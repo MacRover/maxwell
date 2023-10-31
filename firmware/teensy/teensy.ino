@@ -8,8 +8,10 @@
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/imu.h>
 
+#define LED_PIN 13
 #define AD0_VAL 1
 #define MG_TO_MS2 0.0098066
+#define DEG_TO_RAD 0.01745329
 
 rcl_allocator_t allocator;
 rclc_support_t support;
@@ -28,21 +30,20 @@ IPAddress agent_ip(192, 168, 1, 110);
 
 void setup()
 {
+    pinMode(LED_PIN, OUTPUT);
     Wire.begin();
     Wire.setClock(400000);
+    ICM.begin(Wire, AD0_VAL);
 
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
 
     allocator = rcl_get_default_allocator();
+    
+    while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {   
+        delay(100);
+    }
 
-    rcl_ret_t statusRCL;
-    do {
-        statusRCL = rclc_support_init(&support, 0, NULL, &allocator);
-        ICM.begin(Wire, AD0_VAL);
-        delay(500);
-    } 
-    while (statusRCL != RCL_RET_OK && ICM.status != ICM_20948_Stat_Ok);
-
+    digitalWrite(LED_PIN, HIGH);
 
     rclc_node_init_default(&teensy_node, "teensy_node", "", &support);
 
@@ -58,6 +59,10 @@ void loop()
         imu_msg.linear_acceleration.x = ICM.accX() * MG_TO_MS2;
         imu_msg.linear_acceleration.y = ICM.accY() * MG_TO_MS2;
         imu_msg.linear_acceleration.z = ICM.accZ() * MG_TO_MS2;
+
+        imu_msg.angular_velocity.x = ICM.gyrX() * DEG_TO_RAD;
+        imu_msg.angular_velocity.y = ICM.gyrY() * DEG_TO_RAD;
+        imu_msg.angular_velocity.z = ICM.gyrZ() * DEG_TO_RAD;
     }
 
     rcl_publish(&pub, &imu_msg, NULL);
