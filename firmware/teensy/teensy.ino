@@ -38,6 +38,32 @@ IPAddress agent_ip(192, 168, 1, 110);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
+
+void updateIMU(ICM_20948_I2C* icm)
+{
+    imu_msg.linear_acceleration.x = icm->accX() * MG_TO_MS2;
+    imu_msg.linear_acceleration.y = icm->accY() * MG_TO_MS2;
+    imu_msg.linear_acceleration.z = icm->accZ() * MG_TO_MS2;
+
+    imu_msg.angular_velocity.x = icm->gyrX() * DEG_TO_RAD;
+    imu_msg.angular_velocity.y = icm->gyrY() * DEG_TO_RAD;
+    imu_msg.angular_velocity.z = icm->gyrZ() * DEG_TO_RAD;
+}
+
+
+void updateGNSS(SFE_UBLOX_GNSS* gnss)
+{
+    gps_msg.latitude = (double)( gnss->getLatitude() ) * 0.0000001;
+    gps_msg.longitude = (double)( gnss->getLongitude() ) * 0.0000001;
+    gps_msg.altitude = (double)( gnss->getAltitude() ) * 0.001;
+
+    double H_m = gnss->getHorizontalAccuracy() * 0.001;
+    double V_m = gnss->getVerticalAccuracy() * 0.001;
+    gps_msg.position_covariance[0] = H_m*H_m;
+    gps_msg.position_covariance[4] = H_m*H_m;
+    gps_msg.position_covariance[8] = V_m*V_m;
+}
+
 void setup()
 {
     Wire.begin();
@@ -71,22 +97,13 @@ void loop()
     if (ICM.dataReady())
     {
         ICM.getAGMT();
-        imu_msg.linear_acceleration.x = ICM.accX() * MG_TO_MS2;
-        imu_msg.linear_acceleration.y = ICM.accY() * MG_TO_MS2;
-        imu_msg.linear_acceleration.z = ICM.accZ() * MG_TO_MS2;
-
-        imu_msg.angular_velocity.x = ICM.gyrX() * DEG_TO_RAD;
-        imu_msg.angular_velocity.y = ICM.gyrY() * DEG_TO_RAD;
-        imu_msg.angular_velocity.z = ICM.gyrZ() * DEG_TO_RAD;
+        updateIMU(&ICM);
     }
 
     if ( (millis() - prev_time1) > 5000)
     {
         prev_time1 = millis();
-
-        gps_msg.latitude = (double)( GNSS.getLatitude() ) * 0.0000001;
-        gps_msg.longitude = (double)( GNSS.getLongitude() ) * 0.0000001;
-        gps_msg.altitude = (double)( GNSS.getAltitude() ) * 0.001;
+        updateGNSS(&GNSS);
     }
 
     if ( (millis() - prev_time2) > 20) 
