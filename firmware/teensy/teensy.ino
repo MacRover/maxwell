@@ -77,6 +77,16 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
     gps_msg.position_covariance[8] = V_m*V_m;
     gps_msg.position_covariance_type = 
         sensor_msgs__msg__NavSatFix__COVARIANCE_TYPE_DIAGONAL_KNOWN;
+
+    if (ubx_nav->fixType < 2)
+        gps_msg.status.status = 
+            sensor_msgs__msg__NavSatStatus__STATUS_NO_FIX;
+    else
+        gps_msg.status.status = 
+            sensor_msgs__msg__NavSatStatus__STATUS_FIX;
+
+    gps_msg.status.service = 
+        sensor_msgs__msg__NavSatStatus__SERVICE_GPS;
 }
 
 void setup()
