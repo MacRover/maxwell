@@ -10,6 +10,9 @@
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
+#define USING_IMU
+#define USING_GPS
+
 #define LED_PIN 13
 #define AD0_VAL 1
 
@@ -51,14 +54,14 @@ void updateIMU(ICM_20948_I2C* icm)
 }
 
 
-void updateGNSS(SFE_UBLOX_GNSS* gnss)
+void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
 {
-    gps_msg.latitude = (double)( gnss->getLatitude() ) * 0.0000001;
-    gps_msg.longitude = (double)( gnss->getLongitude() ) * 0.0000001;
-    gps_msg.altitude = (double)( gnss->getAltitude() ) * 0.001;
+    gps_msg.latitude = (double)( ubx_nav->lat ) * 0.0000001;
+    gps_msg.longitude = (double)( ubx_nav->lon ) * 0.0000001;
+    gps_msg.altitude = (double)( ubx_nav->hMSL ) * 0.001;
 
-    double H_m = gnss->getHorizontalAccuracy() * 0.001;
-    double V_m = gnss->getVerticalAccuracy() * 0.001;
+    double H_m = ubx_nav->hAcc * 0.001;
+    double V_m = ubx_nav->vAcc * 0.001;
     gps_msg.position_covariance[0] = H_m*H_m;
     gps_msg.position_covariance[4] = H_m*H_m;
     gps_msg.position_covariance[8] = V_m*V_m;
@@ -71,17 +74,29 @@ void setup()
     Serial1.begin(38400);
     Serial.begin(115200);
 
-    ICM.begin(Wire, AD0_VAL);
-    GNSS.begin(Serial1);
-
     pinMode(LED_PIN, OUTPUT);
 
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
     
-    while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {   
-        delay(100);
+    while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
+
+    #ifdef USING_IMU
+    ICM.begin(Wire, AD0_VAL);
+    while (ICM.status != ICM_20948_Stat_Ok) 
+    {
+        ICM.begin(Wire, AD0_VAL);
     }
+    #endif
+
+    #ifdef USING_GPS
+    while (!GNSS.begin(Serial1)) { }
+    GNSS.setUART1Output(COM_TYPE_UBX);
+    GNSS.setMeasurementRate(33.333);
+    GNSS.setNavigationRate(6);
+    GNSS.saveConfiguration();
+    GNSS.setAutoPVTcallbackPtr(&updatePVTData);
+    #endif
 
     digitalWrite(LED_PIN, HIGH);
 
@@ -94,19 +109,19 @@ void setup()
 
 void loop()
 {
+    #ifdef USING_IMU
     if (ICM.dataReady())
     {
         ICM.getAGMT();
         updateIMU(&ICM);
     }
+    #endif
+    #ifdef USING_GPS
+    GNSS.checkUblox();
+    GNSS.checkCallbacks();
+    #endif
 
-    if ( (millis() - prev_time1) > 5000)
-    {
-        prev_time1 = millis();
-        updateGNSS(&GNSS);
-    }
-
-    if ( (millis() - prev_time2) > 20) 
+    if ( (millis() - prev_time2) > 40) 
     {
         prev_time2 = millis();
 
