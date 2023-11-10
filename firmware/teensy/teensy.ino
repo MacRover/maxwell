@@ -34,12 +34,15 @@ rcl_publisher_t gps_pub;
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
-
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
 IPAddress agent_ip(192, 168, 1, 110);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
+
+
+struct timespec tp;
+extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 
 void updateIMU(ICM_20948_I2C* icm)
@@ -56,6 +59,13 @@ void updateIMU(ICM_20948_I2C* icm)
 
 void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
 {
+    clock_gettime(CLOCK_REALTIME, &tp);
+    gps_msg.header.stamp.sec = tp.tv_sec;
+    gps_msg.header.stamp.nanosec = tp.tv_nsec;
+    gps_msg.header.frame_id.data = "gps_frame";
+    gps_msg.header.frame_id.size = 9;
+    gps_msg.header.frame_id.capacity = 9;
+
     gps_msg.latitude = (double)( ubx_nav->lat ) * 0.0000001;
     gps_msg.longitude = (double)( ubx_nav->lon ) * 0.0000001;
     gps_msg.altitude = (double)( ubx_nav->hMSL ) * 0.001;
@@ -65,6 +75,8 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
     gps_msg.position_covariance[0] = H_m*H_m;
     gps_msg.position_covariance[4] = H_m*H_m;
     gps_msg.position_covariance[8] = V_m*V_m;
+    gps_msg.position_covariance_type = 
+        sensor_msgs__msg__NavSatFix__COVARIANCE_TYPE_DIAGONAL_KNOWN;
 }
 
 void setup()
