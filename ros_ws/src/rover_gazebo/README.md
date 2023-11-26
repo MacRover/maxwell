@@ -36,3 +36,7 @@ The simulation uses virtual controllers for controlling each joint. You can cont
 
 The keyboard controller is publishing to these topics to move the robot in the simulation.
 
+## TODO
+
+- Adding more controls in the keyboard controller
+- Figuring out the model, how will a odom message be converted to controller commands
