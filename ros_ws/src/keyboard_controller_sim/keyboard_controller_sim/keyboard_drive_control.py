@@ -70,7 +70,7 @@ def main(args=None):
     kc_node = KeyboardController()
 
     print(
-        "Press w, a, s, d accordingly to move; space for stopping and Esckey for exiting. Be careful not to hold these keys, as these keys control the acceleration of the bot, and u dont want the bot flying out!!"
+        "Press w, a, s, d, i, o accordingly to move; space for stopping and Esckey for exiting. Be careful not to hold these keys, as these keys control the acceleration of the bot, and u dont want the bot flying out!!"
     )
     while True:
         char = getch()
