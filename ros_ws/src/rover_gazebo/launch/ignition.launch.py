@@ -72,10 +72,9 @@ def generate_launch_description():
     pkg_ignition_bringup = get_package_share_directory(
         'rover_gazebo')
     pkg_robot_description = get_package_share_directory(
-        'robot_description')
-
-    pkg_ros_ign_gazebo = get_package_share_directory(
-        'ros_ign_gazebo')
+        'robot_description')    
+    pkg_ros_gz_sim = get_package_share_directory(
+        'ros_gz_sim')
 
     # Set ignition resource path
     ign_resource_path = SetEnvironmentVariable(
@@ -86,7 +85,7 @@ def generate_launch_description():
 
     # Paths
     ign_gazebo_launch = PathJoinSubstitution(
-        [pkg_ros_ign_gazebo, 'launch', 'ign_gazebo.launch.py'])
+        [pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
 
     ign_bridge_launch = PathJoinSubstitution(
         [pkg_ignition_bringup, 'launch', 'ignition_bridge.launch.py'])

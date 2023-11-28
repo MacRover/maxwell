@@ -529,7 +529,7 @@
 
   <ros2_control name="RoverJointControl" type="system">
       <hardware>
-          <plugin>ign_ros2_control/IgnitionSystem</plugin>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
       </hardware>
       <xacro:steering_module_controller name="front_left" />
       <xacro:steering_module_controller name="front_right" />
