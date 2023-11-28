@@ -17,6 +17,7 @@
   <depend>ros_gz_sim</depend>
   <depend>ros_gz_bridge</depend>
   <depend>ros_gz_interfaces</depend>
+  <depend>gz_ros2_control</depend>
 
   <!-- Messages -->
   <depend>std_msgs</depend>
