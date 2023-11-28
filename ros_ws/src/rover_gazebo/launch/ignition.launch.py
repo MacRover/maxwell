@@ -32,92 +32,104 @@ from launch_ros.actions import Node
 
 class OffsetParser(Substitution):
     def __init__(
-            self,
-            number: SomeSubstitutionsType,
-            offset: float,
+        self,
+        number: SomeSubstitutionsType,
+        offset: float,
     ) -> None:
         self.__number = number
         self.__offset = offset
 
     def perform(
-            self,
-            context: LaunchContext = None,
+        self,
+        context: LaunchContext = None,
     ) -> str:
         number = float(self.__number.perform(context))
-        return f'{number + self.__offset}'
+        return f"{number + self.__offset}"
 
 
 ARGUMENTS = [
-    DeclareLaunchArgument('rviz', default_value='false',
-                          choices=['true', 'false'],
-                          description='Start rviz.'),
-    DeclareLaunchArgument('world', default_value='empty_world',
-                          description='Ignition World'),
-    DeclareLaunchArgument('robot_name', default_value='robot_description',
-                          description='Robot name'),
-    DeclareLaunchArgument('x', default_value='0',
-                          description='The x-coordinate for the robot'),
-    DeclareLaunchArgument('y', default_value='0',
-                          description='The y-coordinate for the robot'),
-    DeclareLaunchArgument('z', default_value='0',
-                          description='The x-coordinate for the robot'),
-    DeclareLaunchArgument('yaw', default_value='0',
-                          description='The rotation for the robot')
+    DeclareLaunchArgument(
+        "rviz",
+        default_value="false",
+        choices=["true", "false"],
+        description="Start rviz.",
+    ),
+    DeclareLaunchArgument(
+        "world", default_value="empty_world", description="Ignition World"
+    ),
+    DeclareLaunchArgument(
+        "robot_name", default_value="robot_description", description="Robot name"
+    ),
+    DeclareLaunchArgument(
+        "x", default_value="0", description="The x-coordinate for the robot"
+    ),
+    DeclareLaunchArgument(
+        "y", default_value="0", description="The y-coordinate for the robot"
+    ),
+    DeclareLaunchArgument(
+        "z", default_value="0", description="The x-coordinate for the robot"
+    ),
+    DeclareLaunchArgument(
+        "yaw", default_value="0", description="The rotation for the robot"
+    ),
 ]
 
 
 def generate_launch_description():
-
     # Directories
-    pkg_ignition_bringup = get_package_share_directory(
-        'rover_gazebo')
-    pkg_robot_description = get_package_share_directory(
-        'robot_description')    
-    pkg_ros_gz_sim = get_package_share_directory(
-        'ros_gz_sim')
+    pkg_ignition_bringup = get_package_share_directory("rover_gazebo")
+    pkg_robot_description = get_package_share_directory("robot_description")
+    pkg_ros_gz_sim = get_package_share_directory("ros_gz_sim")
 
     # Set ignition resource path
     ign_resource_path = SetEnvironmentVariable(
-        name='IGN_GAZEBO_RESOURCE_PATH',
+        name="IGN_GAZEBO_RESOURCE_PATH",
         value=[
-            os.path.join(pkg_ignition_bringup, 'worlds'), ':' +
-            str(Path(pkg_robot_description).parent.resolve())])
+            os.path.join(pkg_ignition_bringup, "worlds"),
+            ":" + str(Path(pkg_robot_description).parent.resolve()),
+        ],
+    )
 
     # Paths
     ign_gazebo_launch = PathJoinSubstitution(
-        [pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
+        [pkg_ros_gz_sim, "launch", "gz_sim.launch.py"]
+    )
 
     ign_bridge_launch = PathJoinSubstitution(
-        [pkg_ignition_bringup, 'launch', 'ignition_bridge.launch.py'])
+        [pkg_ignition_bringup, "launch", "ignition_bridge.launch.py"]
+    )
     # rviz_launch = PathJoinSubstitution(
     #     [pkg_robot_viz, 'launch', 'view_robot.launch.py'])
     robot_description_base_launch = PathJoinSubstitution(
-        [pkg_robot_description, 'launch', 'base.launch.py'])
+        [pkg_robot_description, "launch", "base.launch.py"]
+    )
     robot_description_controller_launch = PathJoinSubstitution(
-        [pkg_robot_description, 'launch', 'controllers.launch.py'])
+        [pkg_robot_description, "launch", "controllers.launch.py"]
+    )
     # robot_control_launch = PathJoinSubstitution(
     #     [pkg_robot_control, 'launch', 'swerve_controller.launch.py'])
 
     # Launch configurations
-    x, y, z = LaunchConfiguration('x'), LaunchConfiguration('y'), LaunchConfiguration('z')
-    yaw = LaunchConfiguration('yaw')
+    x, y, z = (
+        LaunchConfiguration("x"),
+        LaunchConfiguration("y"),
+        LaunchConfiguration("z"),
+    )
+    yaw = LaunchConfiguration("yaw")
     # robot_node_yaml_file = LaunchConfiguration('param_file')
 
     # Ignition gazebo
     ignition_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ign_gazebo_launch]),
         launch_arguments=[
-            ('ign_args', [
-                '-r ',
-                LaunchConfiguration('world'), '.sdf',
-                ' -v 4'])
-        ]
+            ("ign_args", ["-r ", LaunchConfiguration("world"), ".sdf", " -v 4"])
+        ],
     )
 
     # Robot description
     robot_description_base = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([robot_description_base_launch]),
-        launch_arguments=[('use_sim_time', 'true')]
+        launch_arguments=[("use_sim_time", "true")],
     )
 
     # ROS Ign bridge
@@ -127,16 +139,24 @@ def generate_launch_description():
 
     # Spawn the robot in Gazebo
     spawn_robot = Node(
-        package='ros_gz_sim',
-        executable='create',
+        package="ros_gz_sim",
+        executable="create",
         arguments=[
-            '-name', LaunchConfiguration('robot_name'),
-            '-x', x,
-            '-y', y,
-            '-z', z,
-            '-Y', yaw,
-            '-topic', '/robot_description'], # <-- There might not be a topic with this ....
-        output='screen')
+            "-name",
+            LaunchConfiguration("robot_name"),
+            "-x",
+            x,
+            "-y",
+            y,
+            "-z",
+            z,
+            "-Y",
+            yaw,
+            "-topic",
+            "/robot_description",
+        ],  # <-- There might not be a topic with this ....
+        output="screen",
+    )
 
     # # Rviz2
     # rviz2 = IncludeLaunchDescription(
@@ -157,11 +177,12 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([robot_description_controller_launch]),
                 launch_arguments=[
-                    ('use_sim_time', 'true'),
-                    ('use_fake_hardware', 'false'),
-                    ('fake_sensor_commands', 'false'),
-                ]
-            )]
+                    ("use_sim_time", "true"),
+                    ("use_fake_hardware", "false"),
+                    ("fake_sensor_commands", "false"),
+                ],
+            )
+        ],
     )
 
     # Define LaunchDescription variable
