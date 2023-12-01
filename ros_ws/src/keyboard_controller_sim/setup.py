@@ -20,6 +20,7 @@ setup(
     entry_points={
         "console_scripts": [
             "keyboard_controller = keyboard_controller_sim.keyboard_drive_control:main",
+            "xbox_controller = keyboard_controller_sim.xbox_drive_control:main",
         ],
     },
 )

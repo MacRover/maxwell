@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from math import pi
 import rclpy
 from rclpy.node import Node
 
