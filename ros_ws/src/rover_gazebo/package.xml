@@ -13,9 +13,11 @@
   <depend>robot_description</depend>
 
   <!-- ROS IGN -->
-  <depend>ros_ign_interfaces</depend>
-  <depend>ros_ign_gazebo</depend>
-  <depend>ros_ign_bridge</depend>
+  <depend>ros_gz</depend>
+  <depend>ros_gz_sim</depend>
+  <depend>ros_gz_bridge</depend>
+  <depend>ros_gz_interfaces</depend>
+  <depend>gz_ros2_control</depend>
 
   <!-- Messages -->
   <depend>std_msgs</depend>

@@ -13,10 +13,10 @@ from launch_ros.substitutions import FindPackageShare
 
 ARGUMENTS = [
     DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        choices=['true', 'false'],
-        description='use_sim_time'
+        "use_sim_time",
+        default_value="false",
+        choices=["true", "false"],
+        description="use_sim_time",
     ),
     DeclareLaunchArgument(
         "use_fake_hardware",
@@ -40,11 +40,17 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([get_package_share_directory('robot_description'), "urdf", 'robot_description.urdf']),
+            PathJoinSubstitution(
+                [
+                    get_package_share_directory("robot_description"),
+                    "urdf",
+                    "robot_description.urdf",
+                ]
+            ),
             " ",
             "is_simulation:=",
             is_simulation,
-             " ",
+            " ",
             "use_fake_hardware:=",
             use_fake_hardware,
             " ",
@@ -52,16 +58,18 @@ def generate_launch_description():
             fake_sensor_commands,
         ]
     )
-    robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
+    robot_description = {
+        "robot_description": ParameterValue(robot_description_content, value_type=str)
+    }
 
     # Takes the joint positions from the 'joint_state' topic and updates the position of the robot with tf2.
     robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        name="robot_state_publisher",
+        output="screen",
         parameters=[
-            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            {"use_sim_time": LaunchConfiguration("use_sim_time")},
             robot_description,
         ],
     )
