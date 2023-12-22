@@ -19,5 +19,5 @@
    ```
 5. Build robot packages
    ```
-   colcon build
+   colcon build --symlink-install
    ```
