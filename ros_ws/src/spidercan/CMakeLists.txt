@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(custom_interfaces REQUIRED)
 
 add_executable(ggoblin src/ggoblin.cpp)
 target_include_directories(ggoblin PUBLIC
@@ -17,6 +18,7 @@ target_include_directories(ggoblin PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(ggoblin PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
+ament_target_dependencies(ggoblin rclcpp custom_interfaces)
 install(TARGETS ggoblin
   DESTINATION lib/${PROJECT_NAME})
 
