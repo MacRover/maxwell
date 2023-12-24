@@ -29,6 +29,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   model/writer.py
   model/reader.py
+  model/tx_tester.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
