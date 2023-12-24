@@ -7,9 +7,9 @@ from can import Message, ThreadSafeBus
 from custom_interfaces.msg import CANraw
 
 
-class GGoblin(Node):
+class Writer(Node):
     def __init__(self, bus, topic):
-        super().__init__("ggoblin")
+        super().__init__("writer")
         self.bus = bus
         self.topic = topic
         self.subscription = self.create_subscription(
@@ -28,11 +28,11 @@ def main(args=None):
     rclpy.init(args=args)
 
     bus = ThreadSafeBus(interface="socketcan", channel="can0", bitrate=500000)
-    ggoblin = GGoblin(bus=bus, topic="/can/can_out")
-    rclpy.spin(ggoblin)
+    writer = Writer(bus=bus, topic="/can/can_out")
+    rclpy.spin(writer)
 
     bus.shutdown()
-    ggoblin.destroy_node()
+    writer.destroy_node()
     rclpy.shutdown()
 
 

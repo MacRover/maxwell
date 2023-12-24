@@ -12,14 +12,14 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(custom_interfaces REQUIRED)
 
-add_executable(ggoblin src/ggoblin.cpp)
-target_include_directories(ggoblin PUBLIC
+add_executable(writer src/writer.cpp)
+target_include_directories(writer PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(ggoblin PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(writer PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-ament_target_dependencies(ggoblin rclcpp custom_interfaces)
-install(TARGETS ggoblin
+ament_target_dependencies(writer rclcpp custom_interfaces)
+install(TARGETS writer
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
@@ -27,7 +27,8 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  model/ggoblin.py
+  model/writer.py
+  model/reader.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
