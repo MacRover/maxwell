@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Subscribe to CANraw topic and publish to CAN bus
+"""
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
@@ -9,6 +11,15 @@ from custom_interfaces.msg import CANraw
 
 
 class Writer(Node):
+    """Writes data to CAN bus
+
+    Args:
+        topic (str): topic to subscribe to for CAN data. Must be in CANraw message format. Default: "/can/can_out"
+        interface (str): type of CAN device to interface with. Passed to python-can. Default: "socketcan"
+        channel (str): name of CAN device to interface with. Passed to python-can. Default: "can0"
+        bitrate (int): transmission bitrate for CAN connection. Passed to python-can. Default: 500000
+    """
+
     def __init__(self):
         super().__init__("writer")
         self.declare_parameter(

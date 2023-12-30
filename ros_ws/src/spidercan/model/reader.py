@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Read data from a CAN device and publish as a CANraw topic.
+"""
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
@@ -9,6 +11,15 @@ from custom_interfaces.msg import CANraw
 
 
 class Reader(Node):
+    """Reads data from CAN bus device and publishes as a topic
+
+    Args:
+        topic (str): topic to publish CAN data to. Default: "/can/can_in"
+        interface (str): type of CAN device to interface with. Passed to python-can. Default: "socketcan"
+        channel (str): name of CAN device to interface with. Passed to python-can. Default: "can0"
+        bitrate (int): transmission bitrate for CAN connection. Passed to python-can. Default: 500000
+    """
+
     def __init__(self):
         super().__init__("reader")
         self.declare_parameter(
