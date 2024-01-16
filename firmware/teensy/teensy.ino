@@ -91,9 +91,9 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
 
 void setup()
 {
-    Wire.begin();
-    Wire.setClock(400000);
-    Serial1.begin(38400);
+    Wire1.begin();
+    Wire1.setClock(400000);
+    Serial5.begin(38400);
     Serial.begin(115200);
 
     pinMode(LED_PIN, OUTPUT);
@@ -104,15 +104,15 @@ void setup()
     while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
 
     #ifdef USING_IMU
-    ICM.begin(Wire, AD0_VAL);
+    ICM.begin(Wire1, AD0_VAL, ICM_ADDR);
     while (ICM.status != ICM_20948_Stat_Ok) 
     {
-        ICM.begin(Wire, AD0_VAL);
+        ICM.begin(Wire1, AD0_VAL, ICM_ADDR);
     }
     #endif
 
     #ifdef USING_GPS
-    while (!GNSS.begin(Serial1)) { }
+    while (!GNSS.begin(Serial5)) { }
     GNSS.setUART1Output(COM_TYPE_UBX);
     GNSS.setMeasurementRate(33.333);
     GNSS.setNavigationRate(6);
