@@ -104,10 +104,10 @@ void setup()
     while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
 
     #ifdef USING_IMU
-    ICM.begin(Wire1, AD0_VAL, ICM_ADDR);
+    ICM.begin(Wire1, AD0_VAL);
     while (ICM.status != ICM_20948_Stat_Ok) 
     {
-        ICM.begin(Wire1, AD0_VAL, ICM_ADDR);
+        ICM.begin(Wire1, AD0_VAL);
     }
     #endif
 
