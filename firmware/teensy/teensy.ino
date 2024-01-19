@@ -8,7 +8,7 @@
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <std_msgs/msg/int32.h>
-#include <sensor_msgs/msg/imu.h>
+#include <sensor_m  sgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
 #define USING_IMU_ONBOARD
@@ -75,11 +75,9 @@ void updateLSM6DSM(LSM6DSRSensor* sensor)
 
     if (sensor->Get_G_Axes(gyro) == LSM6DSR_OK)
     {
-        // Euler, convert to Quaternion
-        imu_msg.orientation.x = (double)(gyro[0]) * DEG_TO_RAD;
-        imu_msg.orientation.y = (double)(gyro[1]) * DEG_TO_RAD;
-        imu_msg.orientation.z = (double)(gyro[2]) * DEG_TO_RAD;
-        imu_msg.orientation.w = 0.0;
+        imu_msg.angular_velocity.x = (double)(gyro[0]) * DEG_TO_RAD;
+        imu_msg.angular_velocity.y = (double)(gyro[1]) * DEG_TO_RAD;
+        imu_msg.angular_velocity.z = (double)(gyro[2]) * DEG_TO_RAD;
     }
 }
 
