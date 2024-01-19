@@ -59,6 +59,10 @@ void updateICM_20948(ICM_20948_I2C* icm)
     imu_msg.angular_velocity.x = icm->gyrX() * DEG_TO_RAD;
     imu_msg.angular_velocity.y = icm->gyrY() * DEG_TO_RAD;
     imu_msg.angular_velocity.z = icm->gyrZ() * DEG_TO_RAD;
+
+    imu_msg.orientation_covariance[0] = -1;
+    imu_msg.angular_velocity_covariance[0] = -1;
+    imu_msg.linear_acceleration_covariance[0] = -1;
 }
 
 void updateLSM6DSM(LSM6DSRSensor* sensor)
@@ -79,6 +83,10 @@ void updateLSM6DSM(LSM6DSRSensor* sensor)
         imu_msg.angular_velocity.y = (double)(gyro[1]) * DEG_TO_RAD;
         imu_msg.angular_velocity.z = (double)(gyro[2]) * DEG_TO_RAD;
     }
+
+    imu_msg.orientation_covariance[0] = -1;
+    imu_msg.angular_velocity_covariance[0] = -1;
+    imu_msg.linear_acceleration_covariance[0] = -1;
 }
 
 
