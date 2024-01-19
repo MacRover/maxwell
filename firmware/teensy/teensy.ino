@@ -8,7 +8,7 @@
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <std_msgs/msg/int32.h>
-#include <sensor_m  sgs/msg/imu.h>
+#include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
 #define USING_IMU_ONBOARD
