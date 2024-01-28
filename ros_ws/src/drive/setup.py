@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'drive_controller.py = drive.drive_controller:main'
+            'drive_controller.py = drive.drive_controller:main',
+            'sim_command_converter.py = drive.sim_command_converter:main'
         ],
     },
 )
