@@ -2,15 +2,18 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from typing import List
 import numpy as np
+import math
 
 from .drive_module import DriveModule
 
-from drive_msg.msg import SwerveModule
+from custom_interfaces.msg import SwerveModule
 
 
 class SteeringModel:
 
- 
+	## Solving V_i = A_i * V_b
+	## Angles are from the x axis
+
 	def __init__(self, driveModules: List[DriveModule]):
 		self.driveModules = driveModules
 		self.ActuatorMatrix = np.zeros((2 * len(driveModules), 3))
@@ -37,11 +40,23 @@ class SteeringModel:
 	def getDriveModuleVelocities(self) -> List[SwerveModule]:
 
 		drive_module_states = np.matmul(self.ActuatorMatrix, self.body_state)
+		print("Twist: " + str(self.body_state))
+		print("Drives: ", drive_module_states)
 		out = []
 		for i in range(len(drive_module_states) // 2):
 			module = SwerveModule()
 			module.speed = np.sqrt(drive_module_states[2 * i] ** 2 + drive_module_states[2 * i + 1] ** 2)
-			module.angle = np.arctan2(drive_module_states[2 * i + 1], drive_module_states[2 * i])
+			angle = np.arctan2(drive_module_states[2 * i + 1], drive_module_states[2 * i])
+			# if angle is negative, flip speed and make angle positive
+			
+			if abs(math.pi - angle) < 0.0001:
+				angle = 0.0
+				module.speed *= -1
+			if angle < 0:
+				module.speed *= -1
+				angle += np.pi
+			
+			module.angle = angle
 			out.append(module)
 		
 		return out

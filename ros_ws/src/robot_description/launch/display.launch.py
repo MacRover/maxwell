@@ -7,9 +7,10 @@ from launch.substitutions import Command, LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
-
+import xacro
 
 def generate_launch_description():
+
     pkg_robot_description = get_package_share_path("robot_description")
     model_path = pkg_robot_description / "urdf/robot_description.urdf"
     rviz_config_path = pkg_robot_description / "config/urdf.rviz"
@@ -30,10 +31,17 @@ def generate_launch_description():
         default_value=str(rviz_config_path),
         description="Absolute path to rviz config file",
     )
+    is_simulation_arg = DeclareLaunchArgument(
+        name="is_simulation",
+        default_value="false",
+        choices=["true", "false"],
+        description="Is simulation or not",
+    )
 
     robot_description = ParameterValue(
-        Command(["xacro ", LaunchConfiguration("model")]), value_type=str
+        Command(["xacro ", LaunchConfiguration("model"), " is_simulation:=", LaunchConfiguration("is_simulation")]), value_type=str
     )
+    # doc = xacro.process_file(str(model_path), mappings={"is_simulation": is_simulation})
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
@@ -67,6 +75,7 @@ def generate_launch_description():
             gui_arg,
             model_arg,
             rviz_arg,
+            is_simulation_arg,
             joint_state_publisher_node,
             joint_state_publisher_gui_node,
             robot_state_publisher_node,
