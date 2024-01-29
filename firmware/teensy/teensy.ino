@@ -19,7 +19,7 @@
 #define AD0_VAL 1
 #define IMU_INT1 23
 
-#define G_TO_MS2 9.8066
+#define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
 
 
@@ -52,9 +52,9 @@ extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 void updateICM_20948(ICM_20948_I2C* icm)
 {
-    imu_msg.linear_acceleration.x = icm->accX() * G_TO_MS2 / 1000;
-    imu_msg.linear_acceleration.y = icm->accY() * G_TO_MS2 / 1000;
-    imu_msg.linear_acceleration.z = icm->accZ() * G_TO_MS2 / 1000;
+    imu_msg.linear_acceleration.x = icm->accX() * MG_TO_MS2;
+    imu_msg.linear_acceleration.y = icm->accY() * MG_TO_MS2;
+    imu_msg.linear_acceleration.z = icm->accZ() * MG_TO_MS2;
 
     imu_msg.angular_velocity.x = icm->gyrX() * DEG_TO_RAD;
     imu_msg.angular_velocity.y = icm->gyrY() * DEG_TO_RAD;
@@ -72,16 +72,16 @@ void updateLSM6DSM(LSM6DSRSensor* sensor)
 
     if (sensor->Get_X_Axes(accel) == LSM6DSR_OK)
     {
-        imu_msg.linear_acceleration.x = (double)(accel[0]) * G_TO_MS2;
-        imu_msg.linear_acceleration.y = (double)(accel[1]) * G_TO_MS2;
-        imu_msg.linear_acceleration.z = (double)(accel[2]) * G_TO_MS2;
+        imu_msg.linear_acceleration.x = (double)(accel[0]) * MG_TO_MS2;
+        imu_msg.linear_acceleration.y = (double)(accel[1]) * MG_TO_MS2;
+        imu_msg.linear_acceleration.z = (double)(accel[2]) * MG_TO_MS2;
     }
 
     if (sensor->Get_G_Axes(gyro) == LSM6DSR_OK)
     {
-        imu_msg.angular_velocity.x = (double)(gyro[0]) * DEG_TO_RAD;
-        imu_msg.angular_velocity.y = (double)(gyro[1]) * DEG_TO_RAD;
-        imu_msg.angular_velocity.z = (double)(gyro[2]) * DEG_TO_RAD;
+        imu_msg.angular_velocity.x = (double)(gyro[0]) * (DEG_TO_RAD / 1000.0);
+        imu_msg.angular_velocity.y = (double)(gyro[1]) * (DEG_TO_RAD / 1000.0);
+        imu_msg.angular_velocity.z = (double)(gyro[2]) * (DEG_TO_RAD / 1000.0);
     }
 
     imu_msg.orientation_covariance[0] = -1;
@@ -141,6 +141,8 @@ void setup()
         digitalWrite(IMU_INT1, LOW);
         delay(200);
         while (LSM6DSMR.begin() != LSM6DSR_OK) { }
+        LSM6DSMR.Set_X_FS(8);
+        LSM6DSMR.Set_G_FS(2000);
         LSM6DSMR.Enable_X();
         LSM6DSMR.Enable_G();
 
