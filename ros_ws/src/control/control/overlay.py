@@ -15,10 +15,10 @@ class Toggler(Node):
         self.num = 2
 
     def _toggle_mode_callback(self, msg):
-        if (msg.buttons[0] and not self.active):
+        if (msg.buttons[5] and not self.active):
             self.active = True
             self.state = (self.state + 1) % self.num
-        elif (not msg.buttons[0]):
+        elif (not msg.buttons[5]):
             self.active = False
 
         modes = ControllerMode(
