@@ -106,7 +106,7 @@ int main(void)
     HAL_StatusTypeDef spi_status;
 
     // Bits 19, 18, 17
-    // 00X DRVCTRL (0b11 << 18)
+    // 00X DRVCTRL (0b00 << 18)
     // 100 CHOPCONF (0b100 << 17)
     // 101 SMARTEN (0b101 << 17)
     // 110 SGCSCONF (0b110 << 17)
@@ -139,8 +139,8 @@ int main(void)
     /* SGCSCONF */
     SPImsg = 0;
     SPImsg |= (0b110 << 17); // SGCSCONF
-    SPImsg |= (0b1 << 16); // SFILT: stall guard filter
-    SPImsg |= (0b0111111 << 8); // SGT: stall guard threshold
+    SPImsg |= (0b0 << 16); // SFILT: stall guard filter
+    SPImsg |= (0b1111111 << 8); // SGT: stall guard threshold
     SPImsg |= (0b11111 << 0); // CS: current scale
 
     SPImsg_bytes[0] = SPImsg & 0xFF;
@@ -172,7 +172,7 @@ int main(void)
 
     /* CHOPCONF */
     SPImsg = 0;
-    SPImsg |= (0b101 << 17); // CHOPCONF
+    SPImsg |= (0b100 << 17); // CHOPCONF
     SPImsg |= (0b01 << 15); // TBL: blanking time
     SPImsg |= (0b0 << 14); // CHM: chopper mode
     SPImsg |= (0b0 << 13); // RNDTF: Random TOFF time
@@ -192,10 +192,10 @@ int main(void)
 
     /* DRVCTRL */
     SPImsg = 0;
-    SPImsg |= (0b11 << 18); // DRVCTRL
+    SPImsg |= (0b00 << 18); // DRVCTRL
     SPImsg |= (0b0 << 9); // INTPOL: step interpolation
     SPImsg |= (0b0 << 8); // DEDGE: Double edge step pulses
-    SPImsg |= (0b1000 << 0); // MRES: Microsteps per fullstep
+    SPImsg |= (0b1111 << 0); // MRES: Microsteps per fullstep
 
     SPImsg_bytes[0] = SPImsg & 0xFF;
     SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
