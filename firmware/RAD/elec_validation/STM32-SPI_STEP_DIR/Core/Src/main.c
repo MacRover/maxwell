@@ -94,7 +94,7 @@ int main(void)
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET); // disable stand alone mode
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // CS
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET); // set DIR
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET); // set DIR
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET); // STEP
 
     uint32_t SPImsg = 0;
@@ -116,20 +116,20 @@ int main(void)
     SPImsg = 0;
     SPImsg |= (0b111 << 17); // DRVCONF
     SPImsg |= (0b0 << 16); // TST: test mode
-    SPImsg |= (0b11111 << 11); // SLP: Slope control
+    SPImsg |= (0b11110 << 11); // SLP: Slope control
     SPImsg |= (0b0 << 10); // DIS_S2G: Short to ground protection
-    SPImsg |= (0b11 << 8); // TS2G: Short detection delay
+    SPImsg |= (0b00 << 8); // TS2G: Short detection delay
     SPImsg |= (0b0 << 7); // SDOFF: step/dir interface
     SPImsg |= (0b0 << 6); // VSENSE: full-scale sense resistor voltage setting
     SPImsg |= (0b11 << 4); // RDSEL: read out select
-    SPImsg |= (0b1 << 3); // OTSENS: overtemp shutdown setting
-    SPImsg |= (0b0 << 2); // SHRTSENS: short to ground sensitivity
-    SPImsg |= (0b0 << 1); // ENPFD: passive fast delay setting
+    SPImsg |= (0b0 << 3); // OTSENS: overtemp shutdown setting
+    SPImsg |= (0b1 << 2); // SHRTSENS: short to ground sensitivity
+    SPImsg |= (0b1 << 1); // EN_PFD: passive fast delay setting
     SPImsg |= (0b1 << 0); // EN_S2VS: Short to VS protection
 
-    SPImsg_bytes[0] = SPImsg & 0xFF;
-    SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
-    SPImsg_bytes[2] = (SPImsg & 0xFF0000) >> 16;
+    SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
+    SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
+    SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
@@ -140,12 +140,12 @@ int main(void)
     SPImsg = 0;
     SPImsg |= (0b110 << 17); // SGCSCONF
     SPImsg |= (0b0 << 16); // SFILT: stall guard filter
-    SPImsg |= (0b1111111 << 8); // SGT: stall guard threshold
-    SPImsg |= (0b11111 << 0); // CS: current scale
+    SPImsg |= (0b0000010 << 8); // SGT: stall guard threshold
+    SPImsg |= (0b00100 << 0); // CS: current scale
 
-    SPImsg_bytes[0] = SPImsg & 0xFF;
-    SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
-    SPImsg_bytes[2] = (SPImsg & 0xFF0000) >> 16;
+    SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
+    SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
+    SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
@@ -157,13 +157,13 @@ int main(void)
     SPImsg |= (0b101 << 17); // SMARTEN
     SPImsg |= (0b0 << 15); // SEIMIN: min cool step current
     SPImsg |= (0b00 << 13); // SEDN: current dec. speed
-    SPImsg |= (0b1111 << 8); // SEMAX: upper cool step threshold offset
+    SPImsg |= (0b0000 << 8); // SEMAX: upper cool step threshold offset
     SPImsg |= (0b00 << 5); // SEUP: current increment size
     SPImsg |= (0b0000 << 0); // SEMIN: cool step lower threshold
 
-    SPImsg_bytes[0] = SPImsg & 0xFF;
-    SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
-    SPImsg_bytes[2] = (SPImsg & 0xFF0000) >> 16;
+    SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
+    SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
+    SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
@@ -173,17 +173,17 @@ int main(void)
     /* CHOPCONF */
     SPImsg = 0;
     SPImsg |= (0b100 << 17); // CHOPCONF
-    SPImsg |= (0b01 << 15); // TBL: blanking time
+    SPImsg |= (0b10 << 15); // TBL: blanking time
     SPImsg |= (0b0 << 14); // CHM: chopper mode
     SPImsg |= (0b0 << 13); // RNDTF: Random TOFF time
     SPImsg |= (0b00 << 11); // HDEC: hysteresis decay or fast decay mode
     SPImsg |= (0b0100 << 7); // HEND: hysteresis end value
-    SPImsg |= (0b101 << 4); // HSTRT: hysteresis start value
-    SPImsg |= (0b0001 << 0); // TOFF: mosfet off time
+    SPImsg |= (0b110 << 4); // HSTRT: hysteresis start value
+    SPImsg |= (0b0100 << 0); // TOFF: mosfet off time
 
-    SPImsg_bytes[0] = SPImsg & 0xFF;
-    SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
-    SPImsg_bytes[2] = (SPImsg & 0xFF0000) >> 16;
+    SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
+    SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
+    SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
@@ -195,17 +195,46 @@ int main(void)
     SPImsg |= (0b00 << 18); // DRVCTRL
     SPImsg |= (0b0 << 9); // INTPOL: step interpolation
     SPImsg |= (0b0 << 8); // DEDGE: Double edge step pulses
-    SPImsg |= (0b1111 << 0); // MRES: Microsteps per fullstep
+    SPImsg |= (0b0000 << 0); // MRES: Microsteps per fullstep
 
-    SPImsg_bytes[0] = SPImsg & 0xFF;
-    SPImsg_bytes[1] = (SPImsg & 0xFF00) >> 8;
-    SPImsg_bytes[2] = (SPImsg & 0xFF0000) >> 16;
+    SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
+    SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
+    SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
+    /* DEMO FROM DATASHEET */
+//    SPImsg_bytes[0] = 0x57;
+//    SPImsg_bytes[1] = 0x45;
+//    SPImsg_bytes[2] = 0x09;
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+//    SPImsg_bytes[0] = 0x1F;
+//    SPImsg_bytes[1] = 0x00;
+//    SPImsg_bytes[2] = 0x0D;
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+//    SPImsg_bytes[0] = 0x33;
+//    SPImsg_bytes[1] = 0xF0;
+//    SPImsg_bytes[2] = 0x0E;
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+//    SPImsg_bytes[0] = 0x00;
+//    SPImsg_bytes[1] = 0x00;
+//    SPImsg_bytes[2] = 0x00;
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -213,7 +242,18 @@ int main(void)
     while (1)
     {
         HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
-        HAL_Delay(50);
+//        HAL_Delay(1);
+//        SPImsg_bytes[0] = 0x00;
+//        SPImsg_bytes[1] = 0x00;
+//        SPImsg_bytes[2] = 0x00;
+//        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+//        spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes,
+//                SPIread_bytes, 3, 1000);
+//        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+
+        // Use LED to signal state of ST_TST
+//        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,
+//                HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -338,6 +378,12 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : PA9 */
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USER CODE BEGIN MX_GPIO_Init_2 */
     /* USER CODE END MX_GPIO_Init_2 */
