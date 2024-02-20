@@ -11,7 +11,6 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CANraw.msg"
-  "msg/ControllerMode.msg"
   "msg/SwerveModule.msg"
   "msg/SwerveModulesList.msg"
 )
