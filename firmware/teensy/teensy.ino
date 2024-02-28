@@ -11,9 +11,12 @@
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
+#include "fans.h"
+
+// #define USING_ROS
 #define USING_IMU_ONBOARD
 //#define USING_IMU_OTHER
-#define USING_GPS
+// #define USING_GPS
 
 #define LED_PIN 13
 #define AD0_VAL 1
@@ -48,6 +51,8 @@ unsigned long prev_time1 = 0, prev_time2 = 0;
 
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
+
+Fan fan1;
 
 
 void updateICM_20948(ICM_20948_I2C* icm)
@@ -132,10 +137,27 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
+    #ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
     
     while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
+
+    rclc_node_init_default(&teensy_node, "teensy_node", "", &support);
+
+    rclc_publisher_init_default(
+        &imu_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), 
+        "imu"
+    );
+    rclc_publisher_init_default(
+        &gps_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
+        "gps"
+    );
+    #endif
 
     #ifdef USING_IMU_ONBOARD
         digitalWrite(IMU_INT1, LOW);
@@ -167,10 +189,9 @@ void setup()
 
     digitalWrite(LED_PIN, HIGH);
 
-    rclc_node_init_default(&teensy_node, "teensy_node", "", &support);
-
-    rclc_publisher_init_default(&imu_pub, &teensy_node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu");
-    rclc_publisher_init_default(&gps_pub, &teensy_node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), "gps");
+    initialize_fan(&fan1, 0);
+    enable_fan_control(&fan1);
+    set_fan_rpm(&fan1, 7000);
 }
 
 
@@ -193,6 +214,7 @@ void loop()
         GNSS.checkCallbacks();
     #endif
 
+    #ifdef USING_ROS
     if ( (millis() - prev_time2) > 40) 
     {
         prev_time2 = millis();
@@ -200,6 +222,9 @@ void loop()
         rcl_publish(&imu_pub, &imu_msg, NULL);
         rcl_publish(&gps_pub, &gps_msg, NULL);
     }
+    #endif
+
+    get_fan_rpm(&fan1);
 
     delay(1);
 }
