@@ -189,9 +189,9 @@ void setup()
 
     digitalWrite(LED_PIN, HIGH);
 
-    initialize_fan(&fan1, 0);
-    enable_fan_control(&fan1);
-    set_fan_rpm(&fan1, 7000);
+    initializeFan(&fan1, 0);
+    enableFanControl(&fan1);
+    setFanRPM(&fan1, 4000);
 }
 
 
@@ -224,7 +224,7 @@ void loop()
     }
     #endif
 
-    get_fan_rpm(&fan1);
+    getFanRPM(&fan1);
 
     delay(1);
 }

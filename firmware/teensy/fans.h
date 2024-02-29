@@ -4,6 +4,9 @@
 #define U14_ADDR (uint8_t)0x2E
 #define U15_ADDR (uint8_t)0x2C
 
+#define MIN_RPM 1000
+
+
 typedef struct Fan {
     uint8_t id;
     uint8_t address;
@@ -12,8 +15,7 @@ typedef struct Fan {
     uint16_t tach_target;
 } Fan;
 
-
-void initialize_fan(Fan* fan, uint8_t id) 
+void initializeFan(Fan* fan, uint8_t id) 
 {
     if (id > 7) return;
     fan->id = id;
@@ -21,12 +23,15 @@ void initialize_fan(Fan* fan, uint8_t id)
     fan->offset = 16 * (id % 5);
 }
 
-void set_fan_rpm(Fan* fan, uint16_t speed) 
+void setFanRPM(Fan* fan, uint16_t speed) 
 {
+    if (speed < MIN_RPM) speed = MIN_RPM;
+
+    uint16_t tachCount = (uint16_t)(7864320 / speed);
     fan->tach_target = speed;
     uint8_t reg = 0x3D + (fan->offset);
-    uint8_t high = (speed & 0x1FE0) >> 5;
-    uint8_t low = (speed & 0x1F) << 3;
+    uint8_t high = (tachCount & 0x1FE0) >> 5;
+    uint8_t low = (tachCount & 0x1F) << 3;
 
     Wire1.beginTransmission(fan->address);
     Wire1.write(reg);
@@ -39,32 +44,30 @@ void set_fan_rpm(Fan* fan, uint16_t speed)
     Wire1.endTransmission();
 }
 
-void get_fan_rpm(Fan* fan)
+void getFanRPM(Fan* fan)
 {
     uint16_t count, hCount, lCount;
     uint8_t reg = 0x3E + (fan->offset);
 
     Wire1.beginTransmission(fan->address);
-    Wire1.write(reg + fan->offset);
+    Wire1.write(reg);
     Wire1.endTransmission();
     Wire1.requestFrom(fan->address, 1);
     hCount = Wire1.read();
 
     Wire1.beginTransmission(fan->address);
-    Wire1.write(reg + 1 + fan->offset);
+    Wire1.write(reg + 1);
     Wire1.endTransmission();
     Wire1.requestFrom(fan->address, 1);
     lCount = Wire1.read();
 
     count = (hCount << 5) | (lCount >> 3);
-    fan->tach_reading = count;
-    Serial.print("low byte count: ");
-    Serial.print(lCount, BIN);
-    Serial.print(" high byte count: ");
-    Serial.println(hCount,BIN);
+    fan->tach_reading = (uint16_t)(7864320 / count);
+    // Serial.print("RPM: ");
+    // Serial.println(fan->tach_reading);
 }
 
-void enable_fan_control(Fan* fan)
+void enableFanControl(Fan* fan)
 {
     Wire1.beginTransmission(fan->address);
     Wire1.write(0x32 + (fan->offset));
