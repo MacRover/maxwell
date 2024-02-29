@@ -5,6 +5,7 @@
 #define U15_ADDR (uint8_t)0x2C
 
 #define MIN_RPM 1000
+#define MAX_RPM 6400
 
 
 typedef struct Fan {
@@ -26,6 +27,7 @@ void initializeFan(Fan* fan, uint8_t id)
 void setFanRPM(Fan* fan, uint16_t speed) 
 {
     if (speed < MIN_RPM) speed = MIN_RPM;
+    if (speed > MAX_RPM) speed = MAX_RPM;
 
     uint16_t tachCount = (uint16_t)(7864320 / speed);
     fan->tach_target = speed;
@@ -72,5 +74,10 @@ void enableFanControl(Fan* fan)
     Wire1.beginTransmission(fan->address);
     Wire1.write(0x32 + (fan->offset));
     Wire1.write(0x2B | (1 << 7));
+    Wire1.endTransmission();
+
+    Wire1.beginTransmission(fan->address);
+    Wire1.write(0x39 + (fan->offset));
+    Wire1.write(0xF6);
     Wire1.endTransmission();
 }

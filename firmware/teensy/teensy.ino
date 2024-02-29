@@ -191,7 +191,6 @@ void setup()
 
     initializeFan(&fan1, 0);
     enableFanControl(&fan1);
-    setFanRPM(&fan1, 4000);
 }
 
 
@@ -224,6 +223,7 @@ void loop()
     }
     #endif
 
+    setFanRPM(&fan1, 4500);
     getFanRPM(&fan1);
 
     delay(1);
