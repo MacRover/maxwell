@@ -12,11 +12,13 @@
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
 #include "fans.h"
+#include "lora.h"
 
 // #define USING_ROS
 #define USING_IMU_ONBOARD
 //#define USING_IMU_OTHER
 // #define USING_GPS
+#define USING_LORA
 
 #define LED_PIN 13
 #define AD0_VAL 1
@@ -113,17 +115,17 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
     gps_msg.position_covariance[0] = H_m*H_m;
     gps_msg.position_covariance[4] = H_m*H_m;
     gps_msg.position_covariance[8] = V_m*V_m;
-    gps_msg.position_covariance_type = 
+    gps_msg.position_covariance_type =
         sensor_msgs__msg__NavSatFix__COVARIANCE_TYPE_DIAGONAL_KNOWN;
 
     if (ubx_nav->fixType < 2)
-        gps_msg.status.status = 
+        gps_msg.status.status =
             sensor_msgs__msg__NavSatStatus__STATUS_NO_FIX;
     else
-        gps_msg.status.status = 
+        gps_msg.status.status =
             sensor_msgs__msg__NavSatStatus__STATUS_FIX;
 
-    gps_msg.status.service = 
+    gps_msg.status.service =
         sensor_msgs__msg__NavSatStatus__SERVICE_GPS;
 }
 
@@ -140,21 +142,21 @@ void setup()
     #ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
-    
+
     while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
 
     rclc_node_init_default(&teensy_node, "teensy_node", "", &support);
 
     rclc_publisher_init_default(
-        &imu_pub, 
-        &teensy_node, 
-        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), 
+        &imu_pub,
+        &teensy_node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
         "imu"
     );
     rclc_publisher_init_default(
-        &gps_pub, 
-        &teensy_node, 
-        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
+        &gps_pub,
+        &teensy_node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix),
         "gps"
     );
     #endif
@@ -171,7 +173,7 @@ void setup()
     #else
         #ifdef USING_IMU_OTHER
         ICM.begin(Wire1, AD0_VAL);
-        while (ICM.status != ICM_20948_Stat_Ok) 
+        while (ICM.status != ICM_20948_Stat_Ok)
         {
             ICM.begin(Wire1, AD0_VAL);
         }
@@ -185,6 +187,10 @@ void setup()
         GNSS.setNavigationRate(6);
         GNSS.saveConfiguration();
         GNSS.setAutoPVTcallbackPtr(&updatePVTData);
+    #endif
+
+    #ifdef USING_LORA
+    initializeLoRa();
     #endif
 
     digitalWrite(LED_PIN, HIGH);
@@ -214,13 +220,17 @@ void loop()
     #endif
 
     #ifdef USING_ROS
-    if ( (millis() - prev_time2) > 40) 
+    if ( (millis() - prev_time2) > 40)
     {
         prev_time2 = millis();
 
         rcl_publish(&imu_pub, &imu_msg, NULL);
         rcl_publish(&gps_pub, &gps_msg, NULL);
     }
+    #endif
+
+    #ifdef USING_LORA
+    pollLoRa();
     #endif
 
     setFanRPM(&fan1, 4500);
