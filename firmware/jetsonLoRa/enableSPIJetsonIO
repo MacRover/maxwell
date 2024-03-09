@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# make sure you installed the jetpack sdk for the orin
+
+# run this interactive file
+sudo /opt/nvidia/jetson-io/jetson-io.py
