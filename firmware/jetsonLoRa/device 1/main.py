@@ -11,7 +11,7 @@ def cb(events):
 
 # for jetson orin, must change cs, irq, rst, and gpio depending on what pins the LoRa chip is connected to.
 # CS pin must be connected the NSS pin on the LoRa chip
-sx = SX1262(spi_bus=1, clk=13, mosi=37, miso=22, cs=18, irq=20, rst=15, gpio=2) 
+sx = SX1262(spi_bus=1, clk=23, mosi=19, miso=21, cs=24, irq=29, rst=31, gpio=33) 
 
 # LoRa
 sx.begin(freq=923, bw=125.0, sf=11, cr=5, syncWord=0x12,
