@@ -280,17 +280,17 @@
     name="gripper">
     <inertial>
       <origin
-        xyz="0.0971698965176901 -0.000200552125748731 0.00821728191151871"
+        xyz="0.0971698965168053 -0.000200552125744498 0.00821728191246773"
         rpy="0 0 0" />
       <mass
-        value="0.635591580585097" />
+        value="0.635591580585016" />
       <inertia
-        ixx="0.000351925210187739"
-        ixy="-1.59698712918917E-06"
-        ixz="3.60534286105297E-07"
-        iyy="0.000974539849325974"
-        iyz="5.74444670115383E-06"
-        izz="0.00118797819026758" />
+        ixx="0.00035192521018775"
+        ixy="-1.59698712919832E-06"
+        ixz="3.60534286104498E-07"
+        iyy="0.000974539849325939"
+        iyz="5.74444670110105E-06"
+        izz="0.00118797819026763" />
     </inertial>
     <visual>
       <origin
@@ -298,7 +298,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://Reduced Arm CAD with boundary/meshes/gripper.STL" />
+          filename="package://robot_description/meshes/gripper.STL" />
       </geometry>
       <material
         name="">
@@ -312,12 +312,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://Reduced Arm CAD with boundary/meshes/gripper.STL" />
+          filename="package://robot_description/meshes/gripper.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="gripper_joint"
+    name="gripper joint"
     type="revolute">
     type="revolute">
     <origin
