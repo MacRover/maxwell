@@ -3,22 +3,22 @@
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="Arm Linkage model">
+  name="robot_description">
   <link
-    name="base_link">
+    name="arm_base_footprint">
     <inertial>
       <origin
-        xyz="0.327119739334549 -0.385573897694874 0.323575773767598"
+        xyz="-0.0113623041766557 0.0234161491550731 0.0974238570991405"
         rpy="0 0 0" />
       <mass
-        value="3.06342007448754" />
+        value="135.989046906803" />
       <inertia
-        ixx="0.0160307527911404"
-        ixy="9.39840336813469E-10"
-        ixz="0.00224509460150349"
-        iyy="0.0150959494594248"
-        iyz="-1.10471480736458E-09"
-        izz="0.0144692423969972" />
+        ixx="10.1007824142207"
+        ixy="0.0509701630561758"
+        ixz="4.37579137312956"
+        iyy="18.8030712278475"
+        iyz="0.0140091332218423"
+        izz="23.559395750123" />
     </inertial>
     <visual>
       <origin
@@ -26,7 +26,11 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/base_link.STL" />
+=======
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+>>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -40,25 +44,29 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/base_link.STL" />
+=======
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+>>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
   <link
-    name="shoulder">
+    name="arm_base">
     <inertial>
       <origin
-        xyz="0.143207572859986 -0.0900000000000011 0.138391858217002"
+        xyz="-0.0295249135051615 0.00117350858879285 0.0797519788027215"
         rpy="0 0 0" />
       <mass
-        value="1.46972447540598" />
+        value="3.22741129192052" />
       <inertia
-        ixx="0.00982270362284813"
-        ixy="7.8413299435553E-17"
-        ixz="-0.0102487828485683"
-        iyy="0.0244240913007036"
-        iyz="6.00722353436379E-18"
-        izz="0.0150390086566239" />
+        ixx="0.0149376437776028"
+        ixy="0.000178722626147249"
+        ixz="0.00163106022352945"
+        iyy="0.0188319350106929"
+        iyz="-6.89894445225612E-05"
+        izz="0.0151539463791368" />
     </inertial>
     <visual>
       <origin
@@ -66,7 +74,69 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/shoulder.STL" />
+=======
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.796078431372549 0.823529411764706 0.937254901960784 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_base_joint"
+    type="revolute">
+    <origin
+      xyz="0.11824 0.025047 0.13851"
+      rpy="0 0 0" />
+    <parent
+      link="arm_base_footprint" />
+    <child
+      link="arm_base" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="arm_shoulder">
+    <inertial>
+      <origin
+        xyz="0.141730053782291 0.0543967706458683 0.179330333699823"
+        rpy="0 0 0" />
+      <mass
+        value="0.974957548893571" />
+      <inertia
+        ixx="0.0161693352235825"
+        ixy="0.000337412576528737"
+        ixz="-0.00921960443912687"
+        iyy="0.0241493073427018"
+        iyz="0.000389133806114854"
+        izz="0.00801500710232347" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
+>>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -80,20 +150,24 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/shoulder.STL" />
+=======
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
+>>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
   <joint
-    name="shoulder_joint"
+    name="arm_shoulder_joint"
     type="revolute">
     <origin
-      xyz="0.2958 -0.29557 0.467"
+      xyz="-0.072332 -0.057326 0.22575"
       rpy="0 0 0" />
     <parent
-      link="base_link" />
+      link="arm_base" />
     <child
-      link="shoulder" />
+      link="arm_shoulder" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -103,20 +177,20 @@
       velocity="10" />
   </joint>
   <link
-    name="elbow">
+    name="arm_elbow">
     <inertial>
       <origin
-        xyz="0.127323761521914 -0.0900000000000007 0.0200473861405684"
+        xyz="0.149526134900267 -0.0921124744438282 0.0070189236592052"
         rpy="0 0 0" />
       <mass
-        value="2.29303395925732" />
+        value="1.84402735327987" />
       <inertia
-        ixx="0.010389450850618"
-        ixy="1.01659330409391E-16"
-        ixz="0.0247496988050138"
-        iyy="0.0965408460025389"
-        iyz="-8.31922964686182E-18"
-        izz="0.0865945491134664" />
+        ixx="0.0148226130755206"
+        ixy="0.00317039692700635"
+        ixz="0.0282586448535087"
+        iyy="0.0898032128436468"
+        iyz="-0.0011927315954158"
+        izz="0.075260622201102" />
     </inertial>
     <visual>
       <origin
@@ -124,7 +198,11 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/elbow.STL" />
+=======
+          filename="package://robot_description/meshes/arm_elbow.STL" />
+>>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -138,20 +216,24 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/elbow.STL" />
+=======
+          filename="package://robot_description/meshes/arm_elbow.STL" />
+>>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
   <joint
-    name="elbow_joint"
+    name="arm_elbow_joint"
     type="revolute">
     <origin
-      xyz="0.35425 0 0.28903"
+      xyz="0.25455 0.13544 0.3837"
       rpy="0 0 0" />
     <parent
-      link="shoulder" />
+      link="arm_shoulder" />
     <child
-      link="elbow" />
+      link="arm_elbow" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -161,20 +243,20 @@
       velocity="10" />
   </joint>
   <link
-    name="wrist">
+    name="arm_wrist">
     <inertial>
       <origin
-        xyz="0.00272603728020782 -0.0931117435140996 -4.76166492902053E-07"
+        xyz="0.0013392937554404 -0.0762345627405477 -0.00681521956011"
         rpy="0 0 0" />
       <mass
-        value="0.907669054556265" />
+        value="0.266662965128272" />
       <inertia
-        ixx="0.00111675391373477"
-        ixy="-8.57603201835166E-06"
-        ixz="-5.09853554761219E-08"
-        iyy="0.00181392448184218"
-        iyz="-3.66568455479822E-08"
-        izz="0.00214126667857085" />
+        ixx="0.00041671523167978"
+        ixy="-5.39381999724103E-06"
+        ixz="1.20205609305648E-05"
+        iyy="0.000295895292898398"
+        iyz="-1.5897886472943E-07"
+        izz="0.000406787741636437" />
     </inertial>
     <visual>
       <origin
@@ -182,6 +264,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/wrist.STL" />
       </geometry>
       <material
@@ -241,6 +324,9 @@
       <geometry>
         <mesh
           filename="package://robot_description/meshes/wrist_rotate.STL" />
+=======
+          filename="package://robot_description/meshes/arm_wrist.STL" />
+>>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -254,20 +340,82 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
+<<<<<<< Updated upstream
           filename="package://robot_description/meshes/wrist_rotate.STL" />
+=======
+          filename="package://robot_description/meshes/arm_wrist.STL" />
+>>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
   <joint
-    name="wrist_rotate_joint"
+    name="arm_wrist_joint"
     type="revolute">
     <origin
-      xyz="0.063978 -0.09 0"
-      rpy="-1.5708 0 0" />
+      xyz="0.49451 -0.030405 -0.11266"
+      rpy="0 0 0" />
     <parent
-      link="wrist" />
+      link="arm_elbow" />
     <child
-      link="wrist_rotate" />
+      link="arm_wrist" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="gripper">
+    <inertial>
+      <origin
+        xyz="0.0609185454261827 -0.00277194380799499 -0.0760973053583409"
+        rpy="0 0 0" />
+      <mass
+        value="0.635591580584827" />
+      <inertia
+        ixx="0.000928999820490311"
+        ixy="5.80147257519988E-06"
+        ixz="0.000386602346851702"
+        iyy="0.000974131247165681"
+        iyz="-1.17857868197795E-05"
+        izz="0.000611312182124938" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper joint"
+    type="revolute">
+    <origin
+      xyz="0.014206 -0.078774 -0.024953"
+      rpy="0 0 0" />
+    <parent
+      link="arm_wrist" />
+    <child
+      link="gripper" />
     <axis
       xyz="1 0 0" />
     <limit
