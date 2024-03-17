@@ -26,11 +26,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/base_link.STL" />
-=======
           filename="package://robot_description/meshes/arm_base_footprint.STL" />
->>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -44,11 +40,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/base_link.STL" />
-=======
           filename="package://robot_description/meshes/arm_base_footprint.STL" />
->>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
@@ -74,9 +66,6 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/shoulder.STL" />
-=======
           filename="package://robot_description/meshes/arm_base.STL" />
       </geometry>
       <material
@@ -136,7 +125,6 @@
       <geometry>
         <mesh
           filename="package://robot_description/meshes/arm_shoulder.STL" />
->>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -150,11 +138,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/shoulder.STL" />
-=======
           filename="package://robot_description/meshes/arm_shoulder.STL" />
->>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
@@ -198,11 +182,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/elbow.STL" />
-=======
           filename="package://robot_description/meshes/arm_elbow.STL" />
->>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -216,11 +196,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/elbow.STL" />
-=======
           filename="package://robot_description/meshes/arm_elbow.STL" />
->>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
@@ -264,69 +240,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/wrist.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/wrist.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="wrist_joint"
-    type="revolute">
-    <origin
-      xyz="0.50432 0 -0.061042"
-      rpy="-3.1416 1.4178 -3.1416" />
-    <parent
-      link="elbow" />
-    <child
-      link="wrist" />
-    <axis
-      xyz="0 1 0" />
-    <limit
-      lower="-1.54"
-      upper="1.54"
-      effort="10"
-      velocity="10" />
-  </joint>
-  <link
-    name="wrist_rotate">
-    <inertial>
-      <origin
-        xyz="0.162432716240768 -0.00270052335930604 7.66993540740057E-05"
-        rpy="0 0 0" />
-      <mass
-        value="4.26992312903956" />
-      <inertia
-        ixx="0.00797359273906145"
-        ixy="0.000342360688549404"
-        ixz="-9.26419011758301E-06"
-        iyy="0.0226639487434173"
-        iyz="-0.000152701592992127"
-        izz="0.0170263898069213" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/wrist_rotate.STL" />
-=======
           filename="package://robot_description/meshes/arm_wrist.STL" />
->>>>>>> Stashed changes
       </geometry>
       <material
         name="">
@@ -340,11 +254,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-<<<<<<< Updated upstream
-          filename="package://robot_description/meshes/wrist_rotate.STL" />
-=======
           filename="package://robot_description/meshes/arm_wrist.STL" />
->>>>>>> Stashed changes
       </geometry>
     </collision>
   </link>
