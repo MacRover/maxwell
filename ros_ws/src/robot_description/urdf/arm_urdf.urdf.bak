@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="robot_description">
+  <link
+    name="arm_base_footprint">
+    <inertial>
+      <origin
+        xyz="-0.0113623041766557 0.0234161491550731 0.0974238570991405"
+        rpy="0 0 0" />
+      <mass
+        value="135.989046906803" />
+      <inertia
+        ixx="10.1007824142207"
+        ixy="0.0509701630561758"
+        ixz="4.37579137312956"
+        iyy="18.8030712278475"
+        iyz="0.0140091332218423"
+        izz="23.559395750123" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="arm_base">
+    <inertial>
+      <origin
+        xyz="-0.0295249135051615 0.00117350858879285 0.0797519788027215"
+        rpy="0 0 0" />
+      <mass
+        value="3.22741129192052" />
+      <inertia
+        ixx="0.0149376437776028"
+        ixy="0.000178722626147249"
+        ixz="0.00163106022352945"
+        iyy="0.0188319350106929"
+        iyz="-6.89894445225612E-05"
+        izz="0.0151539463791368" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.796078431372549 0.823529411764706 0.937254901960784 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_base_joint"
+    type="revolute">
+    <origin
+      xyz="0.11824 0.025047 0.13851"
+      rpy="0 0 0" />
+    <parent
+      link="arm_base_footprint" />
+    <child
+      link="arm_base" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="arm_shoulder">
+    <inertial>
+      <origin
+        xyz="0.141730053782291 0.0543967706458683 0.179330333699823"
+        rpy="0 0 0" />
+      <mass
+        value="0.974957548893571" />
+      <inertia
+        ixx="0.0161693352235825"
+        ixy="0.000337412576528737"
+        ixz="-0.00921960443912687"
+        iyy="0.0241493073427018"
+        iyz="0.000389133806114854"
+        izz="0.00801500710232347" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_shoulder_joint"
+    type="revolute">
+    <origin
+      xyz="-0.072332 -0.057326 0.22575"
+      rpy="0 0 0" />
+    <parent
+      link="arm_base" />
+    <child
+      link="arm_shoulder" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="arm_elbow">
+    <inertial>
+      <origin
+        xyz="0.149526134900267 -0.0921124744438282 0.0070189236592052"
+        rpy="0 0 0" />
+      <mass
+        value="1.84402735327987" />
+      <inertia
+        ixx="0.0148226130755206"
+        ixy="0.00317039692700635"
+        ixz="0.0282586448535087"
+        iyy="0.0898032128436468"
+        iyz="-0.0011927315954158"
+        izz="0.075260622201102" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_elbow.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_elbow.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_elbow_joint"
+    type="revolute">
+    <origin
+      xyz="0.25455 0.13544 0.3837"
+      rpy="0 0 0" />
+    <parent
+      link="arm_shoulder" />
+    <child
+      link="arm_elbow" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="arm_wrist">
+    <inertial>
+      <origin
+        xyz="0.0013392937554404 -0.0762345627405477 -0.00681521956011"
+        rpy="0 0 0" />
+      <mass
+        value="0.266662965128272" />
+      <inertia
+        ixx="0.00041671523167978"
+        ixy="-5.39381999724103E-06"
+        ixz="1.20205609305648E-05"
+        iyy="0.000295895292898398"
+        iyz="-1.5897886472943E-07"
+        izz="0.000406787741636437" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_wrist.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_wrist.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_wrist_joint"
+    type="revolute">
+    <origin
+      xyz="0.49451 -0.030405 -0.11266"
+      rpy="0 0 0" />
+    <parent
+      link="arm_elbow" />
+    <child
+      link="arm_wrist" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="gripper">
+    <inertial>
+      <origin
+        xyz="0.0971698965176901 -0.000200552125748731 0.00821728191151871"
+        rpy="0 0 0" />
+      <mass
+        value="0.635591580585097" />
+      <inertia
+        ixx="0.000351925210187739"
+        ixy="-1.59698712918917E-06"
+        ixz="3.60534286105297E-07"
+        iyy="0.000974539849325974"
+        iyz="5.74444670115383E-06"
+        izz="0.00118797819026758" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Reduced Arm CAD with boundary/meshes/gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Reduced Arm CAD with boundary/meshes/gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_joint"
+    type="revolute">
+    type="revolute">
+    <origin
+      xyz="0.014206 -0.078774 -0.024953"
+      rpy="0 0 0" />
+    <parent
+      link="arm_wrist" />
+    <child
+      link="gripper" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="10"
+      velocity="10" />
+  </joint>
+</robot>
