@@ -16,7 +16,7 @@
 // #define USING_ROS
 #define USING_IMU_ONBOARD
 //#define USING_IMU_OTHER
-// #define USING_GPS
+#define USING_GPS
 
 #define LED_PIN 13
 #define AD0_VAL 1
