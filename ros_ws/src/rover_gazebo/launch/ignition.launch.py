@@ -86,6 +86,7 @@ def generate_launch_description():
         name="IGN_GAZEBO_RESOURCE_PATH",
         value=[
             os.path.join(pkg_ignition_bringup, "worlds"),
+            ":" + os.path.join(pkg_ignition_bringup, "worlds", "models"),
             ":" + str(Path(pkg_robot_description).parent.resolve()),
         ],
     )
