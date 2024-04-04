@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
 
 CAN_HandleTypeDef hcan;
 
@@ -65,6 +66,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_ADC2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -171,9 +173,14 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN_Init();
   MX_ADC1_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
     setupTxCAN();
     setupRxCAN();
+
+    HAL_ADCEx_Calibration_Start(&hadc1);
+    HAL_ADCEx_Calibration_Start(&hadc2);
+
 
     //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
@@ -183,19 +190,26 @@ int main(void)
     while (1)
     {
 
+    	//https://deepbluembedded.com/stm32-adc-read-example-dma-interrupt-polling/
+
     	HAL_ADC_Start(&hadc1);
 
-    	HAL_ADC_PollForConversion(&hadc1, 100);
+    	HAL_ADC_PollForConversion(&hadc1, 1);
     	adc_buf[0] = HAL_ADC_GetValue(&hadc1);
-
-    	HAL_ADC_PollForConversion(&hadc1, 100);
-    	adc_buf[1] = HAL_ADC_GetValue(&hadc1);
 
     	HAL_ADC_Stop(&hadc1);
 
-    	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-    	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
-//
+    	HAL_ADC_Start(&hadc2);
+
+    	HAL_ADC_PollForConversion(&hadc2, 1);
+    	adc_buf[1] = HAL_ADC_GetValue(&hadc2);
+
+
+    	HAL_ADC_Stop(&hadc2);
+
+//    	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+//    	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
+////
 //    	TxData[0] = 0x00; //First bit 0 signifies ADC
 //		TxData[1] = 0x02; // Second bit signifies channel number
 //		TxData[2] = 0x00;
@@ -315,12 +329,12 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 2;
+  hadc1.Init.NbrOfConversion = 1;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -335,18 +349,56 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC2_Init(void)
+{
+
+  /* USER CODE BEGIN ADC2_Init 0 */
+
+  /* USER CODE END ADC2_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+
+  /** Common config
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = ADC_REGULAR_RANK_2;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
+  /* USER CODE BEGIN ADC2_Init 2 */
 
-  /* USER CODE END ADC1_Init 2 */
+  /* USER CODE END ADC2_Init 2 */
 
 }
 
