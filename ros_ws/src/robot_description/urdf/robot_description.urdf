@@ -506,6 +506,43 @@
       velocity="10" />
   </joint>
 
+  <xacro:property name="mass"     value="0.5"/>
+  <xacro:property name="length_x" value="0.09" />
+  <xacro:property name="length_y" value="0.025" />
+  <xacro:property name="length_z" value="0.025" />
+
+  <link name="intel_realsense">
+      <visual>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+              <box size="${length_x} ${length_y} ${length_z}"/>
+          </geometry>
+      </visual>
+      <collision>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+              <box size="${length_x} ${length_y} ${length_z}"/>
+          </geometry>
+      </collision>
+      <inertial>
+          <mass value="${mass}" />
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <inertia
+              ixx="${(1/12) * mass * (length_y*length_y + length_z*length_z)}"
+              ixy="0.0"
+              ixz="0.0"
+              iyy="${(1/12) * mass * (length_x*length_x + length_z*length_z)}"
+              iyz="0.0"
+              izz="${(1/12) * mass * (length_x*length_x + length_y*length_y)}" />
+      </inertial>
+  </link>
+
+  <joint name="intel_realsense_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="intel_realsense"/>
+    <origin rpy="0 0 0" xyz="0.95 -0.5 1.5"/>
+  </joint>
+
   <xacro:macro name="steering_module_controller" params="name">
       <joint name="${name}_swerve_joint">
           <command_interface name="position">
