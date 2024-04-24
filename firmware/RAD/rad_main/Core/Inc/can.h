@@ -42,6 +42,29 @@ void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+enum CAN_STATUS {
+	CAN_OK = 0,
+	CAN_ERROR_NOT_INITIALIZED,
+	CAN_ERROR_INVALID_ARGUMENT,
+	CAN_ERROR_DATA,
+	CAN_ERROR_BUFFER_FULL
+};
+
+struct CAN_MESSAGE {
+	uint32_t header;
+	uint8_t[8] data;
+};
+
+CAN_STATUS CAN_Initialize(void);
+CAN_STATUS CAN_ConfigFilterId(uint8_t id);
+CAN_STATUS CAN_ResetFilter(void);
+CAN_STATUS CAN_Send(CAN_MESSAGE *msg);
+CAN_STATUS CAN_RegisterReceiveCallback(void (*fcn)(CAN_MESSAGE *msg));
+CAN_STATUS CAN_Deinitialize(void);
+
+
+
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
