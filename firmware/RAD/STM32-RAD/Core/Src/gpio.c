@@ -23,6 +23,9 @@
 
 /* USER CODE BEGIN 0 */
 
+void (*callback_pressed)(LS_NUMBER *num) = NULL;
+void (*callback_released)(LS_NUMBER *num) = NULL;
+
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -78,5 +81,97 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+
+// PUBLIC FUNCTIONS --------------------------------
+
+LS_STATUS LS_Initialize() {
+
+	MX_GPIO_Init();
+
+	initialized = 1;
+
+	return LS_OK;
+}
+
+LS_STATUS LS_Deinitialize() {
+
+	if (!initialized) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
+
+	initialized = 0;
+	return LS_OK;
+
+}
+
+
+LS_STATUS LS_GetState(LS_NUMBER num, LS_STATE *state) {
+
+	if (!initialized) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	uint8_t pin_state;
+
+
+	if (num == LS_1) {
+		pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+	} else if (num == LS_2) {
+		pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
+	} else {
+		return LS_ERROR_PIN;
+	}
+
+	if (pin_state == GPIO_PIN_RESET) {
+		*state = LS_STATE_RELEASED;
+	} else if (pin_state == GPIO_PIN_SET) {
+		*state = LS_STATE_PRESSED;
+	} else {
+		return LS_ERROR_HAL;
+	}
+
+	return LS_OK;
+
+}
+
+LS_STATUS LS_RegisterPressedCallback(void (*fcn)(LS_NUMBER *num)) {
+
+	if (!initialized) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	if (!fcn)
+	{
+		return LS_ERROR_INVALID_ARGUMENT;
+	}
+
+	callback_pressed = fcn;
+
+	return LS_OK;
+
+}
+
+
+LS_STATUS LS_RegisterReleasedCallback(void (*fcn)(LS_NUMBER *num)) {
+
+	if (!initialized) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	if (!fcn)
+	{
+		return LS_ERROR_INVALID_ARGUMENT;
+	}
+
+	callback_released = fcn;
+
+	return LS_OK;
+
+}
+
+
 
 /* USER CODE END 2 */

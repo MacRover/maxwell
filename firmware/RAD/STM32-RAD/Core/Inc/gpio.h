@@ -40,6 +40,38 @@ void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+// LS_STATUS ENUM -------------------------
+
+typedef enum {
+	LS_OK = 0,
+	LS_ERROR_NOT_INITIALIZED,
+	LS_ERROR_HAL,
+	LS_ERROR_PIN,
+	LS_ERROR_INVALID_ARGUMENT
+
+} LS_STATUS;
+
+// LS_NUMBER ENUM -------------------------
+
+typedef enum {
+	LS_1 = 0,
+	LS_2
+
+} LS_NUMBER;
+
+typedef enum {
+	LS_STATE_PRESSED = 0,
+	LS_STATE_RELEASED
+
+} LS_STATE;
+
+LS_STATUS LS_Initialize(void);
+LS_STATUS LS_GetState(LS_NUMBER num, LS_STATE *state);
+LS_STATUS LS_RegisterPressedCallback(void (*fcn)(LS_NUMBER *num));
+LS_STATUS LS_RegisterReleasedCallback(void (*fcn)(LS_NUMBER *num));
+LS_STATUS LS_Deinitialize(void);
+
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
