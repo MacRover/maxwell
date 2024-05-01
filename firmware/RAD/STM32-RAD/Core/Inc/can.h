@@ -42,7 +42,8 @@ void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
-typedef enum {
+typedef enum 
+{
 	CAN_OK = 0,
 	CAN_ERROR_NOT_INITIALIZED,
 	CAN_ERROR_INVALID_ARGUMENT,
@@ -50,7 +51,8 @@ typedef enum {
 	CAN_ERROR_BUFFER_FULL
 } CAN_STATUS;
 
-typedef struct {
+typedef struct 
+{
 	uint32_t header;
 	uint8_t data[8];
 } CAN_MESSAGE;

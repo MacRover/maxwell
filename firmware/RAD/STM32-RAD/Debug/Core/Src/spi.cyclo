@@ -1,4 +1,8 @@
-../Core/Src/spi.c:31:6:MX_SPI1_Init	2
-../Core/Src/spi.c:63:6:MX_SPI2_Init	2
-../Core/Src/spi.c:95:6:HAL_SPI_MspInit	3
-../Core/Src/spi.c:157:6:HAL_SPI_MspDeInit	3
+../Core/Src/spi.c:37:6:MX_SPI1_Init	2
+../Core/Src/spi.c:69:6:MX_SPI2_Init	2
+../Core/Src/spi.c:101:6:HAL_SPI_MspInit	3
+../Core/Src/spi.c:163:6:HAL_SPI_MspDeInit	3
+../Core/Src/spi.c:210:19:_transmitReceiveDriver_3Bytes	1
+../Core/Src/spi.c:228:16:STEPPER_Initialize	1
+../Core/Src/spi.c:238:16:STEPPER_ConfigRegister	12
+../Core/Src/spi.c:328:16:STEPPER_Deinitialize	3

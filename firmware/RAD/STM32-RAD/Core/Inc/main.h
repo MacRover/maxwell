@@ -33,6 +33,8 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include <string.h>
 
+
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -60,6 +62,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define DRIVER_CS_Pin GPIO_PIN_4
 #define DRIVER_CS_GPIO_Port GPIOA
+#define DRIVER_SCK_Pin GPIO_PIN_5
+#define DRIVER_SCK_GPIO_Port GPIOA
+#define DRIVER_MISO_Pin GPIO_PIN_6
+#define DRIVER_MISO_GPIO_Port GPIOA
+#define DRIVER_MOSI_Pin GPIO_PIN_7
+#define DRIVER_MOSI_GPIO_Port GPIOA
 #define LED_RED_Pin GPIO_PIN_2
 #define LED_RED_GPIO_Port GPIOB
 #define ENCODER_CS_Pin GPIO_PIN_12

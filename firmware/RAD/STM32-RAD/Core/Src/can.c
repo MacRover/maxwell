@@ -290,9 +290,9 @@ CAN_STATUS CAN_Deinitialize()
 
 	initialized=0;
 	if (HAL_CAN_DeInit(&hcan) != HAL_OK)
-	  {
-		Error_Handler();
-	  }
+  {
+  Error_Handler();
+  }
 
 	return CAN_OK;
 

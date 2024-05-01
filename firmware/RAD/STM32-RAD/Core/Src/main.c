@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,10 +87,10 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+  //MX_GPIO_Init();
   //MX_CAN_Init();
   MX_I2C1_Init();
-  MX_SPI1_Init();
+  //MX_SPI1_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
