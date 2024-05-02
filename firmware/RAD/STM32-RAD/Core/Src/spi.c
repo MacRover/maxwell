@@ -21,13 +21,13 @@
 #include "spi.h"
 
 /* USER CODE BEGIN 0 */
-void _prepareDriverTransmit(STEPPER_REGISTER reg);
+void _prepareDriverTransmit(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
 HAL_StatusTypeDef _transmitReceiveDriver_3Bytes(void);
 
 uint8_t driverInitialized;
 
 uint32_t driverTransmit;
-uint32_t driverRecieve;
+uint32_t driverReceive;
 
 STEPPER_REGISTER_DATA localData;
 /* USER CODE END 0 */
@@ -209,9 +209,89 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 
 // STEPPER LIBRARY
 
-void _prepareDriverTransmit(STEPPER_REGISTER reg)
+void _prepareDriverTransmit(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data)
 {
 
+  // Bits 19, 18, 17
+  // 111 DRVCONF (0b111 << 17)
+  // 110 SGCSCONF (0b110 << 17)
+  // 101 SMARTEN (0b101 << 17)
+  // 100 CHOPCONF (0b100 << 17)
+  // 00X DRVCTRL (0b00 << 18)
+
+  switch (reg)
+  {
+    case STEPPER_REGISTER_DRVCONF:
+    {
+      STEPPER_DRVCONF reg = data->reg.drvconf;
+      driverTransmit = 0;
+      driverTransmit |= (0b111 << 17); // DRVCONF
+      driverTransmit |= (reg.TST << 16); // TST: test mode
+      driverTransmit |= (reg.SLP << 11); // SLP: Slope control
+      driverTransmit |= (reg.DIS_S2G << 10); // DIS_S2G: Short to ground protection
+      driverTransmit |= (reg.TS2G << 8); // TS2G: Short detection delay
+      driverTransmit |= (reg.SDOFF << 7); // SDOFF: step/dir interface
+      driverTransmit |= (reg.VSENSE << 6); // VSENSE: full-scale sense resistor voltage setting
+      driverTransmit |= (reg.RDSEL << 4); // RDSEL: read out select
+      driverTransmit |= (reg.OTSENS << 3); // OTSENS: overtemp shutdown setting
+      driverTransmit |= (reg.SHRTSENS << 2); // SHRTSENS: short to ground sensitivity
+      driverTransmit |= (reg.EN_PFD << 1); // EN_PFD: passive fast delay setting
+      driverTransmit |= (reg.EN_S2VS << 0); // EN_S2VS: Short to VS protection
+
+      break;
+    }
+    case STEPPER_REGISTER_SGCONF:
+    {
+      STEPPER_SGCONF reg = data->reg.sgconf;
+      driverTransmit = 0;
+      driverTransmit |= (0b110 << 17); // SGCSCONF
+      driverTransmit |= (reg.SFILT << 16); // SFILT: stall guard filter
+      driverTransmit |= (reg.SGT << 8); // SGT: stall guard threshold
+      driverTransmit |= (reg.CS << 0); // CS: current scale
+
+      break;
+    }
+    case STEPPER_REGISTER_SMARTEN:
+    {
+      STEPPER_SMARTEN reg = data->reg.smarten;
+      driverTransmit = 0;
+      driverTransmit |= (0b101 << 17); // SMARTEN
+      driverTransmit |= (reg.SEIMIN << 15); // SEIMIN: min cool step current
+      driverTransmit |= (reg.SEDN << 13); // SEDN: current dec. speed
+      driverTransmit |= (reg.SEMAX << 8); // SEMAX: upper cool step threshold offset
+      driverTransmit |= (reg.SEUP << 5); // SEUP: current increment size
+      driverTransmit |= (reg.SEMIN << 0); // SEMIN: cool step lower threshold
+
+      break;
+    }
+    case STEPPER_REGISTER_CHOPCONF:
+    {
+      STEPPER_CHOPCONF reg = data->reg.chopconf;
+      driverTransmit = 0;
+      driverTransmit |= (0b100 << 17); // CHOPCONF
+      driverTransmit |= (reg.TBL << 15); // TBL: blanking time
+      driverTransmit |= (reg.CHM << 14); // CHM: chopper mode
+      driverTransmit |= (reg.RNDTF << 13); // RNDTF: Random TOFF time
+      driverTransmit |= (reg.HDEC << 11); // HDEC: hysteresis decay or fast decay mode
+      driverTransmit |= (reg.HEND << 7); // HEND: hysteresis end value
+      driverTransmit |= (reg.HSTRT << 4); // HSTRT: hysteresis start value
+      driverTransmit |= (reg.TOFF << 0); // TOFF: mosfet off time
+    }
+    case STEPPER_REGISTER_DRVCTRL:
+    {
+      STEPPER_DRVCTRL reg = data->reg.drvctrl;
+      driverTransmit = 0;
+      driverTransmit |= (0b00 << 18); // DRVCTRL
+      driverTransmit |= (reg.INTPOL << 9); // INTPOL: step interpolation
+      driverTransmit |= (reg.DEDGE << 8); // DEDGE: Double edge step pulses
+      driverTransmit |= (reg.MRES << 0); // MRES: Microsteps per fullstep
+
+      break;
+    }
+
+    default:
+      break;
+  }
 }
 
 HAL_StatusTypeDef _transmitReceiveDriver_3Bytes()
@@ -227,7 +307,7 @@ HAL_StatusTypeDef _transmitReceiveDriver_3Bytes()
     HAL_StatusTypeDef spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3, 1000);
     HAL_GPIO_WritePin(DRIVER_CS_GPIO_Port, DRIVER_CS_Pin, GPIO_PIN_SET);
 
-    driverRecieve = (SPIread_bytes[0] << 16) | (SPIread_bytes[1] << 8) | SPIread_bytes[2];
+    driverReceive = (SPIread_bytes[0] << 16) | (SPIread_bytes[1] << 8) | SPIread_bytes[2];
 
     return spi_status;
 }
@@ -242,121 +322,120 @@ STEPPER_STATUS STEPPER_Initialize()
   return STEPPER_OK;
 }
 
-STEPPER_STATUS STEPPER_ConfigRegister(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data)
+STEPPER_STATUS STEPPER_WriteRegisterConfig(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data)
 {
   if (!driverInitialized)
   {
     return STEPPER_ERROR_NOT_INITIALIZED;
   }
 
-  // Bits 19, 18, 17
-  // 111 DRVCONF (0b111 << 17)
-  // 110 SGCSCONF (0b110 << 17)
-  // 101 SMARTEN (0b101 << 17)
-  // 100 CHOPCONF (0b100 << 17)
-  // 00X DRVCTRL (0b00 << 18)
+  if (!data)
+  {
+    return STEPPER_ERROR_INVALID_ARGUMENT;
+  }
 
   if ((reg == STEPPER_REGISTER_DRVCONF) || (reg == STEPPER_REGISTER_ALL))
   {
-    STEPPER_DRVCONF reg = data->drvconf;
-    driverTransmit = 0;
-    driverTransmit |= (0b111 << 17); // DRVCONF
-    driverTransmit |= (reg.TST << 16); // TST: test mode
-    driverTransmit |= (reg.SLP << 11); // SLP: Slope control
-    driverTransmit |= (reg.DIS_S2G << 10); // DIS_S2G: Short to ground protection
-    driverTransmit |= (reg.TS2G << 8); // TS2G: Short detection delay
-    driverTransmit |= (reg.SDOFF << 7); // SDOFF: step/dir interface
-    driverTransmit |= (reg.VSENSE << 6); // VSENSE: full-scale sense resistor voltage setting
-    driverTransmit |= (reg.RDSEL << 4); // RDSEL: read out select
-    driverTransmit |= (reg.OTSENS << 3); // OTSENS: overtemp shutdown setting
-    driverTransmit |= (reg.SHRTSENS << 2); // SHRTSENS: short to ground sensitivity
-    driverTransmit |= (reg.EN_PFD << 1); // EN_PFD: passive fast delay setting
-    driverTransmit |= (reg.EN_S2VS << 0); // EN_S2VS: Short to VS protection
+
+    localData.reg.drvconf = data->reg.drvconf;
+    _prepareDriverTransmit(STEPPER_REGISTER_DRVCONF, data);
+    if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+    {
+      return STEPPER_ERROR_HAL;
+    }
+
   }
-  else if ((reg == STEPPER_REGISTER_SGCONF) || (reg == STEPPER_REGISTER_ALL))
+
+  if ((reg == STEPPER_REGISTER_SGCONF) || (reg == STEPPER_REGISTER_ALL))
   {
     
-    STEPPER_SGCONF reg = data->sgconf;
-    driverTransmit = 0;
-    driverTransmit |= (0b110 << 17); // SGCSCONF
-    driverTransmit |= (reg.SFILT << 16); // SFILT: stall guard filter
-    driverTransmit |= (reg.SGT << 8); // SGT: stall guard threshold
-    driverTransmit |= (reg.CS << 0); // CS: current scale
+    localData.reg.sgconf = data->reg.sgconf;
+    _prepareDriverTransmit(STEPPER_REGISTER_SGCONF, data);
+    if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+    {
+      return STEPPER_ERROR_HAL;
+    }
   }
-  else if ((reg == STEPPER_REGISTER_SMARTEN) || (reg == STEPPER_REGISTER_ALL))
+
+  if ((reg == STEPPER_REGISTER_SMARTEN) || (reg == STEPPER_REGISTER_ALL))
   {
-    STEPPER_SMARTEN reg = data->smarten;
-    driverTransmit = 0;
-    driverTransmit |= (0b101 << 17); // SMARTEN
-    driverTransmit |= (reg.SEIMIN << 15); // SEIMIN: min cool step current
-    driverTransmit |= (reg.SEDN << 13); // SEDN: current dec. speed
-    driverTransmit |= (reg.SEMAX << 8); // SEMAX: upper cool step threshold offset
-    driverTransmit |= (reg.SEUP << 5); // SEUP: current increment size
-    driverTransmit |= (reg.SEMIN << 0); // SEMIN: cool step lower threshold
+    
+    localData.reg.smarten = data->reg.smarten;
+    _prepareDriverTransmit(STEPPER_REGISTER_SMARTEN, data);
+    if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+    {
+      return STEPPER_ERROR_HAL;
+    }
+
   }
-  else if ((reg == STEPPER_REGISTER_CHOPCONF) || (reg == STEPPER_REGISTER_ALL))
+  
+  if ((reg == STEPPER_REGISTER_CHOPCONF) || (reg == STEPPER_REGISTER_ALL))
   {
-    STEPPER_CHOPCONF reg = data->chopconf;
-    driverTransmit = 0;
-    driverTransmit |= (0b100 << 17); // CHOPCONF
-    driverTransmit |= (reg.TBL << 15); // TBL: blanking time
-    driverTransmit |= (reg.CHM << 14); // CHM: chopper mode
-    driverTransmit |= (reg.RNDTF << 13); // RNDTF: Random TOFF time
-    driverTransmit |= (reg.HDEC << 11); // HDEC: hysteresis decay or fast decay mode
-    driverTransmit |= (reg.HEND << 7); // HEND: hysteresis end value
-    driverTransmit |= (reg.HSTRT << 4); // HSTRT: hysteresis start value
-    driverTransmit |= (reg.TOFF << 0); // TOFF: mosfet off time
+   
+    localData.reg.chopconf = data->reg.chopconf;
+    _prepareDriverTransmit(STEPPER_REGISTER_CHOPCONF, data);
+    if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+    {
+      return STEPPER_ERROR_HAL;
+    }
+
   }
-  else if ((reg == STEPPER_REGISTER_DRVCTRL) || (reg == STEPPER_REGISTER_ALL))
+
+  if ((reg == STEPPER_REGISTER_DRVCTRL) || (reg == STEPPER_REGISTER_ALL))
   {
-    STEPPER_DRVCTRL reg = data->drvctrl;
-    driverTransmit = 0;
-    driverTransmit |= (0b00 << 18); // DRVCTRL
-    driverTransmit |= (reg.INTPOL << 9); // INTPOL: step interpolation
-    driverTransmit |= (reg.DEDGE << 8); // DEDGE: Double edge step pulses
-    driverTransmit |= (reg.MRES << 0); // MRES: Microsteps per fullstep
+   
+    localData.reg.drvctrl = data->reg.drvctrl;
+    _prepareDriverTransmit(STEPPER_REGISTER_DRVCTRL, data);
+    if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+    {
+      return STEPPER_ERROR_HAL;
+    }
+
   }
   else
   {
-    //invalid arg
+    return STEPPER_ERROR_INVALID_ARGUMENT;
   }
   
-
-
-
-
-  _transmitReceiveDriver_3Bytes();
-
   return STEPPER_OK;
 }
 
-
-STEPPER_STATUS STEPPER_ReadRegister(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data)
+STEPPER_STATUS STEPPER_ReadRegisterConfig(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data)
 {
+
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+
+  if (!data)
+  {
+    return STEPPER_ERROR_INVALID_ARGUMENT;
+  }
 
   switch(reg)
   {
     case STEPPER_REGISTER_DRVCONF:
-      memcpy(data->drvconf, &(localData.drvconf), sizeof(STEPPER_DRVCONF));
+      memcpy(&(data->reg.drvconf), &(localData.reg.drvconf), sizeof(STEPPER_DRVCONF));
       break;
 
     case STEPPER_REGISTER_SGCONF:
-      memcpy(data->sgconf, &(localData.sgconf), sizeof(STEPPER_SGCONF));
+      memcpy(&(data->reg.sgconf), &(localData.reg.sgconf), sizeof(STEPPER_SGCONF));
       break;
 
     case STEPPER_REGISTER_SMARTEN:
-      memcpy(data->smarten, &(localData.smarten), sizeof(STEPPER_SMARTEN));
+      memcpy(&(data->reg.smarten), &(localData.reg.smarten), sizeof(STEPPER_SMARTEN));
       break;
 
     case STEPPER_REGISTER_CHOPCONF:
-      memcpy(data->chopconf, &(localData.chopconf), sizeof(STEPPER_CHOPCONF));
+      memcpy(&(data->reg.chopconf), &(localData.reg.chopconf), sizeof(STEPPER_CHOPCONF));
       break;
 
     case STEPPER_REGISTER_DRVCTRL:
-      memcpy(data->drvctrl, &(localData.drvctrl), sizeof(STEPPER_DRVCTRL));
+      memcpy(&(data->reg.drvctrl), &(localData.reg.drvctrl), sizeof(STEPPER_DRVCTRL));
       break;
     
-    case STEPPER_REGISTERA_ALL:
+    case STEPPER_REGISTER_ALL:
       memcpy(data, &(localData), sizeof(STEPPER_REGISTER_DATA));
       break;
 
@@ -367,11 +446,59 @@ STEPPER_STATUS STEPPER_ReadRegister(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA 
   return STEPPER_OK;
 }
 
+STEPPER_STATUS STEPPER_ReadRegisterResponse(uint32_t *rsp)
+{
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+
+  if (!rsp)
+  {
+    return STEPPER_ERROR_INVALID_ARGUMENT;
+  }
+
+  //send local copy of data, will not overwrite anything
+  _prepareDriverTransmit(STEPPER_REGISTER_DRVCONF, &localData);
+  if (_transmitReceiveDriver_3Bytes() != HAL_OK)
+  {
+    return STEPPER_ERROR_HAL;
+  }
+
+  memcpy(rsp, &driverReceive, sizeof(driverReceive));
+
+  return STEPPER_OK;
+}
+
 
 STEPPER_STATUS STEPPER_StartStep(void);
 STEPPER_STATUS STEPPER_StopStep(void);
 STEPPER_STATUS STEPPER_AdjustStepSpeed(void); //TBD
-STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir);
+
+STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir)
+{
+
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+
+  switch (dir)
+  {
+    case STEPPER_DIRECTION_CW:
+      HAL_GPIO_WritePin(DRIVER_STEP_GPIO_Port, DRIVER_STEP_Pin, GPIO_PIN_RESET);
+      break;
+
+    case STEPPER_DIRECTION_CCW:
+      HAL_GPIO_WritePin(DRIVER_STEP_GPIO_Port, DRIVER_STEP_Pin, GPIO_PIN_SET);
+      break;
+
+    default:
+      return STEPPER_ERROR_INVALID_ARGUMENT;
+  }
+
+  return HAL_OK;
+}
 
 STEPPER_STATUS STEPPER_Deinitialize()
 {

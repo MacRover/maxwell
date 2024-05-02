@@ -49,7 +49,7 @@ typedef enum
 {
   STEPPER_OK = 0,
   STEPPER_ERROR_NOT_INITIALIZED,
-  STEPPER_ERROR_TIMEOUT,
+  STEPPER_ERROR_HAL,
   STEPPER_ERROR_INVALID_ARGUMENT
 } STEPPER_STATUS;
 
@@ -69,7 +69,7 @@ typedef enum
   STEPPER_REGISTER_ALL
 } STEPPER_REGISTER;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
   uint8_t TST     : 1; 
   uint8_t SLP     : 5;
@@ -84,14 +84,14 @@ typedef struct
   uint8_t EN_S2VS : 1;
 } STEPPER_DRVCONF;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
   uint8_t SFILT : 1;
   uint8_t SGT   : 7;
   uint8_t CS    : 8;
 } STEPPER_SGCONF;
 
-typedef struct 
+typedef struct __attribute__((__packed__))
 {
    uint8_t SEIMIN : 1;
    uint16_t SEDN  : 13;
@@ -100,7 +100,7 @@ typedef struct
    uint8_t SEMIN  : 4;
 } STEPPER_SMARTEN;
 
-typedef struct 
+typedef struct __attribute__((__packed__))
 {
   uint8_t TBL   : 2;
   uint8_t CHM   : 1;
@@ -111,26 +111,33 @@ typedef struct
   uint8_t TOFF  : 4; 
 } STEPPER_CHOPCONF;
 
-typedef struct 
+typedef struct __attribute__((__packed__))
 {
   uint8_t INTPOL  : 1;
   uint8_t DEDGE   : 1;
   uint8_t  MRES    : 4; 
 } STEPPER_DRVCTRL;
 
-typedef struct
+typedef union
 {
-  STEPPER_DRVCONF drvconf;
-  STEPPER_SGCONF sgconf;
-  STEPPER_SMARTEN smarten;
-  STEPPER_CHOPCONF chopconf;
-  STEPPER_DRVCTRL drvctrl;
+  //use value for reading/writing to EEPROM only
+  uint32_t value[3]; //96 bits, 12 bytes
+  struct __attribute__((__packed__))
+  {
+    STEPPER_DRVCONF drvconf;
+    STEPPER_SGCONF sgconf;
+    STEPPER_SMARTEN smarten;
+    STEPPER_CHOPCONF chopconf;
+    STEPPER_DRVCTRL drvctrl;
+  } reg;
+
 } STEPPER_REGISTER_DATA;
 
 
 STEPPER_STATUS STEPPER_Initialize(void);
-STEPPER_STATUS STEPPER_ConfigRegister(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
-STEPPER_STATUS STEPPER_ReadRegister(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
+STEPPER_STATUS STEPPER_WriteRegisterConfig(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
+STEPPER_STATUS STEPPER_ReadRegisterConfig(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
+STEPPER_STATUS STEPPER_ReadRegisterResponse(uint32_t *rsp);
 STEPPER_STATUS STEPPER_StartStep(void);
 STEPPER_STATUS STEPPER_StopStep(void);
 STEPPER_STATUS STEPPER_AdjustStepSpeed(void); //TBD
