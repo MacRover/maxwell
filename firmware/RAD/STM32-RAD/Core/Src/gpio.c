@@ -26,6 +26,8 @@
 void (*callback_pressed)(LS_NUMBER *num) = NULL;
 void (*callback_released)(LS_NUMBER *num) = NULL;
 
+uint8_t initialized;
+
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
