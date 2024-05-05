@@ -26,7 +26,7 @@
 void (*callback_pressed)(LS_NUMBER *num) = NULL;
 void (*callback_released)(LS_NUMBER *num) = NULL;
 
-uint8_t initialized;
+uint8_t initialized_limitswitch;
 
 /* USER CODE END 0 */
 
@@ -90,21 +90,21 @@ LS_STATUS LS_Initialize() {
 
 	MX_GPIO_Init();
 
-	initialized = 1;
+	initialized_limitswitch = 1;
 
 	return LS_OK;
 }
 
 LS_STATUS LS_Deinitialize() {
 
-	if (!initialized) {
+	if (!initialized_limitswitch) {
 		return LS_ERROR_NOT_INITIALIZED;
 	}
 
 	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
 	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
 
-	initialized = 0;
+	initialized_limitswitch = 0;
 	return LS_OK;
 
 }
@@ -112,7 +112,7 @@ LS_STATUS LS_Deinitialize() {
 
 LS_STATUS LS_GetState(LS_NUMBER num, LS_STATE *state) {
 
-	if (!initialized) {
+	if (!initialized_limitswitch) {
 		return LS_ERROR_NOT_INITIALIZED;
 	}
 
@@ -141,7 +141,7 @@ LS_STATUS LS_GetState(LS_NUMBER num, LS_STATE *state) {
 
 LS_STATUS LS_RegisterPressedCallback(void (*fcn)(LS_NUMBER *num)) {
 
-	if (!initialized) {
+	if (!initialized_limitswitch) {
 		return LS_ERROR_NOT_INITIALIZED;
 	}
 
@@ -159,7 +159,7 @@ LS_STATUS LS_RegisterPressedCallback(void (*fcn)(LS_NUMBER *num)) {
 
 LS_STATUS LS_RegisterReleasedCallback(void (*fcn)(LS_NUMBER *num)) {
 
-	if (!initialized) {
+	if (!initialized_limitswitch) {
 		return LS_ERROR_NOT_INITIALIZED;
 	}
 
