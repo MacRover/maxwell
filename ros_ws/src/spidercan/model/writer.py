@@ -84,8 +84,13 @@ class Writer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    writer = Writer()
-    rclpy.spin(writer)
+    try:
+        writer = Writer()
+        rclpy.spin(writer)
+    except KeyboardInterrupt:
+        rclpy.try_shutdown()
+        writer.bus.shutdown()
+        writer.destroy_node()
 
 
 if __name__ == "__main__":
