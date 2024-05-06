@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from custom_interfaces.msg import *
+from .VESC import VESC
 
 class VescController(Node):
     def __init__(self):
@@ -16,6 +17,7 @@ class VescController(Node):
     
     def _callback(self, msg):
         pass
+
 
 def main(args=None):
     rclpy.init(args=args)

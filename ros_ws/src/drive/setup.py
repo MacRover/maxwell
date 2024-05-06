@@ -22,7 +22,7 @@ setup(
         'console_scripts': [
             'drive_controller.py = drive.drive_controller:main',
             'sim_command_converter.py = drive.sim_command_converter:main',
-            'vescs.py = drive.vescs:main'
+            'vesc_controller.py = drive.vesc_controller:main'
         ],
     },
 )
