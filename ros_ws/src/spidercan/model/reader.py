@@ -79,8 +79,13 @@ class Reader(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    reader = Reader()
-    rclpy.spin(reader)
+    try:
+        reader = Reader()
+        rclpy.spin(reader)
+    except KeyboardInterrupt:
+        rclpy.try_shutdown()
+        reader.bus.shutdown()
+        reader.destroy_node()
 
 
 if __name__ == "__main__":

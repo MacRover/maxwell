@@ -22,6 +22,10 @@ class Writer(Node):
 
     def __init__(self):
         super().__init__("writer")
+
+        # Set to true when testing
+        self.VCAN_ENABLED = True
+
         self.declare_parameter(
             "topic",
             "/can/can_out",
@@ -40,7 +44,7 @@ class Writer(Node):
         )
         self.declare_parameter(
             "channel",
-            "can0",
+            ("can0" if not self.VCAN_ENABLED else "vcan0"),
             ParameterDescriptor(
                 description="CAN device. Passed to python-can",
                 type=ParameterType.PARAMETER_STRING,
@@ -80,8 +84,13 @@ class Writer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    writer = Writer()
-    rclpy.spin(writer)
+    try:
+        writer = Writer()
+        rclpy.spin(writer)
+    except KeyboardInterrupt:
+        rclpy.try_shutdown()
+        writer.bus.shutdown()
+        writer.destroy_node()
 
 
 if __name__ == "__main__":
