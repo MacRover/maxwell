@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    can.h
+  * @file    tim.h
   * @brief   This file contains all the function prototypes for
-  *          the can.c file
+  *          the tim.c file
   ******************************************************************************
   * @attention
   *
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __CAN_H__
-#define __CAN_H__
+#ifndef __TIM_H__
+#define __TIM_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,40 +32,17 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern CAN_HandleTypeDef hcan;
+extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_CAN_Init(void);
+void MX_TIM2_Init(void);
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN Prototypes */
-
-typedef enum 
-{
-	CAN_OK = 0,
-	CAN_ERROR_NOT_INITIALIZED,
-	CAN_ERROR_INVALID_ARGUMENT,
-	CAN_ERROR_DATA,
-	CAN_ERROR_BUFFER_FULL
-} CAN_STATUS;
-
-typedef struct 
-{
-	uint32_t header;
-	uint8_t data[8];
-} CAN_MESSAGE;
-
-CAN_STATUS CAN_Initialize(void);
-CAN_STATUS CAN_ConfigFilterId(uint8_t id);
-CAN_STATUS CAN_ResetFilter(void);
-CAN_STATUS CAN_Send(CAN_MESSAGE *msg);
-CAN_STATUS CAN_RegisterReceiveCallback(void (*fcn)(CAN_MESSAGE *msg));
-CAN_STATUS CAN_Deinitialize(void);
-
-
-
 
 /* USER CODE END Prototypes */
 
@@ -73,5 +50,5 @@ CAN_STATUS CAN_Deinitialize(void);
 }
 #endif
 
-#endif /* __CAN_H__ */
+#endif /* __TIM_H__ */
 
