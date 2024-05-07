@@ -29,6 +29,8 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
+#include "tim.h" //ACCESS TO PWM TIMER
+#include "gpio.h"
 
 /* USER CODE END Includes */
 
@@ -140,7 +142,7 @@ STEPPER_STATUS STEPPER_ReadRegisterConfig(STEPPER_REGISTER reg, STEPPER_REGISTER
 STEPPER_STATUS STEPPER_ReadRegisterResponse(uint32_t *rsp);
 STEPPER_STATUS STEPPER_StartStep(void);
 STEPPER_STATUS STEPPER_StopStep(void);
-STEPPER_STATUS STEPPER_AdjustStepSpeed(void); //TBD
+STEPPER_STATUS STEPPER_AdjustStepSpeed(uint16_t freq);
 STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir);
 STEPPER_STATUS STEPPER_Deinitialize(void);
 

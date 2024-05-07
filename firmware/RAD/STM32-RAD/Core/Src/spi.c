@@ -316,6 +316,7 @@ STEPPER_STATUS STEPPER_Initialize()
 {
   MX_SPI1_Init();
   MX_GPIO_Init(); 
+  MX_TIM2_Init();
 
   driverInitialized = 1;
 
@@ -470,10 +471,43 @@ STEPPER_STATUS STEPPER_ReadRegisterResponse(uint32_t *rsp)
   return STEPPER_OK;
 }
 
+STEPPER_STATUS STEPPER_StartStep(void)
+{
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+  return STEPPER_OK;
+}
 
-STEPPER_STATUS STEPPER_StartStep(void);
-STEPPER_STATUS STEPPER_StopStep(void);
-STEPPER_STATUS STEPPER_AdjustStepSpeed(void); //TBD
+STEPPER_STATUS STEPPER_StopStep(void)
+{
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+  return STEPPER_OK;
+}
+
+STEPPER_STATUS STEPPER_AdjustStepSpeed(uint16_t freq)
+{
+
+  if (!driverInitialized)
+  {
+    return STEPPER_ERROR_NOT_INITIALIZED;
+  }
+
+  uint32_t desired_arr = 6000/freq;
+  uint32_t desired_ccr = desired_arr / 2;
+
+  __HAL_TIM_SET_AUTORELOAD(&htim2, desired_arr);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, desired_ccr);
+
+  return STEPPER_OK;
+
+}
 
 STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir)
 {
@@ -486,11 +520,11 @@ STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir)
   switch (dir)
   {
     case STEPPER_DIRECTION_CW:
-      HAL_GPIO_WritePin(DRIVER_STEP_GPIO_Port, DRIVER_STEP_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(DRIVER_DIR_GPIO_Port, DRIVER_DIR_Pin, GPIO_PIN_RESET);
       break;
 
     case STEPPER_DIRECTION_CCW:
-      HAL_GPIO_WritePin(DRIVER_STEP_GPIO_Port, DRIVER_STEP_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(DRIVER_DIR_GPIO_Port, DRIVER_DIR_Pin, GPIO_PIN_SET);
       break;
 
     default:
@@ -513,7 +547,14 @@ STEPPER_STATUS STEPPER_Deinitialize()
     Error_Handler();
   }
 
+  if (HAL_TIM_PWM_DeInit(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   HAL_GPIO_DeInit(DRIVER_CS_GPIO_Port, DRIVER_CS_Pin);
+  HAL_GPIO_DeInit(DRIVER_DIR_GPIO_Port, DRIVER_DIR_Pin);
+
 
   return STEPPER_OK;
 }

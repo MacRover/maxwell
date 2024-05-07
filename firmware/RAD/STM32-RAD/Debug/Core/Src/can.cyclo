@@ -10,5 +10,5 @@
 ../Core/Src/can.c:230:12:CAN_ConfigFilterId	1
 ../Core/Src/can.c:237:12:CAN_ResetFilter	2
 ../Core/Src/can.c:249:12:CAN_Send	3
-../Core/Src/can.c:270:12:CAN_RegisterReceiveCallback	2
-../Core/Src/can.c:283:12:CAN_Deinitialize	3
+../Core/Src/can.c:270:12:CAN_RegisterReceiveCallback	3
+../Core/Src/can.c:289:12:CAN_Deinitialize	3

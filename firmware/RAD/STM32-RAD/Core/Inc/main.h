@@ -78,8 +78,8 @@ void Error_Handler(void);
 #define DRIVER_ENN_GPIO_Port GPIOA
 #define DRIVER_ST_ALONE_Pin GPIO_PIN_15
 #define DRIVER_ST_ALONE_GPIO_Port GPIOA
-#define DRIVER_STEP_Pin GPIO_PIN_3
-#define DRIVER_STEP_GPIO_Port GPIOB
+#define DRIVER_STEP_PWM_Pin GPIO_PIN_3
+#define DRIVER_STEP_PWM_GPIO_Port GPIOB
 #define DRIVER_DIR_Pin GPIO_PIN_4
 #define DRIVER_DIR_GPIO_Port GPIOB
 

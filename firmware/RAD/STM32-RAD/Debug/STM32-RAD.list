@@ -29,23 +29,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
  12 .comment      00000043  00000000  00000000  00020035  2**0
                   CONTENTS, READONLY
- 13 .debug_info   00009714  00000000  00000000  00020078  2**0
+ 13 .debug_info   00009c8e  00000000  00000000  00020078  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 00001e65  00000000  00000000  0002978c  2**0
+ 14 .debug_abbrev 00001f02  00000000  00000000  00029d06  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_aranges 00000a98  00000000  00000000  0002b5f8  2**3
+ 15 .debug_aranges 00000ad0  00000000  00000000  0002bc08  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_rnglists 0000081a  00000000  00000000  0002c090  2**0
+ 16 .debug_rnglists 00000846  00000000  00000000  0002c6d8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  00017a92  00000000  00000000  0002c8aa  2**0
+ 17 .debug_macro  000184d1  00000000  00000000  0002cf1e  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0000e10d  00000000  00000000  0004433c  2**0
+ 18 .debug_line   0000e573  00000000  00000000  000453ef  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000860e9  00000000  00000000  00052449  2**0
+ 19 .debug_str    0008d243  00000000  00000000  00053962  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00002ab4  00000000  00000000  000d8534  2**2
+ 20 .debug_frame  00002ba4  00000000  00000000  000e0ba8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000079  00000000  00000000  000dafe8  2**0
+ 21 .debug_line_str 00000079  00000000  00000000  000e374c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -321,11 +321,11 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  //MX_GPIO_Init();
-  //MX_CAN_Init();
+//  MX_GPIO_Init();
+//  MX_CAN_Init();
   MX_I2C1_Init();
  800028c:	f7ff ff8c 	bl	80001a8 <MX_I2C1_Init>
-  //MX_SPI1_Init();
+//  MX_SPI1_Init();
   MX_SPI2_Init();
  8000290:	f000 f856 	bl	8000340 <MX_SPI2_Init>
 

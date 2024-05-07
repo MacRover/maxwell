@@ -11,4 +11,4 @@
 ../Core/Src/can.c:237:12:CAN_ResetFilter	8	static
 ../Core/Src/can.c:249:12:CAN_Send	16	static
 ../Core/Src/can.c:270:12:CAN_RegisterReceiveCallback	16	static
-../Core/Src/can.c:283:12:CAN_Deinitialize	8	static
+../Core/Src/can.c:289:12:CAN_Deinitialize	8	static
