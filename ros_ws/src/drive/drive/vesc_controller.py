@@ -23,10 +23,10 @@ class VescController(Node):
         
         self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
 
-        self.front_left = VESC(VESC_ID.FRONT_LEFT)
-        self.front_right = VESC(VESC_ID.FRONT_RIGHT)
-        self.back_left = VESC(VESC_ID.BACK_LEFT)
-        self.back_right = VESC(VESC_ID.BACK_RIGHT)
+        self.front_left = VESC(VESC_ID.FRONT_LEFT.value)
+        self.front_right = VESC(VESC_ID.FRONT_RIGHT.value)
+        self.back_left = VESC(VESC_ID.BACK_LEFT.value)
+        self.back_right = VESC(VESC_ID.BACK_RIGHT.value)
     
     def _callback(self, msg):
         self.front_left.set_speed_mps(msg[0].speed)

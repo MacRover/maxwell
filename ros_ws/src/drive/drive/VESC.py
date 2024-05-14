@@ -21,7 +21,7 @@ class VESC:
         self.id = vesc_id
         self.can = CANraw()
         self.scaling = 1
-        self.cmd_id = CMD.CAN_PACKET_SET_RPM
+        self.cmd_id = CMD.CAN_PACKET_SET_RPM.value
         self.data = 0
     
     def get_can_message(self) -> CANraw:
@@ -30,18 +30,18 @@ class VESC:
         return self.can
     
     def set_duty(self, duty_cycle: int) -> None:
-        self.cmd_id = CMD.CAN_PACKET_SET_DUTY
+        self.cmd_id = CMD.CAN_PACKET_SET_DUTY.value
         self.data = duty_cycle
         self.scaling = 100000
 
     def set_current(self, current: int, brake: bool) -> None:
-        self.cmd_id = (CMD.CAN_PACKET_SET_CURRENT_BRAKE if brake else 
-                       CMD.CAN_PACKET_SET_CURRENT)
+        self.cmd_id = (CMD.CAN_PACKET_SET_CURRENT_BRAKE.value if brake else 
+                       CMD.CAN_PACKET_SET_CURRENT.value)
         self.data = current
         self.scaling = 1000
     
     def set_rpm(self, rpm: int) -> None:
-        self.cmd_id = CMD.AN_PACKET_SET_RPM
+        self.cmd_id = CMD.AN_PACKET_SET_RPM.value
         self.data = rpm
         self.scaling = 1
     
@@ -51,7 +51,7 @@ class VESC:
         self.set_rpm(mps_to_rpm)
     
     def set_pos(self, deg: int) -> None:
-        self.cmd_id = CMD.CAN_PACKET_SET_POS
+        self.cmd_id = CMD.CAN_PACKET_SET_POS.value
         self.data = deg
         self.scaling = 1000000
     
