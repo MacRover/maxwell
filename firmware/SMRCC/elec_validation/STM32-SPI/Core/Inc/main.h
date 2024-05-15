@@ -57,16 +57,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ENCODER_CS_Pin GPIO_PIN_4
+#define ENCODER_CS_GPIO_Port GPIOA
+#define ENCODER_SCK_Pin GPIO_PIN_5
+#define ENCODER_SCK_GPIO_Port GPIOA
+#define ENCODER_MISO_Pin GPIO_PIN_6
+#define ENCODER_MISO_GPIO_Port GPIOA
+#define ENCODER_MOSI_Pin GPIO_PIN_7
+#define ENCODER_MOSI_GPIO_Port GPIOA
 #define LED_RED_Pin GPIO_PIN_2
 #define LED_RED_GPIO_Port GPIOB
-#define ENCODER_CS_Pin GPIO_PIN_12
-#define ENCODER_CS_GPIO_Port GPIOB
-#define ENCODER_SPI2_SCK_Pin GPIO_PIN_13
-#define ENCODER_SPI2_SCK_GPIO_Port GPIOB
-#define ENCODER_SPI2_MISO_Pin GPIO_PIN_14
-#define ENCODER_SPI2_MISO_GPIO_Port GPIOB
-#define ENCODER_SPI2_MOSI_Pin GPIO_PIN_15
-#define ENCODER_SPI2_MOSI_GPIO_Port GPIOB
 #define J7_SWDIO_Pin GPIO_PIN_13
 #define J7_SWDIO_GPIO_Port GPIOA
 #define J7_SWCLK_Pin GPIO_PIN_14

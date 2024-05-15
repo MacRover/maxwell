@@ -57,8 +57,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define NPK_DE_Pin GPIO_PIN_0
+#define NPK_DE_GPIO_Port GPIOA
+#define NPK_RE_Pin GPIO_PIN_1
+#define NPK_RE_GPIO_Port GPIOA
+#define CO2_READY_Pin GPIO_PIN_0
+#define CO2_READY_GPIO_Port GPIOB
+#define SPARE_1_Pin GPIO_PIN_1
+#define SPARE_1_GPIO_Port GPIOB
 #define LED_RED_Pin GPIO_PIN_2
 #define LED_RED_GPIO_Port GPIOB
+#define LINACTUATOR_3_Pin GPIO_PIN_12
+#define LINACTUATOR_3_GPIO_Port GPIOB
+#define LINACTUATOR_2_Pin GPIO_PIN_13
+#define LINACTUATOR_2_GPIO_Port GPIOB
+#define LINACTUATOR_1_Pin GPIO_PIN_14
+#define LINACTUATOR_1_GPIO_Port GPIOB
+#define NPK_TX_Pin GPIO_PIN_9
+#define NPK_TX_GPIO_Port GPIOA
+#define NPK_RX_Pin GPIO_PIN_10
+#define NPK_RX_GPIO_Port GPIOA
 #define J7_SWDIO_Pin GPIO_PIN_13
 #define J7_SWDIO_GPIO_Port GPIOA
 #define J7_SWCLK_Pin GPIO_PIN_14
