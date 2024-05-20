@@ -12,6 +12,7 @@
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
 #include "fans.h"
+#include "TSB.h"
 
 #define USING_ROS
 #define USING_IMU_ONBOARD

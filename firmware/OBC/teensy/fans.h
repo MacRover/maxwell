@@ -1,12 +1,15 @@
+#ifndef _FANS_H
+#define _FANS_H
 #include <cstdint>
 #include <Wire.h>
+#include "enums.h"
 
+#define WIRE Wire1
 #define U14_ADDR (uint8_t)0x2E
 #define U15_ADDR (uint8_t)0x2C
 
 #define MIN_RPM 1000
 #define MAX_RPM 6400
-
 
 typedef struct Fan {
     uint8_t id;
@@ -31,37 +34,35 @@ void setFanRPM(Fan* fan, uint16_t speed)
 
     uint16_t tachCount = (uint16_t)(7864320 / speed);
     fan->tach_target = speed;
-    uint8_t reg = 0x3D + (fan->offset);
     uint8_t high = (tachCount & 0x1FE0) >> 5;
     uint8_t low = (tachCount & 0x1F) << 3;
 
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(reg);
-    Wire1.write(high);
-    Wire1.endTransmission();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset));
+    WIRE.write(high);
+    WIRE.endTransmission();
 
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(reg - 1);
-    Wire1.write(low);
-    Wire1.endTransmission();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_TACH_TARGET_LOW_BYTE + (fan->offset));
+    WIRE.write(low);
+    WIRE.endTransmission();
 }
 
 void getFanRPM(Fan* fan)
 {
     uint16_t count, hCount, lCount;
-    uint8_t reg = 0x3E + (fan->offset);
 
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(reg);
-    Wire1.endTransmission();
-    Wire1.requestFrom(fan->address, 1);
-    hCount = Wire1.read();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_TACH_READING_HIGH_BYTE + (fan->offset));
+    WIRE.endTransmission();
+    WIRE.requestFrom(fan->address, 1);
+    hCount = WIRE.read();
 
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(reg + 1);
-    Wire1.endTransmission();
-    Wire1.requestFrom(fan->address, 1);
-    lCount = Wire1.read();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_TACH_READING_LOW_BYTE + (fan->offset));
+    WIRE.endTransmission();
+    WIRE.requestFrom(fan->address, 1);
+    lCount = WIRE.read();
 
     count = (hCount << 5) | (lCount >> 3);
     fan->tach_reading = (uint16_t)(7864320 / count);
@@ -71,13 +72,15 @@ void getFanRPM(Fan* fan)
 
 void enableFanControl(Fan* fan)
 {
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(0x32 + (fan->offset));
-    Wire1.write(0x2B | (1 << 7));
-    Wire1.endTransmission();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_CONFIG + (fan->offset));
+    WIRE.write(0x2B | (1 << 7));
+    WIRE.endTransmission();
 
-    Wire1.beginTransmission(fan->address);
-    Wire1.write(0x39 + (fan->offset));
-    Wire1.write(0xF6);
-    Wire1.endTransmission();
+    WIRE.beginTransmission(fan->address);
+    WIRE.write(FAN_1_TACH_VALID_COUNT + (fan->offset));
+    WIRE.write(0xF6);
+    WIRE.endTransmission();
 }
+
+#endif
