@@ -22,6 +22,12 @@ typedef struct TSB
 
 } TSB;
 
+
+void setChannel(TSB* tsb, uint8_t channel_)
+{
+    tsb->channel = channel_;
+}
+
 void _tca9544a(uint8_t b)
 {
     WIRE.beginTransmission(U16_ADDR);
@@ -45,7 +51,7 @@ float _mic184_read_temp()
 
 void _mic184_switch_zone(MIC184_Zone zone)
 {
-    uint8_t config, t;
+    uint8_t config;
     WIRE.beginTransmission(MIC184_ADDR);
     WIRE.write(MIC184_CONFIG);
     WIRE.endTransmission();
@@ -59,12 +65,19 @@ void _mic184_switch_zone(MIC184_Zone zone)
     WIRE.endTransmission();
 }
 
-void readTemp(TSB* tsb)
+void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
 {
     _tca9544a(tsb->channel);
 
+    tsb->thermocouple_temp = mcp->readThermocouple();
+
+    tsb->ambient_temp = mcp->readAmbient();
+
+    tsb->adc = (mcp->readADC() * 2);
+
     _mic184_switch_zone(MIC184_INTERNAL);
     tsb->local_temp = _mic184_read_temp();
+    
     _mic184_switch_zone(MIC184_EXTERNAL);
     tsb->remote_temp = _mic184_read_temp();
 }
