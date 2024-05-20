@@ -41,7 +41,7 @@ class VESC:
         self.scaling = 1000
     
     def set_rpm(self, rpm: int) -> None:
-        self.cmd_id = CMD.AN_PACKET_SET_RPM.value
+        self.cmd_id = CMD.CAN_PACKET_SET_RPM.value
         self.data = rpm
         self.scaling = 1
     

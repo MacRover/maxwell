@@ -1,19 +1,16 @@
 #! /usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from enum import Enum
 
 from custom_interfaces.msg import *
 from .VESC import VESC
 
-class VESC_ID(Enum):
+
+class VescController(Node):
     FRONT_LEFT = 0
     FRONT_RIGHT = 1
     BACK_LEFT = 2
     BACK_RIGHT = 3
-
-
-class VescController(Node):
     def __init__(self):
         super().__init__("vesc_controller")
         self.sub = self.create_subscription(
@@ -23,21 +20,21 @@ class VescController(Node):
         
         self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
 
-        self.front_left = VESC(VESC_ID.FRONT_LEFT.value)
-        self.front_right = VESC(VESC_ID.FRONT_RIGHT.value)
-        self.back_left = VESC(VESC_ID.BACK_LEFT.value)
-        self.back_right = VESC(VESC_ID.BACK_RIGHT.value)
+        self.vfl = VESC(self.FRONT_LEFT)
+        self.vfr = VESC(self.FRONT_RIGHT)
+        self.vbl = VESC(self.BACK_LEFT)
+        self.vbr = VESC(self.BACK_RIGHT)
     
     def _callback(self, msg):
-        self.front_left.set_speed_mps(msg[0].speed)
-        self.front_right.set_speed_mps(msg[1].speed)
-        self.back_left.set_speed_mps(msg[2].speed)
-        self.back_right.set_speed_mps(msg[3].speed)
+        self.vfl.set_speed_mps(msg.front_left.speed)
+        self.vfr.set_speed_mps(msg.front_right.speed)
+        self.vbl.set_speed_mps(msg.rear_left.speed)
+        self.vbr.set_speed_mps(msg.rear_right.speed)
 
-        self.pub.publish(front_left.get_can_message())
-        self.pub.publish(front_right.get_can_message())
-        self.pub.publish(back_left.get_can_message())
-        self.pub.publish(back_right.get_can_message())
+        self.pub.publish(self.vfl.get_can_message())
+        self.pub.publish(self.vfr.get_can_message())
+        self.pub.publish(self.vbl.get_can_message())
+        self.pub.publish(self.vbr.get_can_message())
 
 
 def main(args=None):
