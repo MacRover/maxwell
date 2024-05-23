@@ -1,10 +1,9 @@
 #ifndef _FANS_H
 #define _FANS_H
 #include <cstdint>
-#include <Wire.h>
+#include "i2c.h"
 #include "enums.h"
 
-#define WIRE Wire1
 #define U14_ADDR (uint8_t)0x2E
 #define U15_ADDR (uint8_t)0x2C
 
@@ -37,34 +36,33 @@ void setFanRPM(Fan* fan, uint16_t speed)
     uint8_t high = (tachCount & 0x1FE0) >> 5;
     uint8_t low = (tachCount & 0x1F) << 3;
 
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset));
-    WIRE.write(high);
-    WIRE.endTransmission();
-
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_TACH_TARGET_LOW_BYTE + (fan->offset));
-    WIRE.write(low);
-    WIRE.endTransmission();
+    write_i2c_8bit(
+        fan->address, 
+        FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset), 
+        high);
+    
+    write_i2c_8bit(
+        fan->address, 
+        FAN_1_TACH_TARGET_LOW_BYTE + (fan->offset), 
+        low);
 }
 
 void getFanRPM(Fan* fan)
 {
-    uint16_t count, hCount, lCount;
+    uint8_t hCount, lCount;
+    uint16_t count;
 
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_TACH_READING_HIGH_BYTE + (fan->offset));
-    WIRE.endTransmission();
-    WIRE.requestFrom(fan->address, 1);
-    hCount = WIRE.read();
+    read_i2c_8bit(
+        fan->address,
+        FAN_1_TACH_READING_HIGH_BYTE + (fan->offset),
+        &hCount);
 
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_TACH_READING_LOW_BYTE + (fan->offset));
-    WIRE.endTransmission();
-    WIRE.requestFrom(fan->address, 1);
-    lCount = WIRE.read();
+    read_i2c_8bit(
+        fan->address,
+        FAN_1_TACH_READING_LOW_BYTE + (fan->offset),
+        &lCount);
 
-    count = (hCount << 5) | (lCount >> 3);
+    count = ((uint16_t)hCount << 5) | (lCount >> 3);
     fan->tach_reading = (uint16_t)(7864320 / count);
     // Serial.print("RPM: ");
     // Serial.println(fan->tach_reading);
@@ -72,15 +70,15 @@ void getFanRPM(Fan* fan)
 
 void enableFanControl(Fan* fan)
 {
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_CONFIG + (fan->offset));
-    WIRE.write(0x2B | (1 << 7));
-    WIRE.endTransmission();
-
-    WIRE.beginTransmission(fan->address);
-    WIRE.write(FAN_1_TACH_VALID_COUNT + (fan->offset));
-    WIRE.write(0xF6);
-    WIRE.endTransmission();
+    write_i2c_8bit(
+        fan->address, 
+        FAN_1_CONFIG + (fan->offset), 
+        0x2B | (1 << 7));
+        
+    write_i2c_8bit(
+        fan->address,
+        FAN_1_TACH_VALID_COUNT + (fan->offset),
+        0xF6);
 }
 
 #endif
