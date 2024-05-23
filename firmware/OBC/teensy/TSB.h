@@ -1,11 +1,10 @@
 #ifndef _TSB_H
 #define _TSB_H
 #include <cstdint>
-#include <Wire.h>
-#include "Adafruit_MCP9601.h"
+#include <Adafruit_MCP9601.h>
 #include "enums.h"
+#include "i2c.h"
 
-#define WIRE Wire1
 #define U16_ADDR (uint8_t)0x70
 #define MCP9601_ADDR (uint8_t)0x60
 #define MIC184_ADDR (uint8_t)0x48
@@ -17,8 +16,7 @@ typedef struct TSB
     float thermocouple_temp;
     int32_t adc;
 
-    float local_temp;
-    float remote_temp;
+    float mic_temp;
 
 } TSB;
 
@@ -38,31 +36,20 @@ void _tca9544a(uint8_t b)
 float _mic184_read_temp() 
 {
     int16_t temp;
-    WIRE.beginTransmission(MIC184_ADDR);
-    WIRE.write(MIC184_TEMP);
-    WIRE.endTransmission();
-
-    WIRE.requestFrom(MIC184_ADDR, 2);
-    temp = WIRE.read();
-    temp = (temp << 1) | (WIRE.read() >> 7);
-
-    return (float)temp;
+    read_i2c_16bit(MIC184_ADDR, MIC184_TEMP, &temp);
+    return (float)temp / 255.0f;
 }
 
-void _mic184_switch_zone(MIC184_Zone zone)
+void mic184_switch_zone(MIC184_Zone zone)
 {
     uint8_t config;
-    WIRE.beginTransmission(MIC184_ADDR);
-    WIRE.write(MIC184_CONFIG);
-    WIRE.endTransmission();
+    read_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, &config);
 
-    WIRE.requestFrom(MIC184_ADDR, 1);
-    config = WIRE.read();
+    config = config | (0x40);
+    config = (config & 0xDF) | zone;
 
-    WIRE.beginTransmission(MIC184_ADDR);
-    WIRE.write(MIC184_CONFIG);
-    WIRE.write((config & 0xDF) | zone);
-    WIRE.endTransmission();
+    write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config);
+    write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config & 0xDF);
 }
 
 void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
@@ -75,11 +62,7 @@ void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
 
     tsb->adc = (mcp->readADC() * 2);
 
-    _mic184_switch_zone(MIC184_INTERNAL);
-    tsb->local_temp = _mic184_read_temp();
-    
-    _mic184_switch_zone(MIC184_EXTERNAL);
-    tsb->remote_temp = _mic184_read_temp();
+    tsb->mic_temp = _mic184_read_temp();
 }
 
 #endif

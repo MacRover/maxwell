@@ -3,6 +3,7 @@
 #include <ICM_20948.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
+#include <Adafruit_MCP9601.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -16,8 +17,9 @@
 
 #define USING_ROS
 #define USING_IMU_ONBOARD
-//#define USING_IMU_OTHER
+// #define USING_IMU_OTHER
 #define USING_GPS
+#define USING_TSB
 
 #define LED_PIN 13
 #define AD0_VAL 1
@@ -42,6 +44,7 @@ sensor_msgs__msg__NavSatFix gps_msg;
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
+Adafruit_MCP9601 MCP;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
@@ -54,6 +57,7 @@ struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 Fan fan1;
+TSB tsb1;
 
 
 void updateICM_20948(ICM_20948_I2C* icm)
@@ -188,10 +192,17 @@ void setup()
         GNSS.setAutoPVTcallbackPtr(&updatePVTData);
     #endif
 
-    digitalWrite(LED_PIN, HIGH);
+    #ifdef USING_TSB
+        while (!MCP.begin(MCP9601_ADDR, &Wire1)) {}
+        MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
+        MCP.setThermocoupleType(MCP9600_TYPE_K);
+        // setChannel(&tsb1, 0);
+    #endif
 
-    initializeFan(&fan1, 0);
-    enableFanControl(&fan1);
+    // initializeFan(&fan1, 0);
+    // enableFanControl(&fan1);
+
+    digitalWrite(LED_PIN, HIGH);
 }
 
 
@@ -224,8 +235,8 @@ void loop()
     }
     #endif
 
-    setFanRPM(&fan1, 4500);
-    getFanRPM(&fan1);
+    // setFanRPM(&fan1, 4500);
+    // getFanRPM(&fan1);
 
     delay(1);
 }
