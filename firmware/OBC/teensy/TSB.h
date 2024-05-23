@@ -45,11 +45,18 @@ void mic184_switch_zone(MIC184_Zone zone)
     uint8_t config;
     read_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, &config);
 
+    // Set IM HIGH
     config = config | (0x40);
-    config = (config & 0xDF) | zone;
-
     write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config);
-    write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config & 0xDF);
+    read_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, &config);
+
+    // Set ZONE
+    config = (config & 0xDF) | zone;
+    write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config);
+
+    // Set IM LOW
+    read_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, &config);
+    write_i2c_8bit(MIC184_ADDR, MIC184_CONFIG, config & 0xBF);
 }
 
 void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
