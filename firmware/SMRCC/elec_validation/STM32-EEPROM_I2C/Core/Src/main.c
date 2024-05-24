@@ -335,6 +335,10 @@ int main(void)
     TxHeader.DLC = 1;
     HAL_CAN_AddTxMessage(&hcan, &TxHeader, can_data, &TxMailbox);
 
+
+    can_data[0] = i2c_read_data_io;
+    TxHeader.DLC = 1;
+    HAL_CAN_AddTxMessage(&hcan, &TxHeader, can_data, &TxMailbox);
     HAL_Delay(500);
     /* USER CODE END WHILE */
 

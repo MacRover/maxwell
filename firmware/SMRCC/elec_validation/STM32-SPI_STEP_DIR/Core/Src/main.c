@@ -116,9 +116,8 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET); // disable stand alone mode
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // CS
+    HAL_GPIO_WritePin(M1_EN_GPIO_Port, M1_EN_Pin, GPIO_PIN_RESET); // Motor driver chip enable
+    HAL_GPIO_WritePin(M2_EN_GPIO_Port, M2_EN_Pin, GPIO_PIN_RESET); // Motor driver chip enable
 
 //    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET); // set DIR
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET); // STEP
@@ -157,10 +156,14 @@ int main(void)
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+            1000);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* SGCSCONF */
     SPImsg = 0;
@@ -173,10 +176,14 @@ int main(void)
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+            1000);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* SMARTEN */
     SPImsg = 0;
@@ -191,10 +198,14 @@ int main(void)
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+            1000);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* CHOPCONF */
     SPImsg = 0;
@@ -211,10 +222,14 @@ int main(void)
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+            1000);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* DRVCTRL */
     SPImsg = 0;
@@ -227,21 +242,37 @@ int main(void)
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+            1000);
+    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  uint16_t direction_counter;
+
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
     while (1)
     {
-//        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
+      HAL_GPIO_TogglePin(M1_STEP_GPIO_Port, M1_STEP_Pin);
+      HAL_GPIO_TogglePin(M2_STEP_GPIO_Port, M2_STEP_Pin); // STEP
 
-//        HAL_Delay(1);
-//        delayUs(1);
+      if (direction_counter++ < 200)
+      {
+        HAL_GPIO_TogglePin(M1_DIR_GPIO_Port, M1_DIR_Pin);
+        HAL_GPIO_TogglePin(M2_DIR_GPIO_Port, M2_DIR_Pin); // DIR 
+      }
+
+      HAL_Delay(5);
+      delayUs(5); //10ms step
 
         // Use LED to signal state of ST_TST
 //        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,

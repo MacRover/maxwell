@@ -193,12 +193,12 @@ int main(void)
         { 0xFF, 0xFF }; //two bytes, 16 bits
 
         //ENCODER WRITE AND READ
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(ENCODER_CS_GPIO_Port, ENCODER_CS_Pin, GPIO_PIN_RESET);
 
         HAL_StatusTypeDef transmitStatus_encoder = HAL_SPI_TransmitReceive(
-                &hspi2, SPI_msg, SPI_read, 2, 1000);
+                &hspi1, SPI_msg, SPI_read, 2, 1000);
 
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(ENCODER_CS_GPIO_Port, ENCODER_CS_Pin, GPIO_PIN_SET);
 
         //DEBUG OUT OVER CAN. MODIFY AS DESIRED. CURRENTLY CONFIGURED TO ENCODER
         TxData[0] = transmitStatus_encoder;

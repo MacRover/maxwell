@@ -187,48 +187,22 @@ int main(void)
     while (1)
     {
 
-    	//https://deepbluembedded.com/stm32-adc-read-example-dma-interrupt-polling/
+ 
+    HAL_GPIO_WritePin(CO2_READY_GPIO_Port, CO2_READY_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(SPARE_1_GPIO_Port, SPARE_1_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
 
-    	HAL_ADC_Start(&hadc1);
+    HAL_GPIO_WritePin(LINACTUATOR_1_GPIO_Port, LINACTUATOR_1_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LINACTUATOR_2_GPIO_Port, LINACTUATOR_2_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LINACTUATOR_3_GPIO_Port, LINACTUATOR_3_Pin, GPIO_PIN_SET);
 
-    	HAL_ADC_PollForConversion(&hadc1, 1);
-    	adc_buf[0] = HAL_ADC_GetValue(&hadc1);
-
-    	HAL_ADC_Stop(&hadc1);
-
-    	HAL_ADC_Start(&hadc2);
-
-    	HAL_ADC_PollForConversion(&hadc2, 1);
-    	adc_buf[1] = HAL_ADC_GetValue(&hadc2);
+    HAL_GPIO_WritePin(NPK_DE_GPIO_Port, NPK_DE_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(NPK_RE_GPIO_Port, NPK_RE_Pin, GPIO_PIN_RESET);
 
 
-    	HAL_ADC_Stop(&hadc2);
+   	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+   	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
 
-//    	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-//    	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
-////
-//    	TxData[0] = 0x00; //First bit 0 signifies ADC
-//		TxData[1] = 0x02; // Second bit signifies channel number
-//		TxData[2] = 0x00;
-//		TxData[3] = 0x00;
-//		TxData[4] = 0x00;
-//		TxData[5] = 0x00;
-//		TxData[6] = (adc_buf[0] >> 8) & 0x08;
-//		TxData[7] = (adc_buf[0]) & 0x08;
-//
-//        txCAN();
-//
-//        TxData[0] = 0x00; //First bit 0 signifies ADC
-//        TxData[1] = 0x03; // Second bit signifies channel number
-//		TxData[2] = 0x00;
-//		TxData[3] = 0x00;
-//		TxData[4] = 0x00;
-//		TxData[5] = 0x00;
-//		TxData[6] = (adc_buf[1] >> 8) & 0x08;
-//		TxData[7] = (adc_buf[1]) & 0x08;
-//
-//		txCAN();
-////        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 //
 //		TxData[0] = 0x01; //First bit 1 signifies GPIO
 //		TxData[1] = 0x00; // Second bit signifies channel number
