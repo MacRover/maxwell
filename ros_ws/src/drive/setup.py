@@ -22,7 +22,9 @@ setup(
         'console_scripts': [
             'drive_controller.py = drive.drive_controller:main',
             'sim_command_converter.py = drive.sim_command_converter:main',
-            'vesc_controller.py = drive.vesc_controller:main'
+            'vesc_controller.py = drive.vesc_controller:main',
+            'keyboard_drive.py = drive.keyboard_drive:main',
+            'heartbeat.py = drive.heartbeat:main',
         ],
     },
 )
