@@ -175,11 +175,7 @@ int main(void)
     setupTxCAN();
     setupRxCAN();
 
-    HAL_ADCEx_Calibration_Start(&hadc1);
-    HAL_ADCEx_Calibration_Start(&hadc2);
 
-
-    //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
