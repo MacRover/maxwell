@@ -22,9 +22,9 @@ def main():
     vel_msg = Twist()
 
     print(
-        	"""Press w, a, s, d, q, e accordingly to move; space for stopping and Esckey for exiting.
-            Be careful not to hold these keys, as these keys control the acceleration of the bot,
-            and u dont want the bot flying out!!"""
+        """Press w, a, s, d, q, e accordingly to move; space for stopping and Esckey for exiting.
+        Be careful not to hold these keys, as these keys control the acceleration of the bot,
+        and u dont want the bot flying out!!"""
     )
     while True:
         char = getch()
@@ -65,5 +65,5 @@ def main():
     rclpy.shutdown()
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     main()
