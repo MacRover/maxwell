@@ -22,7 +22,7 @@ def main():
     vel_msg = Twist()
 
     print(
-        	"""Press w, a, s, d accordingly to move; space for stopping and Esckey for exiting.
+        	"""Press w, a, s, d, q, e accordingly to move; space for stopping and Esckey for exiting.
             Be careful not to hold these keys, as these keys control the acceleration of the bot,
             and u dont want the bot flying out!!"""
     )
@@ -43,13 +43,19 @@ def main():
         elif char == "a":
             print("Turning left")
             vel_msg.angular.z += 0.008
+        elif char == "q":
+            print("Strafing left")
+            vel_msg.linear.y += 0.008
+        elif char == "e":
+            print("Strafing right")
+            vel_msg.linear.y -= 0.008
         elif ord(char) == 32:
             print("Stopping")
             vel_msg.linear.x = 0.0
+            vel_msg.linear.y = 0.0
             vel_msg.angular.z = 0.0
 
-        print("x vel: {}\tz vel: {}".format(vel_msg.linear.x, vel_msg.angular.z))   
-        vel_msg.linear.y = 0.0
+        print(f"lin x: {vel_msg.linear.x}, lin y: {vel_msg.linear.y}, ang z: {vel_msg.angular.z}")   
         vel_msg.linear.z = 0.0
         vel_msg.angular.y = 0.0
         vel_msg.angular.x = 0.0
