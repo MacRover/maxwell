@@ -7,10 +7,10 @@ from .VESC import VESC
 
 
 class VescController(Node):
-    FRONT_LEFT = 0
-    FRONT_RIGHT = 1
-    BACK_LEFT = 2
-    BACK_RIGHT = 3
+    FRONT_LEFT = 89
+    FRONT_RIGHT = 86
+    BACK_LEFT = 88
+    BACK_RIGHT = 87
     def __init__(self):
         super().__init__("vesc_controller")
         self.sub = self.create_subscription(

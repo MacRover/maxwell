@@ -46,7 +46,7 @@ class VESC:
         self.scaling = 1
     
     def set_speed_mps(self, speed: float) -> None:
-        d = 1.0
+        d = 0.22
         mps_to_rpm = round((speed / (pi*d)) * 60.0)
         self.set_rpm(mps_to_rpm)
     
