@@ -23,11 +23,17 @@
 /* USER CODE BEGIN 0 */
 void _prepareDriverTransmit(STEPPER_REGISTER reg, STEPPER_REGISTER_DATA *data);
 HAL_StatusTypeDef _transmitReceiveDriver_3Bytes(void);
+HAL_StatusTypeDef _transmitReceiveEncoder_2Bytes(void);
+
 
 uint8_t driverInitialized;
+uint8_t encoderInitialized;
 
 uint32_t driverTransmit;
 uint32_t driverReceive;
+
+uint8_t encoderTransmit[2];
+uint8_t encoderReceive[2];
 
 STEPPER_REGISTER_DATA localData;
 /* USER CODE END 0 */
@@ -83,9 +89,9 @@ void MX_SPI2_Init(void)
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -146,15 +152,15 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     PB14     ------> SPI2_MISO
     PB15     ------> SPI2_MOSI
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_15;
+    GPIO_InitStruct.Pin = ENCODER_SCK_Pin|ENCODER_MOSI_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_14;
+    GPIO_InitStruct.Pin = ENCODER_MISO_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_Init(ENCODER_MISO_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SPI2_MspInit 1 */
 
@@ -197,7 +203,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
     PB14     ------> SPI2_MISO
     PB15     ------> SPI2_MOSI
     */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
+    HAL_GPIO_DeInit(GPIOB, ENCODER_SCK_Pin|ENCODER_MISO_Pin|ENCODER_MOSI_Pin);
 
   /* USER CODE BEGIN SPI2_MspDeInit 1 */
 
@@ -308,6 +314,16 @@ HAL_StatusTypeDef _transmitReceiveDriver_3Bytes()
     HAL_GPIO_WritePin(DRIVER_CS_GPIO_Port, DRIVER_CS_Pin, GPIO_PIN_SET);
 
     driverReceive = (SPIread_bytes[0] << 16) | (SPIread_bytes[1] << 8) | SPIread_bytes[2];
+
+    return spi_status;
+}
+
+HAL_StatusTypeDef _transmitReceiveEncoder_2Bytes()
+{
+   
+    HAL_GPIO_WritePin(ENCODER_CS_GPIO_Port, ENCODER_CS_Pin, GPIO_PIN_RESET);
+    HAL_StatusTypeDef spi_status = HAL_SPI_TransmitReceive(&hspi2, encoderTransmit, encoderReceive, 2, 1000);
+    HAL_GPIO_WritePin(ENCODER_CS_GPIO_Port, ENCODER_CS_Pin, GPIO_PIN_SET);
 
     return spi_status;
 }
@@ -559,7 +575,69 @@ STEPPER_STATUS STEPPER_Deinitialize()
   return STEPPER_OK;
 }
 
+ENCODER_STATUS ENCODER_Initialize()
+{
+  MX_SPI2_Init();
 
+  encoderInitialized = 1;
+
+  return ENCODER_OK;
+}
+
+ENCODER_STATUS ENCODER_ReadAngle(uint16_t *angle)
+{
+  if (!encoderInitialized)
+  {
+    return ENCODER_ERROR_NOT_INITIALIZED;
+  }
+
+  encoderTransmit[0] = 0xFF;
+  encoderTransmit[1] = 0xFF;
+
+  if (_transmitReceiveEncoder_2Bytes() != HAL_OK)
+  {
+    return STEPPER_ERROR_HAL;
+  }
+
+  *angle = (encoderReceive[1] << 8) | (encoderReceive[0]);
+
+  return ENCODER_OK;
+}
+
+ENCODER_STATUS ENCODER_ReadMagneticField(uint16_t *field)
+{
+  if (!encoderInitialized)
+  {
+    return ENCODER_ERROR_NOT_INITIALIZED;
+  }
+
+  encoderTransmit[0] = 0x7F;
+  encoderTransmit[1] = 0xFD;
+  if (_transmitReceiveEncoder_2Bytes() != HAL_OK)
+  {
+    return STEPPER_ERROR_HAL;
+  }
+
+  *field = (encoderReceive[1] << 8) | (encoderReceive[0]);
+
+  return ENCODER_OK;
+}
+
+ENCODER_STATUS ENCODER_Deinitialize()
+{
+  if (!encoderInitialized)
+  {
+    return ENCODER_ERROR_NOT_INITIALIZED;
+  }
+
+  encoderInitialized = 0;
+  if (HAL_SPI_DeInit(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  return ENCODER_OK;
+}
 
 
 //ENCODER LIBRARY

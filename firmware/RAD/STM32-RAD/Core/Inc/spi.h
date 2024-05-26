@@ -147,6 +147,18 @@ STEPPER_STATUS STEPPER_SetDirection(STEPPER_DIRECTION dir);
 STEPPER_STATUS STEPPER_Deinitialize(void);
 
 
+typedef enum
+{
+  ENCODER_OK = 0,
+  ENCODER_ERROR_NOT_INITIALIZED,
+  ENCODER_ERROR_HAL
+} ENCODER_STATUS; 
+
+ENCODER_STATUS ENCODER_Initialize(void);
+ENCODER_STATUS ENCODER_ReadAngle(uint16_t *angle);
+ENCODER_STATUS ENCODER_ReadMagneticField(uint16_t *field);
+ENCODER_STATUS ENCODER_Deinitialize(void);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
