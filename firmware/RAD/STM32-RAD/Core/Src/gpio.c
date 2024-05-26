@@ -60,6 +60,12 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_RED_Pin|ENCODER_CS_Pin|DRIVER_STEP_Pin|DRIVER_DIR_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = LIMITSWITCH_1_Pin|LIMITSWITCH_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PAPin PAPin PAPin */
   GPIO_InitStruct.Pin = DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -80,11 +86,34 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(DRIVER_SG_TEST_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
 }
 
 /* USER CODE BEGIN 2 */
 
 // PUBLIC FUNCTIONS --------------------------------
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  static LS_NUMBER pin;
+  pin = (GPIO_Pin == LIMITSWITCH_1_Pin) ? LS_1 : LS_2;
+
+  if (HAL_GPIO_ReadPin(LIMITSWITCH_1_GPIO_Port, GPIO_Pin) == GPIO_PIN_SET)
+  {
+    (*callback_pressed)(&pin);
+  }
+  else
+  {
+    (*callback_released)(&pin);
+  }
+}
+
 
 LS_STATUS LS_Initialize() {
 
