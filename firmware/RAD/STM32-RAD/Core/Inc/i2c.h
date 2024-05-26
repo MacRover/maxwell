@@ -42,6 +42,22 @@ void MX_I2C1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+typedef enum 
+{
+  EEPROM_OK = 0,
+  EEPROM_ERROR_NOT_INITIALIZED,
+  EEPROM_ERROR_DATA,
+  EERPOM_ERROR_TIMEOUT,
+  EEPROM_ERROR_FULL
+} EEPROM_STATUS;
+
+EEPROM_STATUS EEPROM_Initialize(void);
+EEPROM_STATUS EEPROM_Write(uint16_t addr, uint8_t *data, uint16_t len_bytes);
+EEPROM_STATUS EEPROM_Read(uint16_t addr, uint8_t *buffer, uint16_t len_bytes);
+EEPROM_STATUS EEPROM_Clear(uint16_t addr, uint16_t len_bytes);
+EEPROM_STATUS EEPROM_Deinitialize(void);
+
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
