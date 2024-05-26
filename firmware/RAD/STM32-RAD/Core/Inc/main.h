@@ -61,6 +61,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LIMITSWITCH_1_Pin GPIO_PIN_0
+#define LIMITSWITCH_1_GPIO_Port GPIOA
+#define LIMITSWITCH_1_EXTI_IRQn EXTI0_IRQn
+#define LIMITSWITCH_2_Pin GPIO_PIN_1
+#define LIMITSWITCH_2_GPIO_Port GPIOA
+#define LIMITSWITCH_2_EXTI_IRQn EXTI1_IRQn
 #define DRIVER_CS_Pin GPIO_PIN_4
 #define DRIVER_CS_GPIO_Port GPIOA
 #define DRIVER_SCK_Pin GPIO_PIN_5
