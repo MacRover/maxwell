@@ -285,6 +285,9 @@ ADC_STATUS ADC_Initialize()
 
   // This is probably where you run all the starter code too for the analog watchdog
 
+  HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADCEx_Calibration_Start(&hadc2);
+
   adcInitialized = 1;
 
   return ADC_OK;
