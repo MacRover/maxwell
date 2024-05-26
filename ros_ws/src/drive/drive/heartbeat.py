@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 class HeartBeatNode(Node):
     def __init__(self):
         super().__init__("cmd_vel_repeater")
-        self.hz = 50
+        self.hz = 20
         self.vel_msg = Twist()
 
         self.pub = self.create_publisher(Twist, "/cmd_vel", 10)

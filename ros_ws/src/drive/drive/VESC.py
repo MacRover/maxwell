@@ -26,7 +26,8 @@ class VESC:
     
     def get_can_message(self) -> CANraw:
         self.can.address = self.id | (self.cmd_id << 8)
-        self.can.data = struct.pack(">i", self.data * self.scaling)
+        self.can.data = struct.pack(">q", (self.data << 32) * self.scaling)
+        self.can.extended = True
         return self.can
     
     def set_duty(self, duty_cycle: int) -> None:
