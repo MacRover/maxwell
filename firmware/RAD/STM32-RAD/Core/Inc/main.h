@@ -32,6 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <stdlib.h>
 
 
 
@@ -60,6 +61,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LIMITSWITCH_1_Pin GPIO_PIN_0
+#define LIMITSWITCH_1_GPIO_Port GPIOA
+#define LIMITSWITCH_1_EXTI_IRQn EXTI0_IRQn
+#define LIMITSWITCH_2_Pin GPIO_PIN_1
+#define LIMITSWITCH_2_GPIO_Port GPIOA
+#define LIMITSWITCH_2_EXTI_IRQn EXTI1_IRQn
 #define ADC_1_Pin GPIO_PIN_2
 #define ADC_1_GPIO_Port GPIOA
 #define ADC_2_Pin GPIO_PIN_3
