@@ -162,11 +162,8 @@
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1954876885;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1954876885.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1101980644;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1645395940">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.737632225;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.737632225.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.172354032;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.133466343">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="0.1564585994">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>

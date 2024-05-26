@@ -67,6 +67,10 @@ void Error_Handler(void);
 #define LIMITSWITCH_2_Pin GPIO_PIN_1
 #define LIMITSWITCH_2_GPIO_Port GPIOA
 #define LIMITSWITCH_2_EXTI_IRQn EXTI1_IRQn
+#define ADC_1_Pin GPIO_PIN_2
+#define ADC_1_GPIO_Port GPIOA
+#define ADC_2_Pin GPIO_PIN_3
+#define ADC_2_GPIO_Port GPIOA
 #define DRIVER_CS_Pin GPIO_PIN_4
 #define DRIVER_CS_GPIO_Port GPIOA
 #define DRIVER_SCK_Pin GPIO_PIN_5
