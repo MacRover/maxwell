@@ -27,7 +27,7 @@ void _setupRxFilter(void);
 HAL_StatusTypeDef _txCAN(void);
 
 
-uint8_t initialized;
+uint8_t canInitialized;
 
 CAN_TxHeaderTypeDef TxHeader;
 uint8_t TxData[8];
@@ -222,7 +222,7 @@ CAN_STATUS CAN_Initialize()
 	_setupRxCAN();
 	_setupRxFilter();
 
-	initialized = 1;
+	canInitialized = 1;
 	return CAN_OK;
 
 }
@@ -237,7 +237,7 @@ CAN_STATUS CAN_ConfigFilterId(uint8_t id)
 CAN_STATUS CAN_ResetFilter()
 {
 
-	if(!initialized)
+	if(!canInitialized)
 	{
 		return CAN_ERROR_NOT_INITIALIZED;
 	}
@@ -249,7 +249,7 @@ CAN_STATUS CAN_ResetFilter()
 CAN_STATUS CAN_Send(CAN_MESSAGE *msg)
 {
 
-	if(!initialized)
+	if(!canInitialized)
 	{
 		return CAN_ERROR_NOT_INITIALIZED;
 	}
@@ -269,6 +269,12 @@ CAN_STATUS CAN_Send(CAN_MESSAGE *msg)
 
 CAN_STATUS CAN_RegisterReceiveCallback(void (*fcn)(CAN_MESSAGE *msg))
 {
+
+  if(!canInitialized)
+	{
+		return CAN_ERROR_NOT_INITIALIZED;
+	}
+  
 	if (!fcn)
 	{
 		return CAN_ERROR_INVALID_ARGUMENT;
@@ -282,17 +288,17 @@ CAN_STATUS CAN_RegisterReceiveCallback(void (*fcn)(CAN_MESSAGE *msg))
 
 CAN_STATUS CAN_Deinitialize()
 {
-	if (!initialized)
+	if (!canInitialized)
 	{
 		return CAN_ERROR_NOT_INITIALIZED;
 	}
 
 
-	initialized=0;
+	canInitialized=0;
 	if (HAL_CAN_DeInit(&hcan) != HAL_OK)
-	  {
-		Error_Handler();
-	  }
+  {
+  Error_Handler();
+  }
 
 	return CAN_OK;
 
