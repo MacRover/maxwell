@@ -173,6 +173,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   setupTxCAN();
   setupRxCAN();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -181,7 +182,7 @@ int main(void)
   while (1)
   {
     //txCAN();
-    //        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 
     // set channel
     uint8_t device_identifier = 0b11100000;
@@ -192,17 +193,17 @@ int main(void)
 
     uint8_t i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2) | (a0_pin << 1) | read_write;
 
-    uint8_t channel = 2;
-//
-//    uint8_t i2c_send_data_mux = 0b00000000 | (channel & 3);
-//
-//    while (HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)i2c_address, &i2c_send_data_mux, 1, 10000) != HAL_OK)
-//    {
-//      if (HAL_I2C_GetError(&hi2c2) != HAL_I2C_ERROR_AF)
-//      {
-//        Error_Handler();
-//      }
-//    }
+    uint8_t channel = 1;
+
+    uint8_t i2c_send_data_mux = 0b00000000 | (channel | 4);
+
+    while (HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)i2c_address, &i2c_send_data_mux, 1, 10000) != HAL_OK)
+    {
+      if (HAL_I2C_GetError(&hi2c2) != HAL_I2C_ERROR_AF)
+      {
+        Error_Handler();
+      }
+    }
 
     //shift i/o mux
     //configure input/output
@@ -225,6 +226,7 @@ int main(void)
         Error_Handler();
       }
     }
+
 
     //configure input polarity
 
@@ -253,17 +255,40 @@ int main(void)
 
     //configure register for reading
     i2c_send_data_io[0] = (uint8_t) 0b00000000; //input port register
-    i2c_send_data_io[1] = (uint8_t) 0b11100000; // dont' care
+    //i2c_send_data_io[1] = (uint8_t) 0b11100000; // Doesn't respond to second byte - only takes one
 
-    while (HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)i2c_address, &i2c_send_data_io[0], 2, 10000) != HAL_OK)
+    while (HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)i2c_address, &i2c_send_data_io[0], 1, 10000) != HAL_OK)
     {
       if (HAL_I2C_GetError(&hi2c2) != HAL_I2C_ERROR_AF)
       {
         Error_Handler();
       }
     }
+    //NO DELAY BETWEEN THESE COMMANDS
 
-    // write eeprom
+	//read io mux
+	device_identifier = 0b00110000;
+	a2_pin = 0;
+	a1_pin = 0;
+	a0_pin = 0;
+	read_write = 1; // read
+
+	i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2) | (a0_pin << 1) | read_write;
+
+	uint8_t i2c_read_data_io[1];
+
+	while (HAL_I2C_Master_Receive(&hi2c2, (uint16_t)(i2c_address), i2c_read_data_io, 1, 10000) != HAL_OK)
+	{
+	  if (HAL_I2C_GetError(&hi2c2) != HAL_I2C_ERROR_AF)
+	  {
+		Error_Handler();
+	  }
+	}
+
+
+
+
+     write eeprom
     uint8_t read_eeprom = 0; // address in eeprom to write to
     uint16_t eeprom_address = 321;
 
@@ -311,24 +336,7 @@ int main(void)
       }
     }
 
-    //read io mux
-    device_identifier = 0b00110000;
-    a2_pin = 0;
-    a1_pin = 0;
-    a0_pin = 0;
-    read_write = 1; // read
 
-    i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2) | (a0_pin << 1) | read_write;
-
-    uint8_t i2c_read_data_io;
-
-//    while (HAL_I2C_Master_Receive(&hi2c2, (uint16_t)i2c_address, &i2c_read_data_io, 1, 10000) != HAL_OK)
-//    {
-//      if (HAL_I2C_GetError(&hi2c2) != HAL_I2C_ERROR_AF)
-//      {
-//        Error_Handler();
-//      }
-//    }
 
     uint8_t can_data[1];
     can_data[0] = i2c_data_buff;
@@ -472,6 +480,7 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
+  __HAL_AFIO_REMAP_SWJ_NOJTAG();
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -509,8 +518,8 @@ void Error_Handler(void)
   while (1)
   {
 
-	 HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
-	 HAL_Delay(10);
+	 //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+	  uint32_t HAL_ERR = HAL_I2C_GetError(&hi2c2);
 
   }
   /* USER CODE END Error_Handler_Debug */
