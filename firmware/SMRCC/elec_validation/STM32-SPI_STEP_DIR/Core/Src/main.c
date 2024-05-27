@@ -254,31 +254,22 @@ int main(void)
 
   uint16_t direction_counter;
 
-  //HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-  //HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
     while (1)
     {
       HAL_GPIO_WritePin(M1_STEP_GPIO_Port, M1_STEP_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(M1_DIR_GPIO_Port, M1_DIR_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-      //HAL_GPIO_TogglePin(M2_STEP_GPIO_Port, M2_STEP_Pin); // STEP
-//
-//      if (direction_counter++ > 200)
-//      {
-//        HAL_GPIO_TogglePin(M1_DIR_GPIO_Port, M1_DIR_Pin);
-//        HAL_GPIO_TogglePin(M2_DIR_GPIO_Port, M2_DIR_Pin); // DIR
-//    		direction_counter = 0;
-//      }
-//
+
       //HAL_Delay(10);
-      delayUs(50);
+      delayUs(5);
 
       HAL_GPIO_WritePin(M1_STEP_GPIO_Port, M1_STEP_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
 
 
       //HAL_Delay(10);
-      delayUs(50);
+      delayUs(5);
 
 
       //delayUs(50); //10ms step
