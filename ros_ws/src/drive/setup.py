@@ -25,6 +25,7 @@ setup(
             'vesc_controller.py = drive.vesc_controller:main',
             'keyboard_drive.py = drive.keyboard_drive:main',
             'heartbeat.py = drive.heartbeat:main',
+            'vesc_status.py = drive.vesc_status:main',
         ],
     },
 )

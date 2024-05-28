@@ -3,14 +3,10 @@ import rclpy
 from rclpy.node import Node
 
 from custom_interfaces.msg import *
-from .VESC import VESC
+from .VESC import *
 
 
 class VescController(Node):
-    FRONT_LEFT = 89
-    FRONT_RIGHT = 86
-    BACK_LEFT = 88
-    BACK_RIGHT = 87
     def __init__(self):
         super().__init__("vesc_controller")
         self.sub = self.create_subscription(
@@ -20,10 +16,10 @@ class VescController(Node):
         
         self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
 
-        self.vfl = VESC(self.FRONT_LEFT)
-        self.vfr = VESC(self.FRONT_RIGHT)
-        self.vbl = VESC(self.BACK_LEFT)
-        self.vbr = VESC(self.BACK_RIGHT)
+        self.vfl = VESC(VESC_ID.FRONT_LEFT)
+        self.vfr = VESC(VESC_ID.FRONT_RIGHT)
+        self.vbl = VESC(VESC_ID.BACK_LEFT)
+        self.vbr = VESC(VESC_ID.BACK_RIGHT)
     
     def _callback(self, msg):
         self.vfl.set_speed_mps(msg.front_left.speed)
