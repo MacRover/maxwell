@@ -38,7 +38,7 @@ class VescStatus(Node):
         ]
 
     def _callback(self, msg):
-        if ((msg.address & 0xff) != self.motor.value and 
+        if ((msg.address & 0xff) != self.motor.value or 
             (msg.address >> 8) != self.status.value):
             return
             
