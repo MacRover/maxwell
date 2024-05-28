@@ -55,6 +55,10 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+void Callback_CAN(CAN_MESSAGE *msg);
+void Callback_LED(CAN_MESSAGE *msg);
+void Callback_Stepper(CAN_MESSAGE *msg);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,12 +107,81 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+
+    static enum
+    {
+      BAREBONES_STATE_CAN = 0,
+      BAREBONES_STATE_LED,
+      BAREBONES_STATE_STEPPER
+    } eState = BAREBONES_STATE_CAN; //Adjust test state here
+
+
+    switch (eState)
+    {
+      case BAREBONES_STATE_CAN:
+      {
+
+        CAN_Initialize();
+        CAN_RegisterReceiveCallback(&Callback_CAN);
+
+        break;
+      }
+      case BAREBONES_STATE_LED:
+      {
+
+        CAN_Initialize();
+        CAN_RegisterReceiveCallback(&Callback_LED);
+        break;
+      }
+      case BAREBONES_STATE_STEPPER:
+      {
+
+        CAN_Initialize();
+        STEPPER_Initialize();
+        STEPPER_AdjustStepSpeed(400); //400 hz
+
+        STEPPER_REGISTER_DATA data = {0};
+
+        //all values are zero - only need to populate non-zero values
+
+        data.reg.drvconf.SLP = 0b11110;
+        data.reg.drvconf.RDSEL = 0b11;
+        data.reg.drvconf.SHRTSENS = 1;
+        data.reg.drvconf.EN_PFD = 1;
+        data.reg.drvconf.EN_S2VS = 1;
+
+        data.reg.sgconf.SGT = 0b0000010;
+        data.reg.sgconf.CS = 17;
+
+        //smarten is all 0
+
+        data.reg.chopconf.TBL = 0b10;
+        data.reg.chopconf.HEND = 0b0100;
+        data.reg.chopconf.HSTRT = 0b110;
+        data.reg.chopconf.TOFF = 0b0100;
+
+        data.reg.drvctrl.INTPOL = 1;
+        data.reg.drvctrl.MRES = 0b0111;
+
+
+
+
+        STEPPER_WriteRegisterConfig(STEPPER_REGISTER_ALL, &data);
+        CAN_RegisterReceiveCallback(&Callback_Stepper);
+        break;
+      }
+    }
+
+    while (1)
+    {
+
+
+
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+    }
   /* USER CODE END 3 */
 }
 
@@ -159,7 +232,75 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Callback_CAN(CAN_MESSAGE *msg)
+{
+  CAN_MESSAGE txMsg;
 
+  txMsg.header = (msg->header) + 1;
+  //data is zero
+
+  CAN_Send(&txMsg);
+
+}
+
+void Callback_LED(CAN_MESSAGE *msg)
+{
+
+  switch(msg->header)
+  {
+    case 0x00:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+      break;
+    case 0x01:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+      break;
+    default:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+      break;
+  }
+
+  CAN_MESSAGE txMsg;
+
+  txMsg.header = 0xFF;
+  memcpy(txMsg.data, msg->data, 8); //echo data w a different header
+
+  CAN_Send(&txMsg);
+}
+
+void Callback_Stepper(CAN_MESSAGE *msg)
+{
+
+  switch(msg->header)
+  {
+    case 0x00:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+      STEPPER_StopStep();
+      break;
+    case 0x01:
+      //CW Direction
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+      STEPPER_SetDirection(STEPPER_DIRECTION_CW);
+      STEPPER_StartStep();
+      break;
+    case 0x02:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+      STEPPER_SetDirection(STEPPER_DIRECTION_CCW);
+      STEPPER_StartStep();
+      break;
+    case 0x03:
+      STEPPER_AdjustStepSpeed((msg->data[6] << 8) | msg->data[7]);
+    default:
+      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+      break;
+  }
+
+  CAN_MESSAGE txMsg;
+
+  txMsg.header = 0xFF;
+  memcpy(txMsg.data, msg->data, 8); //echo data w a different header
+
+  CAN_Send(&txMsg);
+}
 /* USER CODE END 4 */
 
 /**

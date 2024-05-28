@@ -515,11 +515,11 @@ STEPPER_STATUS STEPPER_AdjustStepSpeed(uint16_t freq)
     return STEPPER_ERROR_NOT_INITIALIZED;
   }
 
-  uint32_t desired_arr = 6000/freq;
+  uint32_t desired_arr = 12000/freq;
   uint32_t desired_ccr = desired_arr / 2;
 
-  __HAL_TIM_SET_AUTORELOAD(&htim2, desired_arr);
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, desired_ccr);
+  __HAL_TIM_SET_AUTORELOAD(&htim2, desired_arr-1);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, desired_ccr-1);
 
   return STEPPER_OK;
 
