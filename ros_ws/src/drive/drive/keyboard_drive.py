@@ -26,11 +26,16 @@ def main():
         Be careful not to hold these keys, as these keys control the acceleration of the bot,
         and u dont want the bot flying out!!"""
     )
-    while True:
+
+    enabled = True
+    while enabled:
         char = getch()
         if ord(char) == 27:
             print("Exiting")
-            break
+            vel_msg.linear.x = 0.0
+            vel_msg.linear.y = 0.0
+            vel_msg.angular.z = 0.0
+            enabled = False
         elif char == "w":
             print("Accelerated")
             vel_msg.linear.x += 0.008
