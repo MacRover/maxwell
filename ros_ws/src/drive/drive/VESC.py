@@ -57,7 +57,10 @@ class VESC:
     
     def set_rpm(self, rpm: int) -> None:
         self.cmd_id = CMD.CAN_PACKET_SET_RPM
-        self.data = rpm
+        rpm_min = 249
+        if (rpm < 0): 
+            rpm_min = -rpm_min
+        self.data = int(rpm * 10 * 3 + rpm_min)
         self.scaling = 1
     
     def set_speed_mps(self, speed: float) -> None:
