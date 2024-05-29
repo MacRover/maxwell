@@ -112,8 +112,9 @@ int main(void)
     {
       BAREBONES_STATE_CAN = 0,
       BAREBONES_STATE_LED,
-      BAREBONES_STATE_STEPPER
-    } eState = BAREBONES_STATE_CAN; //Adjust test state here
+      BAREBONES_STATE_STEPPER,
+      BAREBONES_STATE_STEPPER_CAN
+    } eState = BAREBONES_STATE_STEPPER; //Adjust test state here
 
 
     switch (eState)
@@ -135,10 +136,44 @@ int main(void)
       }
       case BAREBONES_STATE_STEPPER:
       {
+        STEPPER_Initialize();
+        STEPPER_AdjustStepSpeed(400); //400 hz
+
+        STEPPER_REGISTER_DATA data = {0};
+
+        //all values are zero - only need to populate non-zero values
+
+        data.reg.drvconf.SLP = 0b11110;
+        data.reg.drvconf.RDSEL = 0b11;
+        data.reg.drvconf.SHRTSENS = 1;
+        data.reg.drvconf.EN_PFD = 1;
+        data.reg.drvconf.EN_S2VS = 1;
+
+        data.reg.sgconf.SGT = 0b0000010;
+        data.reg.sgconf.CS = 17;
+
+        //smarten is all 0
+
+        data.reg.chopconf.TBL = 0b10;
+        data.reg.chopconf.HEND = 0b0100;
+        data.reg.chopconf.HSTRT = 0b110;
+        data.reg.chopconf.TOFF = 0b0100;
+
+        data.reg.drvctrl.INTPOL = 1;
+        data.reg.drvctrl.MRES = 0b0111;
+
+        STEPPER_WriteRegisterConfig(STEPPER_REGISTER_ALL, &data);
+        STEPPER_SetDirection(STEPPER_DIRECTION_CW);
+        //STEPPER_StartStep();
+
+        break;
+      }
+      case BAREBONES_STATE_STEPPER_CAN:
+      {
 
         CAN_Initialize();
         STEPPER_Initialize();
-        STEPPER_AdjustStepSpeed(400); //400 hz
+        STEPPER_AdjustStepSpeed(200); //200 hz
 
         STEPPER_REGISTER_DATA data = {0};
 
@@ -172,10 +207,40 @@ int main(void)
       }
     }
 
+    uint32_t timer = HAL_GetTick();
+    STEPPER_DIRECTION dir = STEPPER_DIRECTION_CW;
+
     while (1)
     {
 
+      switch (eState)
+      {
+        case BAREBONES_STATE_STEPPER:
+        {
+          //motor is at 200hz. Will do one rotation in 200 steps. Does two motor rotations, or 24 degrees, in 2 seconds, 2000ms
+          if ((HAL_GetTick() - timer) > 2000)
+          {
+            HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+            if (dir == STEPPER_DIRECTION_CW)
+            {
+              dir = STEPPER_DIRECTION_CCW;
+            }
+            else
+            {
+              dir = STEPPER_DIRECTION_CW;
+            }
+            STEPPER_SetDirection(dir);
+            timer = HAL_GetTick();
+          }
 
+          break;
+        }
+
+        default:
+          break;
+
+
+      }
 
     
     /* USER CODE END WHILE */
@@ -236,6 +301,8 @@ void Callback_CAN(CAN_MESSAGE *msg)
 {
   CAN_MESSAGE txMsg;
 
+  HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+
   txMsg.header = (msg->header) + 1;
   //data is zero
 
@@ -290,6 +357,7 @@ void Callback_Stepper(CAN_MESSAGE *msg)
     case 0x03:
       STEPPER_AdjustStepSpeed((msg->data[6] << 8) | msg->data[7]);
     default:
+      STEPPER_StopStep();
       HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
       break;
   }
@@ -312,8 +380,11 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+
   while (1)
   {
+
   }
   /* USER CODE END Error_Handler_Debug */
 }
