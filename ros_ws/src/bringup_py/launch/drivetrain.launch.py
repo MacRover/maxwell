@@ -26,11 +26,9 @@ def generate_launch_description():
         name="writer"
     )
 
-    return LaunchDescription(
-        [
-            heartbeat_node,
-            drive_controller_node,
-            vesc_controller_node,
-            can_writer_node,
-        ]
-    )
+    ld = LaunchDescription()
+    ld.add_action(heartbeat_node)
+    ld.add_action(drive_controller_node)
+    ld.add_action(vesc_controller_node)
+    ld.add_action(can_writer_node)
+    return ld
