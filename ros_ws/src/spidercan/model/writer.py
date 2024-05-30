@@ -24,7 +24,7 @@ class Writer(Node):
         super().__init__("writer")
 
         # Set to true when testing
-        self.VCAN_ENABLED = True
+        self.VCAN_ENABLED = False
 
         self.declare_parameter(
             "topic",

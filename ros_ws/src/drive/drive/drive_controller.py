@@ -59,7 +59,11 @@ class DriveController(Node):
         print("Received command %s" % msg)
         self.model.body_state = [msg.linear.x, msg.linear.y, msg.angular.z]
         out = SwerveModulesList()
-        out.modules = self.model.getDriveModuleVelocities()
+        modules = self.model.getDriveModuleVelocities()
+        out.front_left = modules[0]
+        out.front_right = modules[1]
+        out.rear_left = modules[2]
+        out.rear_right = modules[3]
         print("Publishing command %s" % out)
         self.publisher_modules_command.publish(out)
 
