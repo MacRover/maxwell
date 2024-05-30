@@ -54,6 +54,28 @@ class Reader(Node):
                 type=ParameterType.PARAMETER_INTEGER,
             ),
         )
+        self.declare_parameter(
+            "can_id",
+            0x00000000,
+            ParameterDescriptor(
+                description="CAN ID Filter",
+                type=ParameterType.PARAMETER_INTEGER,
+            ),
+        )
+        self.declare_parameter(
+            "can_mask",
+            0x00000000,
+            ParameterDescriptor(
+                description="CAN ID Mask",
+                type=ParameterType.PARAMETER_INTEGER,
+            ),
+        )
+
+        self.filter = {
+            "can_id": self.get_parameter("can_id").get_parameter_value().integer_value,
+            "can_mask": self.get_parameter("can_mask").get_parameter_value().integer_value,
+            "extended": True
+        }
 
         self.publisher = self.create_publisher(
             CANraw, self.get_parameter("topic").get_parameter_value().string_value, 10
@@ -65,6 +87,7 @@ class Reader(Node):
             channel=self.get_parameter("channel").get_parameter_value().string_value,
             bitrate=self.get_parameter("bitrate").get_parameter_value().integer_value,
         )
+        self.bus.set_filters([self.filter])
         self.notifier = Notifier(self.bus, listeners=[self.can_recv_callback])
         self.notifier.add_listener(self.can_recv_callback)
         self.bus.recv()
