@@ -69,7 +69,7 @@ static void MX_CAN_Init(void);
 void setupTxCAN()
 {
     TxHeader.StdId = 0x321;
-    TxHeader.ExtId = 0x04;
+    TxHeader.ExtId = 0x01;
     TxHeader.RTR = CAN_RTR_DATA;
     TxHeader.IDE = CAN_ID_EXT;
     TxHeader.DLC = 8;
@@ -82,7 +82,7 @@ void setupTxCAN()
     TxData[4] = 0xA4;
     TxData[5] = 0xA5;
     TxData[6] = 0xA6;
-    TxData[7] = 0xA0;
+    TxData[7] = 0xA7;
 }
 
 void setupRxCAN()
@@ -91,7 +91,7 @@ void setupRxCAN()
     canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
     canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
     canfilterconfig.FilterIdHigh = 0x0000;
-    canfilterconfig.FilterIdLow = 0x0359 << 3;  //read only 959. nothing else
+    canfilterconfig.FilterIdLow = 0x0356 << 3;  //read only 959. nothing else
     canfilterconfig.FilterMaskIdHigh = 0x0000;
     canfilterconfig.FilterMaskIdLow = 0xFFF8;
     canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;

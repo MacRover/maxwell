@@ -40,9 +40,20 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
+
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
+CAN_TxHeaderTypeDef TxHeader;
+uint8_t TxData[8];
+uint32_t TxMailbox;
+
+// CAN Rx
+CAN_FilterTypeDef canfilterconfig;
+CAN_RxHeaderTypeDef RxHeader;
+uint8_t RxData[8];
+int speed;
 
 /* USER CODE END PV */
 
@@ -50,12 +61,106 @@ SPI_HandleTypeDef hspi1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_CAN_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void setupTxCAN()
+{
+    TxHeader.StdId = 0x321;
+    TxHeader.ExtId = 0x03;
+    TxHeader.RTR = CAN_RTR_DATA;
+    TxHeader.IDE = CAN_ID_EXT;
+    TxHeader.DLC = 8;
+    TxHeader.TransmitGlobalTime = DISABLE;
+
+    TxData[0] = 0xA0;
+    TxData[1] = 0xA1;
+    TxData[2] = 0xA2;
+    TxData[3] = 0xA3;
+    TxData[4] = 0xA4;
+    TxData[5] = 0xA5;
+    TxData[6] = 0xA6;
+    TxData[7] = 0xA9;
+}
+
+void setupRxCAN()
+{
+    canfilterconfig.FilterBank = 0;
+    canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+    canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
+    canfilterconfig.FilterIdHigh = 0x0000;
+    canfilterconfig.FilterIdLow = 0x0054 << 3;  //read only 54 or 55. nothing else
+    canfilterconfig.FilterMaskIdHigh = 0x0000;
+    canfilterconfig.FilterMaskIdLow = 0xFFF0;
+    canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+    canfilterconfig.FilterActivation = ENABLE;
+    canfilterconfig.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(&hcan, &canfilterconfig);
+    HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
+}
+
+void txCAN()
+{
+    HAL_StatusTypeDef can_result = HAL_CAN_AddTxMessage(&hcan, &TxHeader,
+            TxData, &TxMailbox);
+    if (can_result != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
+{
+    /* Get RX message */
+    if (HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData)
+            != HAL_OK)
+    {
+        /* Reception Error */
+        Error_Handler();
+    }
+
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+    // Echo received CAN message
+
+    //RxData[7] = RxData[7] + 1;
+    HAL_CAN_AddTxMessage(&hcan, &TxHeader, RxData, &TxMailbox);
+
+    if (RxHeader.ExtId == 0x54)
+    {
+    	//counter clockwise
+
+    	if (RxData[7] != 0)
+    	{
+    		speed = speed + RxData[7];
+    	}
+    	else
+    	{
+    		speed = 0;
+    	}
+    }
+    else if (RxHeader.ExtId == 0x55)
+    {
+    	//clockwise clockwise
+
+    	if (RxData[7] != 0)
+    	{
+    		speed = speed - RxData[7];
+    	}
+    	else
+    	{
+    		speed = 0;
+    	}
+    }
+}
+
+
+
 uint32_t getUs(void)
 {
 
@@ -110,6 +215,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
@@ -233,20 +339,55 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+    setupTxCAN();
+    setupRxCAN();
+
     uint32_t timer;
+    uint32_t delay;
+
 	while (1) {
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
 
-		//HAL_Delay(1);
-		delayUs(300);
 
-		if ((HAL_GetTick() - timer) > 1500) {
+		if (speed == 0)
+		{
+		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Motor driver chip disable so we can free spin it
+
+			txCAN();
 			HAL_Delay(500);
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_4);
-			HAL_Delay(500);
-			timer = HAL_GetTick();
 		}
+		else if (speed > 0)
+		{
+		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
+
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
+
+			delay = 100000/speed; //arbitrary speed calculation
+
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
+
+
+			delayUs(delay);
+
+		}
+		else if (speed < 0)
+		{
+		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
+
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
+
+			delay = 100000/ (-1*speed);
+
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
+
+			delayUs(delay);
+		}
+
+
+
+	//HAL_Delay(1);
+
 
     /* USER CODE END WHILE */
 
@@ -292,6 +433,48 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CAN Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN_Init(void)
+{
+
+  /* USER CODE BEGIN CAN_Init 0 */
+
+  /* USER CODE END CAN_Init 0 */
+
+  /* USER CODE BEGIN CAN_Init 1 */
+
+  /* USER CODE END CAN_Init 1 */
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 4;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SyncJumpWidth = CAN_SJW_2TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_15TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan.Init.TimeTriggeredMode = DISABLE;
+  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoWakeUp = DISABLE;
+  hcan.Init.AutoRetransmission = ENABLE;
+  hcan.Init.ReceiveFifoLocked = DISABLE;
+  hcan.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN_Init 2 */
+
+  if (HAL_CAN_Start(&hcan) != HAL_OK)
+      {
+          /* Start Error */
+          Error_Handler();
+      }
+  /* USER CODE END CAN_Init 2 */
+
 }
 
 /**
@@ -391,6 +574,9 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
+
+    uint32_t CAN_ERR = HAL_CAN_GetError(&hcan);
+
     while (1)
     {
     }
