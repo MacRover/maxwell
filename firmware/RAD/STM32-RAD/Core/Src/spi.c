@@ -334,6 +334,9 @@ STEPPER_STATUS STEPPER_Initialize()
   MX_GPIO_Init(); 
   MX_TIM2_Init();
 
+  HAL_GPIO_WritePin(DRIVER_ENN_GPIO_Port, DRIVER_ENN_Pin, GPIO_PIN_SET);
+
+
   driverInitialized = 1;
 
   return STEPPER_OK;
@@ -493,6 +496,9 @@ STEPPER_STATUS STEPPER_StartStep(void)
   {
     return STEPPER_ERROR_NOT_INITIALIZED;
   }
+
+  HAL_GPIO_WritePin(DRIVER_ENN_GPIO_Port, DRIVER_ENN_Pin, GPIO_PIN_RESET);
+
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   return STEPPER_OK;
 }
@@ -503,6 +509,8 @@ STEPPER_STATUS STEPPER_StopStep(void)
   {
     return STEPPER_ERROR_NOT_INITIALIZED;
   }
+  HAL_GPIO_WritePin(DRIVER_ENN_GPIO_Port, DRIVER_ENN_Pin, GPIO_PIN_SET);
+
   HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
   return STEPPER_OK;
 }
@@ -570,6 +578,7 @@ STEPPER_STATUS STEPPER_Deinitialize()
 
   HAL_GPIO_DeInit(DRIVER_CS_GPIO_Port, DRIVER_CS_Pin);
   HAL_GPIO_DeInit(DRIVER_DIR_GPIO_Port, DRIVER_DIR_Pin);
+  HAL_GPIO_DeInit(DRIVER_ENN_GPIO_Port, DRIVER_ENN_Pin);
 
 
   return STEPPER_OK;

@@ -56,7 +56,7 @@ void MX_CAN_Init(void)
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 2;
+  hcan.Init.Prescaler = 4;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_2TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_15TQ;
@@ -72,7 +72,11 @@ void MX_CAN_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN_Init 2 */
-
+  if (HAL_CAN_Start(&hcan) != HAL_OK)
+    {
+        /* Start Error */
+        Error_Handler();
+    }
   /* USER CODE END CAN_Init 2 */
 
 }
@@ -105,7 +109,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* CAN1 interrupt Init */
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
@@ -165,7 +169,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 void _setupTxCAN()
 {
     TxHeader.StdId = 0x321;
-    TxHeader.ExtId = 0x01;
+    TxHeader.ExtId = 0x03;
     TxHeader.RTR = CAN_RTR_DATA;
     TxHeader.IDE = CAN_ID_EXT;
     TxHeader.DLC = 8;
@@ -178,13 +182,12 @@ void _setupTxCAN()
     TxData[4] = 0xA4;
     TxData[5] = 0xA5;
     TxData[6] = 0xA6;
-    TxData[7] = 0xA7;
+    TxData[7] = 0xA9;
 }
 
 void _setupRxCAN()
 {
-
-    HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
+  HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
 }
 
 void _setupRxFilter()
@@ -193,9 +196,9 @@ void _setupRxFilter()
 	canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
 	canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
 	canfilterconfig.FilterIdHigh = 0x0000;
-	canfilterconfig.FilterIdLow = 0x0000;
+	canfilterconfig.FilterIdLow = 0x0054 << 3;
 	canfilterconfig.FilterMaskIdHigh = 0x0000;
-	canfilterconfig.FilterMaskIdLow = 0x0000;
+	canfilterconfig.FilterMaskIdLow = 0xFFF0;
 	canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
 	canfilterconfig.FilterActivation = ENABLE;
 	canfilterconfig.SlaveStartFilterBank = 14;

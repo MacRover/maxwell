@@ -48,7 +48,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+int speed;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,14 +93,14 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  // MX_GPIO_Init();
-  // MX_CAN_Init();
-  // MX_I2C1_Init();
-  // MX_SPI1_Init();
-  // MX_SPI2_Init();
-  // MX_TIM2_Init();
-  // MX_ADC1_Init();
-  // MX_ADC2_Init();
+//  MX_GPIO_Init();
+//  MX_CAN_Init();
+//  MX_I2C1_Init();
+//  MX_SPI1_Init();
+//  MX_SPI2_Init();
+//  MX_TIM2_Init();
+//  MX_ADC1_Init();
+//  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -112,9 +112,8 @@ int main(void)
     {
       BAREBONES_STATE_CAN = 0,
       BAREBONES_STATE_LED,
-      BAREBONES_STATE_STEPPER,
       BAREBONES_STATE_STEPPER_CAN
-    } eState = BAREBONES_STATE_STEPPER; //Adjust test state here
+    } eState = BAREBONES_STATE_STEPPER_CAN; //Adjust test state here
 
 
     switch (eState)
@@ -134,40 +133,7 @@ int main(void)
         CAN_RegisterReceiveCallback(&Callback_LED);
         break;
       }
-      case BAREBONES_STATE_STEPPER:
-      {
-        STEPPER_Initialize();
-        STEPPER_AdjustStepSpeed(400); //400 hz
 
-        STEPPER_REGISTER_DATA data = {0};
-
-        //all values are zero - only need to populate non-zero values
-
-        data.reg.drvconf.SLP = 0b11110;
-        data.reg.drvconf.RDSEL = 0b11;
-        data.reg.drvconf.SHRTSENS = 1;
-        data.reg.drvconf.EN_PFD = 1;
-        data.reg.drvconf.EN_S2VS = 1;
-
-        data.reg.sgconf.SGT = 0b0000010;
-        data.reg.sgconf.CS = 17;
-
-        //smarten is all 0
-
-        data.reg.chopconf.TBL = 0b10;
-        data.reg.chopconf.HEND = 0b0100;
-        data.reg.chopconf.HSTRT = 0b110;
-        data.reg.chopconf.TOFF = 0b0100;
-
-        data.reg.drvctrl.INTPOL = 1;
-        data.reg.drvctrl.MRES = 0b0111;
-
-        STEPPER_WriteRegisterConfig(STEPPER_REGISTER_ALL, &data);
-        STEPPER_SetDirection(STEPPER_DIRECTION_CW);
-        //STEPPER_StartStep();
-
-        break;
-      }
       case BAREBONES_STATE_STEPPER_CAN:
       {
 
@@ -186,7 +152,7 @@ int main(void)
         data.reg.drvconf.EN_S2VS = 1;
 
         data.reg.sgconf.SGT = 0b0000010;
-        data.reg.sgconf.CS = 17;
+        data.reg.sgconf.CS = 7;
 
         //smarten is all 0
 
@@ -213,40 +179,15 @@ int main(void)
     while (1)
     {
 
-      switch (eState)
-      {
-        case BAREBONES_STATE_STEPPER:
-        {
-          //motor is at 200hz. Will do one rotation in 200 steps. Does two motor rotations, or 24 degrees, in 2 seconds, 2000ms
-          if ((HAL_GetTick() - timer) > 2000)
-          {
-            HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
-            if (dir == STEPPER_DIRECTION_CW)
-            {
-              dir = STEPPER_DIRECTION_CCW;
-            }
-            else
-            {
-              dir = STEPPER_DIRECTION_CW;
-            }
-            STEPPER_SetDirection(dir);
-            timer = HAL_GetTick();
-          }
-
-          break;
-        }
-
-        default:
-          break;
 
 
-      }
+    }
 
     
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    }
+
   /* USER CODE END 3 */
 }
 
@@ -300,10 +241,11 @@ void SystemClock_Config(void)
 void Callback_CAN(CAN_MESSAGE *msg)
 {
   CAN_MESSAGE txMsg;
+  memset(&txMsg.data, 0, sizeof(txMsg.data));
 
   HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 
-  txMsg.header = (msg->header) + 1;
+  txMsg.header = 3;
   //data is zero
 
   CAN_Send(&txMsg);
@@ -315,10 +257,10 @@ void Callback_LED(CAN_MESSAGE *msg)
 
   switch(msg->header)
   {
-    case 0x00:
+    case 0x54:
       HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
       break;
-    case 0x01:
+    case 0x55:
       HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
       break;
     default:
@@ -328,7 +270,7 @@ void Callback_LED(CAN_MESSAGE *msg)
 
   CAN_MESSAGE txMsg;
 
-  txMsg.header = 0xFF;
+  txMsg.header = 0x03;
   memcpy(txMsg.data, msg->data, 8); //echo data w a different header
 
   CAN_Send(&txMsg);
@@ -337,34 +279,49 @@ void Callback_LED(CAN_MESSAGE *msg)
 void Callback_Stepper(CAN_MESSAGE *msg)
 {
 
+
+	uint16_t hz = (msg->data[6] << 8) | msg->data[7];
   switch(msg->header)
   {
-    case 0x00:
-      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-      STEPPER_StopStep();
+    case 0x54:
+    {
+    	if (hz != 0)
+		{
+    		STEPPER_SetDirection(STEPPER_DIRECTION_CCW);
+			STEPPER_AdjustStepSpeed(hz);
+			STEPPER_StartStep();
+		}
+		else
+		{
+			STEPPER_StopStep();
+		}
+
       break;
-    case 0x01:
+    }
+    case 0x55:
       //CW Direction
-      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-      STEPPER_SetDirection(STEPPER_DIRECTION_CW);
-      STEPPER_StartStep();
+	{
+		if (hz != 0)
+		{
+			STEPPER_SetDirection(STEPPER_DIRECTION_CW);
+			STEPPER_AdjustStepSpeed(hz);
+			STEPPER_StartStep();
+		}
+		else
+		{
+			STEPPER_StopStep();
+		}
+
       break;
-    case 0x02:
-      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-      STEPPER_SetDirection(STEPPER_DIRECTION_CCW);
-      STEPPER_StartStep();
-      break;
-    case 0x03:
-      STEPPER_AdjustStepSpeed((msg->data[6] << 8) | msg->data[7]);
+	}
     default:
-      STEPPER_StopStep();
-      HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+    	STEPPER_StopStep();
       break;
   }
 
   CAN_MESSAGE txMsg;
 
-  txMsg.header = 0xFF;
+  txMsg.header = 0x03;
   memcpy(txMsg.data, msg->data, 8); //echo data w a different header
 
   CAN_Send(&txMsg);
