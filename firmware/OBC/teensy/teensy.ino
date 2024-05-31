@@ -19,7 +19,9 @@
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
-#define USING_TSB
+// #define USING_TSB
+
+#define DOMAIN_ID 5
 
 #define LED_PIN 13
 #define AD0_VAL 1
@@ -145,10 +147,14 @@ void setup()
     #ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
-    
-    while (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) { }
 
-    rclc_node_init_default(&teensy_node, "teensy_node", "", &support);
+    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+    rcl_init_options_init(&init_options, allocator);
+    rcl_init_options_set_domain_id(&init_options, DOMAIN_ID);
+    
+    while (rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator) != RCL_RET_OK) { }
+
+    rclc_node_init_default(&teensy_node, "obc_node", "obc", &support);
 
     rclc_publisher_init_default(
         &imu_pub, 
