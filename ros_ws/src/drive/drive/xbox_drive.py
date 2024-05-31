@@ -19,7 +19,7 @@ class XboxDrive(Node):
         self.vel_msg.linear.x = self._scale_with_deadzone(msg.axes[1])
         self.vel_msg.linear.y = self._scale_with_deadzone(msg.axes[0])
         self.vel_msg.angular.z = self._scale_with_deadzone(msg.axes[3])
-        self.pub.publish(vel_msg)
+        self.pub.publish(self.vel_msg)
 
     def _scale_with_deadzone(self, axes):
         if abs(axes) < DEAD_ZONE:
