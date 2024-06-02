@@ -23,9 +23,6 @@ class Writer(Node):
     def __init__(self):
         super().__init__("writer")
 
-        # Set to true when testing
-        self.VCAN_ENABLED = False
-
         self.declare_parameter(
             "topic",
             "/can/can_out",
@@ -44,7 +41,7 @@ class Writer(Node):
         )
         self.declare_parameter(
             "channel",
-            ("can0" if not self.VCAN_ENABLED else "vcan0"),
+            "can0",
             ParameterDescriptor(
                 description="CAN device. Passed to python-can",
                 type=ParameterType.PARAMETER_STRING,

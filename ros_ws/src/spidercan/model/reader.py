@@ -89,7 +89,6 @@ class Reader(Node):
         )
         self.bus.set_filters([self.filter])
         self.notifier = Notifier(self.bus, listeners=[self.can_recv_callback])
-        self.notifier.add_listener(self.can_recv_callback)
         self.bus.recv()
 
     def can_recv_callback(self, msg: Message):
