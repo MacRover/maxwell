@@ -19,7 +19,8 @@ def generate_launch_description():
         name="vesc_status_node",
         parameters=[{
             "status": "STATUS_1",
-            "motor": "FRONT_RIGHT"
+            "motor": "FRONT_RIGHT",
+            "publish_rate": 15
         }]
     )
 
