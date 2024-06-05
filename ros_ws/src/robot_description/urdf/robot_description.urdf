@@ -47,6 +47,15 @@
       </geometry>
     </collision>
   </link>
+
+  <link name="base_link">
+  </link>
+  <joint name="joint_chassis_to_base" type="fixed">
+    <origin rpy="0 0 -1.57079633" xyz="0.98467 -1.02594 0.94417"/>
+    <parent link="chassis"/>
+    <child link="base_link"/>
+  </joint>
+
   <link
     name="rear_right_swerve">
     <inertial>
