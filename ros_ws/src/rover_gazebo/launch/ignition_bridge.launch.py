@@ -111,10 +111,52 @@ def generate_launch_description():
         remappings=[(["/model/", LaunchConfiguration("robot_name"), "/tf"], "/tf")],
     )
 
+    # rgbd camera bridge
+    rgbd_camera_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        namespace=namespace,
+        name='rgbd_camera_bridge',
+        parameters=[{
+            'use_sim_time': use_sim_time
+            }],
+        arguments=[
+            ['/intel_realsense/camera_info' + '@sensor_msgs/msg/CameraInfo'  + '[ignition.msgs.CameraInfo'],
+            ['/intel_realsense' + '@sensor_msgs/msg/Image'       + '[ignition.msgs.Image'],
+            ['/intel_realsense/points'      + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked']
+        ]
+    )
+
+    # IMU bridge
+    imu_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        namespace=namespace,
+        name="imu_bridge",
+        output="screen",
+        parameters=[{
+            "use_sim_time": use_sim_time
+        }],
+        arguments=[
+            ['/world/', LaunchConfiguration('world'),
+             '/model/', LaunchConfiguration('robot_name'),
+             '/link/chassis/sensor/imu_sensor/imu' +
+             "@sensor_msgs/msg/Imu[ignition.msgs.IMU"]
+        ],
+        remappings=[
+            (['/world/', LaunchConfiguration('world'),
+             '/model/', LaunchConfiguration('robot_name'),
+             '/link/chassis/sensor/imu_sensor/imu'],
+              "/imu")
+        ]
+    )
+
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(clock_bridge)
     ld.add_action(cmd_vel_bridge)
     ld.add_action(pose_bridge)
     ld.add_action(odom_base_tf_bridge)
+    ld.add_action(rgbd_camera_bridge)
+    ld.add_action(imu_bridge)
     return ld
