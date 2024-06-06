@@ -22,13 +22,13 @@
 // #define USING_TSB
 
 #define DOMAIN_ID 5
-
 #define LED_PIN 13
 #define AD0_VAL 1
 #define IMU_INT1 23
-
 #define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
+
+#define RCL_RECONNECT(fn){rcl_ret_t rc = (fn); if(rc != RCL_RET_OK){obc_setup_uros();}}
 
 
 rcl_allocator_t allocator;
@@ -48,6 +48,9 @@ ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 
+Fan fan1;
+TSB tsb1;
+
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
 IPAddress agent_ip(192, 168, 1, 111);
@@ -57,9 +60,6 @@ unsigned long prev_time1 = 0, prev_time2 = 0;
 
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
-
-Fan fan1;
-TSB tsb1;
 
 
 void updateICM_20948(ICM_20948_I2C* icm)
@@ -134,17 +134,9 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
         sensor_msgs__msg__NavSatStatus__SERVICE_GPS;
 }
 
-void setup()
+void obc_setup_uros()
 {
-    Wire1.begin();
-    Wire1.setClock(400000);
-    Serial5.begin(38400);
-    Serial.begin(115200);
-
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(IMU_INT1, OUTPUT);
-
-    #ifdef USING_ROS
+#ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
 
@@ -152,7 +144,14 @@ void setup()
     rcl_init_options_init(&init_options, allocator);
     rcl_init_options_set_domain_id(&init_options, DOMAIN_ID);
     
-    while (rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator) != RCL_RET_OK) { }
+    while (rclc_support_init_with_options(
+            &support, 0, NULL, 
+            &init_options, 
+            &allocator) != RCL_RET_OK)
+    {
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+        delay(100);
+    }
 
     rclc_node_init_default(&teensy_node, "obc_node", "obc", &support);
 
@@ -168,81 +167,105 @@ void setup()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
     );
-    #endif
-
-    #ifdef USING_IMU_ONBOARD
-        digitalWrite(IMU_INT1, LOW);
-        delay(200);
-        while (LSM6DSMR.begin() != LSM6DSR_OK) { }
-        LSM6DSMR.Set_X_FS(8);
-        LSM6DSMR.Set_G_FS(2000);
-        LSM6DSMR.Enable_X();
-        LSM6DSMR.Enable_G();
-
-    #else
-        #ifdef USING_IMU_OTHER
-        ICM.begin(Wire1, AD0_VAL);
-        while (ICM.status != ICM_20948_Stat_Ok) 
-        {
-            ICM.begin(Wire1, AD0_VAL);
-        }
-        #endif
-    #endif
-
-    #ifdef USING_GPS
-        while (!GNSS.begin(Serial5)) { }
-        GNSS.setUART1Output(COM_TYPE_UBX);
-        GNSS.setMeasurementRate(33.333);
-        GNSS.setNavigationRate(6);
-        GNSS.saveConfiguration();
-        GNSS.setAutoPVTcallbackPtr(&updatePVTData);
-    #endif
-
-    #ifdef USING_TSB
-        while (!MCP.begin(MCP9601_ADDR, &Wire1)) {}
-        MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
-        MCP.setThermocoupleType(MCP9600_TYPE_K);
-        // setChannel(&tsb1, 0);
-    #endif
-
-    // initializeFan(&fan1, 0);
-    // enableFanControl(&fan1);
-
+#endif
     digitalWrite(LED_PIN, HIGH);
+}
+
+void obc_setup_imu()
+{
+#ifdef USING_IMU_ONBOARD
+    digitalWrite(IMU_INT1, LOW);
+    delay(200);
+    while (LSM6DSMR.begin() != LSM6DSR_OK) { delay(100); }
+    LSM6DSMR.Set_X_FS(8);
+    LSM6DSMR.Set_G_FS(2000);
+    LSM6DSMR.Enable_X();
+    LSM6DSMR.Enable_G();
+#else
+    #ifdef USING_IMU_OTHER
+    ICM.begin(Wire1, AD0_VAL);
+    while (ICM.status != ICM_20948_Stat_Ok) 
+    {
+        ICM.begin(Wire1, AD0_VAL);
+        delay(100);
+    }
+    #endif
+#endif
+}
+
+void obc_setup_gps()
+{
+#ifdef USING_GPS
+    while (!GNSS.begin(Serial5)) { delay(100); }
+    GNSS.setUART1Output(COM_TYPE_UBX);
+    GNSS.setMeasurementRate(33.333);
+    GNSS.setNavigationRate(6);
+    GNSS.saveConfiguration();
+    GNSS.setAutoPVTcallbackPtr(&updatePVTData);
+#endif
+}
+
+void obc_setup_tsb() 
+{
+#ifdef USING_TSB
+    while (!MCP.begin(MCP9601_ADDR, &Wire1)) { delay(100); }
+    MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
+    MCP.setThermocoupleType(MCP9600_TYPE_K);
+    // setChannel(&tsb1, 0);
+#endif
+}
+
+void obc_setup_fans()
+{
+
+}
+
+void setup()
+{
+    Wire1.begin();
+    Wire1.setClock(400000);
+    Serial5.begin(38400);
+    Serial.begin(115200);
+
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(IMU_INT1, OUTPUT);
+
+    obc_setup_imu();
+    obc_setup_gps();
+    obc_setup_tsb();
+    obc_setup_fans();
+    obc_setup_uros();
 }
 
 
 void loop()
 {
-    #ifdef USING_IMU_ONBOARD
-        updateLSM6DSM(&LSM6DSMR);
-    #else
-        #ifdef USING_IMU_OTHER
-        if (ICM.dataReady())
-        {
-            ICM.getAGMT();
-            updateICM_20948(&ICM);
-        }
-        #endif
+#ifdef USING_IMU_ONBOARD
+    updateLSM6DSM(&LSM6DSMR);
+#else
+    #ifdef USING_IMU_OTHER
+    if (ICM.dataReady())
+    {
+        ICM.getAGMT();
+        updateICM_20948(&ICM);
+    }
     #endif
+#endif
 
-    #ifdef USING_GPS
-        GNSS.checkUblox();
-        GNSS.checkCallbacks();
-    #endif
+#ifdef USING_GPS
+    GNSS.checkUblox();
+    GNSS.checkCallbacks();
+#endif
 
-    #ifdef USING_ROS
+#ifdef USING_ROS
     if ( (millis() - prev_time2) > 40) 
     {
         prev_time2 = millis();
 
-        rcl_publish(&imu_pub, &imu_msg, NULL);
-        rcl_publish(&gps_pub, &gps_msg, NULL);
+        RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
+        RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
     }
-    #endif
-
-    // setFanRPM(&fan1, 4500);
-    // getFanRPM(&fan1);
+#endif
 
     delay(1);
 }
