@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "*.tcc": "cpp"
     },
     "cmake.configureOnOpen": false
 }
