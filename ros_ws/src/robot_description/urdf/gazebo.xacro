@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<robot name="zinger" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <!--
+        GAZEBO MACROS
+    -->
+    <!--
+        Define Gazebo specific macro's here because this file isn't included if we're not running
+        Gazebo
+    -->
+    <xacro:macro name="gazebo_reference_link_wheel" params="name">
+        <gazebo reference="link_wheel_${name}">
+            <mu1>0.9</mu1>
+            <mu2>0.9</mu2>
+            <kp>500000.0</kp>
+            <kd>10.0</kd>
+            <minDepth>0.001</minDepth>
+            <maxVel>0.1</maxVel>
+            <fdir1>1 0 0</fdir1>
+            <selfCollide>true</selfCollide>
+        </gazebo>
+    </xacro:macro>
+
+    <!--
+        GAZEBO
+    -->
+    <xacro:gazebo_reference_link_wheel name="front_left_wheel" />
+    <xacro:gazebo_reference_link_wheel name="rear_left_wheel" />
+    <xacro:gazebo_reference_link_wheel name="rear_right_wheel" />
+    <xacro:gazebo_reference_link_wheel name="front_right_wheel" />
+
+    <gazebo>
+        <plugin
+                filename="gz_ros2_control-system"
+                name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find robot_description)/config/rover.yaml</parameters>
+        </plugin>
+    </gazebo>
+    <gazebo>
+         <plugin
+                filename="libignition-gazebo-pose-publisher-system.so"
+                name="ignition::gazebo::systems::PosePublisher">
+            <publish_link_pose>true</publish_link_pose>
+            <publish_sensor_pose>true</publish_sensor_pose>
+            <publish_collision_pose>false</publish_collision_pose>
+            <publish_visual_pose>false</publish_visual_pose>
+            <publish_model_pose>true</publish_model_pose>
+            <publish_nested_model_pose>true</publish_nested_model_pose>
+            <use_pose_vector_msg>true</use_pose_vector_msg>
+            <static_publisher>true</static_publisher>
+            <static_update_frequency>-1</static_update_frequency>
+        </plugin>
+    </gazebo>
+</robot>
