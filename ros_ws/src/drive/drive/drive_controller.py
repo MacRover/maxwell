@@ -25,7 +25,7 @@ class DriveController(Node):
         )
         self.subscription_cmd_vel = self.create_subscription(
             Twist,
-            "/cmd_vel",
+            "/cmd_vel_repeat",
             self.publishModulesCommand,
             10,
         )

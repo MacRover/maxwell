@@ -2,12 +2,6 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    heartbeat_node = Node(
-        package="drive",
-        executable="heartbeat.py",
-        name="heartbeat_node"
-    )
-
     drive_controller_node = Node(
         package="drive",
         executable="drive_controller.py",
@@ -27,7 +21,6 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription()
-    ld.add_action(heartbeat_node)
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
     ld.add_action(can_writer_node)
