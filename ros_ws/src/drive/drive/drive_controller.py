@@ -9,6 +9,7 @@ from std_msgs.msg import Float64MultiArray
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from custom_interfaces.msg import SwerveModulesList, SwerveModule
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 from .model import SteeringModel
 from .drive_module import DriveModule
@@ -23,8 +24,8 @@ class Drive:
     def publishModulesCommand(self, msg: SwerveModulesList) -> None:
         pass
     # Takes encoder data from RAD and VESCs from /drive_modules and converts
-    # it to Twist msg. Publish to Odom msg /odom
-    def publishOdom(self, modules: SwerveModulesList, stamp: time) -> None:
+    # it to Twist msg. Publishes to Odometry msg /odom
+    def publishOdom(self, modules: SwerveModulesList, stamp) -> None:
         pass
 
 class SwerveDrive(Drive):
@@ -41,7 +42,6 @@ class SwerveDrive(Drive):
         self.model = SteeringModel(modules)
     
     def publishModulesCommand(self, msg):
-        print("Received command %s" % msg)
         self.model.body_state = [msg.linear.x, msg.linear.y, msg.angular.z]
         out = SwerveModulesList()
         modules = self.model.getDriveModuleVelocities()
@@ -49,7 +49,7 @@ class SwerveDrive(Drive):
         out.front_right = modules[1]
         out.rear_left = modules[2]
         out.rear_right = modules[3]
-        print("Publishing command %s" % out)
+        print("Swerve publishing command %s" % out)
         self.pub_modules.publish(out)
     
     def publishOdom(self, modules, stamp):
@@ -67,7 +67,7 @@ class TankSteerDrive(Drive):
     def __init__(self, pub_odom: Publisher, pub_modules: Publisher) -> None:
         self.pub_odom = pub_odom
         self.pub_modules = pub_modules
-        self.width = 0.7366
+        self.width = 0.7366 # Track Width of Robot (in meters)
     
     def publishModulesCommand(self, msg):
         left_speed = msg.linear.x - msg.angular.z*self.width/2
@@ -99,9 +99,23 @@ class TankSteerDrive(Drive):
 class DriveController(Node):
     def __init__(self):
         super().__init__("drive_controller")
-        self.publisher = self.create_publisher(Odometry, "/odom", 10)
+
+        self.declare_parameter(
+            "drive_mode",
+            "SWERVE_DRIVE",
+            ParameterDescriptor(
+                description="Method of Driving (SWERVE_DRIVE | TANK_STEER_HYBRID)",
+                type=ParameterType.PARAMETER_STRING,
+            ),
+        )
+        self.mode: DriveMode = DriveMode[
+            self.get_parameter("drive_mode").get_parameter_value().string_value
+        ]
+
+        self.publisher_odom = self.create_publisher(Odometry, "/odom", 10)
         self.publisher_modules_command = self.create_publisher(SwerveModulesList, "/modules_command", 10)
-        self.drive: Drive = SwerveDrive(self.publisher, self.publisher_modules_command)
+        self.drive = self.getDrive()
+
         self.subscription = self.create_subscription(
             SwerveModulesList,
             "/drive_modules",
@@ -117,7 +131,14 @@ class DriveController(Node):
     
     def callback(self, msg):
         self.get_logger().info("Received message %s" % msg)
-        self.drive.publishOdom(msg.modules, rclpy.clock.Clock().now().to_msg())
+        self.drive.publishOdom(msg, rclpy.clock.Clock().now().to_msg())
+    
+    def getDrive(self) -> Drive:
+        if (self.mode == DriveMode.SWERVE_DRIVE):
+            return SwerveDrive(self.publisher_odom, self.publisher_modules_command)
+        elif (self.mode == DriveMode.TANK_STEER_HYBRID):
+            return TankSteerDrive(self.publisher_odom, self.publisher_modules_command)
+
 
 def main(args=None):
     rclpy.init(args=args)
