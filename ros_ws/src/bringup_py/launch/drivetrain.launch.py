@@ -5,7 +5,10 @@ def generate_launch_description():
     drive_controller_node = Node(
         package="drive",
         executable="drive_controller.py",
-        name="drive_controller"
+        name="drive_controller",
+        parameters=[{
+            "drive_mode": "TANK_STEER_HYBRID"
+        }]
     )
 
     vesc_controller_node = Node(
