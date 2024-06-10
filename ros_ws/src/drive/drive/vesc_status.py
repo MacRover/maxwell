@@ -5,6 +5,7 @@ from rclpy.node import Node
 import struct
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from custom_interfaces.msg import CANraw
+from std_msgs.msg import Int32
 from .VESC import *
 
 class VescStatus(Node):
@@ -33,25 +34,51 @@ class VescStatus(Node):
             ),
         )
         self.declare_parameter(
-            "publish_rate",
+            "status_rate",
             10,
             ParameterDescriptor(
                 description="Publish rate of status messages",
                 type=ParameterType.PARAMETER_INTEGER,
             ),
         )
+        self.declare_parameter(
+            "namespace",
+            "front_right",
+            ParameterDescriptor(
+                description="Namespace of status topic",
+                type=ParameterType.PARAMETER_STRING,
+            ),
+        )
+        self.declare_parameter(
+            "logging",
+            False,
+            ParameterDescriptor(
+                description="Logging flag",
+                type=ParameterType.PARAMETER_BOOL
+            )
+        )
+
         self.status: Status = Status[
             self.get_parameter("status").get_parameter_value().string_value
         ]
         self.motor: VESC_ID = VESC_ID[
             self.get_parameter("motor").get_parameter_value().string_value
         ]
-        self.timer = self.create_timer(
-            1 / (self.get_parameter("publish_rate").get_parameter_value().integer_value),
-            (lambda: self.get_logger().info(self.output) if self.output else None)
-        )
 
-    def status_callback(self, msg):
+        is_logging = self.get_parameter("logging").get_parameter_value().bool_value
+        if is_logging:
+            self.timer = self.create_timer(
+                1 / (self.get_parameter("status_rate").get_parameter_value().integer_value),
+                (lambda: self.get_logger().info(self.output) if self.output else None))
+
+        self.pub_status = self.create_publisher(
+            Int32, 
+            "/"+self.get_parameter("namespace").get_parameter_value().string_value+"/vesc_rpm",
+            10
+        )
+        self.rpm = Int32()
+
+    def status_callback(self, msg: CANraw):
         if ((msg.address & 0xff) != self.motor.value or 
             (msg.address >> 8) != self.status.value):
             return
@@ -62,6 +89,8 @@ class VescStatus(Node):
             cur = ((raw_data >> 16) & 0xffff) / 10.0
             dc = (raw_data & 0xffff) / 1000.0
             self.output = f"RPM:{rpm}, Current:{cur}A, Duty Cycle:{dc}%"
+            self.rpm.data = rpm
+            self.pub_status.publish(self.rpm)
 
         elif (self.status == Status.STATUS_2):
             ampH = (raw_data >> 32) / 10000.0

@@ -20,7 +20,9 @@ def generate_launch_description():
         parameters=[{
             "status": "STATUS_1",
             "motor": "FRONT_RIGHT",
-            "publish_rate": 15
+            "namespace": "front_right",
+            "status_rate": 15,
+            "logging": True
         }]
     )
 
