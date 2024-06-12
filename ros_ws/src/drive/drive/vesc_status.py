@@ -8,6 +8,8 @@ from custom_interfaces.msg import CANraw
 from std_msgs.msg import Int32
 from .VESC import *
 
+MAX_CURRENT_DRAW = 65
+
 class VescStatus(Node):
     def __init__(self):
         super().__init__("vesc_status_node")
@@ -77,6 +79,7 @@ class VescStatus(Node):
             10
         )
         self.rpm = Int32()
+        self.max_cur = -1
 
     def status_callback(self, msg: CANraw):
         if ((msg.address & 0xff) != self.motor.value or 
@@ -88,7 +91,9 @@ class VescStatus(Node):
             rpm = (raw_data >> 32)
             cur = ((raw_data >> 16) & 0xffff) / 10.0
             dc = (raw_data & 0xffff) / 1000.0
-            self.output = f"RPM:{rpm}, Current:{cur}A, Duty Cycle:{dc}%"
+            if (self.max_cur < cur and self.max_cur < MAX_CURRENT_DRAW):
+                self.max_cur = cur
+            self.output = f"RPM:{rpm}, Current:{cur}A, Max Current:{self.max_cur}A, Duty Cycle:{dc}%"
             self.rpm.data = rpm
             self.pub_status.publish(self.rpm)
 
