@@ -14,12 +14,14 @@
 
 #include "fans.h"
 #include "TSB.h"
+#include "lora.h"
 
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
 // #define USING_TSB
+#define USING_LORA
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -265,6 +267,25 @@ void loop()
         RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
         RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
     }
+#endif
+
+#ifdef USING_LORA
+  if (transmittedFlag) {
+    transmittedFlag = false;
+    
+  }
+  if (receivedFlag) {
+    receivedFlag = false;
+
+  }
+  if (operationDone) {
+    operationDone = false;
+
+  }
+  if (scanDone) {
+    scanDone = false;
+
+  }
 #endif
 
     delay(1);
