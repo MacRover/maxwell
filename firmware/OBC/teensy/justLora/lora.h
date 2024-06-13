@@ -97,40 +97,40 @@
 enum LORA_MODE {
   SLEEP,
   STANDBY,
-  RECEIVE_INTERRUPT,
-  RECEIVE_BLOCKING,
-  TRANSMIT_INTERRUPT,
-  TRANSMIT_BLOCKING,
-  SCAN_CHANNEL_BLOCKING,
-  SCAN_CHANNEL_INTERRUPT,
-}
+  RECEIVE,
+  TRANSMIT,
+  SCAN_CHANNEL,
+};
 
 class Lora {
   private:
-    SX1262 radio;
+    SX1262 radio = new Module(NSS_PIN, DIO_PIN, NRST_PIN, BUSY_PIN);
     LORA_MODE mode;
     int state;
 
-    void loraPrint(char* str) {
-      if verbose
+    void loraPrint(String str) {
+      if (verbose) {
         Serial.print(serialID + str);
+      }
     }
 
-    void loraPrintln(char* str) {
-      if verbose
+    void loraPrintln(String str) {
+      if (verbose) {
         Serial.println(serialID + str);
+        }
     }
 
     void loraPrintState() {
-      if verbose
-        Serial.prinln(serialID + F("Status Code : ") + state);
+      if (verbose) {
+        Serial.println(serialID + F("Status Code : ") + state);
+      }
     }
 
     void loraHandleError() {
       while (true);
     }
 
-    void loraCheckError(char* successMsg, char* failMsg) {
+    void loraCheckError(String successMsg, String failMsg) {
       if (state == RADIOLIB_ERR_NONE) {
         loraPrintln(F("Success! ") + successMsg);
       } else {
@@ -143,7 +143,7 @@ class Lora {
   public:
     // Lora class parameters
     bool verbose;
-    const char[] serialID = F("[SX1262] "); // F() macro stores in flash mem
+    String serialID = F("[SX1262] "); // F() macro stores in flash mem
 
     // Last received packet parameters
     float rx_snr;
@@ -154,9 +154,16 @@ class Lora {
     // Last transmitted packet parameters
     float tx_dataRate;
 
-    Lora(bool isVerbose) {
-      radio = new Module(NSS_PIN, DIO_PIN, NRST_PIN, BUSY_PIN);
+    Lora (bool isVerbose = true) {
       verbose = isVerbose;
+    }
+
+    int GetState() {
+      return state;
+    }
+
+    LORA_MODE GetMode() {
+      return mode;
     }
 
     void InitializeLora() {
@@ -172,7 +179,7 @@ class Lora {
     }
 
     void InitInterruptHandler() {
-      radio.setPacketReceivedAction(setFlagRecieve);
+      radio.setPacketReceivedAction(setFlagReceive);
       radio.setPacketSentAction(setFlagTransmit);
       //radio.setChannelScanAction(setFlagScan);
       //radio.setDio1Action(setFlagOperation); // DIO1 is interrupt pin, toggled when any of the above interrupts are active
@@ -186,18 +193,20 @@ class Lora {
     }
 
     void SetMode(LORA_MODE md) {
-      char* msg = (md == LORA_MODE.STANDBY) ? F("standby") : ((md == LORA_MODE.SLEEP) ? F("sleep") : "other");
+      String msg = (md == LORA_MODE::STANDBY) ? F("standby") : ((md == LORA_MODE::SLEEP) ? F("sleep") : F("other"));
       loraPrint(F("Attempting to change power mode to ") + msg + " ... ");
-      if (md == LORA_MODE.STANDBY && mode != LORA_MODE.STANDBY) {
+      if (md == LORA_MODE::STANDBY && mode != LORA_MODE::STANDBY) {
         state = radio.standby(); // ON , in standby mode (no active RX/TX)
         loraCheckError("", "");
-      }else if (md == LORA_MODE.SLEEP && mode != LORA_MODE.SLEEP) {
+        mode = LORA_MODE::STANDBY;
+      }else if (md == LORA_MODE::SLEEP && mode != LORA_MODE::SLEEP) {
         state = radio.sleep(); // OFF , in sleep mode (low power)
         loraCheckError("", "");
+        mode = LORA_MODE::SLEEP;
       } else if (md == mode){
         loraPrintln(F("Already in ") + msg + "!");
       } else {
-        loraPrintln(F("Transitioning to " + msg + " mode via SetMode function is not supported."));
+        loraPrintln(F("Transitioning to ") + msg + F(" mode via SetMode function is not supported."));
       }
     }
 
@@ -221,35 +230,40 @@ class Lora {
       loraPrint(F("Starting to listen ... ")); 
       state = radio.startReceive(); // start listening for LoRa packets
       loraCheckError(F("Starting Recieve!"), F("Failed to start Receive!"));
+      mode = LORA_MODE::RECEIVE;
     }
 
-    void ReadInterruptPacket(char* str, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+    void ReadInterruptPacket(String str, bool updatePacketLength = true) {
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      }
       UpdateRXPacketParameters();
       state = radio.readData(str);
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
     }
 
     void ReadInterruptPacket(byte* byteArr, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      }
       UpdateRXPacketParameters();
       state = radio.readData(byteArr, rx_packetLength); // ensure allocated 256 byte array beforehand for all ranges of data
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
     }
 
     void ReadInterruptPacket(byte* byteArr, int byteLength, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      }
       UpdateRXPacketParameters();
       state = radio.readData(byteArr, byteLength); // create dynamically allocated byte array beforehand
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
     }
 
-    void InterruptTransmit(char* str) {
+    void InterruptTransmit(String str) {
       loraPrintln(F("Sending packet ... ")); // start transmitting the packet
       state = radio.startTransmit(str); // transmit C-string or Arduino string up to 256 characters long
+      mode = LORA_MODE::TRANSMIT;
       // check state error after ISR during main loop
 
       // NOTE: when using interrupt-driven transmit method,
@@ -261,6 +275,7 @@ class Lora {
     void InterruptTransmit(byte* byteArr, int byteLength) {
       loraPrintln(F("Sending packet ... ")); // start transmitting the packet
       state = radio.startTransmit(byteArr, byteLength); // transmit byte array up to 256 bytes long
+      mode = LORA_MODE::TRANSMIT;
       // check state error after ISR during main loop
 
       // NOTE: when using interrupt-driven transmit method,
@@ -269,49 +284,69 @@ class Lora {
       // i.e:  tx_dataRate does not get updated
     }
 
-    void EndInterruptTransmit() {
-      state = radio.finishTransmit(); // ALWAYS run after finishing a transmit sequence (can be 1 or multiple transmit function calls in sequence)
-      loraCheckError(F("Turned off RF transmit switch!"), F("Failed to clean up transmit sequence!"));
+    void EndInterruptReceive() {
+      SetMode(LORA_MODE::STANDBY);
+    }
+
+    void EndInterruptTransmit(bool endOfSequence) {
+      if (endOfSequence) {
+        state = radio.finishTransmit(); // ALWAYS run after finishing a transmit sequence (can be 1 or multiple transmit function calls in sequence)
+        loraCheckError(F("Turned off RF transmit switch!"), F("Failed to clean up transmit sequence!"));
+      }
+      SetMode(LORA_MODE::STANDBY);
     }
 
     // BLOCKING TX/RX METHODS =========================================
 
-    void ReadBlockingPacket(char* str, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+    void ReadBlockingPacket(String str, bool updatePacketLength = true) {
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      }
       UpdateRXPacketParameters();
+      mode = LORA_MODE::RECEIVE;
       state = radio.receive(str);
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
+      mode = LORA_MODE::STANDBY;
     }
 
     void ReadBlockingPacket(byte* byteArr, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      } 
       UpdateRXPacketParameters();
+      mode = LORA_MODE::RECEIVE;
       state = radio.receive(byteArr, rx_packetLength); // ensure allocated 256 byte array beforehand for all ranges of data
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
+      mode = LORA_MODE::STANDBY;
     }
 
     void ReadBlockingPacket(byte* byteArr, int byteLength, bool updatePacketLength = true) {
-      if update
-        UpdatePacketLength()
+      if (updatePacketLength) {
+        UpdatePacketLength();
+      }
       UpdateRXPacketParameters();
+      mode = LORA_MODE::RECEIVE;
       state = radio.receive(byteArr, byteLength); // create dynamically allocated byte array beforehand
       loraCheckError(F("Read packet succesfully!"), F("Failed to read packet!"));
+      mode = LORA_MODE::STANDBY;
     }
 
-    void BlockingTransmit(char* str) {
+    void BlockingTransmit(String str) {
       loraPrintln(F("Sending packet ... ")); // start transmitting the packet
+      mode = LORA_MODE::TRANSMIT;
       state = radio.transmit(str); // transmit C-string or Arduino string up to 256 characters long
       loraCheckError(F("Transmitted packet succesfully!"), F("Failed to transmit packet!"));
       UpdateTXPacketParameters();
+      mode = LORA_MODE::STANDBY;
     }
 
     void BlockingTransmit(byte* byteArr, int byteLength) {
       loraPrintln(F("Sending packet ... ")); // start transmitting the packet
+      mode = LORA_MODE::TRANSMIT;
       state = radio.transmit(byteArr, byteLength); // transmit byte array up to 256 bytes long
       loraCheckError(F("Transmitted packet succesfully!"), F("Failed to transmit packet!"));
       UpdateTXPacketParameters();
+      mode = LORA_MODE::STANDBY;
     }
 
     // CHANNEL AND SPECTRAL SCAN METHODS =========================================

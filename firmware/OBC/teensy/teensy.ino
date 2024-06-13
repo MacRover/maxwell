@@ -3,7 +3,7 @@
 #include <ICM_20948.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
-#include <Adafruit_MCP9601.h>
+//#include <Adafruit_MCP9601.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -16,10 +16,10 @@
 #include "TSB.h"
 #include "lora.h"
 
-#define USING_ROS
-#define USING_IMU_ONBOARD
+//#define USING_ROS
+//#define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-#define USING_GPS
+//#define USING_GPS
 // #define USING_TSB
 #define USING_LORA
 
@@ -48,7 +48,7 @@ sensor_msgs__msg__NavSatFix gps_msg;
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
-Adafruit_MCP9601 MCP;
+//Adafruit_MCP9601 MCP;
 
 Fan fan1;
 TSB tsb1;

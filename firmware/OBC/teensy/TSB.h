@@ -1,7 +1,7 @@
 #ifndef _TSB_H
 #define _TSB_H
 #include <cstdint>
-#include <Adafruit_MCP9601.h>
+//#include <Adafruit_MCP9601.h>
 #include "enums.h"
 #include "i2c.h"
 
