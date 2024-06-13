@@ -91,7 +91,7 @@ class VescStatus(Node):
             rpm = (raw_data >> 32)
             cur = ((raw_data >> 16) & 0xffff) / 10.0
             dc = (raw_data & 0xffff) / 1000.0
-            if (self.max_cur < cur and self.max_cur < MAX_CURRENT_DRAW):
+            if (self.max_cur < cur and cur < MAX_CURRENT_DRAW):
                 self.max_cur = cur
             self.output = f"RPM:{rpm}, Current:{cur}A, Max Current:{self.max_cur}A, Duty Cycle:{dc}%"
             self.rpm.data = rpm

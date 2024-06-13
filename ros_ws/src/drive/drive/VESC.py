@@ -19,9 +19,9 @@ class Status(Enum):
     STATUS_6 = 28
 
 class VESC_ID(Enum):
-    FRONT_LEFT = 88
+    FRONT_LEFT = 89
     FRONT_RIGHT = 87
-    BACK_LEFT = 89
+    BACK_LEFT = 88
     BACK_RIGHT = 86
 
 

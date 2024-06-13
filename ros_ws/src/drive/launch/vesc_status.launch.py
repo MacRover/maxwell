@@ -22,7 +22,7 @@ def generate_launch_description():
             "motor": "BACK_RIGHT",
             "namespace": "rear_right",
             "status_rate": 15,
-            "logging": False
+            "logging": True
         }]
     )
 
@@ -39,29 +39,29 @@ def generate_launch_description():
         }]
     )
 
-    vesc3_node = Node(
-        package="drive",
-        executable="vesc_status.py",
-        name="vesc3_status_node",
-        parameters=[{
-            "status": "STATUS_1",
-            "motor": "FRONT_LEFT",
-            "namespace": "front_left",
-            "status_rate": 15,
-            "logging": False
-        }]
-    )
-
     vesc4_node = Node(
         package="drive",
         executable="vesc_status.py",
         name="vesc4_status_node",
         parameters=[{
             "status": "STATUS_1",
+            "motor": "FRONT_LEFT",
+            "namespace": "front_left",
+            "status_rate": 15,
+            "logging": True
+        }]
+    )
+
+    vesc3_node = Node(
+        package="drive",
+        executable="vesc_status.py",
+        name="vesc3_status_node",
+        parameters=[{
+            "status": "STATUS_1",
             "motor": "BACK_LEFT",
             "namespace": "rear_left",
             "status_rate": 15,
-            "logging": False
+            "logging": True
         }]
     )
 
