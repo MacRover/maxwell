@@ -345,19 +345,23 @@ int main(void)
     uint32_t timer;
     uint32_t delay;
 
+    //LOCK THE MOTOR WITH THIS SETTING:
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
+    
+
 	while (1) {
 
 
 		if (speed == 0)
 		{
-		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Motor driver chip disable so we can free spin it
+		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Motor driver chip disable so we can free spin it
 
 			txCAN();
 			HAL_Delay(500);
 		}
 		else if (speed > 0)
 		{
-		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
+		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
 
 			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
 
@@ -372,7 +376,7 @@ int main(void)
 		}
 		else if (speed < 0)
 		{
-		    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
+		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
 
 			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
 
