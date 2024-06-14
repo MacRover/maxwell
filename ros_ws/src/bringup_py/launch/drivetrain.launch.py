@@ -20,7 +20,10 @@ def generate_launch_description():
     can_writer_node = Node(
         package="spidercan",
         executable="writer.py",
-        name="writer"
+        name="writer",
+        parameters=[{
+            "channel": "can0"
+        }]
     )
 
     ld = LaunchDescription()

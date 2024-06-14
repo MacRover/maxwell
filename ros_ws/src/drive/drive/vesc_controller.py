@@ -29,11 +29,11 @@ class VescController(Node):
         self.vbr.set_speed_mps(msg.rear_right.speed)
 
         self.pub.publish(self.vfl.get_can_message())
-        time.sleep(0.01)
+        time.sleep(0.02)
         self.pub.publish(self.vfr.get_can_message())
-        time.sleep(0.01)
+        time.sleep(0.02)
         self.pub.publish(self.vbl.get_can_message())
-        time.sleep(0.01)
+        time.sleep(0.02)
         self.pub.publish(self.vbr.get_can_message())
 
 
