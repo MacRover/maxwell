@@ -7,6 +7,8 @@
 
 #include "stm32f1xx_tmc_2590.h"
 
+#include <stdlib.h>
+
 TMC_2590_StatusTypeDef TMC_2590_Init(TMC_2590_HandleTypeDef *htmc2590)
 {
     // check tmc2590 handle allocation
@@ -143,6 +145,8 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
     // set driver state
     htmc2590->State = TMC_2590_STATE_BUSY;
     __send_conf_registers(htmc2590);
+
+    htmc2590->State = TMC_2590_STATE_READY;
 
     return TMC_2590_OK;
 }
@@ -341,12 +345,12 @@ HAL_StatusTypeDef __send_spi_packet(TMC_2590_HandleTypeDef *htmc2590,
     uint8_t SPImsg_bytes[3];
     __word_to_spi_order_buffer(SPImsg, SPImsg_bytes);
     // write new registers
-    HAL_GPIO_WritePin(htmc2590->Init.CS_GPIO_Port, htmc2590->Init.CS_GPIO_Port,
+    HAL_GPIO_WritePin(htmc2590->Init.CS_GPIO_Port, htmc2590->Init.CS_Pin,
             GPIO_PIN_RESET);
     HAL_StatusTypeDef spi_status = HAL_SPI_TransmitReceive(
             htmc2590->Init.SPI_HandlerInstance, SPImsg_bytes, SPI_read_bytes, 3,
             1000);
-    HAL_GPIO_WritePin(htmc2590->Init.CS_GPIO_Port, htmc2590->Init.CS_GPIO_Port,
+    HAL_GPIO_WritePin(htmc2590->Init.CS_GPIO_Port, htmc2590->Init.CS_Pin,
             GPIO_PIN_SET);
     return spi_status;
 }

@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tmc_2590.h"
+#include "as5048a.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +101,7 @@ int main(void)
     MX_TIM2_Init();
     /* USER CODE BEGIN 2 */
     MX_TMC_2590_1_Init();
+    MX_AS5048A_2_Init();
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -107,6 +109,7 @@ int main(void)
     while (1)
     {
         TMC_2590_MoveSteps(&tmc_2590_1, 100);
+        AS5048A_ReadAngle(&as5048a_2);
         HAL_Delay(100);
         /* USER CODE END WHILE */
 
