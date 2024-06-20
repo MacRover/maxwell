@@ -39,6 +39,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+void LS_Released_Callback(LS_NUMBER *num);
+void LS_Pressed_Callback(LS_NUMBER *num);
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -102,6 +106,11 @@ int main(void)
     /* USER CODE BEGIN 2 */
     MX_TMC_2590_1_Init();
     MX_AS5048A_2_Init();
+    LS_Initialize();
+
+    uint8_t callbacksSet = 0;
+
+    
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -111,6 +120,41 @@ int main(void)
         TMC_2590_MoveSteps(&tmc_2590_1, 100);
         AS5048A_ReadAngle(&as5048a_2);
         HAL_Delay(100);
+
+        //UNCOMMENT BELOW FOR LS TEST - INTERRUPT BASED
+
+        if (!callbacksSet)
+        {
+            //make this only happen once
+            LS_RegisterPressedCallback(&LS_Pressed_Callback);
+            LS_RegisterReleasedCallback(&LS_Released_Callback);
+            callbacksSet = 1;
+        }
+        
+
+        //UNCOMMENT BELOW FOR LS TEST - POLLING BASED
+        // LS_STATE button;
+
+        // LS_GetState(LS_1, &button);
+
+        // switch (button)
+        // {
+        //     case LS_STATE_RELEASED:
+        //         HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        //         break;
+        //     case LS_STATE_PRESSED:
+        //         HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        //         break;
+        //     default:
+        //         HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        //         break;
+        // }
+
+
+
+
+
+
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -173,6 +217,16 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void LS_Pressed_Callback(LS_NUMBER *num)
+{
+    HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+}
+
+void LS_Released_Callback(LS_NUMBER *num)
+{
+    HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+}
 
 /* USER CODE END 4 */
 

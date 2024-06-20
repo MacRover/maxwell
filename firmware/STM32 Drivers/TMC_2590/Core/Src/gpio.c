@@ -23,6 +23,12 @@
 
 /* USER CODE BEGIN 0 */
 
+void (*callback_pressed)(LS_NUMBER *num) = NULL;
+void (*callback_released)(LS_NUMBER *num) = NULL;
+
+uint8_t initialized_limitswitch;
+
+
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -111,5 +117,112 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+
+// PUBLIC FUNCTIONS --------------------------------
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  static LS_NUMBER pin;
+  pin = (GPIO_Pin == LS_1_Pin) ? LS_1 : LS_2;
+
+  if (HAL_GPIO_ReadPin(LS_1_GPIO_Port, GPIO_Pin) == GPIO_PIN_SET)
+  {
+    (*callback_pressed)(&pin);
+  }
+  else
+  {
+    (*callback_released)(&pin);
+  }
+}
+
+
+LS_STATUS LS_Initialize() {
+
+	//MX_GPIO_Init();
+
+	initialized_limitswitch = 1;
+
+	return LS_OK;
+}
+
+LS_STATUS LS_Deinitialize() {
+
+	if (!initialized_limitswitch) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	//HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+	//HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
+
+	initialized_limitswitch = 0;
+	return LS_OK;
+
+}
+
+
+LS_STATUS LS_GetState(LS_NUMBER num, LS_STATE *state) {
+
+	if (!initialized_limitswitch) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	uint8_t pin_state;
+
+
+	if (num == LS_1) {
+		pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+	} else if (num == LS_2) {
+		pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
+	} else {
+		return LS_ERROR_PIN;
+	}
+
+	if (pin_state == GPIO_PIN_RESET) {
+		*state = LS_STATE_RELEASED;
+	} else if (pin_state == GPIO_PIN_SET) {
+		*state = LS_STATE_PRESSED;
+	} else {
+		return LS_ERROR_HAL;
+	}
+
+	return LS_OK;
+
+}
+
+LS_STATUS LS_RegisterPressedCallback(void (*fcn)(LS_NUMBER *num)) {
+
+	if (!initialized_limitswitch) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	if (!fcn)
+	{
+		return LS_ERROR_INVALID_ARGUMENT;
+	}
+
+	callback_pressed = fcn;
+
+	return LS_OK;
+
+}
+
+
+LS_STATUS LS_RegisterReleasedCallback(void (*fcn)(LS_NUMBER *num)) {
+
+	if (!initialized_limitswitch) {
+		return LS_ERROR_NOT_INITIALIZED;
+	}
+
+	if (!fcn)
+	{
+		return LS_ERROR_INVALID_ARGUMENT;
+	}
+
+	callback_released = fcn;
+
+	return LS_OK;
+
+}
+
 
 /* USER CODE END 2 */
