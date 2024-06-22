@@ -1,1 +1,7 @@
-../Core/Src/gpio.c:44:6:MX_GPIO_Init	40	static
+../Core/Src/gpio.c:50:6:MX_GPIO_Init	40	static
+../Core/Src/gpio.c:122:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/gpio.c:139:11:LS_Initialize	4	static
+../Core/Src/gpio.c:148:11:LS_Deinitialize	4	static
+../Core/Src/gpio.c:163:11:LS_GetState	24	static
+../Core/Src/gpio.c:192:11:LS_RegisterPressedCallback	16	static
+../Core/Src/gpio.c:210:11:LS_RegisterReleasedCallback	16	static

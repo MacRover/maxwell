@@ -35,34 +35,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := library_test
+BUILD_ARTIFACT_NAME := TMC_2590
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-library_test.elf \
+TMC_2590.elf \
 
 MAP_FILES += \
-library_test.map \
+TMC_2590.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-library_test.list \
+TMC_2590.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: library_test.elf secondary-outputs
+main-build: TMC_2590.elf secondary-outputs
 
 # Tool invocations
-library_test.elf library_test.map: $(OBJS) $(USER_OBJS) C:\Users\Ethan\Documents\Repos\maxwell\firmware\RAD\lib\test2\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "library_test.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Ethan\Documents\Repos\maxwell\firmware\RAD\lib\test2\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="library_test.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+TMC_2590.elf TMC_2590.map: $(OBJS) $(USER_OBJS) C:\Users\Ethan\Documents\Repos\maxwell\firmware\STM32\ Drivers\TMC_2590\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "TMC_2590.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Ethan\Documents\Repos\maxwell\firmware\STM32 Drivers\TMC_2590\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TMC_2590.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -71,14 +71,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-library_test.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "library_test.list"
+TMC_2590.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "TMC_2590.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout library_test.elf library_test.list library_test.map
+	-$(RM) TMC_2590.elf TMC_2590.list TMC_2590.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

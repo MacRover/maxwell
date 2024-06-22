@@ -32,7 +32,6 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32f1xx_tmc_2590.h"
-#include "stm32f1xx_as5048a.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
