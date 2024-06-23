@@ -26,8 +26,18 @@ def generate_launch_description():
         }]
     )
 
+    can_queue_node = Node(
+        package="spidercan",
+        executable="can_queue.py",
+        name="queue",
+        parameters=[{
+            "queue_size": 10
+        }]
+    )
+
     ld = LaunchDescription()
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
     ld.add_action(can_writer_node)
+    ld.add_action(can_queue_node)
     return ld
