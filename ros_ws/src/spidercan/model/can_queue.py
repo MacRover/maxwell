@@ -19,7 +19,7 @@ class CANQueue(Node):
             "queue_size",
             10,
             ParameterDescriptor(
-                description="CAN bitrate. Passed to python-can",
+                description="Queue size of CAN",
                 type=ParameterType.PARAMETER_INTEGER,
             ),
         )
