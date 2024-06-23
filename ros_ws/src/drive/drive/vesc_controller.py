@@ -15,7 +15,7 @@ class VescController(Node):
             "/modules_command",
             self._callback, 10)
         
-        self.pub = self.create_publisher(CANraw, "/can/queue", 10)
+        self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
 
         self.vfl = VESC(VESC_ID.FRONT_LEFT)
         self.vfr = VESC(VESC_ID.FRONT_RIGHT)
