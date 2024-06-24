@@ -60,7 +60,7 @@ class Writer(Node):
             CANraw,
             self.get_parameter("topic").get_parameter_value().string_value,
             self.new_message_callback,
-            10,
+            15,
         )
 
         self.bus = ThreadSafeBus(

@@ -7,7 +7,7 @@ using std::placeholders::_1;
 RAD_Drive_Controller::RAD_Drive_Controller() : Node("rad_drive_controller")
 {
   this->declare_parameter("can_rate", 10);
-  sleep_sec = 1 / (4.0 * (float)this->get_parameter("can_rate").as_int());
+  sleep_msec = 1000 / (4.0 * (float)this->get_parameter("can_rate").as_int());
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
   sub_ = this->create_subscription<SwerveModulesList>(
     "/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)

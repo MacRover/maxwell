@@ -16,5 +16,5 @@ private:
     std::shared_ptr<rclcpp::Publisher<CANraw> > can_pub_;
     std::shared_ptr<rclcpp::Subscription<SwerveModulesList> > sub_;
 
-    uint16_t sleep_sec;
+    uint16_t sleep_msec;
 };
