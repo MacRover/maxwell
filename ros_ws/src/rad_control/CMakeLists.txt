@@ -12,17 +12,22 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(custom_interfaces REQUIRED)
 
-foreach(target rad_drive_controller)
-  add_executable(${target} src/${target}.cpp)
+set(Targets
+    rad_drive_controller
+  )
+
+foreach(target ${Targets})
+  add_executable(${target} src/${target}.cpp src/rad.cpp)
   ament_target_dependencies(${target} rclcpp custom_interfaces)
   target_include_directories(${target} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
   target_compile_features(${target} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-  install(TARGETS ${target}
-    DESTINATION lib/${PROJECT_NAME})
 endforeach()
+
+install(TARGETS ${Targets}
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
