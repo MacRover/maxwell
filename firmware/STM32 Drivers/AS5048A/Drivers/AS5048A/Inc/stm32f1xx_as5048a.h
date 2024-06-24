@@ -54,6 +54,8 @@ typedef struct __AS5048A_HandleTypeDef
 
     volatile uint16_t Angle; /*!< AS5048A Angle*/
 
+    volatile double Angle_double;
+
     volatile uint16_t MagneticField; /*!< AS5048A Magnetic Field Diagnostic*/
 
     // todo add error codes

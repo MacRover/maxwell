@@ -41,6 +41,8 @@ AS5048A_StatusTypeDef AS5048A_Init(AS5048A_HandleTypeDef *has5048a)
         return AS5048A_ERROR;
     }
 
+    has5048a->State = AS5048A_STATE_READY;
+
     // return status
     return AS5048A_OK;
 }
@@ -163,6 +165,7 @@ AS5048A_StatusTypeDef __read_angle_command(AS5048A_HandleTypeDef *has5048a)
     SPIread = __spi_order_buffer_to_word_2bytes(SPI_read_bytes);
 
     has5048a->Angle = SPIread;
+    has5048a->Angle_double = (double) SPIread;
 
     return AS5048A_OK;
 }

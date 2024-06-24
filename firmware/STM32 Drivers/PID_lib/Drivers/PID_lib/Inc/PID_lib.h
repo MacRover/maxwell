@@ -12,7 +12,7 @@
 
 typedef struct
 {
-    double *feedback;
+    volatile double *feedback;
     double kp;
     double ki;
     double kd;

@@ -61,7 +61,7 @@ TMC_2590_StatusTypeDef TMC_2590_Init(TMC_2590_HandleTypeDef *htmc2590)
         // write config registers
         __send_conf_registers(htmc2590);
     }
-    if (htmc2590->Init.use_pwm)
+    if (!htmc2590->Init.use_pwm)
     {
         // set default step
         HAL_GPIO_WritePin(htmc2590->Init.STEP_GPIO_Port,
@@ -191,7 +191,7 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
                 GPIO_PIN_SET);
     }
 
-    if (htmc2590->Init.use_pwm)
+    if (!htmc2590->Init.use_pwm)
     {
         // pulse step pin with some delay
         for (uint32_t i = 0; i < steps; i++)
@@ -213,7 +213,7 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
     // todo callback should move TMC2590 to READY state
     // config timer settings to pulse
     uint16_t pwm_pulses = abs(steps);
-    uint8_t pwm_data[pwm_pulses];
+    uint16_t pwm_data[pwm_pulses];
     for (uint16_t i = 0; i < pwm_pulses; i++)
     {
         pwm_data[i] = 50;
