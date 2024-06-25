@@ -9,9 +9,9 @@ class HeartBeatNode(Node):
         self.hz = 10
         self.vel_msg = Twist()
 
-        self.pub = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.pub = self.create_publisher(Twist, "/cmd_vel_repeat", 10)
         self.sub = self.create_subscription(
-            Twist, "/vel_state", 
+            Twist, "/cmd_vel", 
             self._vel_callback,
             10
         )

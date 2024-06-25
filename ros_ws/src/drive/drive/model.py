@@ -6,7 +6,7 @@ import math
 
 from .drive_module import DriveModule
 
-from custom_interfaces.msg import SwerveModule
+from custom_interfaces.msg import SwerveModule, SwerveModulesList
 
 
 class SteeringModel:
@@ -27,7 +27,13 @@ class SteeringModel:
 		self.ActuatorMatrixInv = np.linalg.pinv(self.ActuatorMatrix)
 		self.body_state = None
 
-	def updateOdom(self, driveModules: List[SwerveModule]):
+	def updateOdom(self, modules: SwerveModulesList):
+		driveModules = [
+			modules.front_left, 
+			modules.front_right, 
+			modules.rear_left, 
+			modules.rear_right
+		]
 		module_states = np.zeros((len(driveModules) * 2))
 		
 		for i, module in enumerate(driveModules):
