@@ -33,6 +33,7 @@ setup(
             'heartbeat.py = drive.heartbeat:main',
             'vesc_status.py = drive.vesc_status:main',
             'xbox_drive.py = drive.xbox_drive:main',
+            'xbox_drive_steer_test.py = drive.xbox_drive_steer_test:main',
         ],
     },
 )

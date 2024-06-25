@@ -16,11 +16,15 @@ void SteerTest::_callback(const Int64& msg)
 {
     int8_t speed = (int8_t)(msg.data & 0xFF);
     if (speed > 0)
+    {
         can_msg.address = 0x54;
+        can_msg.data[7] = speed;
+    }
     else
+    {
         can_msg.address = 0x55;
-    
-    can_msg.data[7] = speed;
+        can_msg.data[7] = -1*speed;
+    }
 }
 
 void SteerTest::_timer_callback()
