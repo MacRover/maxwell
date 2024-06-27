@@ -19,7 +19,7 @@
 //#define USING_ROS
 //#define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-//#define USING_GPS
+#define USING_GPS
 // #define USING_TSB
 #define USING_LORA
 
@@ -63,6 +63,14 @@ unsigned long prev_time1 = 0, prev_time2 = 0;
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
+gps_msg.latitude = 0;
+gps_msg.longitude = 0;
+gps_msg.altitude = 0;
+
+// Create instance of Lora
+Lora lora;
+
+// Call InterruptTransmit and pass in corresponding GPS data as the data being sent.
 
 void updateICM_20948(ICM_20948_I2C* icm)
 {
@@ -288,5 +296,10 @@ void loop()
   }
 #endif
 
+  if (lora.GetMode() != LORA_MODE::TRANSMIT) {
+    lora.InterruptTransmit(gps_msg.latitude)
+    lora.InterruptTransmit(gps_msg.longitude)
+    lora.InterruptTransmit(gps_msg.altitude) 
+  }
     delay(1);
 }
