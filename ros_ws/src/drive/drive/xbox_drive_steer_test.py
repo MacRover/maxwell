@@ -14,9 +14,9 @@ class XboxDriveTest(Node):
     def _joy_callback(self, msg):
         rad_speed_msg = Int64()
         if msg.buttons[4]:
-            rad_speed_msg.data = 100
+            rad_speed_msg.data = -255
         elif msg.buttons[5]:
-            rad_speed_msg.data = -100
+            rad_speed_msg.data = 255
         else:
             rad_speed_msg.data = 0
         self.pub.publish(rad_speed_msg)

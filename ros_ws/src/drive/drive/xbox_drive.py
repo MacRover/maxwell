@@ -17,9 +17,7 @@ class XboxDrive(Node):
             Joy, "/joy", self._joy_callback, 10)
     
     def _joy_callback(self, msg):
-        speed = TOP_SPEED
-        if (msg.buttons[5]):
-            speed = speed * TURBO_FACTOR
+        speed = TOP_SPEED*self._map(msg.axes[5], 1.0, -1.0, 1.0, TURBO_FACTOR)
             
         self.vel_msg.linear.x = self._scale_with_deadzone(msg.axes[1],speed)
         self.vel_msg.linear.y = self._scale_with_deadzone(msg.axes[0],speed)

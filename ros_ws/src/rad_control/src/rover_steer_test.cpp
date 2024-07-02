@@ -14,16 +14,16 @@ SteerTest::SteerTest(std::string name) : Node(name)
 
 void SteerTest::_callback(const Int64& msg)
 {
-    int8_t speed = (int8_t)(msg.data & 0xFF);
+    int16_t speed = (int16_t)(msg.data);
     if (speed > 0)
     {
         can_msg.address = 0x54;
-        can_msg.data[7] = speed;
+        can_msg.data[7] = (speed & 0xFF);
     }
     else
     {
         can_msg.address = 0x55;
-        can_msg.data[7] = -1*speed;
+        can_msg.data[7] = -1*(speed & 0xFF);
     }
 }
 
