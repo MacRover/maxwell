@@ -122,7 +122,8 @@ def generate_launch_description():
             }],
         arguments=[
             ['/intel_realsense/camera_info' + '@sensor_msgs/msg/CameraInfo'  + '[ignition.msgs.CameraInfo'],
-            ['/intel_realsense' + '@sensor_msgs/msg/Image'       + '[ignition.msgs.Image'],
+            ['/intel_realsense/color/image_raw' + '@sensor_msgs/msg/Image'       + '[ignition.msgs.Image'],
+            ['/intel_realsense/depth/image_raw'      + '@sensor_msgs/msg/Image' + '[ignition.msgs.Image'],
             ['/intel_realsense/points'      + '@sensor_msgs/msg/PointCloud2' + '[ignition.msgs.PointCloudPacked']
         ]
     )
