@@ -54,6 +54,7 @@ CAN_FilterTypeDef canfilterconfig;
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
 int speed;
+uint32_t timer;
 
 /* USER CODE END PV */
 
@@ -125,7 +126,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
         Error_Handler();
     }
 
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+    timer = 0;
+
+//    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
     // Echo received CAN message
 
     //RxData[7] = RxData[7] + 1;
@@ -137,7 +140,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 
     	if (RxData[7] != 0)
     	{
-    		speed = speed + RxData[7];
+    		speed = 0 + RxData[7];
     	}
     	else
     	{
@@ -150,7 +153,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 
     	if (RxData[7] != 0)
     	{
-    		speed = speed - RxData[7];
+    		speed = 0 - RxData[7];
     	}
     	else
     	{
@@ -339,10 +342,12 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+    HAL_Delay(2000);
+
     setupTxCAN();
     setupRxCAN();
 
-    uint32_t timer;
+    uint32_t prev = 0;
     uint32_t delay;
 
     //LOCK THE MOTOR WITH THIS SETTING:
@@ -350,14 +355,16 @@ int main(void)
     
 
 	while (1) {
+		timer += HAL_GetTick() - prev;
+		prev = HAL_GetTick();
 
-
-		if (speed == 0)
+		if (speed == 0 || timer > 500)
 		{
 		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Motor driver chip disable so we can free spin it
 
-			txCAN();
-			HAL_Delay(500);
+//			txCAN();
+			HAL_Delay(10);
+//			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 		}
 		else if (speed > 0)
 		{
