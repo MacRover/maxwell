@@ -18,9 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "modbus_crc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -53,6 +56,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void readTemperature();
+void readNPK();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -62,9 +66,12 @@ uint8_t rx_buff[10];
 
 uint8_t temp[]={0x01, 0x03, 0x00, 0x12, 0x00, 0x02, 0x64, 0x0E};
 uint8_t npk_code[]={0x01, 0x03, 0x00, 0x1E, 0x00, 0x03, 0x65, 0xCD};
+uint8_t k_code[]={0x01, 0x03, 0x00, 0x20, 0x00, 0x01, 0x85, 0xC0};
 //uint8_t temp2[]={0x0E, 0x64, 0x02, 0x00, 0x12, 0x00, 0x03, 0x01};
 char temp2[]={0x0, 0x0, 0x0};
 uint8_t npkRX[12];
+
+uint8_t buf[30];
 /* USER CODE END 0 */
 
 /**
@@ -106,18 +113,34 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_WritePin(GPIOA, NPK_DE_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOA, NPK_RE_Pin, GPIO_PIN_RESET);
+  uint16_t crc = crc16(temp, 6);
+  temp[6] = crc&0xFF;   // CRC LOW
+  temp[7] = (crc>>8)&0xFF;  // CRC HIGH
+  uint16_t data[5];
+
 //  HAL_UART_Receive_IT(&huart2, npkRX, 9);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//	  HAL_UART_Transmit(&huart1, "a\n", 2, 1000);
+
 //	  HAL_UART_Receive(&huart2, npkRX, 9, 3000);
-	  HAL_UART_Transmit(&huart1, "a", 1, 1000);
+//	  HAL_UART_Transmit(&huart1, "a\n", 2, 1000);
 	  readTemperature();
+	  data[0] = ((uint16_t)npkRX[3] << 8) | npkRX[4];
+	  data[1] = npkRX[6];
+	  HAL_UART_Transmit(&huart1, npkRX, 9, 5000);
+//	  readNPK();
+	  data[2] = ((uint16_t)npkRX[3] << 8) | npkRX[4];
+	  data[3] = ((uint16_t)npkRX[5] << 8) | npkRX[6];
+	  data[4] = ((uint16_t)npkRX[7] << 8) | npkRX[8];
+//	  HAL_UART_Transmit(&huart1, npkRX, 11, 5000);
 	  //return (npkRX[5] << 8) | npkRX[6];
-	  HAL_UART_Transmit(&huart1, npkRX, 11, 1000);
-	  HAL_Delay(3000);
+	  sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+//	  HAL_UART_Transmit(&huart1, buf, strlen((char*)buf), 5000);
+	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -254,19 +277,40 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	HAL_UART_Transmit(&huart1, "b", 1, 1000);
-	HAL_UART_Receive_IT(&huart2, npkRX, 9); //You need to toggle a breakpoint on this line!
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//	HAL_UART_Transmit(&huart1, buf, 1, 1000);
+//	HAL_UART_Receive_IT(&huart1, buf, 1); //You need to toggle a breakpoint on this line!
+//}
 
 void readTemperature(){
 	HAL_GPIO_WritePin(GPIOA, NPK_DE_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOA, NPK_RE_Pin, GPIO_PIN_SET);
 	HAL_Delay(100);
 
-	if (HAL_UART_Transmit(&huart2, npk_code, 8, 1000) == HAL_OK){
+	if (HAL_UART_Transmit(&huart2, temp, 8, 5000) == HAL_OK){
 		HAL_UART_Transmit(&huart1, "b", 1, 1000);
+		HAL_GPIO_WritePin(GPIOA, NPK_DE_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, NPK_RE_Pin, GPIO_PIN_RESET);
+		HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 9, 3000);
+//		HAL_Delay(100);
+//		if (txResult == HAL_OK){
+//			HAL_UART_Transmit(&huart1, "b", 1, 1000);
+//		} else {
+//			HAL_UART_Transmit(&huart1, (void *)txResult, 1, 1000);
+//		}
+	} else {
+		HAL_UART_Transmit(&huart1, "c", 1, 1000);
+	}
+}
+
+void readNPK(){
+	HAL_GPIO_WritePin(GPIOA, NPK_DE_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, NPK_RE_Pin, GPIO_PIN_SET);
+	HAL_Delay(100);
+
+	if (HAL_UART_Transmit(&huart2, npk_code, 8, 1000) == HAL_OK){
+//		HAL_UART_Transmit(&huart1, "b", 1, 1000);
 		HAL_GPIO_WritePin(GPIOA, NPK_DE_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOA, NPK_RE_Pin, GPIO_PIN_RESET);
 		HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 11, 3000);

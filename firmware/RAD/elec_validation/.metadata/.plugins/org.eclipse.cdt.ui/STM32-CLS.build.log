@@ -1,0 +1,48 @@
+19:31:31 **** Incremental Build of configuration Debug for project STM32-CLS ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:141:38: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  141 |           HAL_UART_Transmit(&huart1, "b", 1, 5000);
+      |                                      ^~~
+      |                                      |
+      |                                      char *
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c:143:17: warning: unused variable 'cc' [-Wunused-variable]
+  143 |         uint8_t cc = 0x05;
+      |                 ^~
+../Core/Src/main.c:181:45: warning: '%u' directive writing between 1 and 5 bytes into a region of size between 1 and 9 [-Wformat-overflow=]
+  181 |           sprintf((char*)buf, "R,G,B: %u %u %u \n", (unsigned int)rgb[0], (unsigned int)rgb[1], (unsigned int)rgb[2]);
+      |                                             ^~
+../Core/Src/main.c:181:31: note: directive argument in the range [0, 65535]
+  181 |           sprintf((char*)buf, "R,G,B: %u %u %u \n", (unsigned int)rgb[0], (unsigned int)rgb[1], (unsigned int)rgb[2]);
+      |                               ^~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:181:11: note: 'sprintf' output between 15 and 27 bytes into a destination of size 20
+  181 |           sprintf((char*)buf, "R,G,B: %u %u %u \n", (unsigned int)rgb[0], (unsigned int)rgb[1], (unsigned int)rgb[2]);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:140:11: warning: 'ret' is used uninitialized [-Wuninitialized]
+  140 |         if(ret != HAL_OK){
+      |           ^
+../Core/Src/main.c:138:27: note: 'ret' was declared here
+  138 |         HAL_StatusTypeDef ret;
+      |                           ^~~
+arm-none-eabi-gcc -o "STM32-CLS.elf" @"objects.list"   -mcpu=cortex-m3 -T"/home/veerash/maxwell/firmware/SMRCC/elec_validation/STM32-CLS/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-CLS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: STM32-CLS.elf
+ 
+arm-none-eabi-size  STM32-CLS.elf 
+arm-none-eabi-objdump -h -S STM32-CLS.elf  > "STM32-CLS.list"
+   text	   data	    bss	    dec	    hex	filename
+  16344	     92	   2084	  18520	   4858	STM32-CLS.elf
+Finished building: default.size.stdout
+ 
+Finished building: STM32-CLS.list
+ 
+
+19:31:31 Build Finished. 0 errors, 4 warnings. (took 584ms)
+

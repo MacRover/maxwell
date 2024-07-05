@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete 5 resources" deleteContents="false" description="Delete 5 resources" element1="/STM32-ADC" element2="/STM32-CAN" element3="/STM32-EEPROM_I2C" element4="/STM32-SPI" element5="/STM32-SPI_STEP_DIR" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="5" stamp="1718414529250"/>&#x0A;<refactoring comment="Rename resource &apos;STM32-UART&apos; to &apos;STM32-NPK_UART&apos;" description="Rename resource &apos;STM32-UART&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/STM32-UART" name="STM32-NPK_UART" stamp="1718414596105" updateReferences="true"/>
+</session>

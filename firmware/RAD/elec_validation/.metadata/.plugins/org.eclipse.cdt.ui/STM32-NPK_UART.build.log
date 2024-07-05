@@ -1,0 +1,10 @@
+18:56:57 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-size  STM32-NPK_UART.elf 
+   text	   data	    bss	    dec	    hex	filename
+   9824	    108	   2092	  12024	   2ef8	STM32-NPK_UART.elf
+Finished building: default.size.stdout
+ 
+
+18:56:57 Build Finished. 0 errors, 0 warnings. (took 280ms)
+

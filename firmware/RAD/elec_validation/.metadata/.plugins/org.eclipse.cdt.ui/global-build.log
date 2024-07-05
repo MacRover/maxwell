@@ -1,0 +1,246 @@
+18:31:06 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc "../Core/Src/modbus_crc.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/modbus_crc.d" -MT"Core/Src/modbus_crc.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/modbus_crc.o"
+arm-none-eabi-gcc "../Core/Src/stm32f1xx_hal_msp.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f1xx_hal_msp.d" -MT"Core/Src/stm32f1xx_hal_msp.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f1xx_hal_msp.o"
+arm-none-eabi-gcc "../Core/Src/stm32f1xx_it.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f1xx_it.d" -MT"Core/Src/stm32f1xx_it.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f1xx_it.o"
+arm-none-eabi-gcc "../Core/Src/syscalls.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/syscalls.d" -MT"Core/Src/syscalls.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/syscalls.o"
+arm-none-eabi-gcc "../Core/Src/sysmem.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/sysmem.d" -MT"Core/Src/sysmem.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/sysmem.o"
+arm-none-eabi-gcc "../Core/Src/system_stm32f1xx.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/system_stm32f1xx.d" -MT"Core/Src/system_stm32f1xx.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/system_stm32f1xx.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:116:24: error: 'TxData' undeclared (first use in this function)
+  116 |   uint16_t crc = crc16(TxData, 6);
+      |                        ^~~~~~
+../Core/Src/main.c:116:24: note: each undeclared identifier is reported only once for each function it appears in
+../Core/Src/main.c: In function 'readTemperature':
+../Core/Src/main.c:292:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  292 |                 HAL_UART_Transmit(&huart1, "b", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c:295:35: warning: unused variable 'txResult' [-Wunused-variable]
+  295 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 9, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:303:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  303 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'readNPK':
+../Core/Src/main.c:316:35: warning: unused variable 'txResult' [-Wunused-variable]
+  316 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 11, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:324:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  324 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+make: *** Waiting for unfinished jobs....
+"make -j16 all" terminated with exit code 2. Build might be incomplete.
+18:31:23 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'readTemperature':
+../Core/Src/main.c:292:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  292 |                 HAL_UART_Transmit(&huart1, "b", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c:295:35: warning: unused variable 'txResult' [-Wunused-variable]
+  295 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 9, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:303:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  303 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'readNPK':
+../Core/Src/main.c:316:35: warning: unused variable 'txResult' [-Wunused-variable]
+  316 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 11, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:324:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  324 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:141:53: warning: '%u' directive writing between 1 and 5 bytes into a region of size between 0 and 12 [-Wformat-overflow=]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                                                     ^~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+../Core/Src/main.c:141:11: note: 'sprintf' output between 27 and 47 bytes into a destination of size 30
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "STM32-NPK_UART.elf" @"objects.list"   -mcpu=cortex-m3 -T"/home/veerash/maxwell/firmware/SMRCC/elec_validation/STM32-NPK_UART/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-NPK_UART.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+/opt/st/stm32cubeide_1.15.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.100.202403111256/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: warning: STM32-NPK_UART.elf has a LOAD segment with RWX permissions
+Finished building target: STM32-NPK_UART.elf
+ 
+arm-none-eabi-size  STM32-NPK_UART.elf 
+arm-none-eabi-objdump -h -S STM32-NPK_UART.elf  > "STM32-NPK_UART.list"
+   text	   data	    bss	    dec	    hex	filename
+   9968	    116	   2092	  12176	   2f90	STM32-NPK_UART.elf
+Finished building: default.size.stdout
+ 
+Finished building: STM32-NPK_UART.list
+ 
+18:37:13 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'readTemperature':
+../Core/Src/main.c:292:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  292 |                 HAL_UART_Transmit(&huart1, "b", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c:295:35: warning: unused variable 'txResult' [-Wunused-variable]
+  295 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 9, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:303:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  303 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'readNPK':
+../Core/Src/main.c:316:35: warning: unused variable 'txResult' [-Wunused-variable]
+  316 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 11, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:324:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  324 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:141:53: warning: '%u' directive writing between 1 and 5 bytes into a region of size between 0 and 12 [-Wformat-overflow=]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                                                     ^~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+../Core/Src/main.c:141:11: note: 'sprintf' output between 27 and 47 bytes into a destination of size 30
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "STM32-NPK_UART.elf" @"objects.list"   -mcpu=cortex-m3 -T"/home/veerash/maxwell/firmware/SMRCC/elec_validation/STM32-NPK_UART/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-NPK_UART.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+/opt/st/stm32cubeide_1.15.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.100.202403111256/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: warning: STM32-NPK_UART.elf has a LOAD segment with RWX permissions
+Finished building target: STM32-NPK_UART.elf
+ 
+arm-none-eabi-size  STM32-NPK_UART.elf 
+arm-none-eabi-objdump -h -S STM32-NPK_UART.elf  > "STM32-NPK_UART.list"
+   text	   data	    bss	    dec	    hex	filename
+   9968	    116	   2092	  12176	   2f90	STM32-NPK_UART.elf
+Finished building: default.size.stdout
+ 
+Finished building: STM32-NPK_UART.list
+ 
+18:41:30 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'readTemperature':
+../Core/Src/main.c:292:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  292 |                 HAL_UART_Transmit(&huart1, "b", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c:295:35: warning: unused variable 'txResult' [-Wunused-variable]
+  295 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 9, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:303:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  303 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'readNPK':
+../Core/Src/main.c:316:35: warning: unused variable 'txResult' [-Wunused-variable]
+  316 |                 HAL_StatusTypeDef txResult = HAL_UART_Receive(&huart2, npkRX, 11, 3000);
+      |                                   ^~~~~~~~
+../Core/Src/main.c:324:44: warning: pointer targets in passing argument 2 of 'HAL_UART_Transmit' differ in signedness [-Wpointer-sign]
+  324 |                 HAL_UART_Transmit(&huart1, "c", 1, 1000);
+      |                                            ^~~
+      |                                            |
+      |                                            char *
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:749:79: note: expected 'const uint8_t *' {aka 'const unsigned char *'} but argument is of type 'char *'
+  749 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~~~~~~~^~~~~
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:141:53: warning: '%u' directive writing between 1 and 5 bytes into a region of size between 0 and 12 [-Wformat-overflow=]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                                                     ^~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:141:31: note: directive argument in the range [0, 65535]
+../Core/Src/main.c:141:11: note: 'sprintf' output between 27 and 47 bytes into a destination of size 30
+  141 |           sprintf((char*)buf, "H: %u T: %u N: %u P: %u K: %u \n", (unsigned int)data[0], (unsigned int) data[1], (unsigned int)data[2], (unsigned int)data[3], (unsigned int)data[4]);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "STM32-NPK_UART.elf" @"objects.list"   -mcpu=cortex-m3 -T"/home/veerash/maxwell/firmware/SMRCC/elec_validation/STM32-NPK_UART/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-NPK_UART.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+/opt/st/stm32cubeide_1.15.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.100.202403111256/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: warning: STM32-NPK_UART.elf has a LOAD segment with RWX permissions
+Finished building target: STM32-NPK_UART.elf
+ 
+arm-none-eabi-size  STM32-NPK_UART.elf 
+arm-none-eabi-objdump -h -S STM32-NPK_UART.elf  > "STM32-NPK_UART.list"
+   text	   data	    bss	    dec	    hex	filename
+   9824	    108	   2092	  12024	   2ef8	STM32-NPK_UART.elf
+Finished building: default.size.stdout
+ 
+Finished building: STM32-NPK_UART.list
+ 
+18:56:57 **** Incremental Build of configuration Debug for project STM32-NPK_UART ****
+make -j16 all 
+arm-none-eabi-size  STM32-NPK_UART.elf 
+   text	   data	    bss	    dec	    hex	filename
+   9824	    108	   2092	  12024	   2ef8	STM32-NPK_UART.elf
+Finished building: default.size.stdout
+ 
