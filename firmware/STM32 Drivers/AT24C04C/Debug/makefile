@@ -61,8 +61,8 @@ all: main-build
 main-build: AT24C04C.elf secondary-outputs
 
 # Tool invocations
-AT24C04C.elf AT24C04C.map: $(OBJS) $(USER_OBJS) C:\Users\ishan\OneDrive\Documents\MarsRover\maxwell\firmware\STM32\ Drivers\AT24C04C\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "AT24C04C.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\ishan\OneDrive\Documents\MarsRover\maxwell\firmware\STM32 Drivers\AT24C04C\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="AT24C04C.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+AT24C04C.elf AT24C04C.map: $(OBJS) $(USER_OBJS) C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\STM32\ Drivers\AT24C04C\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "AT24C04C.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\STM32 Drivers\AT24C04C\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="AT24C04C.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
