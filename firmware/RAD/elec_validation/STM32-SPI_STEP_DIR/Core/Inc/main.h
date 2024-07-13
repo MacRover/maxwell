@@ -37,6 +37,13 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+typedef enum LS_STATE
+{
+	PRESSED,
+	RELEASED
+
+} LS_STATE;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -57,6 +64,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LS_1_Pin GPIO_PIN_0
+#define LS_1_GPIO_Port GPIOA
+#define LS_1_EXTI_IRQn EXTI0_IRQn
+#define LS_2_Pin GPIO_PIN_1
+#define LS_2_GPIO_Port GPIOA
+#define LS_2_EXTI_IRQn EXTI1_IRQn
 #define DRIVER_CS_Pin GPIO_PIN_4
 #define DRIVER_CS_GPIO_Port GPIOA
 #define DRIVER_SPI1_SCK_Pin GPIO_PIN_5

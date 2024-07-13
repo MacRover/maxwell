@@ -55,7 +55,7 @@ CAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
 int speed;
 uint32_t timer;
-
+LS_STATE ls_state = RELEASED;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -163,7 +163,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 }
 
 
-
 uint32_t getUs(void)
 {
 
@@ -195,6 +194,7 @@ void delayUs(uint16_t micros)
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -272,7 +272,7 @@ int main(void)
     SPImsg |= (0b110 << 17); // SGCSCONF
     SPImsg |= (0b0 << 16); // SFILT: stall guard filter
     SPImsg |= (0b0000010 << 8); // SGT: stall guard threshold
-    SPImsg |= (7 << 0); // CS: current scale
+    SPImsg |= (10 << 0); // CS: current scale
 
     SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
@@ -352,7 +352,7 @@ int main(void)
 
     //LOCK THE MOTOR WITH THIS SETTING:
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
-    
+
 
 	while (1) {
 		timer += HAL_GetTick() - prev;
@@ -363,6 +363,7 @@ int main(void)
 		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Motor driver chip disable so we can free spin it
 
 //			txCAN();
+
 			HAL_Delay(10);
 //			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 		}
@@ -375,7 +376,7 @@ int main(void)
 			delay = 100000/speed; //arbitrary speed calculation
 
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
+//			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
 
 
 			delayUs(delay);
@@ -390,7 +391,7 @@ int main(void)
 			delay = 100000/ (-1*speed);
 
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3); // STEP
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
+//			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2); //LED
 
 			delayUs(delay);
 		}
@@ -548,6 +549,18 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_RED_Pin|DRIVER_STEP_Pin|DRIVER_DIR_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : LS_1_Pin */
+  GPIO_InitStruct.Pin = LS_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(LS_1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LS_2_Pin */
+  GPIO_InitStruct.Pin = LS_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(LS_2_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : DRIVER_CS_Pin DRIVER_ENN_Pin DRIVER_ST_ALONE_Pin */
   GPIO_InitStruct.Pin = DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -568,12 +581,22 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(DRIVER_SG_TEST_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+}
 /* USER CODE END 4 */
 
 /**
