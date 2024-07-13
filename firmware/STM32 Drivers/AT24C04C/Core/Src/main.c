@@ -47,10 +47,18 @@ typedef union {
 	char array[sizeof(eeprom_map)];
 } e ;
 
+typedef struct __attribute__((__packed__)){
+	uint8_t a;
+	uint16_t b;
+	double c;
+} Dummy_struct ;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+Dummy_struct dummy_struct;
 
 /* USER CODE END PD */
 
@@ -195,7 +203,6 @@ int main(void)
 
     uint16_t eeprom_address = 321;
     uint8_t penguinsChampionships_2000s[3];
-    uint16_t len_bytes = 3;
 
     penguinsChampionships_2000s[0] = 9;
     penguinsChampionships_2000s[1] = 16;
@@ -212,15 +219,32 @@ int main(void)
 
     //Can read results over CAN or Breakpoints. 
 
+    dummy_struct.a = 15;
+    dummy_struct.b = 5273;
+    dummy_struct.c = 5.7;
+
+    uint16_t eeprom_address_2 = 400;
+    AT24C04C_WriteData(&at24c04c_1, eeprom_address_2, (uint8_t*) &dummy_struct, sizeof(dummy_struct));
+
+    HAL_Delay(2);
+
+    uint8_t data_array[sizeof(dummy_struct)];
+    Dummy_struct dummy_struct_2;
+
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address_2, (uint8_t*) &dummy_struct_2, sizeof(dummy_struct));
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address_2, data_array, sizeof(dummy_struct));
+
+
+
     
     TxHeader.DLC = 1;
     HAL_CAN_AddTxMessage(&hcan, &TxHeader, readData, &TxMailbox);
 
     eeprom_address = 52;
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address, (uint8_t*)&(map1_e.array[0]), sizeof(eeprom_map));
-    HAL_Delay(100);
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address, (uint8_t*)&(read_e.array[0]), sizeof(eeprom_map));
-    memcpy(&read, &read_e.data, sizeof(read));
+//    AT24C04C_WriteData(&at24c04c_1, eeprom_address, (uint8_t*)&(map1_e.array[0]), sizeof(eeprom_map));
+//    HAL_Delay(100);
+//    AT24C04C_ReadData(&at24c04c_1, eeprom_address, (uint8_t*)&(read_e.array[0]), sizeof(eeprom_map));
+//    memcpy(&read, &read_e.data, sizeof(read));
 
     HAL_Delay(1000);
 
