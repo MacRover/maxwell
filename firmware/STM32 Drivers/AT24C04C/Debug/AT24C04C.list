@@ -652,10 +652,10 @@ int main(void)
  8000478:	2311      	movs	r3, #17
  800047a:	71bb      	strb	r3, [r7, #6]
 
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, len_bytes);
- 800047c:	89bb      	ldrh	r3, [r7, #12]
- 800047e:	1d3a      	adds	r2, r7, #4
- 8000480:	89f9      	ldrh	r1, [r7, #14]
+    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, sizeof(penguinsChampionships_2000s));
+ 800047c:	1d3a      	adds	r2, r7, #4
+ 800047e:	89f9      	ldrh	r1, [r7, #14]
+ 8000480:	2303      	movs	r3, #3
  8000482:	481e      	ldr	r0, [pc, #120]	@ (80004fc <main+0xf4>)
  8000484:	f000 f993 	bl	80007ae <AT24C04C_WriteData>
 
@@ -666,10 +666,10 @@ int main(void)
 
     uint8_t readData[3];
 
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, len_bytes);
- 8000490:	89bb      	ldrh	r3, [r7, #12]
- 8000492:	463a      	mov	r2, r7
- 8000494:	89f9      	ldrh	r1, [r7, #14]
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, sizeof(penguinsChampionships_2000s));
+ 8000490:	463a      	mov	r2, r7
+ 8000492:	89f9      	ldrh	r1, [r7, #14]
+ 8000494:	2303      	movs	r3, #3
  8000496:	4819      	ldr	r0, [pc, #100]	@ (80004fc <main+0xf4>)
  8000498:	f000 f948 	bl	800072c <AT24C04C_ReadData>
 
@@ -690,7 +690,7 @@ int main(void)
     eeprom_address = 52;
  80004ae:	2334      	movs	r3, #52	@ 0x34
  80004b0:	81fb      	strh	r3, [r7, #14]
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address, (uint8_t*)&(map1_e.array[0]), sizeof(e));
+    AT24C04C_WriteData(&at24c04c_1, eeprom_address, (uint8_t*)&(map1_e.array[0]), sizeof(eeprom_map));
  80004b2:	89f9      	ldrh	r1, [r7, #14]
  80004b4:	2310      	movs	r3, #16
  80004b6:	4a10      	ldr	r2, [pc, #64]	@ (80004f8 <main+0xf0>)
@@ -699,7 +699,7 @@ int main(void)
     HAL_Delay(100);
  80004be:	2064      	movs	r0, #100	@ 0x64
  80004c0:	f000 fab4 	bl	8000a2c <HAL_Delay>
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address, (uint8_t*)&(read_e.array[0]), sizeof(e));
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address, (uint8_t*)&(read_e.array[0]), sizeof(eeprom_map));
  80004c4:	89f9      	ldrh	r1, [r7, #14]
  80004c6:	2310      	movs	r3, #16
  80004c8:	4a10      	ldr	r2, [pc, #64]	@ (800050c <main+0x104>)

@@ -201,14 +201,14 @@ int main(void)
     penguinsChampionships_2000s[1] = 16;
     penguinsChampionships_2000s[2] = 17;
 
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, len_bytes);
+    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, sizeof(penguinsChampionships_2000s));
 
     HAL_Delay(1000);
 
 
     uint8_t readData[3];
 
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, len_bytes);
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, sizeof(penguinsChampionships_2000s));
 
     //Can read results over CAN or Breakpoints. 
 

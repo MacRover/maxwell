@@ -193,9 +193,10 @@ int main(void)
         uint8_t i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
                 | (eeprom_address >> 8) << 1 | read_eeprom;
 
-        uint8_t i2c_send_data[2];
+        uint8_t i2c_send_data[3];
         i2c_send_data[0] = (uint8_t) eeprom_address & 0xff;
         i2c_send_data[1] = (uint8_t) 0x79;
+        i2c_send_data[2] = (uint8_t) 0xAA;
 
         while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
                 &i2c_send_data[0], sizeof(i2c_send_data), 10000) != HAL_OK)
@@ -211,7 +212,8 @@ int main(void)
 
         HAL_Delay(25);
 
-        eeprom_address = 123; // address in eeprom to read from
+        eeprom_address = 322; // address in eeprom to read from
+        read_eeprom = 1;
         i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
                 | (eeprom_address >> 8) << 1 | read_eeprom;
         uint8_t i2c_address_write = (uint8_t) (i2c_address & 0xfe);
