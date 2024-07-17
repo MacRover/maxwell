@@ -21,7 +21,6 @@ typedef enum
     AS5048A_TIMEOUT = 0x03U
 } AS5048A_StatusTypeDef;
 
-
 /**
  * @brief  AS5048A Configuration Structure definition
  */
@@ -73,12 +72,14 @@ AS5048A_StatusTypeDef AS5048A_ReadAngle(AS5048A_HandleTypeDef *has5048a);
 AS5048A_StatusTypeDef AS5048A_ReadMagneticField(AS5048A_HandleTypeDef *has5048a);
 
 AS5048A_StatusTypeDef __read_angle_command(AS5048A_HandleTypeDef *has5048a);
-AS5048A_StatusTypeDef __read_magneticfield_command(AS5048A_HandleTypeDef *has5048a);
+AS5048A_StatusTypeDef __read_magneticfield_command(
+        AS5048A_HandleTypeDef *has5048a);
 
 void __word_to_spi_order_buffer_2bytes(uint16_t word, uint8_t *buff);
 
 uint16_t __spi_order_buffer_to_word_2bytes(uint8_t *buff);
 
-HAL_StatusTypeDef __send_spi_packet_as5048a(AS5048A_HandleTypeDef *has5048a, uint16_t SPImsg, uint8_t *SPI_read_bytes);
+HAL_StatusTypeDef __send_spi_packet_as5048a(AS5048A_HandleTypeDef *has5048a,
+        uint16_t SPImsg, uint8_t *SPI_read_bytes);
 
 #endif /* AS5048A_INC_STM32F1XX_AS5048A_H_ */

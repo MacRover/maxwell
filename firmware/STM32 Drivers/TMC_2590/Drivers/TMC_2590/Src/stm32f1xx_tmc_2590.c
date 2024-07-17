@@ -74,6 +74,24 @@ TMC_2590_StatusTypeDef TMC_2590_Init(TMC_2590_HandleTypeDef *htmc2590)
     // set enn
     HAL_GPIO_WritePin(htmc2590->Init.ENN_GPIO_Port, htmc2590->Init.ENN_Pin,
             GPIO_PIN_RESET);
+
+    if (htmc2590->Init.use_pwm)
+    {
+        // pre-allocate memory for pwm dma
+        htmc2590->__pwm_dma_ptr = (uint16_t*) calloc(htmc2590->Init.max_steps,
+                sizeof(uint16_t));
+        // check calloc was successful
+        if (htmc2590->__pwm_dma_ptr == NULL)
+        {
+            htmc2590->State = TMC_2590_STATE_ERROR;
+            return TMC_2590_ERROR;
+        }
+        // set all values to 50% duty cycle
+        for (uint16_t i = 0; i < htmc2590->Init.max_steps; i++)
+        {
+            htmc2590->__pwm_dma_ptr[i] = 50;
+        }
+    }
     // set driver state
     htmc2590->State = TMC_2590_STATE_READY;
 
@@ -108,6 +126,8 @@ TMC_2590_StatusTypeDef TMC_2590_DeInit(TMC_2590_HandleTypeDef *htmc2590)
     // unset enn
     HAL_GPIO_WritePin(htmc2590->Init.ENN_GPIO_Port, htmc2590->Init.ENN_Pin,
             GPIO_PIN_SET);
+
+    free(htmc2590->__pwm_dma_ptr);
 
     // set driver state
     htmc2590->State = TMC_2590_STATE_RESET;
@@ -176,6 +196,12 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
         return TMC_2590_ERROR;
     }
 
+    // short-circuit if steps to move is 0, prevents callback to reset state from never firing
+    if (steps == 0)
+    {
+        return TMC_2590_OK;
+    }
+
     // set driver state
     htmc2590->State = TMC_2590_STATE_BUSY;
 
@@ -210,16 +236,19 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
         return TMC_2590_OK;
     }
 
-    // todo callback should move TMC2590 to READY state
+
+    // callback moves TMC2590 to READY state
     // config timer settings to pulse
     uint16_t pwm_pulses = abs(steps);
-    uint16_t pwm_data[pwm_pulses];
-    for (uint16_t i = 0; i < pwm_pulses; i++)
+    if (pwm_pulses > htmc2590->Init.max_steps)
     {
-        pwm_data[i] = 50;
+        // throw error
+        htmc2590->State = TMC_2590_STATE_ERROR;
+        return TMC_2590_ERROR;
     }
+
     HAL_TIM_PWM_Start_DMA(htmc2590->Init.STEP_Tim, htmc2590->Init.STEP_Channel,
-            (uint32_t*) pwm_data, pwm_pulses);
+            (uint32_t*) htmc2590->__pwm_dma_ptr, pwm_pulses);
     return TMC_2590_OK;
 }
 
@@ -242,7 +271,7 @@ TMC_2590_StatusTypeDef TMC_2590_SG_Read(TMC_2590_HandleTypeDef *htmc2590)
 void TMC_2590_TIM_PWM_PulseFinishedCallback(TMC_2590_HandleTypeDef *htmc2590,
         TIM_HandleTypeDef *htim)
 {
-    HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Stop_DMA(htim, htmc2590->Init.STEP_Channel);
     htmc2590->State = TMC_2590_STATE_READY;
 }
 

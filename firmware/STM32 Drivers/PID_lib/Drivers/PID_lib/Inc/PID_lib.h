@@ -16,6 +16,7 @@ typedef struct
     double kp;
     double ki;
     double kd;
+    double max_output_abs;
 } PID_InitTypeDef;
 
 typedef struct

@@ -105,6 +105,8 @@ AS5048A_StatusTypeDef AS5048A_ReadAngle(AS5048A_HandleTypeDef *has5048a)
 
     if (__read_angle_command(has5048a) != AS5048A_OK)
     {
+        //todo remove this it's a hack
+        has5048a->State = AS5048A_STATE_READY;
         return AS5048A_ERROR;
     }
 
@@ -142,6 +144,8 @@ AS5048A_StatusTypeDef AS5048A_ReadMagneticField(AS5048A_HandleTypeDef *has5048a)
 
     if (__read_magneticfield_command(has5048a) != AS5048A_OK)
     {
+        //todo remove this it's a hack
+        has5048a->State = AS5048A_STATE_READY;
         return AS5048A_ERROR;
     }
 
@@ -164,13 +168,35 @@ AS5048A_StatusTypeDef __read_angle_command(AS5048A_HandleTypeDef *has5048a)
 
     SPIread = __spi_order_buffer_to_word_2bytes(SPI_read_bytes);
 
-    has5048a->Angle = SPIread;
-    has5048a->Angle_double = (double) SPIread;
+    uint16_t angle_data = SPIread & 0x3fff;
+    uint8_t error = (SPIread & 0x4000) >> 14;
+
+    if (error)
+    {
+        __send_spi_packet_as5048a(has5048a, 0x4001, SPI_read_bytes);
+        return AS5048A_ERROR;
+    }
+
+    // fast parity check
+    uint16_t parity_check = SPIread;
+    parity_check ^= parity_check >> 8;
+    parity_check ^= parity_check >> 4;
+    parity_check ^= parity_check >> 2;
+    parity_check ^= parity_check >> 1;
+    uint8_t parity = (~parity_check) & 1;
+    if (!parity)
+    {
+        return AS5048A_ERROR;
+    }
+
+    has5048a->Angle = angle_data;
+    has5048a->Angle_double = ((double) angle_data) * 0.0219;
 
     return AS5048A_OK;
 }
 
-AS5048A_StatusTypeDef __read_magneticfield_command(AS5048A_HandleTypeDef *has5048a)
+AS5048A_StatusTypeDef __read_magneticfield_command(
+        AS5048A_HandleTypeDef *has5048a)
 {
     uint16_t SPImsg = 0x7FFD;
     uint16_t SPIread;
@@ -191,13 +217,13 @@ AS5048A_StatusTypeDef __read_magneticfield_command(AS5048A_HandleTypeDef *has504
 
 void __word_to_spi_order_buffer_2bytes(uint16_t word, uint8_t *buff)
 {
-    buff[0] = (uint8_t) (word & 0xFF);
-    buff[1] = (uint8_t) ((word & 0xFF00) >> 8);
+    buff[0] = (uint8_t) ((word & 0xFF00) >> 8);
+    buff[1] = (uint8_t) (word & 0xFF);
 }
 
 uint16_t __spi_order_buffer_to_word_2bytes(uint8_t *buff)
 {
-    return ((uint32_t) buff[1] << 8) | (uint32_t) buff[0];
+    return ((uint16_t) buff[0] << 8) | (uint16_t) buff[1];
 }
 
 HAL_StatusTypeDef __send_spi_packet_as5048a(AS5048A_HandleTypeDef *has5048a,
