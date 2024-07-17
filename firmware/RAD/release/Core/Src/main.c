@@ -35,6 +35,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+// CAN Tx
+CAN_TxHeaderTypeDef TxHeader;
+uint8_t TxData[8];
+uint32_t TxMailbox;
 
 /* USER CODE END PTD */
 
@@ -106,27 +110,42 @@ int main(void)
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
+
+    TxHeader.ExtId = 0x01;
+    TxHeader.RTR = CAN_RTR_DATA;
+    TxHeader.IDE = CAN_ID_EXT;
+    TxHeader.DLC = 2;
+    TxHeader.TransmitGlobalTime = DISABLE;
+    TxData[0] = 0x00;
+    TxData[1] = 0x00;
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+//    TMC_2590_DeInit(&tmc_2590_1);
+    // flush out undefined angle value
+    AS5048A_ReadAngle(&as5048a_1);
+    AS5048A_ReadAngle(&as5048a_1);
+    AS5048A_ReadAngle(&as5048a_1);
+
+    PID_ChangeSetPoint(&pid_1, 185.0);
+    PID_Update(&pid_1);
+
+    uint32_t i = 0;
     while (1)
     {
-//        PID_ChangeSetPoint(&pid_1, 90.0);
-//        AS5048A_ReadAngle(&as5048a_1);
-//        PID_Update(&pid_1);
-//        while (TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output)
-//                != TMC_2590_OK)
-//        {
-//            AS5048A_ReadAngle(&as5048a_1);
-//            PID_Update(&pid_1);
-//        }
-        while (TMC_2590_MoveSteps(&tmc_2590_1, 2000) != TMC_2590_OK)
-            AS5048A_ReadAngle(&as5048a_1);
-        while (TMC_2590_MoveSteps(&tmc_2590_1, -2000) != TMC_2590_OK)
-            AS5048A_ReadAngle(&as5048a_1);
+        TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
+            ;
+        PID_Update(&pid_1);
 
-//        AS5048A_ReadAngle(&as5048a_1);
+        if (i % 1000 == 0)
+        {
+            TxData[0] = as5048a_1.Angle & 0xff;
+            TxData[1] = (as5048a_1.Angle & 0xff00) >> 8;
+            HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+        }
+        i++;
 
         /* USER CODE END WHILE */
 

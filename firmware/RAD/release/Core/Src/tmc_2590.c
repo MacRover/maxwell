@@ -29,6 +29,7 @@ void MX_TMC_2590_1_Init(void)
 //    tmc_2590_1.Init.STEP_Pin = ;
     tmc_2590_1.Init.STEP_Tim = &htim2;
     tmc_2590_1.Init.STEP_Channel = TIM_CHANNEL_2;
+    tmc_2590_1.Init.max_steps = 1000;
     tmc_2590_1.Init.SG_TST_GPIO_Port = DRIVER_SG_TEST_GPIO_Port;
     tmc_2590_1.Init.SG_TST_Pin = DRIVER_SG_TEST_Pin;
 
@@ -55,7 +56,7 @@ void MX_TMC_2590_1_Init(void)
 
     tmc_2590_1.ConfRegisters.DRVCTRL.dedge = 0b0;
     tmc_2590_1.ConfRegisters.DRVCTRL.intpol = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCTRL.mres = 0b1000;
+    tmc_2590_1.ConfRegisters.DRVCTRL.mres = 0b0100;
 
     tmc_2590_1.ConfRegisters.SGCSCONF.cs = 5;
     tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = 0b0;

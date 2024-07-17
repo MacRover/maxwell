@@ -127,6 +127,7 @@ typedef struct
     uint16_t STEP_Pin; // step gpio pin
     TIM_HandleTypeDef *STEP_Tim; // step pin timer
     uint32_t STEP_Channel; // step pin channel
+    uint16_t max_steps; // maximum number of steps per command in pwm mode. Determines how much memory to allocate.
 
     GPIO_TypeDef *SG_TST_GPIO_Port; // SG_TST gpio port
     uint16_t SG_TST_Pin; // SG_TST gpio pin
@@ -161,6 +162,8 @@ typedef struct __TMC_2590_HandleTypeDef
 
     // todo add error codes
     volatile uint32_t ErrorCode; /*!< TMC 2590 Error code*/
+
+    uint16_t *__pwm_dma_ptr; // memory space for PWM DMA
 } TMC_2590_HandleTypeDef;
 
 /* Initialization/de-initialization functions  ********************************/

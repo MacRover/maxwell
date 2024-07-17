@@ -25,8 +25,8 @@ void PID_Init(PID_HandleTypeDef *PID)
 void PID_Update(PID_HandleTypeDef *PID)
 {
     double feedback_value = *(PID->Init.feedback);
-    double current_time = HAL_GetTick();
-    double dt = current_time - PID->__time;
+    uint32_t current_time = HAL_GetTick();
+    double dt = (double) (current_time - PID->__time);
 
     PID->__time = current_time;
     PID->__error = PID->__set_point - feedback_value;
@@ -36,10 +36,27 @@ void PID_Update(PID_HandleTypeDef *PID)
     PID->__i_error = PID->__i_error + (PID->__error * dt);
     double integral = PID->Init.ki * PID->__i_error;
 
+    // todo remove this hack
+    if (current_time == PID->__time)
+    {
+        dt = 1;
+    }
     double derivative = PID->Init.kd * ((PID->__error - PID->__error_old) / dt);
     PID->__error_old = PID->__error;
 
-    PID->output = proportional + integral + derivative;
+    double output_raw = proportional + integral + derivative;
+
+    if (output_raw > PID->Init.max_output_abs)
+    {
+        PID->output = PID->Init.max_output_abs;
+        return;
+    }
+    if (output_raw < -1.0 * PID->Init.max_output_abs)
+    {
+        PID->output = -1.0 * PID->Init.max_output_abs;
+        return;
+    }
+    PID->output = output_raw;
 }
 
 void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point)

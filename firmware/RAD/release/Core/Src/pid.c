@@ -18,6 +18,7 @@ void MX_PID_1_Init(void)
     pid_1.Init.kp = 1;
     pid_1.Init.ki = 0;
     pid_1.Init.kd = 0;
+    pid_1.Init.max_output_abs = 1000;
 
     PID_Init(&pid_1);
 
