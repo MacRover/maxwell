@@ -17,17 +17,21 @@ typedef struct
     double ki;
     double kd;
     double max_output_abs;
+    double rollover_max;
 } PID_InitTypeDef;
 
 typedef struct
 {
     PID_InitTypeDef Init;
-    volatile uint32_t __time;
+    volatile double output;
+    volatile double feedback_adj;
     volatile double __set_point;
     volatile double __error;
-    volatile double __error_old;
     volatile double __i_error;
-    volatile double output;
+    volatile int16_t __rollovers;
+    volatile uint32_t __time_old;
+    volatile double __error_old;
+    volatile double __feedback_raw_old;
 } PID_HandleTypeDef;
 
 void PID_Init(PID_HandleTypeDef *PID);

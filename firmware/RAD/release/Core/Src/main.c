@@ -114,7 +114,7 @@ int main(void)
     TxHeader.ExtId = 0x01;
     TxHeader.RTR = CAN_RTR_DATA;
     TxHeader.IDE = CAN_ID_EXT;
-    TxHeader.DLC = 2;
+    TxHeader.DLC = 6;
     TxHeader.TransmitGlobalTime = DISABLE;
     TxData[0] = 0x00;
     TxData[1] = 0x00;
@@ -128,10 +128,9 @@ int main(void)
     AS5048A_ReadAngle(&as5048a_1);
     AS5048A_ReadAngle(&as5048a_1);
 
-    PID_ChangeSetPoint(&pid_1, 185.0);
+    PID_ChangeSetPoint(&pid_1, 1850.0);
     PID_Update(&pid_1);
 
-    uint32_t i = 0;
     while (1)
     {
         TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
@@ -139,13 +138,20 @@ int main(void)
             ;
         PID_Update(&pid_1);
 
-        if (i % 1000 == 0)
+        if (HAL_GetTick() % 20 == 0)
         {
+//            float fpt = (float) as5048a_1.Angle_double;
+            float fpt = (float) pid_1.feedback_adj;
+            uint32_t *fpt_bin_ptr = (uint32_t*) &fpt;
+
             TxData[0] = as5048a_1.Angle & 0xff;
             TxData[1] = (as5048a_1.Angle & 0xff00) >> 8;
+            TxData[2] = (*fpt_bin_ptr) & 0x000000ff;
+            TxData[3] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
+            TxData[4] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
+            TxData[5] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
             HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
         }
-        i++;
 
         /* USER CODE END WHILE */
 

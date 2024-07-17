@@ -13,12 +13,12 @@ PID_HandleTypeDef pid_1;
 
 void MX_PID_1_Init(void)
 {
-    // todo convert the angle into a double
     pid_1.Init.feedback = &(as5048a_1.Angle_double);
-    pid_1.Init.kp = 1;
-    pid_1.Init.ki = 0;
-    pid_1.Init.kd = 0;
-    pid_1.Init.max_output_abs = 1000;
+    pid_1.Init.kp = 1.0;
+    pid_1.Init.ki = 0.0;
+    pid_1.Init.kd = 0.0;
+    pid_1.Init.max_output_abs = 1000.0;
+    pid_1.Init.rollover_max = 360.0;
 
     PID_Init(&pid_1);
 

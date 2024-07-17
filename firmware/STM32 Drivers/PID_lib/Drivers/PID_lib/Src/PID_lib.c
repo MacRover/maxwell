@@ -14,48 +14,66 @@ void PID_Init(PID_HandleTypeDef *PID)
         // TODO throw error
     }
 
-    PID->__time = HAL_GetTick();
+    PID->__time_old = HAL_GetTick();
 
     PID->__error_old = *(PID->Init.feedback) - PID->__set_point;
     PID->__i_error = 0.0;
 
+    PID->__rollovers = 0;
+    PID->__feedback_raw_old = PID->Init.rollover_max / 2.0; // half way mark
     // todo zero out error & other values
 }
 
 void PID_Update(PID_HandleTypeDef *PID)
 {
-    double feedback_value = *(PID->Init.feedback);
+    double feedback_raw = *(PID->Init.feedback);
     uint32_t current_time = HAL_GetTick();
-    double dt = (double) (current_time - PID->__time);
 
-    PID->__time = current_time;
-    PID->__error = PID->__set_point - feedback_value;
-
-    double proportional = PID->Init.kp * PID->__error;
-
-    PID->__i_error = PID->__i_error + (PID->__error * dt);
-    double integral = PID->Init.ki * PID->__i_error;
-
-    // todo remove this hack
-    if (current_time == PID->__time)
+    // adjust rollover count
+    if (feedback_raw < PID->Init.rollover_max * 0.1
+            && PID->__feedback_raw_old > PID->Init.rollover_max * 0.9)
     {
-        dt = 1;
+        PID->__rollovers++;
     }
-    double derivative = PID->Init.kd * ((PID->__error - PID->__error_old) / dt);
+
+    if (feedback_raw > PID->Init.rollover_max * 0.9
+            && PID->__feedback_raw_old < PID->Init.rollover_max * 0.1)
+    {
+        PID->__rollovers--;
+    }
+
+    PID->feedback_adj = feedback_raw
+            + PID->__rollovers * PID->Init.rollover_max;
+    double dt = (double) (current_time - PID->__time_old);
+
+    PID->__error = PID->__set_point - PID->feedback_adj;
+    PID->__i_error = PID->__i_error + (PID->__error * dt);
+
+    double integral = PID->__i_error;
+    double derivative =
+            (PID->__time_old == current_time) ?
+                    0 : (PID->__error - PID->__error_old) / dt; // avoid divide by zero errors
+    double output_raw = (PID->Init.kp * PID->__error)
+            + (PID->Init.ki * integral) + (PID->Init.kd * derivative); // P, I, D
+
+    // set old values for next update
     PID->__error_old = PID->__error;
+    PID->__time_old = current_time;
+    PID->__feedback_raw_old = feedback_raw;
 
-    double output_raw = proportional + integral + derivative;
-
+    // fit output to bounds
     if (output_raw > PID->Init.max_output_abs)
     {
         PID->output = PID->Init.max_output_abs;
         return;
     }
+
     if (output_raw < -1.0 * PID->Init.max_output_abs)
     {
         PID->output = -1.0 * PID->Init.max_output_abs;
         return;
     }
+
     PID->output = output_raw;
 }
 
@@ -66,10 +84,12 @@ void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point)
     PID->__error_old = *(PID->Init.feedback) - PID->__set_point;
 }
 
+//void PID_
 //void PID_DeInit(PID_HandleTypeDef *PID){
 //
 //}
 
+// todo add fn to set zero position
 // todo add ability to update kp, ki, kd
 // todo determine if this is a good way of formatting the library
 // todo add return statuses and error codes
