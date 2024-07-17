@@ -25,40 +25,16 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "at24c04c.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-typedef struct __attribute__((__packed__)) {
-	uint8_t radID;
-	float p_value;
-	float i_value;
-	float d_value;
-	uint8_t DRVConfRegister[3];
-} eeprom_map ;
-
-typedef union {
-	eeprom_map data;
-	char array[sizeof(eeprom_map)];
-} e ;
-
-typedef struct __attribute__((__packed__)){
-	uint8_t a;
-	uint16_t b;
-	double c;
-} Dummy_struct ;
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-Dummy_struct dummy_struct;
 
 /* USER CODE END PD */
 
@@ -79,14 +55,6 @@ uint32_t TxMailbox;
 CAN_FilterTypeDef canfilterconfig;
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
-
-
-// Map definitions
-eeprom_map map1;
-e map1_e;
-
-eeprom_map read;
-e read_e;
 
 /* USER CODE END PV */
 
@@ -156,17 +124,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-
-	map1.radID = 9;
-	map1.p_value = 3.37;
-	map1.i_value = 1.5;
-	map1.d_value = 7.6;
-	uint32_t DriveConfRegisterValue = 0b01100100010011000101;
-	memcpy(&map1.DRVConfRegister, &DriveConfRegisterValue, sizeof(map1.DRVConfRegister));
-
-	memcpy(&map1_e.data, &map1, sizeof(map1));
-
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -203,48 +160,26 @@ int main(void)
 
     uint16_t eeprom_address = 321;
     uint8_t penguinsChampionships_2000s[3];
+    uint16_t len_bytes = 3;
 
     penguinsChampionships_2000s[0] = 9;
     penguinsChampionships_2000s[1] = 16;
     penguinsChampionships_2000s[2] = 17;
 
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, sizeof(penguinsChampionships_2000s));
+    AT24C04C_WriteData(&at24c04c_1, eeprom_address, penguinsChampionships_2000s, len_bytes);
 
     HAL_Delay(1000);
 
 
     uint8_t readData[3];
 
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, sizeof(penguinsChampionships_2000s));
+    AT24C04C_ReadData(&at24c04c_1, eeprom_address, readData, len_bytes);
 
     //Can read results over CAN or Breakpoints. 
-
-    dummy_struct.a = 15;
-    dummy_struct.b = 5273;
-    dummy_struct.c = 5.7;
-
-    uint16_t eeprom_address_2 = 400;
-    AT24C04C_WriteData(&at24c04c_1, eeprom_address_2, (uint8_t*) &dummy_struct, sizeof(dummy_struct));
-
-    HAL_Delay(2);
-
-    uint8_t data_array[sizeof(dummy_struct)];
-    Dummy_struct dummy_struct_2;
-
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address_2, (uint8_t*) &dummy_struct_2, sizeof(dummy_struct));
-    AT24C04C_ReadData(&at24c04c_1, eeprom_address_2, data_array, sizeof(dummy_struct));
-
-
 
     
     TxHeader.DLC = 1;
     HAL_CAN_AddTxMessage(&hcan, &TxHeader, readData, &TxMailbox);
-
-    eeprom_address = 52;
-//    AT24C04C_WriteData(&at24c04c_1, eeprom_address, (uint8_t*)&(map1_e.array[0]), sizeof(eeprom_map));
-//    HAL_Delay(100);
-//    AT24C04C_ReadData(&at24c04c_1, eeprom_address, (uint8_t*)&(read_e.array[0]), sizeof(eeprom_map));
-//    memcpy(&read, &read_e.data, sizeof(read));
 
     HAL_Delay(1000);
 

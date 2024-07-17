@@ -60,8 +60,8 @@ all: main-build
 main-build: STM32-PWM.elf secondary-outputs
 
 # Tool invocations
-STM32-PWM.elf STM32-PWM.map: $(OBJS) $(USER_OBJS) C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\RAD\elec_validation\STM32-PWM\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM32-PWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\RAD\elec_validation\STM32-PWM\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-PWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM32-PWM.elf STM32-PWM.map: $(OBJS) $(USER_OBJS) C:\Users\Ethan\Documents\Repos\maxwell\firmware\RAD\elec_validation\STM32-PWM\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32-PWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\Ethan\Documents\Repos\maxwell\firmware\RAD\elec_validation\STM32-PWM\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32-PWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
