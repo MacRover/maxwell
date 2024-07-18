@@ -544,29 +544,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LS_1_Pin|DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_RED_Pin|DRIVER_STEP_Pin|DRIVER_DIR_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LS_1_Pin */
-  GPIO_InitStruct.Pin = LS_1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(LS_1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LS_2_Pin */
-  GPIO_InitStruct.Pin = LS_2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(LS_2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DRIVER_CS_Pin DRIVER_ENN_Pin DRIVER_ST_ALONE_Pin */
-  GPIO_InitStruct.Pin = DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin;
+  /*Configure GPIO pins : LS_1_Pin DRIVER_CS_Pin DRIVER_ENN_Pin DRIVER_ST_ALONE_Pin */
+  GPIO_InitStruct.Pin = LS_1_Pin|DRIVER_CS_Pin|DRIVER_ENN_Pin|DRIVER_ST_ALONE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LS_2_Pin */
+  GPIO_InitStruct.Pin = LS_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(LS_2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED_RED_Pin DRIVER_STEP_Pin DRIVER_DIR_Pin */
   GPIO_InitStruct.Pin = LED_RED_Pin|DRIVER_STEP_Pin|DRIVER_DIR_Pin;
@@ -582,9 +576,6 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(DRIVER_SG_TEST_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
   HAL_NVIC_SetPriority(EXTI1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
@@ -595,7 +586,19 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+	if (GPIO_Pin == LS_2_Pin)
+	{
+		if (HAL_GPIO_ReadPin(LS_2_GPIO_Port, GPIO_Pin) == GPIO_PIN_SET)
+		{
+			ls_state = PRESSED;
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+		}
+		else if (HAL_GPIO_ReadPin(LS_2_GPIO_Port, GPIO_Pin) == GPIO_PIN_RESET)
+		{
+			ls_state = RELEASED;
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+		}
+	}
 }
 /* USER CODE END 4 */
 
