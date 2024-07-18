@@ -190,7 +190,7 @@ AS5048A_StatusTypeDef __read_angle_command(AS5048A_HandleTypeDef *has5048a)
     }
 
     has5048a->Angle = angle_data;
-    has5048a->Angle_double = ((double) angle_data) * 0.0219;
+    has5048a->Angle_double = ((double) angle_data) * (360.0 / 16383.0);
 
     return AS5048A_OK;
 }

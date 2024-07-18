@@ -32,6 +32,7 @@ typedef struct
     volatile uint32_t __time_old;
     volatile double __error_old;
     volatile double __feedback_raw_old;
+    volatile double __offset;
 } PID_HandleTypeDef;
 
 void PID_Init(PID_HandleTypeDef *PID);
@@ -39,5 +40,7 @@ void PID_Init(PID_HandleTypeDef *PID);
 void PID_Update(PID_HandleTypeDef *PID);
 
 void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point);
+
+void PID_SetZeroPoint(PID_HandleTypeDef *PID);
 
 #endif /* PID_LIB_INC_PID_LIB_H_ */

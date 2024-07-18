@@ -21,6 +21,7 @@ void PID_Init(PID_HandleTypeDef *PID)
 
     PID->__rollovers = 0;
     PID->__feedback_raw_old = PID->Init.rollover_max / 2.0; // half way mark
+    PID->__offset = 0.0;
     // todo zero out error & other values
 }
 
@@ -42,8 +43,8 @@ void PID_Update(PID_HandleTypeDef *PID)
         PID->__rollovers--;
     }
 
-    PID->feedback_adj = feedback_raw
-            + PID->__rollovers * PID->Init.rollover_max;
+    PID->feedback_adj = feedback_raw + PID->__rollovers * PID->Init.rollover_max
+            + PID->__offset;
     double dt = (double) (current_time - PID->__time_old);
 
     PID->__error = PID->__set_point - PID->feedback_adj;
@@ -84,12 +85,15 @@ void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point)
     PID->__error_old = *(PID->Init.feedback) - PID->__set_point;
 }
 
-//void PID_
 //void PID_DeInit(PID_HandleTypeDef *PID){
 //
 //}
 
-// todo add fn to set zero position
+void PID_SetZeroPoint(PID_HandleTypeDef *PID)
+{
+    PID->__offset = -1.0 * PID->__feedback_raw_old;
+    PID->__rollovers = 0;
+}
+
 // todo add ability to update kp, ki, kd
-// todo determine if this is a good way of formatting the library
 // todo add return statuses and error codes

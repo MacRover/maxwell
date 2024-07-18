@@ -6,7 +6,7 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2024 STMicroelectronics.
+ * Copyright (c) 2024 MMRT.
  * All rights reserved.
  *
  * This software is licensed under terms that can be found in the LICENSE file
@@ -35,10 +35,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-// CAN Tx
-CAN_TxHeaderTypeDef TxHeader;
-uint8_t TxData[8];
-uint32_t TxMailbox;
 
 /* USER CODE END PTD */
 
@@ -55,7 +51,7 @@ uint32_t TxMailbox;
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+RAD_status_TypeDef rad_status;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -111,23 +107,10 @@ int main(void)
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
 
-    TxHeader.ExtId = 0x01;
-    TxHeader.RTR = CAN_RTR_DATA;
-    TxHeader.IDE = CAN_ID_EXT;
-    TxHeader.DLC = 6;
-    TxHeader.TransmitGlobalTime = DISABLE;
-    TxData[0] = 0x00;
-    TxData[1] = 0x00;
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-//    TMC_2590_DeInit(&tmc_2590_1);
-    // flush out undefined angle value
-    AS5048A_ReadAngle(&as5048a_1);
-    AS5048A_ReadAngle(&as5048a_1);
-    AS5048A_ReadAngle(&as5048a_1);
-
     PID_ChangeSetPoint(&pid_1, 1850.0);
     PID_Update(&pid_1);
 
@@ -138,20 +121,21 @@ int main(void)
             ;
         PID_Update(&pid_1);
 
+        rad_status.current_angle = (float) pid_1.feedback_adj;
+        rad_status.limit_switch_state = 0;
+        rad_status.upper_bound_state = 0;
+
         if (HAL_GetTick() % 20 == 0)
         {
-//            float fpt = (float) as5048a_1.Angle_double;
-            float fpt = (float) pid_1.feedback_adj;
-            uint32_t *fpt_bin_ptr = (uint32_t*) &fpt;
-
-            TxData[0] = as5048a_1.Angle & 0xff;
-            TxData[1] = (as5048a_1.Angle & 0xff00) >> 8;
-            TxData[2] = (*fpt_bin_ptr) & 0x000000ff;
-            TxData[3] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
-            TxData[4] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
-            TxData[5] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
-            HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+            MX_CAN_Broadcast_RAD_Status(&hcan, rad_status);
         }
+
+//        if (pid_1.output < 1.0 && pid_1.output > -1.0)
+//        {
+//            HAL_Delay(1000);
+//            PID_SetZeroPoint(&pid_1);
+////            PID_ChangeSetPoint(&pid_1, 0);
+//        }
 
         /* USER CODE END WHILE */
 

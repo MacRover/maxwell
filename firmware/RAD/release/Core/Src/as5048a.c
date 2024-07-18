@@ -21,4 +21,8 @@ void MX_AS5048A_1_Init(void)
     {
         Error_Handler();
     }
+    // flush out undefined angle value
+    AS5048A_ReadAngle(&as5048a_1);
+    AS5048A_ReadAngle(&as5048a_1);
+    AS5048A_ReadAngle(&as5048a_1);
 }
