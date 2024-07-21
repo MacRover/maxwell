@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
+import time
 import rclpy
 from rclpy.node import Node
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 from custom_interfaces.msg import *
 from .VESC import *
@@ -13,6 +15,17 @@ class VescController(Node):
             SwerveModulesList, 
             "/modules_command",
             self._callback, 10)
+        
+        self.declare_parameter(
+            "can_rate",
+            10,
+            ParameterDescriptor(
+                description="Rate of CAN frame",
+                type=ParameterType.PARAMETER_INTEGER,
+            ),
+        )
+
+        self.delay_sec = 1/(4*self.get_parameter("can_rate").get_parameter_value().integer_value)
         
         self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
 
@@ -28,8 +41,11 @@ class VescController(Node):
         self.vbr.set_speed_mps(msg.rear_right.speed)
 
         self.pub.publish(self.vfl.get_can_message())
+        time.sleep(self.delay_sec)
         self.pub.publish(self.vfr.get_can_message())
+        time.sleep(self.delay_sec)
         self.pub.publish(self.vbl.get_can_message())
+        time.sleep(self.delay_sec)
         self.pub.publish(self.vbr.get_can_message())
 
 
