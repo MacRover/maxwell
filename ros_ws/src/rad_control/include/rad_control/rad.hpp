@@ -1,6 +1,7 @@
 #pragma once
 #include "rclcpp/rclcpp.hpp"
 #include "custom_interfaces/msg/ca_nraw.hpp"
+#include "custom_interfaces/msg/rad_status.hpp"
 
 //#define BIG_ENDIANNESS
 
@@ -99,3 +100,5 @@ private:
     CANraw* l_can_msg;
     CAN_DATA l_can_data;
 };
+
+uint8_t decode_can_msg(CANraw* can_msg, RadStatus* status);
