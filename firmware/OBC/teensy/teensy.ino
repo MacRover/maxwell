@@ -28,7 +28,7 @@
 #define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
 
-#define RCL_RECONNECT(fn){rcl_ret_t rc = (fn); if(rc != RCL_RET_OK){obc_setup_uros();}}
+#define RCL_RECONNECT(fn){rcl_ret_t rc = (fn); if(rc != RCL_RET_OK){obc_destory_uros_entities();obc_setup_uros();}}
 
 
 rcl_allocator_t allocator;
@@ -53,7 +53,7 @@ TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 111);
+IPAddress agent_ip(192, 168, 1, 107);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
@@ -134,6 +134,17 @@ void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
         sensor_msgs__msg__NavSatStatus__SERVICE_GPS;
 }
 
+void obc_destory_uros_entities()
+{
+    rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
+    (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+
+    rcl_publisher_fini(&gps_pub, &teensy_node);
+    rcl_publisher_fini(&imu_pub, &teensy_node);
+    rcl_node_fini(&teensy_node);
+    rclc_support_fini(&support);
+}
+
 void obc_setup_uros()
 {
 #ifdef USING_ROS
@@ -149,8 +160,7 @@ void obc_setup_uros()
             &init_options, 
             &allocator) != RCL_RET_OK)
     {
-        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-        delay(100);
+        digitalWrite(LED_PIN, LOW);
     }
 
     rclc_node_init_default(&teensy_node, "obc_node", "obc", &support);
