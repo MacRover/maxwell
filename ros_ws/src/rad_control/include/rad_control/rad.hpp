@@ -17,7 +17,7 @@ typedef enum RAD_CAN_MSG : uint8_t
 
     CAN_SET_P_VALUE           = 0x05,
     CAN_SET_I_VALUE           = 0x07,
-    CAN_SET_D_VALUE           = 0x09,
+    CAN_SET_D_VALUE           = 0x08,
 
     // CAN_SET_DRVCTRL_REGISTER  = 0x11,
     // CAN_SET_CHOPCONF_REGISTER = 0x13,
