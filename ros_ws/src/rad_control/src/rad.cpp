@@ -45,7 +45,8 @@ uint8_t decode_can_msg(CANraw* can_msg, RadStatus* status)
     switch((can_msg->address) >> 8)
     {
         case CAN_STATUS_1:
-            status->ls_state = (bool)(buf[0] >> 1);
+            status->ls_state = (bool)(buf[0] & 2);
+            status->upper_bound_state = (bool)(buf[0] & 1);
             i = i + 1;
             status->angle = __buffer_get_float32(buf, &i);
             break;
