@@ -1,6 +1,6 @@
-float64 angle
-uint64 speed
-uint32 p
-uint32 i
-uint32 d
+float32 angle
+float32 speed
+float32 p
+float32 i
+float32 d
 bool ls_state false
