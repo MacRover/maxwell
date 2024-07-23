@@ -21,13 +21,7 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-CAN_TxHeaderTypeDef TxHeader;
-uint8_t TxData[8];
-uint32_t TxMailbox;
-
-CAN_RxHeaderTypeDef RxHeader;
-uint8_t RxData[8];
-CAN_FilterTypeDef canfilterconfig;
+RAD_CAN_TypeDef rad_can;
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -67,11 +61,17 @@ void MX_CAN_Init(void)
         Error_Handler();
     }
 
-    TxHeader.ExtId = 0x01; // fill from EEPROM
-    TxHeader.RTR = CAN_RTR_DATA;
-    TxHeader.IDE = CAN_ID_EXT;
-    TxHeader.DLC = 0;
-    TxHeader.TransmitGlobalTime = DISABLE;
+    rad_can.hcan = hcan;
+    // todo read id from eeprom
+    rad_can.id = 1;
+
+    rad_can.TxHeader.RTR = CAN_RTR_DATA;
+    rad_can.TxHeader.IDE = CAN_ID_EXT;
+    rad_can.TxHeader.DLC = 0;
+    rad_can.TxHeader.TransmitGlobalTime = DISABLE;
+
+    // todo populate rx details
+//    rad_can.RxHeader
     /* USER CODE END CAN_Init 2 */
 
 }
@@ -149,8 +149,8 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *canHandle)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 {
     /* Get RX message */
-    if (HAL_CAN_GetRxMessage(canHandle, CAN_RX_FIFO0, &RxHeader, RxData)
-            != HAL_OK)
+    if (HAL_CAN_GetRxMessage(canHandle, CAN_RX_FIFO0, &(rad_can.RxHeader),
+            rad_can.RxData) != HAL_OK)
     {
         /* Reception Error */
         Error_Handler();
@@ -159,20 +159,56 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 }
 
 // todo status return value?
-void MX_CAN_Broadcast_RAD_Status(CAN_HandleTypeDef *canHandle,
+void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status)
 {
-    uint32_t *fpt_bin_ptr = (uint32_t*) &(status.current_angle);
-
-    TxData[0] = (*fpt_bin_ptr) & 0x000000ff;
-    TxData[1] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
-    TxData[2] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
-    TxData[3] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
-    TxData[4] = ((status.limit_switch_state & 0x01) << 1)
+    // status message 1
+    rad_can_handle->TxData[0] = ((status.limit_switch_state & 0x01) << 1)
             | (status.upper_bound_state & 0x01);
+    __encode_float_big_endian(status.current_angle,
+            &(rad_can_handle->TxData[1]));
+    rad_can_handle->TxHeader.DLC = 5;
+    // status message 1 is ID 9 according to VESC
+    // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 
-    TxHeader.DLC = 5;
-    HAL_CAN_AddTxMessage(canHandle, &TxHeader, TxData, &TxMailbox);
+    // status message 2
+    __encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
+    __encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
+    rad_can_handle->TxHeader.DLC = 8;
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+            14);
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+
+    // status message 3
+    __encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
+//    todo include rad motor speed
+//    __encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
+    rad_can_handle->TxHeader.DLC = 4;
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+            15);
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
+{
+    // return a value that combines both the device ID and the
+    // message ID so that the message can be identified
+    return (message_id << 8) | (device_id);
+}
+
+void __encode_float_big_endian(float value, uint8_t *data)
+{
+    uint32_t *fpt_bin_ptr = (uint32_t*) &value;
+
+    data[0] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
+    data[1] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
+    data[2] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
+    data[3] = (*fpt_bin_ptr) & 0x000000ff;
 }
 
 /* USER CODE END 1 */

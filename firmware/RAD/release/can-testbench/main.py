@@ -8,10 +8,18 @@ import struct
 def main():
     with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=1_000_000) as bus:
         for msg in bus:
-            angle_float = struct.unpack("<f", msg.data[0:4])[0]
-            ls_state = msg.data[4]
-            ub_state = msg.data[4]
-            print(f"{angle_float=}")
+            if ((msg.arbitration_id & 0xFF00) >> 8) == 9:
+                angle_float = struct.unpack(">f", msg.data[1:5])[0]
+                # ls_state = msg.data[0]
+                # ub_state = msg.data[0]
+                print(f"{angle_float=}")
+            elif ((msg.arbitration_id & 0xFF00) >> 8) == 14:
+                kp = struct.unpack(">f", msg.data[0:4])[0]
+                ki = struct.unpack(">f", msg.data[4:8])[0]
+                print(f"{kp=} {ki=}")
+            elif ((msg.arbitration_id & 0xFF00) >> 8) == 15:
+                kd = struct.unpack(">f", msg.data[0:4])[0]
+                print(f"{kd=}")
 
 
 if __name__ == "__main__":

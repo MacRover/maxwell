@@ -121,21 +121,17 @@ int main(void)
             ;
         PID_Update(&pid_1);
 
-        rad_status.current_angle = (float) pid_1.feedback_adj;
-        rad_status.limit_switch_state = 0;
-        rad_status.upper_bound_state = 0;
 
         if (HAL_GetTick() % 20 == 0)
         {
-            MX_CAN_Broadcast_RAD_Status(&hcan, rad_status);
+            rad_status.current_angle = (float) pid_1.feedback_adj;
+            rad_status.limit_switch_state = 0;
+            rad_status.upper_bound_state = 0;
+            rad_status.kp = pid_1.Init.kp;
+            rad_status.ki = pid_1.Init.ki;
+            rad_status.kd = pid_1.Init.kd;
+            MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
         }
-
-//        if (pid_1.output < 1.0 && pid_1.output > -1.0)
-//        {
-//            HAL_Delay(1000);
-//            PID_SetZeroPoint(&pid_1);
-////            PID_ChangeSetPoint(&pid_1, 0);
-//        }
 
         /* USER CODE END WHILE */
 

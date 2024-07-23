@@ -56,7 +56,7 @@ void MX_TMC_2590_1_Init(void)
 
     tmc_2590_1.ConfRegisters.DRVCTRL.dedge = 0b0;
     tmc_2590_1.ConfRegisters.DRVCTRL.intpol = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCTRL.mres = 0b0100;
+    tmc_2590_1.ConfRegisters.DRVCTRL.mres = 0b1000;
 
     tmc_2590_1.ConfRegisters.SGCSCONF.cs = 5;
     tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = 0b0;
