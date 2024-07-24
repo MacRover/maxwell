@@ -3,7 +3,7 @@
 #include <ICM_20948.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
-#include <Adafruit_MCP9601.h>
+//#include <Adafruit_MCP9601.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -14,12 +14,14 @@
 
 #include "fans.h"
 #include "TSB.h"
+#include "lora.h"
 
-#define USING_ROS
-#define USING_IMU_ONBOARD
+//#define USING_ROS
+//#define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
 // #define USING_TSB
+#define USING_LORA
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -46,7 +48,7 @@ sensor_msgs__msg__NavSatFix gps_msg;
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
-Adafruit_MCP9601 MCP;
+//Adafruit_MCP9601 MCP;
 
 Fan fan1;
 TSB tsb1;
@@ -61,6 +63,14 @@ unsigned long prev_time1 = 0, prev_time2 = 0;
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
+gps_msg.latitude = 0;
+gps_msg.longitude = 0;
+gps_msg.altitude = 0;
+
+// Create instance of Lora
+Lora lora;
+
+// Call InterruptTransmit and pass in corresponding GPS data as the data being sent.
 
 void updateICM_20948(ICM_20948_I2C* icm)
 {
@@ -277,5 +287,29 @@ void loop()
     }
 #endif
 
+#ifdef USING_LORA
+  if (transmittedFlag) {
+    transmittedFlag = false;
+    
+  }
+  if (receivedFlag) {
+    receivedFlag = false;
+
+  }
+  if (operationDone) {
+    operationDone = false;
+
+  }
+  if (scanDone) {
+    scanDone = false;
+
+  }
+#endif
+
+  if (lora.GetMode() != LORA_MODE::TRANSMIT) {
+    lora.InterruptTransmit(gps_msg.latitude)
+    lora.InterruptTransmit(gps_msg.longitude)
+    lora.InterruptTransmit(gps_msg.altitude) 
+  }
     delay(1);
 }
