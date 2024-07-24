@@ -15,6 +15,7 @@ find_package(custom_interfaces REQUIRED)
 
 set(Targets
     rad_drive_controller
+    rad_status
     rover_steer_test
   )
 

@@ -89,4 +89,4 @@ private:
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind);
 void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind);
-uint8_t decode_can_msg(CANraw* can_msg, RadStatus* status);
+uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status);

@@ -10,7 +10,7 @@ RAD::RAD(CANraw* can_msg, uint8_t can_id) : l_can_msg(can_msg)
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind)
 {
-#ifdef BIG_ENDIANNESS
+#ifndef BIG_ENDIANNESS
 	uint32_t res = ((uint32_t) buf[*ind]) << 24 |
 				 ((uint32_t) buf[*ind + 1]) << 16 |
 				 ((uint32_t) buf[*ind + 2]) << 8 |
@@ -37,7 +37,7 @@ void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind)
     buf[(*ind)++] = (*n_ptr & 0x000000ff);
 }
 
-uint8_t decode_can_msg(CANraw* can_msg, RadStatus* status)
+uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
 {
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
     uint8_t i = 0;
