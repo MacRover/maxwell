@@ -12,7 +12,7 @@ using namespace custom_interfaces::msg;
 
 typedef enum RAD_CAN_MSG : uint8_t
 {
-    CAN_SET_TARGET_ANGLE      = 0x01,
+    CAN_SET_TARGET_ANGLE      = 0x04,
     CAN_SET_STEPPER_SPEED     = 0x03,
 
     CAN_SET_P_VALUE           = 0x05,

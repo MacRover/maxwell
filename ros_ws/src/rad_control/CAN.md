@@ -8,7 +8,7 @@
 ## Control Commands (Ingoing)
 | **Command Name** | **Command ID** | **Description**
 |--------------|------------|-----------|
-|SET TARGET ANGLE | 0x1 | Set the target angle, between 0 and 360 degrees (send as double)|
+|SET TARGET ANGLE | 0x4 | Set the target angle, between 0 and 360 degrees (send as double)|
 |SET STEPPER SPEED | 0x3 | Set Stepper Speed |
 |SET P VALUE | 0x5 | Set P value (sent as a single - 4 bytes)|
 |SET I VALUE | 0x7 | Set I value (sent as a single - 4 bytes)|
