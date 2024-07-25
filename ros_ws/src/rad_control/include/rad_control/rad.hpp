@@ -63,8 +63,8 @@ typedef enum RAD_CAN_MSG : uint8_t
     // CAN_GET_WATCHDOG_INTERVAL = 0x36
 
     CAN_STATUS_1                 = 0x09,
-    CAN_STATUS_2                 = 0x14,
-    CAN_STATUS_3                 = 0x15
+    CAN_STATUS_2                 = 0x0E,
+    CAN_STATUS_3                 = 0x0F
 
 } RAD_CAN_MSG;
 

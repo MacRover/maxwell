@@ -32,8 +32,8 @@
 | **Command Name** | **Command ID** | **Description**
 |--------------|------------|-----------|
 |STATUS 1 | 0x9 |Limit Switch and Upper Bound State, Current Angle Reading (0 to 360 degrees) |
-|STATUS 2 | 0x14 | P-Value, I-Value|
-|STATUS 3| 0x15 | D-Value, Motor Speed|
+|STATUS 2 | 0xE | P-Value, I-Value|
+|STATUS 3| 0xF | D-Value, Motor Speed|
 |~~GET DRVCTRL REGISTER~~ | ~~0x12~~ | ~~Get register value, sent over 3 bytes~~|
 |~~GET CHOPCONF REGISTER~~ | ~~0x14~~ | ~~Get register value, sent over 3 bytes~~|
 |~~GET SMARTEN REGISTER~~ | ~~0x16~~ | ~~Get register value, sent over 3 bytes~~|

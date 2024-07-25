@@ -7,6 +7,7 @@ def generate_launch_description():
         executable="reader.py",
         name="reader",
         parameters=[{
+            "topic": "/can/vesc_can_in",
             "channel": "can0",
             "can_id": 0x950,
             "can_mask": 0x1FFFFFC0
