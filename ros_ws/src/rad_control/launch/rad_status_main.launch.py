@@ -40,43 +40,12 @@ def generate_launch_description():
         }]
     )
 
-    rad1_node = Node(
+    rad_status_node = Node(
         package="rad_control",
         executable="rad_status",
-        name="rad1_status_node",
+        name="rad_status_node",
         parameters=[{
-            "motor_id": 1,
-            "namespace": "front_right",
-            "status_rate": 10
-        }]
-    )
-    rad2_node = Node(
-        package="rad_control",
-        executable="rad_status",
-        name="rad2_status_node",
-        parameters=[{
-            "motor_id": 2,
-            "namespace": "back_right",
-            "status_rate": 10
-        }]
-    )
-    rad3_node = Node(
-        package="rad_control",
-        executable="rad_status",
-        name="rad3_status_node",
-        parameters=[{
-            "motor_id": 3,
-            "namespace": "back_left",
-            "status_rate": 10
-        }]
-    )
-    rad4_node = Node(
-        package="rad_control",
-        executable="rad_status",
-        name="rad4_status_node",
-        parameters=[{
-            "motor_id": 4,
-            "namespace": "front_left",
+            "can_topic": "/can/rad_can_in",
             "status_rate": 10
         }]
     )
@@ -84,6 +53,6 @@ def generate_launch_description():
     return LaunchDescription(
         [
             reader1_node, reader2_node, reader3_node,
-            rad1_node, rad2_node, rad3_node, rad4_node,
+            rad_status_node,
         ]
     )

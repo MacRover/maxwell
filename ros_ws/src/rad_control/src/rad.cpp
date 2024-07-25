@@ -3,7 +3,7 @@
 
 RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg) { }
 
-RAD::RAD(CANraw* can_msg, uint8_t can_id) : l_can_msg(can_msg)
+RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg)
 {
     l_can_msg->address = (uint32_t)can_id;
 }

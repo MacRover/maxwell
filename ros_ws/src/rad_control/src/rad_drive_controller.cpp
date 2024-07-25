@@ -6,10 +6,10 @@ using std::placeholders::_1;
 
 RAD_Drive_Controller::RAD_Drive_Controller() : 
   Node("rad_drive_controller"),
-  rad_fl_drive(&can1, 4),
-  rad_fr_drive(&can2, 1),
-  rad_bl_drive(&can3, 2),
-  rad_br_drive(&can4, 3),
+  rad_fl_drive(&can1, RAD__DRIVE__FRONT_LEFT),
+  rad_fr_drive(&can2, RAD__DRIVE__FRONT_RIGHT),
+  rad_bl_drive(&can3, RAD__DRIVE__BACK_LEFT),
+  rad_br_drive(&can4, RAD__DRIVE__BACK_RIGHT),
   rate(std::chrono::milliseconds(25))
 {
   this->declare_parameter("can_rate", 10);

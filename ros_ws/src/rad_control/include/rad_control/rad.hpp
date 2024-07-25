@@ -69,11 +69,21 @@ typedef enum RAD_CAN_MSG : uint8_t
 } RAD_CAN_MSG;
 
 
+typedef enum __rad_can_id : uint8_t
+{
+    RAD__DRIVE__FRONT_RIGHT = 0x01,
+    RAD__DRIVE__BACK_RIGHT = 0x02,
+    RAD__DRIVE__BACK_LEFT = 0x03,
+    RAD__DRIVE__FRONT_LEFT = 0x04
+
+} RAD_ID;
+
+
 class RAD
 {
 public:
     RAD(CANraw* can_msg);
-    RAD(CANraw* can_msg, uint8_t can_id);
+    RAD(CANraw* can_msg, RAD_ID can_id);
 
     void set_target_angle(float angle);
     void set_stepper_speed(float speed);
