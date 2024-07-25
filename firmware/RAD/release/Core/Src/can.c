@@ -70,8 +70,23 @@ void MX_CAN_Init(void)
     rad_can.TxHeader.DLC = 0;
     rad_can.TxHeader.TransmitGlobalTime = DISABLE;
 
-    // todo populate rx details
-//    rad_can.RxHeader
+    // filter any messages not addressed to self
+    // see 24.7.4 Identifier Filtering in STM32F103C8T6 reference manual for filter configuration
+    rad_can.canfilterconfig.FilterBank = 0;
+    rad_can.canfilterconfig.FilterIdLow = (rad_can.id << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterIdHigh = ((rad_can.id << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilterconfig.FilterMaskIdLow = (0x00ff << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterMaskIdHigh = ((0x00ff << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+    rad_can.canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
+    rad_can.canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+    rad_can.canfilterconfig.FilterActivation = ENABLE;
+    rad_can.canfilterconfig.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(&(rad_can.hcan), &(rad_can.canfilterconfig));
+    HAL_CAN_ActivateNotification(&(rad_can.hcan), CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
     /* USER CODE END CAN_Init 2 */
 
 }

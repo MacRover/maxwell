@@ -13,6 +13,23 @@ def main():
                 # ls_state = msg.data[0]
                 # ub_state = msg.data[0]
                 print(f"{angle_float=}")
+                if angle_float > 1849 and angle_float < 1851:
+                    # dummy = 256.0
+                    # data_dummy = struct.pack(">f", dummy)
+
+                    # # 0x4380_0000
+
+                    # new_msg = can.Message(
+                    #     arbitration_id=0x0100,
+                    #     data=[0x43, 0x80, 0x00, 0x00],
+                    #     is_extended_id=True,
+                    # )
+                    new_msg = can.Message(
+                        arbitration_id=0x0001,
+                        data=[0, 25, 0, 1, 3, 1, 4, 1],
+                        is_extended_id=True,
+                    )
+                    bus.send(msg=new_msg)
             elif ((msg.arbitration_id & 0xFF00) >> 8) == 14:
                 kp = struct.unpack(">f", msg.data[0:4])[0]
                 ki = struct.unpack(">f", msg.data[4:8])[0]
