@@ -5,7 +5,7 @@ def generate_launch_description():
     reader_node = Node(
         package="spidercan",
         executable="reader.py",
-        name="reader",
+        name="vesc_reader",
         parameters=[{
             "topic": "/can/vesc_can_in",
             "channel": "can0",

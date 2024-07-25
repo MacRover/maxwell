@@ -7,7 +7,7 @@ def generate_launch_description():
     reader1_node = Node(
         package="spidercan",
         executable="reader.py",
-        name="reader",
+        name="rad1_reader",
         parameters=[{
             "topic": "/can/rad_can_in",
             "channel": "can0",
@@ -19,7 +19,7 @@ def generate_launch_description():
     reader2_node = Node(
         package="spidercan",
         executable="reader.py",
-        name="reader",
+        name="rad2_reader",
         parameters=[{
             "topic": "/can/rad_can_in",
             "channel": "can0",
@@ -31,7 +31,7 @@ def generate_launch_description():
     reader3_node = Node(
         package="spidercan",
         executable="reader.py",
-        name="reader",
+        name="rad3_reader",
         parameters=[{
             "topic": "/can/rad_can_in",
             "channel": "can0",
@@ -53,7 +53,7 @@ def generate_launch_description():
     rad2_node = Node(
         package="rad_control",
         executable="rad_status",
-        name="rad1_status_node",
+        name="rad2_status_node",
         parameters=[{
             "motor_id": 2,
             "namespace": "back_right",
@@ -63,7 +63,7 @@ def generate_launch_description():
     rad3_node = Node(
         package="rad_control",
         executable="rad_status",
-        name="rad1_status_node",
+        name="rad3_status_node",
         parameters=[{
             "motor_id": 3,
             "namespace": "back_left",
@@ -73,7 +73,7 @@ def generate_launch_description():
     rad4_node = Node(
         package="rad_control",
         executable="rad_status",
-        name="rad1_status_node",
+        name="rad4_status_node",
         parameters=[{
             "motor_id": 4,
             "namespace": "front_left",
