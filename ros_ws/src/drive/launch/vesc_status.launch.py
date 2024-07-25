@@ -9,8 +9,8 @@ def generate_launch_description():
         parameters=[{
             "topic": "/can/vesc_can_in",
             "channel": "can0",
-            "can_id": 0x950,
-            "can_mask": 0x1FFFFFC0
+            "can_ids": [0x950],
+            "can_masks": [0x1FFFFFC0]
         }]
     )
 

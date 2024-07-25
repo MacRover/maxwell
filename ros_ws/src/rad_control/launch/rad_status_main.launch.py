@@ -2,8 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # Tad bit overkill
-    # STATUS 1 READER NODE
+    # STATUS READER NODE
     reader1_node = Node(
         package="spidercan",
         executable="reader.py",
@@ -11,32 +10,8 @@ def generate_launch_description():
         parameters=[{
             "topic": "/can/rad_can_in",
             "channel": "can0",
-            "can_id": 0x900,
-            "can_mask": 0x1FFFFFE0
-        }]
-    )
-    # STATUS 2 READER NODE
-    reader2_node = Node(
-        package="spidercan",
-        executable="reader.py",
-        name="rad2_reader",
-        parameters=[{
-            "topic": "/can/rad_can_in",
-            "channel": "can0",
-            "can_id": 0xE00,
-            "can_mask": 0x1FFFFFE0
-        }]
-    )
-    # STATUS 3 READER NODE
-    reader3_node = Node(
-        package="spidercan",
-        executable="reader.py",
-        name="rad3_reader",
-        parameters=[{
-            "topic": "/can/rad_can_in",
-            "channel": "can0",
-            "can_id": 0xF00,
-            "can_mask": 0x1FFFFFE0
+            "can_ids": [0x900, 0xE00, 0xF00],
+            "can_masks": [0x1FFFFFE0, 0x1FFFFFE0, 0x1FFFFFE0]
         }]
     )
 
@@ -52,7 +27,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            reader1_node, reader2_node, reader3_node,
+            reader1_node,
             rad_status_node,
         ]
     )
