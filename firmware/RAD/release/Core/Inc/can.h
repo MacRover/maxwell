@@ -36,6 +36,14 @@ extern CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN Private defines */
 
+#define SET_TARGET_ANGLE    0x1
+#define SET_STEPPER_SPEED   0x3
+#define SET_P_VALUE         0x5
+#define SET_I_VALUE         0x7
+#define SET_D_VALUE         0x9
+
+#define SAVE_TO_EEPROM      0x37
+
 typedef struct
 {
     CAN_HandleTypeDef hcan;

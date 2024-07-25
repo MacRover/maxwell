@@ -35,7 +35,20 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum 
+{
+    RAD_STATE_INIT = 0,
+    RAD_STATE_READ_EEPROM,
+    RAD_STATE_IDLE,
+    RAD_STATE_PROCESS_CAN_MESSAGE,
+    RAD_STATE_SET_TARGET_ANGLE,
+    RAD_STATE_SET_P_VALUE,
+    RAD_STATE_SET_I_VALUE,
+    RAD_STATE_SET_D_VALUE,
+    RAD_STATE_TRANSMIT_STATUS,
+    RAD_STATE_WRITE_EEPROM
+    
+} RAD_STATE;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,12 +65,17 @@
 
 /* USER CODE BEGIN PV */
 RAD_status_TypeDef rad_status;
+
+RAD_STATE prevRadState = RAD_STATE_INIT;
+RAD_STATE radState = RAD_STATE_INIT;
+
+uint32_t transmitTimer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void bytesToDouble(uint8_t *bytes, double *double);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -116,22 +134,144 @@ int main(void)
 
     while (1)
     {
+
+        if (prevRadState != radState)
+        {
+            prevRadState = radState;
+            
+            //DEBUG STATEMENT HERE
+        }
+
+        switch (radState)
+        {
+            case RAD_STATE_INIT:
+            {
+                HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+
+                radState = RAD_STATE_READ_EEPROM;
+                break;
+            }
+            case RAD_STATE_READ_EEPROM:
+            {
+                
+                //EEPROM STRUCT SETUP
+
+                //READ EEPROM
+
+                //ASSIGN VARIABLES APPROPRIATELY
+
+
+                HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+                
+                radState = RAD_STATE_IDLE;
+
+                break;
+            }
+            case RAD_STATE_IDLE:
+            {
+                
+                //IF LIMIT SWITCH INTERRUPT TRIGGERED
+                    //CHECK DIRECTION, STOP AS APPROPRIATE
+                
+                //TODO: Modify Queue Call here
+                if (!isQueueEmpty(rad_status->Queue))
+                {
+                    radState = RAD_STATE_PROCESS_CAN_MESSAGE;
+                    break;
+                }
+
+                if ((HAL_GetTick() - transmitTimer) > 20)
+                {
+                    radState = RAD_STATE_TRANSMIT_STATUS;
+                    break;
+                }
+                    
+
+                //READ ENCODER
+
+                break;
+            }
+            case RAD_STATE_PROCESS_CAN_MESSAGE
+            {
+
+                //TODO: Replace with proper queue call
+                switch (getQueueHead(rad_can->queue).header & 0xFF00)
+                {
+                    case SET_TARGET_ANGLE:
+                    {
+                        double newSetpoint;
+                        bytesToDouble(&newSetpoint, rad_can->RxData);
+                        PID_ChangeSetPoint(&pid_1, newSetpoint);
+                        
+                        break;
+                    }
+                    case SET_P_VALUE:
+                    {
+
+                        double newKp;
+                        bytesToDouble(&newKp, rad_can->RxData);
+                        pid_1.Init.kp = newKp;
+                        break;
+                    }
+                    case SET_I_VALUE:
+                    {
+
+                        float newKi;
+                        bytesToDouble(&newKi, rad_can->RxData);
+
+                        pid_1.Init.ki = newKi;
+                        break;
+                    }
+                    case SET_D_VALUE:
+                    {
+
+                        float newKd;
+                        //Copy over LSBs
+                        bytesToDouble(&newKd, rad_can->RxData);
+                        pid_1.Init.kd = newKd;
+                        break;
+                    }
+                    case SAVE_TO_EEPROM:
+                    {   
+
+                        break;
+                    }
+                    
+                    default:
+                        break;
+                }
+
+                radState = RAD_STATE_IDLE;
+
+                break;
+            }
+            case RAD_STATE_TRANSMIT_STATUS:
+            {
+                rad_status.current_angle = (float) pid_1.feedback_adj;
+                rad_status.limit_switch_state = 0;
+                rad_status.upper_bound_state = 0;
+                rad_status.kp = pid_1.Init.kp;
+                rad_status.ki = pid_1.Init.ki;
+                rad_status.kd = pid_1.Init.kd;
+                MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
+
+                transmitTimer = HAL_GetTick();
+
+                radState = RAD_STATE_IDLE;
+                break;
+            }
+        
+            default:
+                radState = RAD_STATE_INIT;
+                break;
+        }
+
+    
+
         TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
             ;
         PID_Update(&pid_1);
-
-
-        if (HAL_GetTick() % 20 == 0)
-        {
-            rad_status.current_angle = (float) pid_1.feedback_adj;
-            rad_status.limit_switch_state = 0;
-            rad_status.upper_bound_state = 0;
-            rad_status.kp = pid_1.Init.kp;
-            rad_status.ki = pid_1.Init.ki;
-            rad_status.kd = pid_1.Init.kd;
-            MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
-        }
 
         /* USER CODE END WHILE */
 
@@ -193,6 +333,11 @@ void SystemClock_Config(void)
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
     TMC_2590_TIM_PWM_PulseFinishedCallback(&tmc_2590_1, htim);
+}
+
+void bcanBytesToDouble(uint8_t *bytes, double *double)
+{
+    memcpy(double, bytes, sizeof(double));   
 }
 /* USER CODE END 4 */
 
