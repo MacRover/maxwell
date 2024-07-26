@@ -12,16 +12,18 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(custom_interfaces REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 set(Targets
     rad_drive_controller
     rad_status
     rover_steer_test
+    rover_arm_test
   )
 
 foreach(target ${Targets})
   add_executable(${target} src/${target}.cpp src/rad.cpp)
-  ament_target_dependencies(${target} rclcpp custom_interfaces std_msgs)
+  ament_target_dependencies(${target} rclcpp custom_interfaces std_msgs trajectory_msgs)
   target_include_directories(${target} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
