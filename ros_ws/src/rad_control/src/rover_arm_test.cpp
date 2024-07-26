@@ -37,18 +37,19 @@ void ArmTestRADController::_callback(const JointTrajectory& msg)
     wrist_dir = (msg.points[4].velocities[0] > 0.0) ? 0x54 : 0x55;
     gripper_dir = (msg.points[5].velocities[0] > 0.0) ? 0x54 : 0x55;
     
+    // Set speed range: [-255, 255]
     can_msg_base.address = (0x00000001 << 8 | base_dir);
-    can_msg_base.data[7] = (uint8_t)(msg.points[0].velocities[0]);
+    can_msg_base.data[7] = (uint8_t)std::abs(msg.points[0].velocities[0]);
     can_msg_pitch.address = (0x00000002 << 8 | pitch_dir);
-    can_msg_pitch.data[7] = (uint8_t)(msg.points[1].velocities[0]);
+    can_msg_pitch.data[7] = (uint8_t)std::abs(msg.points[1].velocities[0]);
     can_msg_shoulder.address = (0x00000003 << 8 | shoulder_dir);
-    can_msg_shoulder.data[7] = (uint8_t)(msg.points[2].velocities[0]);
+    can_msg_shoulder.data[7] = (uint8_t)std::abs(msg.points[2].velocities[0]);
     can_msg_elbow.address = (0x00000004 << 8 | elbow_dir);
-    can_msg_elbow.data[7] = (uint8_t)(msg.points[3].velocities[0]);
+    can_msg_elbow.data[7] = (uint8_t)std::abs(msg.points[3].velocities[0]);
     can_msg_wrist.address = (0x00000005 << 8 | wrist_dir);
-    can_msg_wrist.data[7] = (uint8_t)(msg.points[4].velocities[0]);
+    can_msg_wrist.data[7] = (uint8_t)std::abs(msg.points[4].velocities[0]);
     can_msg_gripper.address = (0x00000006 << 8 | gripper_dir);
-    can_msg_gripper.data[7] = (uint8_t)(msg.points[5].velocities[0]);
+    can_msg_gripper.data[7] = (uint8_t)std::abs(msg.points[5].velocities[0]);
 }
 
 void ArmTestRADController::_timer_callback(void)
