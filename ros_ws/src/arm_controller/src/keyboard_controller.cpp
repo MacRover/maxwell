@@ -26,12 +26,12 @@
 #define KEYCODE_Z 0x7A
 #define KEYCODE_X 0x78
 
-#define base_joint_vel 20
-#define pitch_joint_vel 20
-#define shoulder_joint_vel 20
-#define elbow_joint_vel 20
-#define wrist_joint_vel 20
-#define gripper_joint_vel 20
+#define base_joint_vel 50
+#define pitch_joint_vel 50
+#define shoulder_joint_vel 50
+#define elbow_joint_vel 50
+#define wrist_joint_vel 50
+#define gripper_joint_vel 50
 
 class KeyboardController
 {
