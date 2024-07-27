@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 {
 //   ros::init(argc, argv, "teleop_turtle");
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("teleop_turtle");
+  auto node = rclcpp::Node::make_shared("arm_keyboard_controller");
   KeyboardController teleop_turtle(node);
 
   signal(SIGINT,quit);
@@ -167,13 +167,14 @@ void KeyboardController::keyLoop()
         dirty = true;
         break;
       case KEYCODE_E:
-        std::cout << "WRIST RIGHT" << std::endl;
+        std::cout << "WRIST RIGHTE" << std::endl;
         joint_trajectory_.points[0].velocities[4] = -elbow_joint_vel;
         dirty = true;
         break;
       default:
-        joint_trajectory_.points[0].velocities = {0.0, 0.0, 0.0, 0.0, 0.0};
-        break;
+        std::cout << "STOPPING" << std::endl;
+        joint_trajectory_.points[0].velocities = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        dirty = true;
     }
    
 
