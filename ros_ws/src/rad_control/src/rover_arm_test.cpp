@@ -31,11 +31,11 @@ void ArmTestRADController::_callback(const JointTrajectory& msg)
     uint8_t base_dir, pitch_dir, shoulder_dir, elbow_dir, wrist_dir, gripper_dir;
 
     base_dir = (msg.points[0].velocities[0] > 0.0) ? 0x54 : 0x55;
-    pitch_dir = (msg.points[1].velocities[0] > 0.0) ? 0x54 : 0x55;
-    shoulder_dir = (msg.points[2].velocities[0] > 0.0) ? 0x54 : 0x55;
-    elbow_dir = (msg.points[3].velocities[0] > 0.0) ? 0x54 : 0x55;
-    wrist_dir = (msg.points[4].velocities[0] > 0.0) ? 0x54 : 0x55;
-    gripper_dir = (msg.points[5].velocities[0] > 0.0) ? 0x54 : 0x55;
+    pitch_dir = (msg.points[0].velocities[1] > 0.0) ? 0x54 : 0x55;
+    shoulder_dir = (msg.points[0].velocities[2] > 0.0) ? 0x54 : 0x55;
+    elbow_dir = (msg.points[0].velocities[3] > 0.0) ? 0x54 : 0x55;
+    wrist_dir = (msg.points[0].velocities[4] > 0.0) ? 0x54 : 0x55;
+    gripper_dir = (msg.points[0].velocities[5] > 0.0) ? 0x54 : 0x55;
     
     // Set speed range: [-255, 255]
     can_msg_base.address = (0x00000001 << 8 | base_dir);

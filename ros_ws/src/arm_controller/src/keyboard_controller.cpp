@@ -13,10 +13,25 @@
 #define KEYCODE_R 0x43 
 #define KEYCODE_L 0x44
 #define KEYCODE_U 0x41
-#define KEYCODE_D 0x42
+#define KEYCODE_DO 0x42
 #define KEYCODE_Q 0x71
 
-#define base_joint_steps 0.0174532925
+#define KEYCODE_W 0x77
+#define KEYCODE_A 0x61
+#define KEYCODE_S 0x73
+#define KEYCODE_D 0x64
+
+#define KEYCODE_Q 0x71
+#define KEYCODE_E 0x65
+#define KEYCODE_Z 0x7A
+#define KEYCODE_X 0x78
+
+#define base_joint_vel 20
+#define pitch_joint_vel 20
+#define shoulder_joint_vel 20
+#define elbow_joint_vel 20
+#define wrist_joint_vel 20
+#define gripper_joint_vel 20
 
 class KeyboardController
 {
@@ -41,7 +56,7 @@ KeyboardController::KeyboardController(std::shared_ptr<rclcpp::Node> nh):
   joint_trajectory_.joint_names = { "arm_base_joint", "arm_shoulder_joint", "arm_elbow_joint", "arm_wrist_joint", "gripper_joint"};
   joint_trajectory_.points.resize(1);
   // joint_trajectory_.points.push_back(trajectory_msgs::msg::JointTrajectoryPoint());
-  joint_trajectory_.points[0].positions = {0.0, 0.0, 0.0, 0.0, 0.0};
+  // joint_trajectory_.points[0].positions = {0.0, 0.0, 0.0, 0.0, 0.0};
   joint_trajectory_.points[0].time_from_start = rclcpp::Duration(1, 0);
   joint_pub_ = nh_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/arm_controller/joint_trajectory", 1);
 }
@@ -102,34 +117,62 @@ void KeyboardController::keyLoop()
       perror("read():");
       exit(-1);
     }
-
+    joint_trajectory_.points[0].velocities = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     // ROS_DEBUG("value: 0x%02X\n", c);
     switch(c)
     {
       case KEYCODE_L:
-        std::cout << "LEFT" << std::endl;
-        // angular_ = 1.0;
-        joint_trajectory_.points[0].positions[0] -= base_joint_steps;
+        std::cout << "BASE LEFT" << std::endl;
+        joint_trajectory_.points[0].velocities[0] = -base_joint_vel;
         dirty = true;
         break;
       case KEYCODE_R:
-        // ROS_DEBUG("RIGHT");
-        std::cout << "RIGHT" << std::endl;
-        joint_trajectory_.points[0].positions[0] += base_joint_steps;
-        // angular_ = -1.0;
+        std::cout << "BASE RIGHT" << std::endl;
+        joint_trajectory_.points[0].velocities[0] = base_joint_vel;
         dirty = true;
         break;
       case KEYCODE_U:
-        // ROS_DEBUG("UP");
-        std::cout << "UP" << std::endl;
-        // linear_ = 1.0;
+        std::cout << "BASE UP" << std::endl;
+        joint_trajectory_.points[0].velocities[1] = pitch_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_DO:
+        std::cout << "BASE DOWN" << std::endl;
+        joint_trajectory_.points[0].velocities[1] = -pitch_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_W:
+        std::cout << "SHOULDER UP" << std::endl;
+        joint_trajectory_.points[0].velocities[2] = shoulder_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_S:
+        std::cout << "SHOULDER DOWN" << std::endl;
+        joint_trajectory_.points[0].velocities[2] = -shoulder_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_A:
+        std::cout << "ELBOW UP" << std::endl;
+        joint_trajectory_.points[0].velocities[3] = elbow_joint_vel;
         dirty = true;
         break;
       case KEYCODE_D:
-        // ROS_DEBUG("DOWN");
-        std::cout << "DOWN" << std::endl;
-        // linear_ = -1.0;
+        std::cout << "ELBOW DOWN" << std::endl;
+        joint_trajectory_.points[0].velocities[3] = -elbow_joint_vel;
         dirty = true;
+        break;
+      case KEYCODE_Q:
+        std::cout << "WRIST LEFT" << std::endl;
+        joint_trajectory_.points[0].velocities[4] = elbow_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_E:
+        std::cout << "WRIST RIGHT" << std::endl;
+        joint_trajectory_.points[0].velocities[4] = -elbow_joint_vel;
+        dirty = true;
+        break;
+      default:
+        joint_trajectory_.points[0].velocities = {0.0, 0.0, 0.0, 0.0, 0.0};
         break;
     }
    
