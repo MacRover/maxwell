@@ -36,7 +36,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+//#define LS_INVERT_DIR
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -56,6 +56,8 @@ uint8_t RxData[8];
 int speed;
 uint32_t timer;
 LS_STATE ls_state = RELEASED;
+
+uint8_t can_id = 0x2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,7 +75,7 @@ static void MX_CAN_Init(void);
 void setupTxCAN()
 {
     TxHeader.StdId = 0x321;
-    TxHeader.ExtId = 0x03;
+    TxHeader.ExtId = can_id;
     TxHeader.RTR = CAN_RTR_DATA;
     TxHeader.IDE = CAN_ID_EXT;
     TxHeader.DLC = 8;
@@ -95,9 +97,9 @@ void setupRxCAN()
     canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
     canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
     canfilterconfig.FilterIdHigh = 0x0000;
-    canfilterconfig.FilterIdLow = 0x0054 << 3;  //read only 54 or 55. nothing else
+    canfilterconfig.FilterIdLow = ((can_id) << 8 | 0x0054) << 3;
     canfilterconfig.FilterMaskIdHigh = 0x0000;
-    canfilterconfig.FilterMaskIdLow = 0xFFF0;
+    canfilterconfig.FilterMaskIdLow = (0x07FE) << 3;
     canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
     canfilterconfig.FilterActivation = ENABLE;
     canfilterconfig.SlaveStartFilterBank = 14;
@@ -134,7 +136,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
     //RxData[7] = RxData[7] + 1;
     HAL_CAN_AddTxMessage(&hcan, &TxHeader, RxData, &TxMailbox);
 
-    if (RxHeader.ExtId == 0x54)
+    if ((RxHeader.ExtId & 0xFF) == 0x54)
     {
     	//counter clockwise
 
@@ -147,7 +149,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
     		speed = 0;
     	}
     }
-    else if (RxHeader.ExtId == 0x55)
+    else if ((RxHeader.ExtId & 0xFF) == 0x55)
     {
     	//clockwise clockwise
 
@@ -369,6 +371,9 @@ int main(void)
 		}
 		else if (speed > 0)
 		{
+#ifndef LS_INVERT_DIR
+			if (ls_state == PRESSED) continue;
+#endif
 		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
 
 			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
@@ -384,6 +389,9 @@ int main(void)
 		}
 		else if (speed < 0)
 		{
+#ifdef LS_INVERT_DIR
+			if (ls_state == PRESSED) continue;
+#endif
 		    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET); // Motor driver chip enable
 
 			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
