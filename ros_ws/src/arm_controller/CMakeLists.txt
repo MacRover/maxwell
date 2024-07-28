@@ -24,6 +24,11 @@ target_compile_features(keyboard_controller PUBLIC c_std_99 cxx_std_17)  # Requi
 install(TARGETS keyboard_controller
   DESTINATION lib/${PROJECT_NAME})
 
+# Install launch files.
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
