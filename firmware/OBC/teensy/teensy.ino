@@ -3,7 +3,7 @@
 #include <ICM_20948.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
-//#include <Adafruit_MCP9601.h>
+#include <Adafruit_MCP9601.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -14,14 +14,14 @@
 
 #include "fans.h"
 #include "TSB.h"
-#include "lora.h"
+//#include "lora.h"
 
 //#define USING_ROS
-//#define USING_IMU_ONBOARD
+// #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-#define USING_GPS
-// #define USING_TSB
-#define USING_LORA
+//#define USING_GPS
+#define USING_TSB
+//#define USING_LORA
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -44,14 +44,14 @@ rcl_publisher_t gps_pub;
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
-
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
-//Adafruit_MCP9601 MCP;
+Adafruit_MCP9601 MCP;
 
 Fan fan1;
 TSB tsb1;
+TSB tsb2;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
@@ -59,16 +59,19 @@ IPAddress agent_ip(192, 168, 1, 111);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
-
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
-gps_msg.latitude = 0;
-gps_msg.longitude = 0;
-gps_msg.altitude = 0;
+#ifdef USING_GPS
+  gps_msg.latitude = 0;
+  gps_msg.longitude = 0;
+  gps_msg.altitude = 0;
+#endif
 
-// Create instance of Lora
-Lora lora;
+#ifdef USING_LORA
+  // Create instance of Lora
+  Lora lora;
+#endif
 
 // Call InterruptTransmit and pass in corresponding GPS data as the data being sent.
 
@@ -221,7 +224,8 @@ void obc_setup_tsb()
     while (!MCP.begin(MCP9601_ADDR, &Wire1)) { delay(100); }
     MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
     MCP.setThermocoupleType(MCP9600_TYPE_K);
-    // setChannel(&tsb1, 0);
+    setChannel(&tsb1, 0);
+    setChannel(&tsb2, 1);
 #endif
 }
 
@@ -232,49 +236,64 @@ void obc_setup_fans()
 
 void setup()
 {
-    Wire1.begin();
-    Wire1.setClock(400000);
-    Serial5.begin(38400);
-    Serial.begin(115200);
+  Wire1.begin();
+  Wire1.setClock(400000);
+  Serial5.begin(38400);
+  Serial.begin(115200);
 
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(IMU_INT1, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(IMU_INT1, OUTPUT);
 
-    obc_setup_imu();
-    obc_setup_gps();
-    obc_setup_tsb();
-    obc_setup_fans();
-    obc_setup_uros();
+  obc_setup_imu();
+  obc_setup_gps();
+  obc_setup_tsb();
+  obc_setup_fans();
+  obc_setup_uros();
+
+  Serial.println("Starting OBC...");
 }
 
 
 void loop()
 {
+#ifdef USING_TSB
+  readTemp(&tsb1, &MCP);
+  readTemp(&tsb2, &MCP);
+
+  Serial.println("Ambient Temperature: " + String(tsb1.ambient_temp));
+  Serial.println("Ambient Temperature: " + String(tsb1.thermocouple_temp));
+  Serial.println("Ambient Temperature: " + String(tsb1.mic_temp));
+
+  Serial.println("Ambient Temperature: " + String(tsb2.ambient_temp));
+  Serial.println("Ambient Temperature: " + String(tsb2.thermocouple_temp));
+  Serial.println("Ambient Temperature: " + String(tsb2.mic_temp));
+#endif
+
 #ifdef USING_IMU_ONBOARD
-    updateLSM6DSM(&LSM6DSMR);
+  updateLSM6DSM(&LSM6DSMR);
 #else
     #ifdef USING_IMU_OTHER
-    if (ICM.dataReady())
-    {
-        ICM.getAGMT();
-        updateICM_20948(&ICM);
-    }
+      if (ICM.dataReady())
+      {
+          ICM.getAGMT();
+          updateICM_20948(&ICM);
+      }
     #endif
 #endif
 
 #ifdef USING_GPS
-    GNSS.checkUblox();
-    GNSS.checkCallbacks();
+  GNSS.checkUblox();
+  GNSS.checkCallbacks();
 #endif
 
 #ifdef USING_ROS
-    if ( (millis() - prev_time2) > 40) 
-    {
-        prev_time2 = millis();
+  if ( (millis() - prev_time2) > 40) 
+  {
+      prev_time2 = millis();
 
-        RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
-        RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
-    }
+      RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
+      RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
+  }
 #endif
 
 #ifdef USING_LORA
@@ -292,14 +311,13 @@ void loop()
   }
   if (scanDone) {
     scanDone = false;
-
   }
-#endif
 
   if (lora.GetMode() != LORA_MODE::TRANSMIT) {
     lora.InterruptTransmit(gps_msg.latitude)
     lora.InterruptTransmit(gps_msg.longitude)
     lora.InterruptTransmit(gps_msg.altitude) 
   }
-    delay(1);
+  delay(1);
+#endif
 }
