@@ -48,4 +48,16 @@ For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
     <child link="base_link" />
   </joint>
 
+  <!-- Adding the base footprint -->
+  <link name="base_footprint"/>
+  <!-- No inertial, visual, or collision elements for the link -->
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="base_footprint" />
+    <!-- Origin determined by base_link relative to chassis (.94417) - swerve relative position (0.7682) + 0.123 from swerve + .11 wheel rad -->
+    <!-- changed from -.40897 to .4 -->
+    <origin xyz="0 0 -0.40" rpy="0 0 0" />
+  </joint>
+
 </robot>
