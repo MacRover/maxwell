@@ -15,7 +15,7 @@
 #include "fans.h"
 #include "TSB.h"
 
-#define USING_ROS
+// #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
@@ -48,7 +48,7 @@ ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 
-Fan fan1;
+Fan fan1, fan2, fan3;
 TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
@@ -227,6 +227,13 @@ void obc_setup_tsb()
 
 void obc_setup_fans()
 {
+    initializeFan(&fan1, 1);
+    initializeFan(&fan2, 3);
+    initializeFan(&fan3, 4);
+
+    enableFanControl(&fan1);
+    enableFanControl(&fan2);
+    enableFanControl(&fan3);
 
 }
 
@@ -276,6 +283,10 @@ void loop()
         RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
     }
 #endif
+
+    setFanRPM(&fan1, MIN_RPM);
+    setFanRPM(&fan2, MIN_RPM);
+    setFanRPM(&fan3, MIN_RPM);
 
     delay(1);
 }
