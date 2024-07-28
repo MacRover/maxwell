@@ -10,11 +10,10 @@
 #include <vector>
 
 
-#define KEYCODE_R 0x43 
-#define KEYCODE_L 0x44
-#define KEYCODE_U 0x41
-#define KEYCODE_DO 0x42
-#define KEYCODE_Q 0x71
+#define KEYCODE_RA 0x43 
+#define KEYCODE_LA 0x44
+#define KEYCODE_UA 0x41
+#define KEYCODE_DA 0x42
 
 #define KEYCODE_W 0x77
 #define KEYCODE_A 0x61
@@ -25,13 +24,15 @@
 #define KEYCODE_E 0x65
 #define KEYCODE_Z 0x7A
 #define KEYCODE_X 0x78
+#define KEYCODE_R 0x72
+#define KEYCODE_F 0x66
 
-#define base_joint_vel 50
-#define pitch_joint_vel 50
-#define shoulder_joint_vel 50
-#define elbow_joint_vel 50
-#define wrist_joint_vel 50
-#define gripper_joint_vel 50
+#define base_joint_vel 200
+#define pitch_joint_vel 200
+#define shoulder_joint_vel 200
+#define elbow_joint_vel 150
+#define wrist_joint_vel 200
+#define gripper_joint_vel 200
 
 class KeyboardController
 {
@@ -121,54 +122,64 @@ void KeyboardController::keyLoop()
     // ROS_DEBUG("value: 0x%02X\n", c);
     switch(c)
     {
-      case KEYCODE_L:
+      case KEYCODE_Q:
         std::cout << "BASE LEFT" << std::endl;
         joint_trajectory_.points[0].velocities[0] = -base_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_R:
+      case KEYCODE_E:
         std::cout << "BASE RIGHT" << std::endl;
         joint_trajectory_.points[0].velocities[0] = base_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_U:
-        std::cout << "BASE UP" << std::endl;
-        joint_trajectory_.points[0].velocities[1] = pitch_joint_vel;
+      case KEYCODE_D: // gripper close
+        std::cout << "GRIPPER CLOSE" << std::endl;
+        joint_trajectory_.points[0].velocities[1] = gripper_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_DO:
-        std::cout << "BASE DOWN" << std::endl;
-        joint_trajectory_.points[0].velocities[1] = -pitch_joint_vel;
+      case KEYCODE_A:
+        std::cout << "GRIPPER OPEN" << std::endl; // DOWN is gripper open
+        joint_trajectory_.points[0].velocities[1] = -gripper_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_W:
+      case KEYCODE_R: // shoulder up
         std::cout << "SHOULDER UP" << std::endl;
         joint_trajectory_.points[0].velocities[2] = shoulder_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_S:
+      case KEYCODE_F: // shoulder down
         std::cout << "SHOULDER DOWN" << std::endl;
         joint_trajectory_.points[0].velocities[2] = -shoulder_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_A:
-        std::cout << "ELBOW UP" << std::endl;
+      case KEYCODE_S: // Gripper down
+        std::cout << "GRIPPER DOWN" << std::endl;
         joint_trajectory_.points[0].velocities[3] = elbow_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_D:
-        std::cout << "ELBOW DOWN" << std::endl;
+      case KEYCODE_W:// Gripper up
+        std::cout << "GRIPPER UP" << std::endl;
         joint_trajectory_.points[0].velocities[3] = -elbow_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_Q:
-        std::cout << "WRIST LEFT" << std::endl;
-        joint_trajectory_.points[0].velocities[4] = elbow_joint_vel;
+      case KEYCODE_DA:// Pitch down
+        std::cout << "PITCH DOWN" << std::endl;
+        joint_trajectory_.points[0].velocities[4] = pitch_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_E:
-        std::cout << "WRIST RIGHTE" << std::endl;
-        joint_trajectory_.points[0].velocities[4] = -elbow_joint_vel;
+      case KEYCODE_UA:// Pitch up
+        std::cout << "PITCH UP" << std::endl;
+        joint_trajectory_.points[0].velocities[4] = -pitch_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_LA: // base left
+        std::cout << "BASE LEFT" << std::endl;
+        joint_trajectory_.points[0].velocities[5] = base_joint_vel;
+        dirty = true;
+        break;
+      case KEYCODE_RA: // base right
+        std::cout << "BASE RIGHT" << std::endl;
+        joint_trajectory_.points[0].velocities[5] = -base_joint_vel;
         dirty = true;
         break;
       default:
