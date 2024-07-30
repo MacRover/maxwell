@@ -28,6 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "at24c04c.h"
 #include "tmc_2590.h"
 #include "as5048a.h"
 #include "pid.h"
@@ -105,6 +106,7 @@ int main(void)
     MX_ADC2_Init();
     MX_TIM2_Init();
     /* USER CODE BEGIN 2 */
+    MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
@@ -113,8 +115,7 @@ int main(void)
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-//    PID_ChangeSetPoint(&pid_1, 1850.0);
-//    PID_Update(&pid_1);
+
     while (1)
     {
         if (!queue_empty(&can_message_queue_1))
@@ -136,22 +137,42 @@ int main(void)
             {
                 pid_1.Init.kp = (double) decode_float_big_endian(
                         new_message->data);
+                AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
+                        &pid_1.Init.kp, sizeof(double));
                 break;
             }
             case SET_I_VALUE:
             {
                 pid_1.Init.ki = (double) decode_float_big_endian(
                         new_message->data);
+                AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
+                        &pid_1.Init.ki, sizeof(double));
                 break;
             }
             case SET_D_VALUE:
             {
                 pid_1.Init.kd = (double) decode_float_big_endian(
                         new_message->data);
+                AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
+                        &pid_1.Init.kd, sizeof(double));
                 break;
             }
-            default:
+            case CALIBRATE_PID_POS_OFFSET:
             {
+                // todo determine if ls is active high or low
+                while (!HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin))
+                {
+                    // step back max amount
+                    while (TMC_2590_MoveSteps(&tmc_2590_1,
+                            -1.0 * tmc_2590_1.Init.max_steps) != TMC_2590_OK)
+                        ;
+                    // blocking wait for steps to complete before reading limit switch state again
+                    while (tmc_2590_1.State == TMC_2590_STATE_BUSY)
+                        ;
+                }
+                PID_SetZeroPoint(&pid_1);
+                PID_ChangeSetPoint(&pid_1, 0.0);
+                PID_Update(&pid_1);
                 break;
             }
             }

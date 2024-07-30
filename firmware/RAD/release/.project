@@ -36,6 +36,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AS5048A/Drivers/AS5048A</locationURI>
 		</link>
 		<link>
+			<name>Drivers/AT24C04C</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AT24C04C/Drivers/AT24C04C</locationURI>
+		</link>
+		<link>
 			<name>Drivers/PID_lib</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/PID_lib/Drivers/PID_lib</locationURI>

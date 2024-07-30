@@ -66,19 +66,21 @@ typedef struct
 // enum of message IDs
 typedef enum
 {
+    // match VESC tool
     SET_TARGET_ANGLE = 0x4,
     SET_STEPPER_SPEED = 0x3,
-    SET_P_VALUE = 0x5,
-    SET_I_VALUE = 0x7,
-    SET_D_VALUE = 0x8,
-    SET_RAD_FLAGS = 0x33,
-    SET_WATCHDOG_INTERVAL = 0x35,
-    SAVE_TO_EEPROM = 0x37,
-//    CALIBRATE_ZERO_POINT = ,
-//    SET_ZERO_POINT = ,
-//    SET_CAN_ID=,
-//    SET_OUTPUT_RATIO=,
-
+    UPDATE_PID_POS_OFFSET = 0x37, // sets current position as the 0 offset point
+    // Custom
+    SET_RAD_FLAGS = 0x40,
+    SET_WATCHDOG_INTERVAL = 0x41,
+//    SAVE_TO_EEPROM = 0x42,
+    CALIBRATE_PID_POS_OFFSET = 0x43, // moves motor until it hits limit switch and then sets as zero point
+    SET_CAN_ID = 0x44,
+    SET_OUTPUT_RATIO = 0x45,
+    SET_P_VALUE = 0x46,
+    SET_I_VALUE = 0x47,
+    SET_D_VALUE = 0x48,
+//    SET_
 } RAD_CAN_CommandId;
 
 typedef struct
@@ -99,12 +101,6 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status);
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id);
-
-
-// todo decode can id to message id enum
-//__decode_ext_can_id(uint32_t can_message_id);
-
-
 
 /* USER CODE END Prototypes */
 
