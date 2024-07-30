@@ -6,7 +6,6 @@
  */
 
 #include "pid.h"
-
 #include "as5048a.h"
 
 PID_HandleTypeDef pid_1;

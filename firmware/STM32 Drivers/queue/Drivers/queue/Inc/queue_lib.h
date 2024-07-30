@@ -5,8 +5,8 @@
  *      Author: Ethan
  */
 
-#ifndef QUEUE_INC_QUEUE_H_
-#define QUEUE_INC_QUEUE_H_
+#ifndef QUEUE_INC_QUEUE_LIB_H_
+#define QUEUE_INC_QUEUE_LIB_H_
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -31,4 +31,4 @@ void queue_dequeue(Queue_TypeDef *queue);
 void* queue_front(Queue_TypeDef *queue);
 void* queue_tail(Queue_TypeDef *queue);
 
-#endif /* QUEUE_INC_QUEUE_H_ */
+#endif /* QUEUE_INC_QUEUE_LIB_H_ */

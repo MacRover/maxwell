@@ -8,7 +8,7 @@
 #ifndef INC_TMC_2590_H_
 #define INC_TMC_2590_H_
 
-#include "main.h"
+#include <stm32f1xx_tmc_2590.h>
 
 extern TMC_2590_HandleTypeDef tmc_2590_1;
 

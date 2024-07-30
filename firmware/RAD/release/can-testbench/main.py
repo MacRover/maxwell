@@ -3,10 +3,24 @@
 # follow the link to install python-can. Be sure to pip install python-can[pcan] if using pcan
 import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
+import time
 
 
 def main():
     with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=1_000_000) as bus:
+        # while True:
+        #     # new_msg = can.Message(
+        #     #     arbitration_id=0x0401,
+        #     #     data=[0x43, 0x01, 0x99, 0x9A],
+        #     #     is_extended_id=True,
+        #     # )
+        #     new_msg = can.Message(
+        #         arbitration_id=0x0001,
+        #         data=[0, 25, 0, 1, 3, 1, 4, 1],
+        #         is_extended_id=True,
+        #     )
+        #     bus.send(msg=new_msg)
+        #     time.sleep(0.2)
         for msg in bus:
             if ((msg.arbitration_id & 0xFF00) >> 8) == 9:
                 angle_float = struct.unpack(">f", msg.data[1:5])[0]
@@ -24,9 +38,14 @@ def main():
                     #     data=[0x43, 0x80, 0x00, 0x00],
                     #     is_extended_id=True,
                     # )
+                    # new_msg = can.Message(
+                    #     arbitration_id=0x0001,
+                    #     data=[0, 25, 0, 1, 3, 1, 4, 1],
+                    #     is_extended_id=True,
+                    # )
                     new_msg = can.Message(
-                        arbitration_id=0x0001,
-                        data=[0, 25, 0, 1, 3, 1, 4, 1],
+                        arbitration_id=0x0401,
+                        data=[0x43, 0x01, 0x99, 0x9A],
                         is_extended_id=True,
                     )
                     bus.send(msg=new_msg)

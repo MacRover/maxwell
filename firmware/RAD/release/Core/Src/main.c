@@ -31,6 +31,8 @@
 #include "tmc_2590.h"
 #include "as5048a.h"
 #include "pid.h"
+#include "queue.h"
+#include "enc_dec_utils.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -111,16 +113,57 @@ int main(void)
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    PID_ChangeSetPoint(&pid_1, 1850.0);
-    PID_Update(&pid_1);
-
+//    PID_ChangeSetPoint(&pid_1, 1850.0);
+//    PID_Update(&pid_1);
     while (1)
     {
+        if (!queue_empty(&can_message_queue_1))
+        {
+            RAD_CAN_Message_TypeDef *new_message =
+                    (RAD_CAN_Message_TypeDef*) queue_front(
+                            &can_message_queue_1);
+
+            switch (new_message->command_id)
+            {
+            case SET_TARGET_ANGLE:
+            {
+                float new_setpoint = decode_float_big_endian(new_message->data);
+                // todo get angle multiplier factor (ex for gearbox)
+                PID_ChangeSetPoint(&pid_1, new_setpoint);
+                break;
+            }
+            case SET_P_VALUE:
+            {
+                pid_1.Init.kp = (double) decode_float_big_endian(
+                        new_message->data);
+                break;
+            }
+            case SET_I_VALUE:
+            {
+                pid_1.Init.ki = (double) decode_float_big_endian(
+                        new_message->data);
+                break;
+            }
+            case SET_D_VALUE:
+            {
+                pid_1.Init.kd = (double) decode_float_big_endian(
+                        new_message->data);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+            }
+            free(new_message->data);
+            queue_dequeue(&can_message_queue_1);
+
+        }
+
         TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
             ;
         PID_Update(&pid_1);
-
 
         if (HAL_GetTick() % 20 == 0)
         {

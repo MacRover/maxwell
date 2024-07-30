@@ -21,6 +21,10 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
+#include "queue.h"
+#include <string.h>
+#include "enc_dec_utils.h"
+
 RAD_CAN_TypeDef rad_can;
 /* USER CODE END 0 */
 
@@ -171,6 +175,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         Error_Handler();
     }
 
+    RAD_CAN_Message_TypeDef *new_message = malloc(
+            sizeof(RAD_CAN_Message_TypeDef));
+
+    if (new_message == NULL)
+    {
+        // todo handle error
+        return;
+    }
+
+    new_message->command_id = (rad_can.RxHeader.ExtId & 0xff00) >> 8;
+//    memcpy(new_message->data, rad_can.RxData, 8);
+    new_message->dlc = rad_can.RxHeader.DLC;
+
+    uint8_t *data_ptr = malloc(sizeof(uint8_t) * new_message->dlc);
+
+    if (data_ptr == NULL)
+    {
+        // todo handle error
+        return;
+    }
+
+    new_message->data = memcpy(data_ptr, rad_can.RxData,
+            sizeof(uint8_t) * new_message->dlc);
+
+    queue_enqueue(&can_message_queue_1, new_message);
+
 }
 
 // todo status return value?
@@ -180,7 +210,7 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
     // status message 1
     rad_can_handle->TxData[0] = ((status.limit_switch_state & 0x01) << 1)
             | (status.upper_bound_state & 0x01);
-    __encode_float_big_endian(status.current_angle,
+    encode_float_big_endian(status.current_angle,
             &(rad_can_handle->TxData[1]));
     rad_can_handle->TxHeader.DLC = 5;
     // status message 1 is ID 9 according to VESC
@@ -190,8 +220,8 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 
     // status message 2
-    __encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
-    __encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
+    encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
+    encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
     rad_can_handle->TxHeader.DLC = 8;
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
             14);
@@ -199,9 +229,9 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 
     // status message 3
-    __encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
+    encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
 //    todo include rad motor speed
-//    __encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
+//    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
     rad_can_handle->TxHeader.DLC = 4;
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
             15);
@@ -214,16 +244,6 @@ uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
     // return a value that combines both the device ID and the
     // message ID so that the message can be identified
     return (message_id << 8) | (device_id);
-}
-
-void __encode_float_big_endian(float value, uint8_t *data)
-{
-    uint32_t *fpt_bin_ptr = (uint32_t*) &value;
-
-    data[0] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
-    data[1] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
-    data[2] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
-    data[3] = (*fpt_bin_ptr) & 0x000000ff;
 }
 
 /* USER CODE END 1 */

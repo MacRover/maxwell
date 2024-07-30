@@ -8,7 +8,7 @@
 #ifndef INC_PID_H_
 #define INC_PID_H_
 
-#include "main.h"
+#include <PID_lib.h>
 
 extern PID_HandleTypeDef pid_1;
 

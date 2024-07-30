@@ -63,10 +63,30 @@ typedef struct
     float kd;
 } RAD_status_TypeDef;
 
-// todo enum of message IDs
-//typedef enum {
-//
-//} RAD_CAN_MessageId;
+// enum of message IDs
+typedef enum
+{
+    SET_TARGET_ANGLE = 0x4,
+    SET_STEPPER_SPEED = 0x3,
+    SET_P_VALUE = 0x5,
+    SET_I_VALUE = 0x7,
+    SET_D_VALUE = 0x8,
+    SET_RAD_FLAGS = 0x33,
+    SET_WATCHDOG_INTERVAL = 0x35,
+    SAVE_TO_EEPROM = 0x37,
+//    CALIBRATE_ZERO_POINT = ,
+//    SET_ZERO_POINT = ,
+//    SET_CAN_ID=,
+//    SET_OUTPUT_RATIO=,
+
+} RAD_CAN_CommandId;
+
+typedef struct
+{
+    RAD_CAN_CommandId command_id;
+    uint8_t *data;
+    uint8_t dlc;
+} RAD_CAN_Message_TypeDef;
 
 extern RAD_CAN_TypeDef rad_can;
 
@@ -80,7 +100,6 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id);
 
-void __encode_float_big_endian(float value, uint8_t *data);
 
 // todo decode can id to message id enum
 //__decode_ext_can_id(uint32_t can_message_id);

@@ -8,7 +8,7 @@
 #ifndef INC_AS5048A_H_
 #define INC_AS5048A_H_
 
-#include "main.h"
+#include <stm32f1xx_as5048a.h>
 
 extern AS5048A_HandleTypeDef as5048a_1;
 

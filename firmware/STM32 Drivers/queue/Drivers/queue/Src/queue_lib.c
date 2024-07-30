@@ -6,7 +6,7 @@
  *
  */
 
-#include "queue.h"
+#include "queue_lib.h"
 
 Queue_TypeDef* create_queue()
 {
