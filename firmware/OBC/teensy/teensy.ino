@@ -15,11 +15,12 @@
 #include "fans.h"
 #include "TSB.h"
 
-// #define USING_ROS
+#define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
 // #define USING_TSB
+#define USING_FANS
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -53,7 +54,7 @@ TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 107);
+IPAddress agent_ip(192, 168, 1, 111);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
@@ -227,14 +228,15 @@ void obc_setup_tsb()
 
 void obc_setup_fans()
 {
-    initializeFan(&fan1, 1);
-    initializeFan(&fan2, 3);
-    initializeFan(&fan3, 4);
+#ifdef USING_FANS
+    initializeFan(&fan1, 5);
+    initializeFan(&fan2, 6);
+    initializeFan(&fan3, 7);
 
     enableFanControl(&fan1);
     enableFanControl(&fan2);
     enableFanControl(&fan3);
-
+#endif
 }
 
 void setup()
@@ -284,9 +286,11 @@ void loop()
     }
 #endif
 
-    setFanRPM(&fan1, MIN_RPM);
-    setFanRPM(&fan2, MIN_RPM);
-    setFanRPM(&fan3, MIN_RPM);
+#ifdef USING_FANS
+  setFanRPM(&fan1, MIN_RPM);
+  setFanRPM(&fan2, MIN_RPM);
+  setFanRPM(&fan3, MIN_RPM);
+#endif
 
     delay(1);
 }
