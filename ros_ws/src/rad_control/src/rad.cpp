@@ -37,30 +37,41 @@ void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind)
     buf[(*ind)++] = (*n_ptr & 0x000000ff);
 }
 
-uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
+uint8_t decode_can_status_1(const CANraw* can_msg, RadStatus* status)
 {
+    if ( (can_msg->address) >> 8 != CAN_STATUS_1)
+        return 0;
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
     uint8_t i = 0;
+    status->ls_state = (bool)(buf[0] & 2);
+    status->upper_bound_state = (bool)(buf[0] & 1);
+    i = i + 1;
+    status->angle = __buffer_get_float32(buf, &i);
 
-    switch((can_msg->address) >> 8)
-    {
-        case CAN_STATUS_1:
-            status->ls_state = (bool)(buf[0] & 2);
-            status->upper_bound_state = (bool)(buf[0] & 1);
-            i = i + 1;
-            status->angle = __buffer_get_float32(buf, &i);
-            break;
-        case CAN_STATUS_2:
-            status->p = __buffer_get_float32(buf, &i);
-            status->i = __buffer_get_float32(buf, &i);
-            break;
-        case CAN_STATUS_3:
-            status->d = __buffer_get_float32(buf, &i);
-            status->speed = __buffer_get_float32(buf, &i);
-            break;
-        default:
-            return 0;
-    }
+    return 1;
+}
+
+uint8_t decode_can_status_2(const CANraw* can_msg, RadStatus* status)
+{
+    if ((can_msg->address) >> 8 != CAN_STATUS_2)
+        return 0;
+    uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
+    uint8_t i = 0;
+    status->p = __buffer_get_float32(buf, &i);
+    status->i = __buffer_get_float32(buf, &i);
+
+    return 1;
+}
+
+uint8_t decode_can_status_3(const CANraw* can_msg, RadStatus* status)
+{
+    if ((can_msg->address) >> 8 != CAN_STATUS_3)
+        return 0;
+    uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
+    uint8_t i = 0;
+    status->d = __buffer_get_float32(buf, &i);
+    status->speed = __buffer_get_float32(buf, &i);
+
     return 1;
 }
 
