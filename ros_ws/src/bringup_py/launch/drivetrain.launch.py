@@ -7,7 +7,7 @@ def generate_launch_description():
         executable="drive_controller.py",
         name="drive_controller",
         parameters=[{
-            "drive_mode": "TANK_STEER_HYBRID"
+            "drive_mode": "SWERVE_DRIVE"
         }]
     )
 

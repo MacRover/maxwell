@@ -16,7 +16,7 @@ class VescStatus(Node):
         self.output: str = None
         self.sub_status = self.create_subscription(
             CANraw,
-            "/can/can_in",
+            "/can/vesc_can_in",
             self.status_callback, 10
         )
         self.declare_parameter(
