@@ -15,9 +15,10 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_SET_TARGET_ANGLE      = 0x04,
     CAN_SET_STEPPER_SPEED     = 0x03,
 
-    CAN_SET_P_VALUE           = 0x05,
-    CAN_SET_I_VALUE           = 0x07,
-    CAN_SET_D_VALUE           = 0x08,
+    CAN_CALIBRATE_POS         = 0x43,
+    CAN_SET_P_VALUE           = 0x46,
+    CAN_SET_I_VALUE           = 0x47,
+    CAN_SET_D_VALUE           = 0x48,
 
     // CAN_SET_DRVCTRL_REGISTER  = 0x11,
     // CAN_SET_CHOPCONF_REGISTER = 0x13,
@@ -85,6 +86,7 @@ public:
     RAD(CANraw* can_msg);
     RAD(CANraw* can_msg, RAD_ID can_id);
 
+    void calibrate_zero_pos();
     void set_target_angle(float angle);
     void set_stepper_speed(float speed);
     void set_p_value(float P);
