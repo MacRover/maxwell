@@ -1,9 +1,9 @@
 #include "rad_control/rad.hpp"
 
 
-RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg) { }
+RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg), l_offset(0.0) { }
 
-RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg)
+RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg), l_offset(0.0)
 {
     l_can_msg->address = (uint32_t)can_id;
 }
@@ -64,6 +64,11 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
     return 1;
 }
 
+void RAD::set_pid_angle_offset(float offset_angle)
+{
+    this->l_offset = offset_angle;
+}
+
 void RAD::calibrate_zero_pos()
 {
     uint8_t buf[1];
@@ -76,7 +81,7 @@ void RAD::set_target_angle(float angle)
 {
     uint8_t ind = 0;
     uint8_t buf[4];
-    __buffer_append_float32(buf, angle, &ind);
+    __buffer_append_float32(buf, angle + l_offset, &ind);
     l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_TARGET_ANGLE) << 8);
     _update_can_data(buf, 4);
 }

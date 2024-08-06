@@ -83,22 +83,80 @@ typedef enum __rad_can_id : uint8_t
 class RAD
 {
 public:
+    /**
+     * Takes CANraw msg, calling a CAN command updates
+     * the CAN frame accordingly with its RAD ID
+     * 
+     * @param can_msg CANraw message to broadcast
+     * @param can_id CAN ID of RAD
+     * 
+     */
     RAD(CANraw* can_msg);
     RAD(CANraw* can_msg, RAD_ID can_id);
 
+    // CAN COMMANDS
+    /**
+     * @brief Calibrates zero position of RAD motor
+     */
     void calibrate_zero_pos();
+
+    /**
+     * @brief Set target angle of RAD motor (in degrees)
+     * 
+     * @param angle target angle/setpoint
+     */
     void set_target_angle(float angle);
+
+    /**
+     * @brief Set stepper speed of RAD motor (STEP/DIR)
+     * 
+     * @param speed speed of motor
+     */
     void set_stepper_speed(float speed);
+
+    /**
+     * @brief Set kP value of RAD motor
+     * 
+     * @param P kP value
+     */
     void set_p_value(float P);
+
+    /**
+     * @brief Set kI value of RAD motor
+     * 
+     * @param I kI value
+     */
     void set_i_value(float I);
+
+    /**
+     * @brief Set kD value of RAD motor
+     * 
+     * @param D kD value
+     */
     void set_d_value(float D);
+
+    /**
+     * @brief Set angle offset from zero position (in degrees)
+     * 
+     * @param offset_angle angle offset
+     */
+    void set_pid_angle_offset(float offset_angle);
 
 private:
     void _update_can_data(uint8_t* buf, size_t size);
 
     CANraw* l_can_msg;
+
+    float l_offset;
 };
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind);
 void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind);
+
+/**
+ * Decode incoming CAN status frame and update RAD status message
+ * 
+ * @param can_msg CAN status frame to decode
+ * @param status RAD status msg after processing CAN frame
+ */
 uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status);
