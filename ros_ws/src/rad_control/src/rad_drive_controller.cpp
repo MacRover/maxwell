@@ -15,12 +15,6 @@ RAD_Drive_Controller::RAD_Drive_Controller() :
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
 
-  rad_fl_drive.calibrate_zero_pos();
-  rad_fr_drive.calibrate_zero_pos();
-  rad_bl_drive.calibrate_zero_pos();
-  rad_br_drive.calibrate_zero_pos();
-  this->_publish_to_can();
-
   sub_ = this->create_subscription<SwerveModulesList>(
     "/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)
   );

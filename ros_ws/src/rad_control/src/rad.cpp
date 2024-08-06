@@ -66,9 +66,10 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
 
 void RAD::calibrate_zero_pos()
 {
-    uint8_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t buf[1];
+    buf[0] = 0;
     l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_CALIBRATE_POS) << 8);
-    _update_can_data(buf, 8);
+    _update_can_data(buf, 1);
 }
 
 void RAD::set_target_angle(float angle)
