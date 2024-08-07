@@ -18,6 +18,16 @@ RAD_Drive_Controller::RAD_Drive_Controller() :
   sub_ = this->create_subscription<SwerveModulesList>(
     "/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)
   );
+
+  rad_fl_drive.set_pid_angle_offset(120.0);
+  rad_fr_drive.set_pid_angle_offset(120.0);
+  rad_bl_drive.set_pid_angle_offset(120.0);
+  rad_br_drive.set_pid_angle_offset(120.0);
+
+  rad_fl_drive.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
+  rad_fr_drive.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
+  rad_bl_drive.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
+  rad_br_drive.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
 }
 
 void RAD_Drive_Controller::_publish_to_can()

@@ -70,10 +70,10 @@ int main(int argc, char ** argv)
   // Quit once all motors have been calibrated
   while (!init_node->finished() && rclcpp::ok())
   {
-    rad_fl_drive.calibrate_zero_pos();
-    rad_fr_drive.calibrate_zero_pos();
-    rad_bl_drive.calibrate_zero_pos();
-    rad_br_drive.calibrate_zero_pos();
+    rad_fl_drive.set_target_angle(6000);
+    rad_fr_drive.set_target_angle(6000);
+    rad_bl_drive.set_target_angle(6000);
+    rad_br_drive.set_target_angle(6000);
     can_pub->publish(can1);
     can_pub->publish(can2);
     can_pub->publish(can3);
@@ -81,7 +81,15 @@ int main(int argc, char ** argv)
     rate.sleep();
   }
 
-  RCLCPP_INFO(init_node->get_logger(), "Success!");
+  // zero motor position
+  rad_fl_drive.set_zero_pos();
+  rad_fr_drive.set_zero_pos();
+  rad_bl_drive.set_zero_pos();
+  rad_br_drive.set_zero_pos();
+  can_pub->publish(can1);
+  can_pub->publish(can2);
+  can_pub->publish(can3);
+  can_pub->publish(can4);
 
   // kill node and spin thread
   spin_thread.~thread();

@@ -15,6 +15,7 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_SET_TARGET_ANGLE      = 0x04,
     CAN_SET_STEPPER_SPEED     = 0x03,
 
+    CAN_UPDATE_POS            = 0x37,
     CAN_CALIBRATE_POS         = 0x43,
     CAN_SET_P_VALUE           = 0x46,
     CAN_SET_I_VALUE           = 0x47,
@@ -80,6 +81,13 @@ typedef enum __rad_can_id : uint8_t
 } RAD_ID;
 
 
+typedef enum __rad_gear_ratios : uint16_t
+{
+    RAD__DRIVE__GEAR_RATIO = 30
+    
+} RAD_GEAR_RATIO;
+
+
 class RAD
 {
 public:
@@ -94,11 +102,31 @@ public:
     RAD(CANraw* can_msg);
     RAD(CANraw* can_msg, RAD_ID can_id);
 
+    /**
+     * @brief Set angle offset from zero position (in degrees)
+     * 
+     * @param offset_angle angle offset
+     */
+    void set_pid_angle_offset(float offset_angle);
+
+    /**
+     * @brief Set multiplication factor of angle setting
+     * 
+     * @param factor multiplication factor
+     */
+    void set_mul_factor(float factor);
+
+
     // CAN COMMANDS
     /**
      * @brief Calibrates zero position of RAD motor
      */
     void calibrate_zero_pos();
+
+    /**
+     * @brief Set current position of RAD motor to zero
+     */
+    void set_zero_pos();
 
     /**
      * @brief Set target angle of RAD motor (in degrees)
@@ -135,19 +163,12 @@ public:
      */
     void set_d_value(float D);
 
-    /**
-     * @brief Set angle offset from zero position (in degrees)
-     * 
-     * @param offset_angle angle offset
-     */
-    void set_pid_angle_offset(float offset_angle);
-
 private:
     void _update_can_data(uint8_t* buf, size_t size);
 
     CANraw* l_can_msg;
 
-    float l_offset;
+    float l_offset, l_factor;
 };
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind);
