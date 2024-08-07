@@ -54,6 +54,28 @@ class Reader(Node):
                 type=ParameterType.PARAMETER_INTEGER,
             ),
         )
+        self.declare_parameter(
+            "can_ids",
+            [0x00000000],
+            ParameterDescriptor(
+                description="CAN ID Filters",
+                type=ParameterType.PARAMETER_INTEGER_ARRAY,
+            ),
+        )
+        self.declare_parameter(
+            "can_masks",
+            [0x00000000],
+            ParameterDescriptor(
+                description="CAN ID Masks",
+                type=ParameterType.PARAMETER_INTEGER_ARRAY,
+            ),
+        )
+
+        self.filters = []
+        ids = self.get_parameter("can_ids").get_parameter_value().integer_array_value
+        masks = self.get_parameter("can_masks").get_parameter_value().integer_array_value
+        for id_, mask in zip(ids, masks):
+            self.filters.append({"can_id": id_,"can_mask": mask,"extended": True})
 
         self.publisher = self.create_publisher(
             CANraw, self.get_parameter("topic").get_parameter_value().string_value, 10
@@ -65,8 +87,8 @@ class Reader(Node):
             channel=self.get_parameter("channel").get_parameter_value().string_value,
             bitrate=self.get_parameter("bitrate").get_parameter_value().integer_value,
         )
+        self.bus.set_filters(self.filters)
         self.notifier = Notifier(self.bus, listeners=[self.can_recv_callback])
-        self.notifier.add_listener(self.can_recv_callback)
         self.bus.recv()
 
     def can_recv_callback(self, msg: Message):
@@ -79,8 +101,13 @@ class Reader(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    reader = Reader()
-    rclpy.spin(reader)
+    try:
+        reader = Reader()
+        rclpy.spin(reader)
+    except KeyboardInterrupt:
+        rclpy.try_shutdown()
+        reader.bus.shutdown()
+        reader.destroy_node()
 
 
 if __name__ == "__main__":

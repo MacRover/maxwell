@@ -22,6 +22,7 @@ class Writer(Node):
 
     def __init__(self):
         super().__init__("writer")
+
         self.declare_parameter(
             "topic",
             "/can/can_out",
@@ -59,7 +60,7 @@ class Writer(Node):
             CANraw,
             self.get_parameter("topic").get_parameter_value().string_value,
             self.new_message_callback,
-            10,
+            15,
         )
 
         self.bus = ThreadSafeBus(
@@ -80,8 +81,13 @@ class Writer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    writer = Writer()
-    rclpy.spin(writer)
+    try:
+        writer = Writer()
+        rclpy.spin(writer)
+    except KeyboardInterrupt:
+        rclpy.try_shutdown()
+        writer.bus.shutdown()
+        writer.destroy_node()
 
 
 if __name__ == "__main__":

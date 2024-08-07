@@ -1,3 +1,3 @@
 uint32 address
-byte[<=8] data
+uint8[<=8] data
 bool extended true
