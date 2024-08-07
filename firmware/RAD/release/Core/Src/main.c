@@ -211,10 +211,11 @@ int main(void)
         GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
         GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
 
-        if (ls_1_state == 1 && ls_2_state == 1)
-        {
-            TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-        }
+        // todo stop motor from over-spinning but allow us to move away from limit switch if pressed
+        // if (ls_1_state == 1 && ls_2_state == 1)
+        // {
+        TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        // }
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
             ;
         PID_Update(&pid_1);
