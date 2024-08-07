@@ -24,6 +24,7 @@
 #include "queue.h"
 #include <string.h>
 #include "enc_dec_utils.h"
+#include "at24c04c.h"
 
 RAD_CAN_TypeDef rad_can;
 /* USER CODE END 0 */
@@ -66,8 +67,12 @@ void MX_CAN_Init(void)
     }
 
     rad_can.hcan = hcan;
+
     // todo read id from eeprom
-    rad_can.id = 1;
+//    uint8_t eeprom_buff[1];
+//    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff, sizeof(uint8_t));
+//    rad_can.id = eeprom_buff[0];
+    rad_can.id = 0x29;
 
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;
@@ -210,8 +215,7 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
     // status message 1
     rad_can_handle->TxData[0] = ((status.limit_switch_state & 0x01) << 1)
             | (status.upper_bound_state & 0x01);
-    encode_float_big_endian(status.current_angle,
-            &(rad_can_handle->TxData[1]));
+    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
     rad_can_handle->TxHeader.DLC = 5;
     // status message 1 is ID 9 according to VESC
     // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md

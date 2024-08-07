@@ -95,5 +95,4 @@ void PID_SetZeroPoint(PID_HandleTypeDef *PID)
     PID->__rollovers = 0;
 }
 
-// todo add ability to update kp, ki, kd
 // todo add return statuses and error codes

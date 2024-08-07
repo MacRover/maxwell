@@ -68,19 +68,20 @@ typedef enum
 {
     // match VESC tool
     SET_TARGET_ANGLE = 0x4,
-    SET_STEPPER_SPEED = 0x3,
+//    SET_STEPPER_SPEED = 0x3,
+//    PACKET_PING = 0x11,
     UPDATE_PID_POS_OFFSET = 0x37, // sets current position as the 0 offset point
     // Custom
-    SET_RAD_FLAGS = 0x40,
-    SET_WATCHDOG_INTERVAL = 0x41,
+//    SET_RAD_FLAGS = 0x40,
+//    SET_WATCHDOG_INTERVAL = 0x41,
 //    SAVE_TO_EEPROM = 0x42,
     CALIBRATE_PID_POS_OFFSET = 0x43, // moves motor until it hits limit switch and then sets as zero point
     SET_CAN_ID = 0x44,
-    SET_OUTPUT_RATIO = 0x45,
+//    SET_OUTPUT_RATIO = 0x45,
     SET_P_VALUE = 0x46,
     SET_I_VALUE = 0x47,
     SET_D_VALUE = 0x48,
-//    SET_
+    RESET_BOARD = 0X49,
 } RAD_CAN_CommandId;
 
 typedef struct

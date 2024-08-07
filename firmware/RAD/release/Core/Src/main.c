@@ -138,7 +138,7 @@ int main(void)
                 pid_1.Init.kp = (double) decode_float_big_endian(
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                        &pid_1.Init.kp, sizeof(double));
+                        (uint8_t*) &pid_1.Init.kp, sizeof(double));
                 break;
             }
             case SET_I_VALUE:
@@ -146,7 +146,7 @@ int main(void)
                 pid_1.Init.ki = (double) decode_float_big_endian(
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                        &pid_1.Init.ki, sizeof(double));
+                        (uint8_t*) &pid_1.Init.ki, sizeof(double));
                 break;
             }
             case SET_D_VALUE:
@@ -154,7 +154,7 @@ int main(void)
                 pid_1.Init.kd = (double) decode_float_big_endian(
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                        &pid_1.Init.kd, sizeof(double));
+                        (uint8_t*) &pid_1.Init.kd, sizeof(double));
                 break;
             }
             case CALIBRATE_PID_POS_OFFSET:
@@ -175,13 +175,46 @@ int main(void)
                 PID_Update(&pid_1);
                 break;
             }
+            case UPDATE_PID_POS_OFFSET:
+            {
+                PID_SetZeroPoint(&pid_1);
+                PID_ChangeSetPoint(&pid_1, 0.0);
+                PID_Update(&pid_1);
+                break;
+            }
+            case SET_CAN_ID:
+            {
+                uint8_t new_id = new_message->data[0];
+                AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_CAN_ID, &new_id,
+                        sizeof(uint8_t));
+
+                // test code
+                uint8_t eeprom_buff[1];
+                AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff,
+                        sizeof(uint8_t));
+
+                // will require a reset command to apply updated CAN ID
+                break;
+            }
+            case RESET_BOARD:
+            {
+                NVIC_SystemReset(); // resets/reboots board
+                break;
+            }
             }
             free(new_message->data);
             queue_dequeue(&can_message_queue_1);
 
         }
 
-        TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        // limit switches are active LOW
+        GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
+        GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
+
+        if (ls_1_state == 1 && ls_2_state == 1)
+        {
+            TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        }
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
             ;
         PID_Update(&pid_1);
@@ -189,8 +222,8 @@ int main(void)
         if (HAL_GetTick() % 20 == 0)
         {
             rad_status.current_angle = (float) pid_1.feedback_adj;
-            rad_status.limit_switch_state = 0;
-            rad_status.upper_bound_state = 0;
+            rad_status.limit_switch_state = (uint8_t) ls_1_state;
+            rad_status.upper_bound_state = (uint8_t) ls_2_state; // TODO change this to the right value
             rad_status.kp = pid_1.Init.kp;
             rad_status.ki = pid_1.Init.ki;
             rad_status.kd = pid_1.Init.kd;
