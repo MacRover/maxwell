@@ -2,5 +2,27 @@
     "files.associations": {
         "cstdint": "cpp"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "python.autoComplete.extraPaths": [
+        "/home/koener/Downloads/maxwell_ws/install/spidercan/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/keyboard_controller_sim",
+        "/home/koener/Downloads/maxwell_ws/install/keyboard_controller_sim/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/drive",
+        "/home/koener/Downloads/maxwell_ws/install/drive/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/install/custom_interfaces/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/bringup_py",
+        "/home/koener/Downloads/maxwell_ws/install/bringup_py/lib/python3.10/site-packages",
+        "/opt/ros/iron/lib/python3.10/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/koener/Downloads/maxwell_ws/install/spidercan/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/keyboard_controller_sim",
+        "/home/koener/Downloads/maxwell_ws/install/keyboard_controller_sim/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/drive",
+        "/home/koener/Downloads/maxwell_ws/install/drive/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/install/custom_interfaces/lib/python3.10/site-packages",
+        "/home/koener/Downloads/maxwell_ws/build/bringup_py",
+        "/home/koener/Downloads/maxwell_ws/install/bringup_py/lib/python3.10/site-packages",
+        "/opt/ros/iron/lib/python3.10/site-packages"
+    ]
 }

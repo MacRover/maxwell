@@ -10,6 +10,14 @@
             <real_time_factor>1.0</real_time_factor>
             <real_time_update_rate>500</real_time_update_rate>
         </physics>
+        <!-- Test for mapviz -->
+        <spherical_coordinates>
+            <surface_model>EARTH_WGS84</surface_model>
+            <latitude_deg>38.161479</latitude_deg>
+            <longitude_deg>-122.454630</longitude_deg>
+            <elevation>488.0</elevation>
+        </spherical_coordinates>
+
         <plugin filename="ignition-gazebo-physics-system" name="ignition::gazebo::systems::Physics"></plugin>
         <plugin filename="ignition-gazebo-user-commands-system" name="ignition::gazebo::systems::UserCommands"></plugin>
         <plugin filename="ignition-gazebo-scene-broadcaster-system" name="ignition::gazebo::systems::SceneBroadcaster"></plugin>
