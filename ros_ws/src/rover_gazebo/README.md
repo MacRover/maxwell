@@ -36,6 +36,12 @@ The simulation uses virtual controllers for controlling each joint. You can cont
 
 The keyboard controller is publishing to these topics to move the robot in the simulation.
 
+## Setup for the warehouse.sdf world:
+sudo apt-get update && sudo apt-get install wget
+sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+sudo apt-get update && sudo apt-get install ignition-fortress
+
 ## TODO
 
 - Adding more controls in the keyboard controller

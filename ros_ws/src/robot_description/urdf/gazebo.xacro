@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<robot name="zinger" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+<robot name="robot_description" xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
     <!--
         GAZEBO MACROS
@@ -20,6 +20,54 @@
             <selfCollide>true</selfCollide>
         </gazebo>
     </xacro:macro>
+
+    <gazebo reference="intel_realsense">
+        <sensor name="intel_realsense_depth" type="depth_camera">
+            <always_on>1</always_on>
+            <update_rate>20</update_rate>
+            <pose>0 0 0 0 0 -1.57</pose>
+            <topic>intel_realsense</topic>
+            <camera name="realsense_depth_camera">
+                <horizontal_fov>1.02974</horizontal_fov>
+                <image>
+                    <width>1280</width>
+                    <height>720</height>
+                </image>
+                <clip>
+                    <near>0.02</near>
+                    <far>20</far>
+                </clip>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.007</stddev>
+                </noise>
+            </camera>
+            <plugin
+                filename="libignition-gazebo-sensors-system.so"
+                name="ignition::gazebo::systems::Sensors">
+                <render_engine>ogre2</render_engine>
+            </plugin>
+        </sensor>
+
+    </gazebo>
+
+    <gazebo reference="imu_sensor_link">
+        <gravity>true</gravity>
+        <sensor name='imu_sensor' type='imu'>
+            <ignition_frame_id>/imu_sensor_link</ignition_frame_id>
+            <always_on>1</always_on>
+            <update_rate>100</update_rate>
+            <bodyName>imu_sensor_link</bodyName>
+            <visualize>true</visualize>
+            <!-- <topic>imu</topic> -->
+            <plugin
+                filename="libignition-gazebo-imu-system.so"
+                name="ignition::gazebo::systems::Imu">
+            </plugin>
+            <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>
 
     <!--
         GAZEBO
