@@ -86,6 +86,7 @@ def generate_launch_description():
         name="IGN_GAZEBO_RESOURCE_PATH",
         value=[
             os.path.join(pkg_ignition_bringup, "worlds"),
+            ":" + os.path.join(pkg_ignition_bringup, "worlds", "models"),
             ":" + str(Path(pkg_robot_description).parent.resolve()),
         ],
     )
@@ -98,8 +99,6 @@ def generate_launch_description():
     ign_bridge_launch = PathJoinSubstitution(
         [pkg_ignition_bringup, "launch", "ignition_bridge.launch.py"]
     )
-    # rviz_launch = PathJoinSubstitution(
-    #     [pkg_robot_viz, 'launch', 'view_robot.launch.py'])
     robot_description_base_launch = PathJoinSubstitution(
         [pkg_robot_description, "launch", "base.launch.py"]
     )
@@ -158,15 +157,14 @@ def generate_launch_description():
         output="screen",
     )
 
-    # # Rviz2
-    # rviz2 = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([rviz_launch]),
-    #     condition=IfCondition(LaunchConfiguration('rviz')),
-    #     launch_arguments=[
-    #         ('use_sim_time', 'true'),
-    #         ('description', 'false')
-    #     ]
-    # )
+    # Rviz2 launch 
+    rviz_config_path = os.path.join(get_package_share_directory('rover_gazebo'),'config','maxwell_rviz.rviz')
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_path],
+        output='screen')
 
     # Delay launch of the controllers until after Ignition has launched and the model
     # has spawned in Ignition because the Ignition controller plugins don't become available
@@ -184,6 +182,7 @@ def generate_launch_description():
             )
         ],
     )
+
 
     # Define LaunchDescription variable
     ld = LaunchDescription(ARGUMENTS)
@@ -206,5 +205,7 @@ def generate_launch_description():
     # Launch the controllers
     ld.add_action(robot_controllers)
 
-    # ld.add_action(rviz2)
+    # Launch RViz if specified
+    ld.add_action(rviz_node)
+
     return ld

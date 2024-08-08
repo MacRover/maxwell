@@ -12,7 +12,7 @@ import xacro
 def generate_launch_description():
 
     pkg_robot_description = get_package_share_path("robot_description")
-    model_path = pkg_robot_description / "urdf/arm_urdf.urdf"
+    model_path = pkg_robot_description / "urdf/robot_description.urdf"
     rviz_config_path = pkg_robot_description / "config/urdf.rviz"
 
     gui_arg = DeclareLaunchArgument(

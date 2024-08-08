@@ -7,6 +7,8 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
+        - /RobotModel1/Links1
+        - /RobotModel1/Links1/chassis1
       Splitter Ratio: 0.5
     Tree Height: 739
   - Class: rviz_common/Selection
@@ -66,27 +68,52 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
+        chassis:
+          Alpha: 1
+          Show Axes: true
+          Show Trail: false
+          Value: true
+        front_left_swerve:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        elbow:
+        front_left_wheel:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        shoulder:
+        front_right_swerve:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist:
+        front_right_wheel:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_rotate:
+        intel_realsense:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_swerve:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_swerve:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_wheel:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -102,7 +129,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 12; 12; 12
-    Fixed Frame: base_link
+    Fixed Frame: chassis
     Frame Rate: 30
   Name: root
   Tools:
@@ -145,25 +172,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 3.0869834423065186
+      Distance: 8.068548202514648
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: true
+        X: 0.42558562755584717
+        Y: -0.6977101564407349
+        Z: 0.997768223285675
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.33539772033691406
+      Pitch: 0.8603982329368591
       Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 5.746767997741699
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 1.505394697189331
     Saved: ~
 Window Geometry:
   Displays:
@@ -181,5 +208,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 0
-  Y: 0
+  X: 374
+  Y: 118
