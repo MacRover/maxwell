@@ -1,0 +1,12 @@
+../Core/Src/main.c:75:6:setupTxCAN	1
+../Core/Src/main.c:93:6:setupRxCAN	1
+../Core/Src/main.c:109:6:txCAN	2
+../Core/Src/main.c:117:6:txSPI	1
+../Core/Src/main.c:168:6:HAL_CAN_RxFifo0MsgPendingCallback	2
+../Core/Src/main.c:187:5:main	1
+../Core/Src/main.c:391:6:SystemClock_Config	3
+../Core/Src/main.c:431:13:MX_CAN_Init	3
+../Core/Src/main.c:473:13:MX_SPI1_Init	2
+../Core/Src/main.c:511:13:MX_SPI2_Init	2
+../Core/Src/main.c:549:13:MX_GPIO_Init	1
+../Core/Src/main.c:604:6:Error_Handler	1
