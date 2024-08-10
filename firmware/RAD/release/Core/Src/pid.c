@@ -42,6 +42,9 @@ void MX_PID_1_Init(void)
 //        Error_Handler();
 //    }
 
+    PID_Update(&pid_1);
+    PID_Update(&pid_1);
+    PID_Update(&pid_1);
     // set startup as zero point
     PID_SetZeroPoint(&pid_1);
     PID_ChangeSetPoint(&pid_1, 0.0);

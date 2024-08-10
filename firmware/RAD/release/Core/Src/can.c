@@ -72,7 +72,7 @@ void MX_CAN_Init(void)
 //    uint8_t eeprom_buff[1];
 //    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff, sizeof(uint8_t));
 //    rad_can.id = eeprom_buff[0];
-    rad_can.id = 0x29;
+    rad_can.id = 0x14;
 
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;
@@ -213,8 +213,9 @@ void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status)
 {
     // status message 1
-    rad_can_handle->TxData[0] = ((status.limit_switch_state & 0x01) << 1)
-            | (status.upper_bound_state & 0x01);
+    rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
+            | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
+            | (status.ls_1 & 0x01);
     encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
     rad_can_handle->TxHeader.DLC = 5;
     // status message 1 is ID 9 according to VESC
