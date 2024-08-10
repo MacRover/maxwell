@@ -55,8 +55,10 @@ typedef struct
     float current_angle;
 //    float current_speed;
 
-    uint8_t limit_switch_state;
-    uint8_t upper_bound_state;
+    uint8_t ls_1;
+    uint8_t ls_2;
+    uint8_t fsr_1;
+    uint8_t fsr_2;
 
     float kp;
     float ki;
