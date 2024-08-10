@@ -7,13 +7,19 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='mapviz',
-            executable='mapviz',
-            name='mapviz',
-            output='screen',
-            remappings=[
-                ('/obc/gps', '/navsat/fix')
-            ]
+            executable='mapviz'
+            # remappings=[
+            #     ('/fix', '/obc/gps')
+            # ]
         ),
+        Node(
+            package='swri_transform_util',
+            executable='initialize_origin.py',
+            name='initialize_origin',
+            remappings=[
+                ('/fix', '/obc/gps')
+            ]
+        )
     ])
 
 if __name__ == '__main__':
