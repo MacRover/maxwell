@@ -134,12 +134,12 @@ void KeyboardController::keyLoop()
         break;
       case KEYCODE_D: // gripper close
         std::cout << "GRIPPER CLOSE" << std::endl;
-        joint_trajectory_.points[0].velocities[1] = gripper_joint_vel;
+        joint_trajectory_.points[0].velocities[5] = gripper_joint_vel;
         dirty = true;
         break;
       case KEYCODE_A:
         std::cout << "GRIPPER OPEN" << std::endl; // DOWN is gripper open
-        joint_trajectory_.points[0].velocities[1] = -gripper_joint_vel;
+        joint_trajectory_.points[0].velocities[5] = -gripper_joint_vel;
         dirty = true;
         break;
       case KEYCODE_R: // shoulder up
