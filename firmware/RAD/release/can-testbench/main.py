@@ -8,11 +8,17 @@ import time
 
 def main():
     sleep_time = 3
-    with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=1_000_000) as bus:
+    with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=500_000) as bus:
+
+        send_can_id(bus=bus, id=0x1A54, value=0xB0)
+
+        for msg in bus:
+            print(msg)
+
         # send_p_value(bus=bus, id=0x29, value=0.06)
         # send_i_value(bus=bus, id=0x29, value=0.0001)
         # send_d_value(bus=bus, id=0x29, value=0.0)
-        send_can_id(bus=bus, id=0x29, value=0x29)
+        
         # print("setpoint 1")
         # send_setpoint(bus=bus, id=0x29, value=145.8)
         # time.sleep(sleep_time)
@@ -36,6 +42,7 @@ def main():
     #     #     )
     #     #     bus.send(msg=new_msg)
     #     #     time.sleep(0.2)
+
     #     for msg in bus:
     #         if ((msg.arbitration_id & 0xFF00) >> 8) == 9:
     #             angle_float = struct.unpack(">f", msg.data[1:5])[0]
@@ -120,8 +127,8 @@ def send_d_value(bus: can.BusABC, id: int, value: float):
 
 def send_can_id(bus: can.BusABC, id: int, value: int):
     new_msg = can.Message(
-        arbitration_id=__can_message_id(id, 0x44),
-        data=[value],
+        arbitration_id=__can_message_id(id, 0),
+        data=[0, 0, 0, 0, 0, 0, 0, value],
         is_extended_id=True,
     )
     bus.send(msg=new_msg)
