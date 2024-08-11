@@ -2,6 +2,12 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
+    heartbeat_node = Node(
+        package="drive",
+        executable="heartbeat.py",
+        name="heartbeat_node"
+    )
+
     xbox_node = Node(
         package="drive",
         executable="xbox_drive.py",
@@ -16,6 +22,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            heartbeat_node,
             joy_node, 
             xbox_node,
         ]
