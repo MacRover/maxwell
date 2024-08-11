@@ -231,11 +231,11 @@ void obc_setup_fans()
 #ifdef USING_FANS
     initializeFan(&fan1, 5);
     initializeFan(&fan2, 6);
-    initializeFan(&fan3, 7);
+    // initializeFan(&fan3, 7);
 
     enableFanControl(&fan1);
     enableFanControl(&fan2);
-    enableFanControl(&fan3);
+    // enableFanControl(&fan3);
 #endif
 }
 
@@ -289,7 +289,7 @@ void loop()
 #ifdef USING_FANS
   setFanRPM(&fan1, MIN_RPM);
   setFanRPM(&fan2, MIN_RPM);
-  setFanRPM(&fan3, MIN_RPM);
+//   setFanRPM(&fan3, MIN_RPM);
 #endif
 
     delay(1);
