@@ -11,8 +11,8 @@ rad_fr(&can_fl, RAD_STEER_PID__FRONT_RIGHT)
     timer_ = this->create_wall_timer(
       200ms, std::bind(&SteerTestPID::_timer_callback, this));
     
-    rad_fl.set_pid_angle_offset(120.0);
-    rad_fr.set_pid_angle_offset(120.0);
+    rad_fl.set_pid_angle_offset(0.0);
+    rad_fr.set_pid_angle_offset(0.0);
     rad_fl.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
     rad_fr.set_mul_factor(RAD__DRIVE__GEAR_RATIO);
 }
