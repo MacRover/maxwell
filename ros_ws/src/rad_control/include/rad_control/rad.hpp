@@ -76,7 +76,10 @@ typedef enum __rad_can_id : uint8_t
     RAD__DRIVE__FRONT_RIGHT = 0x01,
     RAD__DRIVE__BACK_RIGHT = 0x02,
     RAD__DRIVE__BACK_LEFT = 0x03,
-    RAD__DRIVE__FRONT_LEFT = 0x04
+    RAD__DRIVE__FRONT_LEFT = 0x04,
+
+    RAD_STEER_PID__FRONT_RIGHT = 0x14,
+    RAD_STEER_PID__FRONT_LEFT = 0x15
 
 } RAD_ID;
 

@@ -4,7 +4,7 @@ SteerTest::SteerTest(std::string name) : Node(name)
 {
     can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
     sub_ = this->create_subscription<Int64>(
-        "/test/rad_speed", 10, std::bind(&SteerTest::_callback, this, _1)
+        "/test/rad_pos", 10, std::bind(&SteerTest::_callback, this, _1)
     );
     timer_ = this->create_wall_timer(
       200ms, std::bind(&SteerTest::_timer_callback, this));

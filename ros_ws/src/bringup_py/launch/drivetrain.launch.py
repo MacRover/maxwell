@@ -15,7 +15,7 @@ from launch.conditions import IfCondition, UnlessCondition
 def generate_launch_description():
     drive_mode_arg = DeclareLaunchArgument(
         "drive_mode",
-        default_value="SWERVE_DRIVE"
+        default_value="TANK_STEER_HYBRID"
     )
     can_rate_arg = DeclareLaunchArgument(
         "can_rate",
@@ -59,6 +59,12 @@ def generate_launch_description():
         }]
     )
 
+    rad_steer_pid_test = Node(
+        package="rad_control",
+        executable="rover_steer_pid",
+        name="rover_steer_pid"
+    )
+
     rad_init_node = Node(
         package="rad_control",
         executable="rad_calibration_init",
@@ -78,23 +84,27 @@ def generate_launch_description():
     ld.add_action(drive_mode_arg)
     ld.add_action(can_rate_arg)
 
-    ld.add_action(
-        RegisterEventHandler(
-            OnProcessExit(
-                target_action=rad_init_node,
-                on_exit=[
-                    LogInfo(msg="Starting CAN controllers"),
-                    vesc_controller_node,
-                    rad_controller_node
-                ]
-            )
-        )
-    )
-    ld.add_action(rad_init_node)
+    # ld.add_action(
+    #     RegisterEventHandler(
+    #         OnProcessExit(
+    #             target_action=rad_init_node,
+    #             on_exit=[
+    #                 LogInfo(msg="Starting CAN controllers"),
+    #                 vesc_controller_node,
+    #                 rad_steer_pid_test
+    #                 # rad_controller_node
+    #             ]
+    #         )
+    #     )
+    # )
+    # ld.add_action(rad_init_node)
 
     ld.add_action(can_writer_node)
     ld.add_action(rad_status_main)
+
     ld.add_action(drive_controller_node)
-    # ld.add_action(vesc_controller_node)
+
+    ld.add_action(vesc_controller_node)
+    ld.add_action(rad_steer_pid_test)
     # ld.add_action(rad_controller_node)
     return ld
