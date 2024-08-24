@@ -1,12 +1,12 @@
 #include "rad_control/rover_steer_pid.hpp"
 
 SteerTestPID::SteerTestPID() : Node("steer_pid_node"), 
-rad_fl(&can_fr, RAD_STEER_PID__FRONT_LEFT),
-rad_fr(&can_fl, RAD_STEER_PID__FRONT_RIGHT)
+rad_fl(&can_fr, RAD_TEST_PID__FRONT_LEFT),
+rad_fr(&can_fl, RAD_TEST_PID__FRONT_RIGHT)
 {
     can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
     sub_ = this->create_subscription<Float32>(
-        "/test/rad_speed", 10, std::bind(&SteerTestPID::_callback, this, _1)
+        "/test/rad_pos", 10, std::bind(&SteerTestPID::_callback, this, _1)
     );
     timer_ = this->create_wall_timer(
       200ms, std::bind(&SteerTestPID::_timer_callback, this));
