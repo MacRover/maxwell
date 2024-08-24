@@ -18,7 +18,6 @@ set(Targets
     rad_status
     rad_calibration_init
     rover_steer_test
-    rover_steer_pid
   )
 
 foreach(target ${Targets})
