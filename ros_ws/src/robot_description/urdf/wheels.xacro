@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Creeated by Nick Koenig for simplifying auto generated robot_description -->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <!-- TODO: LOOK into xacro macros to make this much more simpler! -->
+
+    <link name="rear_right_swerve">
+    <inertial>
+        <origin xyz="-0.0104494510740284 -0.0477345887574869 -0.0104244719000425" rpy="0 0 0" />
+        <mass value="0.542640143684388" />
+        <inertia ixx="0.00079995914007838" ixy="1.59982758198833E-06" ixz="0.000136993625433279"
+                iyy="0.000590903972219635" iyz="1.10148528801798E-06" izz="0.000799957509622796" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_right_swerve.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="1 1 1 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_right_swerve.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="rear_right_swerve_joint" type="revolute">
+        <origin xyz="0.68344 -0.49838 0.7682" rpy="0 0 -1.5703" />
+        <parent link="chassis" />
+        <child link="rear_right_swerve" />
+        <axis xyz="0 0 1" />
+        <limit lower="-3.14" upper="3.14" effort="10" velocity="10" />
+    </joint>
+
+    <link name="rear_right_wheel">
+    <inertial>
+        <origin xyz="1.59073720862324E-09 -0.000197750569955524 2.7684601812461E-05" rpy="0 0 0" />
+        <mass value="0.656482054320521" />
+        <inertia ixx="0.00148549672252236" ixy="-9.89490282732782E-11" ixz="7.33170733284716E-11"
+                iyy="0.00271753332808322" iyz="5.37902018164859E-08" izz="0.0014863037774332" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_right_wheel.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_right_wheel.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="rear_right_wheel_joint" type="continuous">
+        <origin xyz="0 0.00025221 -0.123" rpy="0 0 0" />
+        <parent link="rear_right_swerve" />
+        <child link="rear_right_wheel" />
+        <axis xyz="0 1 0" />
+        <limit lower="0" upper="0" effort="10" velocity="10" />
+    </joint>
+
+    <link name="rear_left_swerve">
+    <inertial>
+        <origin xyz="1.51718870395889E-05 -0.0146301502407999 -0.0473418545998382" rpy="0 0 0" />
+        <mass value="0.547461864226621" />
+        <inertia ixx="0.000663188000274628" ixy="-8.15227789668012E-10" ixz="-3.52381215417115E-07"
+                iyy="0.000937168733698632" iyz="1.91011664848317E-06" izz="0.000591064539342772" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_left_swerve.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="1 1 1 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_left_swerve.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="rear_left_swerve_joint" type="revolute">
+        <origin xyz="1.2863 -0.49838 0.7682" rpy="0 0 -1.5703" />
+        <parent link="chassis" />
+        <child link="rear_left_swerve" />
+        <axis xyz="0 0 1" />
+        <limit lower="-3.14" upper="3.14" effort="10" velocity="10" />
+    </joint>
+
+    <link name="rear_left_wheel">
+    <inertial>
+        <origin xyz="-1.59073604288906E-09 0.000197750569954858 2.7684601812461E-05" rpy="0 0 0" />
+        <mass value="0.656482054320516" />
+        <inertia ixx="0.00148549672252236" ixy="-9.8949028528341E-11" ixz="-7.33170735751615E-11"
+                iyy="0.00271753332808322" iyz="-5.37902018164718E-08" izz="0.00148630377743321" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_left_wheel.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/rear_left_wheel.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="rear_left_wheel_joint" type="continuous">
+        <origin xyz="0 -0.00025221 -0.123" rpy="0 0 0" />
+        <parent link="rear_left_swerve" />
+        <child link="rear_left_wheel" />
+        <axis xyz="0 1 0" />
+        <limit effort="10" velocity="10" />
+    </joint>
+
+    <link name="front_left_swerve">
+    <inertial>
+        <origin xyz="1.73514417078913E-05 -0.0133331786828048 -0.0537440061727622" rpy="0 0 0" />
+        <mass value="0.558004791412519" />
+        <inertia ixx="0.000663539303072256" ixy="-8.15227790064344E-10" ixz="-3.52381215444682E-07"
+                iyy="0.000937984101930968" iyz="1.91011664848573E-06" izz="0.000591478575874573" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_left_swerve.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_left_swerve.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="front_left_swerve_joint" type="revolute">
+        <origin xyz="1.2863 -1.4072 0.77214" rpy="0 0 -1.5703" />
+        <parent link="chassis" />
+        <child link="front_left_swerve" />
+        <axis xyz="0 0 1" />
+        <limit lower="-3.14" upper="3.14" effort="10" velocity="10" />
+    </joint>
+
+    <link name="front_left_wheel">
+    <inertial>
+        <origin xyz="-1.59073731964554E-09 0.000197750569956412 2.7684601812239E-05" rpy="0 0 0" />
+        <mass value="3.656482054320522" />
+        <inertia ixx="0.00148549672252236" ixy="-9.89490284633312E-11" ixz="-7.33170737634534E-11"
+                iyy="0.00271753332808322" iyz="-5.37902018166521E-08" izz="0.00148630377743321" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_left_wheel.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_left_wheel.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="front_left_wheel_joint" type="continuous">
+        <origin xyz="0 -0.00025221 -0.12694" rpy="0 0 0" />
+        <parent link="front_left_swerve" />
+        <child link="front_left_wheel" />
+        <axis xyz="0 1 0" />
+        <limit effort="10" velocity="10" />
+    </joint>
+
+    <link name="front_right_swerve">
+    <inertial>
+        <origin xyz="-1.7351441706337E-05 0.0133331786828054 -0.0469723661727601" rpy="0 0 0" />
+        <mass value="0.558004791412519" />
+        <inertia ixx="0.000663539303072266" ixy="-8.15227791272557E-10" ixz="3.52381215427771E-07"
+                iyy="0.000937984101930992" iyz="-1.91011664848739E-06" izz="0.000591478575874592" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_right_swerve.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_right_swerve.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="front_right_swerve_joint" type="revolute">
+        <origin xyz="0.68344 -1.4072 0.76536" rpy="0 0 -1.5703" />
+        <parent link="chassis" />
+        <child link="front_right_swerve" />
+        <axis xyz="0 0 1" />
+        <limit lower="-3.14" upper="3.14" effort="10" velocity="10" />
+    </joint>
+
+    <link name="front_right_wheel">
+    <inertial>
+        <origin xyz="1.59073687555633E-09 -0.000197750569955524 2.7684601812128E-05" rpy="0 0 0" />
+        <mass value="3.656482054320521" />
+        <inertia ixx="0.00148549672252236" ixy="-9.89490282816427E-11" ixz="7.33170737863754E-11"
+                iyy="0.00271753332808322" iyz="5.3790201816682E-08" izz="0.0014863037774332" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_right_wheel.STL" />
+        </geometry>
+        <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+        <mesh filename="package://robot_description/meshes/front_right_wheel.STL" />
+        </geometry>
+    </collision>
+    </link>
+
+    <joint name="front_right_wheel_joint" type="continuous">
+        <origin xyz="0 0.00025221 -0.12016" rpy="0 0 0" />
+        <parent link="front_right_swerve" />
+        <child link="front_right_wheel" />
+        <axis xyz="0 1 0" />
+        <limit effort="10" velocity="10" />
+    </joint>
+
+</robot>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Creeated by Nick Koenig for simplifying auto generated robot_description -->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+   
+    <link name="imu_sensor_link">
+    </link>
+  
+    <joint name="base_link_to_imu" type="fixed">
+      <origin rpy="0 0 0" xyz="-0.1 0 0.1" />
+      <parent link="base_link" />
+      <child link="imu_sensor_link" />
+    </joint>
+
+</robot>
