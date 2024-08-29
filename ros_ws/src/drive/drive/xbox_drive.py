@@ -47,7 +47,7 @@ class XboxSwerveDrive(XboxDrive):
 
 
 class XboxTankSteerDrive(XboxDrive):
-    def __init__(self, pub_cmd_vel: Publisher, pub_rad_fr: Publisher, pub_rad_fl):
+    def __init__(self, pub_cmd_vel: Publisher, pub_rad_fr: Publisher, pub_rad_fl: Publisher):
         self.pub_cmd_vel = pub_cmd_vel
         self.pub_rad_fr = pub_rad_fr
         self.pub_rad_fl = pub_rad_fl

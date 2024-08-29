@@ -23,7 +23,7 @@ def generate_launch_description():
             "motor": "BACK_RIGHT",
             "namespace": "rear_right",
             "status_rate": 15,
-            "logging": True
+            "logging": False
         }]
     )
 
@@ -36,7 +36,7 @@ def generate_launch_description():
             "motor": "FRONT_RIGHT",
             "namespace": "front_right",
             "status_rate": 15,
-            "logging": True
+            "logging": False
         }]
     )
 
@@ -49,7 +49,7 @@ def generate_launch_description():
             "motor": "FRONT_LEFT",
             "namespace": "front_left",
             "status_rate": 15,
-            "logging": True
+            "logging": False
         }]
     )
 
@@ -62,7 +62,7 @@ def generate_launch_description():
             "motor": "BACK_LEFT",
             "namespace": "rear_left",
             "status_rate": 15,
-            "logging": True
+            "logging": False
         }]
     )
 

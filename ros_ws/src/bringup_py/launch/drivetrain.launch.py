@@ -12,11 +12,13 @@ from launch.conditions import IfCondition
 def generate_launch_description():
     drive_mode_arg = DeclareLaunchArgument(
         "drive_mode",
-        default_value="TANK_STEER_HYBRID" 
+        default_value="TANK_STEER_HYBRID",
+        description="Method of Driving (SWERVE_DRIVE | TANK_STEER_HYBRID)"
     )
     can_rate_arg = DeclareLaunchArgument(
         "can_rate",
-        default_value="10"
+        default_value="10",
+        description="Rate of CAN Messages (hz)"
     )
     drive_mode = LaunchConfiguration("drive_mode")
     can_rate = LaunchConfiguration("can_rate")
@@ -28,6 +30,15 @@ def generate_launch_description():
                 "launch"
             ),
             "/rad_status_main.launch.py"
+        ])
+    )
+    vesc_status_main = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory("drive"),
+                "launch"
+            ),
+            "/vesc_status.launch.py"
         ])
     )
 
@@ -103,9 +114,11 @@ def generate_launch_description():
     ld.add_action(rad_init_node)
 
     ld.add_action(can_writer_node)
+
     ld.add_action(rad_status_main)
+    ld.add_action(vesc_status_main)
 
     ld.add_action(drive_controller_node)
-
     ld.add_action(vesc_controller_node)
+
     return ld
