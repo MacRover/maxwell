@@ -1,7 +1,15 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
+    drive_mode_arg = DeclareLaunchArgument(
+        "drive_mode",
+        default_value="TANK_STEER_HYBRID" 
+    )
+    drive_mode = LaunchConfiguration("drive_mode")
+
     heartbeat_node = Node(
         package="drive",
         executable="heartbeat.py",
@@ -11,7 +19,10 @@ def generate_launch_description():
     xbox_node = Node(
         package="drive",
         executable="xbox_drive.py",
-        name="xbox_controller"
+        name="xbox_controller",
+        parameters=[{
+            "drive_mode": drive_mode
+        }]
     )
 
     joy_node = Node(
@@ -22,6 +33,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            drive_mode_arg,
             heartbeat_node,
             joy_node, 
             xbox_node,

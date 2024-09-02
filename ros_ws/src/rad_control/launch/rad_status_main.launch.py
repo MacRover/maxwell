@@ -21,7 +21,7 @@ def generate_launch_description():
         name="rad_status_node",
         parameters=[{
             "can_topic": "/can/rad_can_in",
-            "status_rate": 10
+            "status_rate": 15
         }]
     )
 
