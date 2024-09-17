@@ -192,24 +192,24 @@ int main(void)
 
     	//https://deepbluembedded.com/stm32-adc-read-example-dma-interrupt-polling/
 
-    	HAL_ADC_Start(&hadc1);
+//    	HAL_ADC_Start(&hadc1);
+//
+//    	HAL_ADC_PollForConversion(&hadc1, 1);
+//    	adc_buf[0] = HAL_ADC_GetValue(&hadc1);
+//
+//    	HAL_ADC_Stop(&hadc1);
+//
+//    	HAL_ADC_Start(&hadc2);
+//
+//    	HAL_ADC_PollForConversion(&hadc2, 1);
+//    	adc_buf[1] = HAL_ADC_GetValue(&hadc2);
+//
+//
+//    	HAL_ADC_Stop(&hadc2);
 
-    	HAL_ADC_PollForConversion(&hadc1, 1);
-    	adc_buf[0] = HAL_ADC_GetValue(&hadc1);
-
-    	HAL_ADC_Stop(&hadc1);
-
-    	HAL_ADC_Start(&hadc2);
-
-    	HAL_ADC_PollForConversion(&hadc2, 1);
-    	adc_buf[1] = HAL_ADC_GetValue(&hadc2);
-
-
-    	HAL_ADC_Stop(&hadc2);
-
-//    	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-//    	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
-////
+    	gpio_in_buf[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    	gpio_in_buf[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
+//
 //    	TxData[0] = 0x00; //First bit 0 signifies ADC
 //		TxData[1] = 0x02; // Second bit signifies channel number
 //		TxData[2] = 0x00;

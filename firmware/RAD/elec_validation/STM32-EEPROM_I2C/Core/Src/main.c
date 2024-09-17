@@ -21,11 +21,37 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
+typedef enum {
+	RAD_TYPE_DRIVETRAIN,
+	RAD_TYPE_ARM_BASE,
+	RAD_TYPE_ARM_ELBOW,
+	RAD_TYPE_ARM_WRIST,
+	RAD_TYPE_ARM_GRIPPER,
+} RAD_TYPE;
+
+
+typedef struct __attribute__((packed)){
+	uint8_t RAD_ID;
+	RAD_TYPE RAD_TYPE;
+	uint8_t HOME_POSITION;
+	float P;
+	float I;
+	float D;
+	uint32_t DRVCTRl;
+	uint32_t CHOPCONF;
+	uint32_t SMARTEN;
+	uint32_t SGSCONF;
+	uint32_t DRVCONF;
+	uint16_t STEPPER_SPEED;
+	uint16_t ODOM_INTERVAL;
+} EEPROM_STRUCT, *P_EEPROM_STRUCT;
 
 /* USER CODE END PTD */
 
@@ -193,9 +219,27 @@ int main(void)
         uint8_t i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
                 | (eeprom_address >> 8) << 1 | read_eeprom;
 
-        uint8_t i2c_send_data[2];
+        EEPROM_STRUCT eeprom_data = {
+        		90,
+				RAD_TYPE_DRIVETRAIN,
+				180,
+				0.5,
+				0.5,
+				0.5,
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6
+        };
+        uint32_t eeprom_data_size = sizeof(eeprom_data) / sizeof(uint8_t);
+        uint8_t* eeprom_data_p = (uint8_t*) &eeprom_data;
+
+        uint8_t i2c_send_data[eeprom_data_size + 1];
         i2c_send_data[0] = (uint8_t) eeprom_address & 0xff;
-        i2c_send_data[1] = (uint8_t) 0x79;
+        memcpy((void*) &i2c_send_data[1], (void*) eeprom_data_p, eeprom_data_size);
 
         while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
                 &i2c_send_data[0], sizeof(i2c_send_data), 10000) != HAL_OK)
@@ -211,15 +255,15 @@ int main(void)
 
         HAL_Delay(25);
 
-        eeprom_address = 123; // address in eeprom to read from
+        eeprom_address = 321; // address in eeprom to read from
         i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
                 | (eeprom_address >> 8) << 1 | read_eeprom;
         uint8_t i2c_address_write = (uint8_t) (i2c_address & 0xfe);
 
-        uint8_t i2c_data_buff;
+        uint8_t i2c_data_buff[eeprom_data_size];
         while (HAL_I2C_Mem_Read(&hi2c1, (uint16_t) i2c_address_write,
-                (uint16_t) eeprom_address, I2C_MEMADD_SIZE_8BIT, &i2c_data_buff,
-                1, 10000) != HAL_OK)
+                (uint16_t) eeprom_address, I2C_MEMADD_SIZE_8BIT, &i2c_data_buff[0],
+				(uint16_t) eeprom_data_size, 10000) != HAL_OK)
         {
             /* Error_Handler() function is called when Timeout error occurs.
              When Acknowledge failure occurs (Slave don't acknowledge its address)
@@ -230,10 +274,14 @@ int main(void)
             }
         }
 
+        P_EEPROM_STRUCT eeprom_data_reconstructed = (P_EEPROM_STRUCT) &i2c_data_buff[0];
+
+        /*
         uint8_t can_data[1];
         can_data[0] = i2c_data_buff;
         TxHeader.DLC = 1;
         HAL_CAN_AddTxMessage(&hcan, &TxHeader, can_data, &TxMailbox);
+        */
 
         HAL_Delay(500);
         /* USER CODE END WHILE */
