@@ -52,7 +52,7 @@ typedef struct __attribute__((packed)){
 	uint32_t DRVCONF;
 	uint16_t STEPPER_SPEED;
 	uint16_t ODOM_INTERVAL;
-} EEPROM_STRUCT, *P_EEPROM_STRUCT;
+} EEPROM_STRUCT;
 
 /* USER CODE END PTD */
 
@@ -98,8 +98,8 @@ static void MX_I2C1_Init(void);
 
 /* USER CODE BEGIN PFP */
 
-static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
-static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
+static void READ_EEPROM(uint8_t* pData, uint32_t size, uint8_t eeprom_page_num);
+static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint8_t eeprom_page_num);
 
 /* USER CODE END PFP */
 
@@ -179,7 +179,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 
 // Write EEPROM Function ------------------------------
 
-static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) {
+static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint8_t eeprom_page_num) {
+	uint16_t eeprom_address = eeprom_page_num * EEPROM_PAGE_TOTAL;
 	uint16_t pageCounter = 0;
 	uint16_t address;
 	uint16_t currentSize;
@@ -208,11 +209,7 @@ static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address)
 			currentSize = EEPROM_PAGE_SIZE;
 		}
 
-		// Setting the elements in pData to different indices of the array
-		// The formula makes sure that the proper elements are indexed each time
-//		for (int i = 1; i < currentSize; i++) {
-//			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
-//		}
+		// Copy elements from pData to data for use
 		memcpy((void *) &data[1], (void *) &pData[pageCounter * (EEPROM_PAGE_SIZE - 1)], currentSize - 1);
 
 		// Write data to EEPROM
@@ -237,7 +234,8 @@ static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address)
 
 }
 
-static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) {
+static void READ_EEPROM(uint8_t* pData, uint32_t size, uint8_t eeprom_page_num) {
+	uint16_t eeprom_address = eeprom_page_num * EEPROM_PAGE_TOTAL;
 	uint16_t pageCounter = 0;
 	uint16_t address;
 	uint16_t currentSize;
@@ -277,7 +275,7 @@ static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) 
 			}
 		}
 
-		memcpy((void *) &pData[(uint16_t) (pageCounter * (EEPROM_PAGE_SIZE - 1))], (void *) &data[0], currentSize * sizeof(uint8_t));
+		memcpy((void *) &pData[pageCounter * (EEPROM_PAGE_SIZE - 1)], (void *) &data[0], currentSize);
 
 		// Incrementing the page counter
 		pageCounter++;
@@ -331,14 +329,14 @@ int main(void)
         txCAN();
 //        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 
-        uint16_t eeprom_address = 321;
+        uint16_t eeprom_page = 0; // page aligned address in eeprom to write to (max 32 pages)
         EEPROM_STRUCT eeprom_data = {
         		90,
-				RAD_TYPE_DRIVETRAIN,
+				RAD_TYPE_ARM_GRIPPER,
 				180,
-				0.5,
-				0.5,
-				0.5,
+				0.812347,
+				0.322345,
+				0.523405,
 				0,
 				1,
 				2,
@@ -347,19 +345,22 @@ int main(void)
 				5,
 				6
         };
+
         uint32_t eeprom_data_size = sizeof(eeprom_data) / sizeof(uint8_t);
 
-        WRITE_EEPROM((uint8_t*) &eeprom_data, eeprom_data_size, eeprom_address);
+
+        // write will definitely span multiple pages!
+        WRITE_EEPROM((uint8_t*) &eeprom_data, eeprom_data_size, eeprom_page);
 
         HAL_Delay(25);
 
-        eeprom_address = 321; // address in eeprom to read from
+        eeprom_page = 0; // page in eeprom to read from
 
         uint8_t* eeprom_data_buff = (uint8_t*) malloc(eeprom_data_size);
 
-        READ_EEPROM(eeprom_data_buff, eeprom_data_size, eeprom_address);
+        READ_EEPROM(eeprom_data_buff, eeprom_data_size, eeprom_page);
 
-        P_EEPROM_STRUCT eeprom_data_reconstructed = (P_EEPROM_STRUCT) &eeprom_data_buff[0];
+        EEPROM_STRUCT* eeprom_data_reconstructed = (EEPROM_STRUCT*) &eeprom_data_buff[0];
 
         /*
         uint8_t can_data[1];
