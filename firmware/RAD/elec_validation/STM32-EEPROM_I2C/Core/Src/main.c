@@ -210,9 +210,10 @@ static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address)
 
 		// Setting the elements in pData to different indices of the array
 		// The formula makes sure that the proper elements are indexed each time
-		for (int i = 1; i < currentSize; i++) {
-			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
-		}
+//		for (int i = 1; i < currentSize; i++) {
+//			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
+//		}
+		memcpy((void *) &data[1], (void *) &pData[pageCounter * (EEPROM_PAGE_SIZE - 1)], currentSize - 1);
 
 		// Write data to EEPROM
 		while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
@@ -256,16 +257,16 @@ static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) 
 		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
 		if (pageCounter == (size / EEPROM_PAGE_SIZE)) {
 			// Calculate the number of items left to pass in, and set that to the current size
-			currentSize = (size + pageCounter + 1) - (pageCounter * EEPROM_PAGE_SIZE);
+			currentSize = size - (pageCounter * (EEPROM_PAGE_SIZE - 1));
 		} else {
 			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
-			currentSize = EEPROM_PAGE_SIZE;
+			currentSize = EEPROM_PAGE_SIZE - 1;
 		}
 
 		// READING FROM EEPROM
 		while (HAL_I2C_Mem_Read(&hi2c1, (uint16_t) i2c_address,
 				(uint16_t) address, I2C_MEMADD_SIZE_8BIT, &data[0],
-				(uint16_t) currentSize - 1, 10000) != HAL_OK)
+				(uint16_t) currentSize, 10000) != HAL_OK)
 		{
 			/* Error_Handler() function is called when Timeout error occurs.
 			 When Acknowledge failure occurs (Slave don't acknowledge its address)
@@ -276,7 +277,7 @@ static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) 
 			}
 		}
 
-		memcpy((void *) &pData[pageCounter * (EEPROM_PAGE_SIZE - 1)], (void *) &data[0], currentSize - 1);
+		memcpy((void *) &pData[(uint16_t) (pageCounter * (EEPROM_PAGE_SIZE - 1))], (void *) &data[0], currentSize * sizeof(uint8_t));
 
 		// Incrementing the page counter
 		pageCounter++;
@@ -356,7 +357,7 @@ int main(void)
 
         uint8_t* eeprom_data_buff = (uint8_t*) malloc(eeprom_data_size);
 
-        READ_EEPROM((uint8_t*) &eeprom_data_buff, eeprom_data_size, eeprom_address);
+        READ_EEPROM(eeprom_data_buff, eeprom_data_size, eeprom_address);
 
         P_EEPROM_STRUCT eeprom_data_reconstructed = (P_EEPROM_STRUCT) &eeprom_data_buff[0];
 
