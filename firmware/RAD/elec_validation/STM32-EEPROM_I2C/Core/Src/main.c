@@ -100,8 +100,6 @@ static void MX_I2C1_Init(void);
 
 static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
 static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
-static void READ_EEPROM_RAW(uint16_t i2c_address, uint16_t memAddress, uint8_t* pData, uint16_t size);
-static void WRITE_EEPROM_RAW(uint16_t i2c_address, uint8_t* pData, uint16_t size);
 
 /* USER CODE END PFP */
 
@@ -182,7 +180,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 // Write EEPROM Function ------------------------------
 
 static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) {
-
 	uint16_t pageCounter = 0;
 	uint16_t address;
 	uint16_t currentSize;
@@ -190,60 +187,104 @@ static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address)
 	uint8_t* data = (uint8_t*) malloc(EEPROM_PAGE_SIZE);
 
 	do {
-
 		// Setting the EEPROM address based on what page we are on
-
 		address = eeprom_address + pageCounter * EEPROM_PAGE_SIZE;
 
 		// Setting the first index of the data array to the EEPROM address
-
 		data[0] = address;
 
 		// Finding the i2c address (from validation code)
-
 		uint8_t i2c_address = DEVICE_IDENTIFIER | (A2_PIN << 3) | (A1_PIN << 2)
 			| (address >> 8) << 1 | 0;
 
 		// Checking if the page counter is equivalent to the size passed in, divided by the EEPROM page size
 		// This is integer division
 		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
-
 		if (pageCounter == (size / EEPROM_PAGE_SIZE)) {
-
 			// Calculate the number of items left to pass in, and set that to the current size
-
 			currentSize = (size + pageCounter + 1) - pageCounter * EEPROM_PAGE_SIZE;
-
-			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
-
 		} else {
+			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
 			currentSize = EEPROM_PAGE_SIZE;
 		}
 
 		// Setting the elements in pData to different indices of the array
-		// The forumla makes sure that the proper elements are indexed each time
-
+		// The formula makes sure that the proper elements are indexed each time
 		for (int i = 1; i < currentSize; i++) {
 			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
 		}
 
-		// Calling WRITE_EEPROM_RAW to write data to EEPROM
-
-		WRITE_EEPROM_RAW(i2c_address, data, currentSize);
+		// Write data to EEPROM
+		while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
+				&data[0], currentSize, 10000) != HAL_OK)
+		{
+			/* Error_Handler() function is called when Timeout error occurs.
+			 When Acknowledge failure occurs (Slave don't acknowledge its address)
+			 Master restarts communication */
+			if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
+			{
+				Error_Handler();
+			}
+		}
 
 		// Incrementing the page counter
-
 		pageCounter++;
 
-		// Exiting the loop
-
-	} while (pageCounter > (size / EEPROM_PAGE_SIZE));
-
+	} while (pageCounter <= (size / EEPROM_PAGE_SIZE));
 	// Deallocating memory needed
-
 	free((void*) data);
 
 }
+
+static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) {
+	uint16_t pageCounter = 0;
+	uint16_t address;
+	uint16_t currentSize;
+
+	uint8_t* data = (uint8_t*) malloc(EEPROM_PAGE_SIZE - 1);
+
+	do {
+		// Setting the EEPROM address based on what page we are on
+		address = eeprom_address + pageCounter * EEPROM_PAGE_SIZE;
+
+		// Finding the i2c address (from validation code)
+		uint8_t i2c_address = DEVICE_IDENTIFIER | (A2_PIN << 3) | (A1_PIN << 2)
+			| (address >> 8) << 1 | 0;
+
+		// Checking if the page counter is equivalent to the size passed in, divided by the EEPROM page size
+		// This is integer division
+		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
+		if (pageCounter == (size / EEPROM_PAGE_SIZE)) {
+			// Calculate the number of items left to pass in, and set that to the current size
+			currentSize = (size + pageCounter + 1) - (pageCounter * EEPROM_PAGE_SIZE);
+		} else {
+			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
+			currentSize = EEPROM_PAGE_SIZE;
+		}
+
+		// READING FROM EEPROM
+		while (HAL_I2C_Mem_Read(&hi2c1, (uint16_t) i2c_address,
+				(uint16_t) address, I2C_MEMADD_SIZE_8BIT, &data[0],
+				(uint16_t) currentSize - 1, 10000) != HAL_OK)
+		{
+			/* Error_Handler() function is called when Timeout error occurs.
+			 When Acknowledge failure occurs (Slave don't acknowledge its address)
+			 Master restarts communication */
+			if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
+			{
+				Error_Handler();
+			}
+		}
+
+		memcpy((void *) &pData[pageCounter * (EEPROM_PAGE_SIZE - 1)], (void *) &data[0], currentSize - 1);
+
+		// Incrementing the page counter
+		pageCounter++;
+
+	} while (pageCounter <= (size / EEPROM_PAGE_SIZE));
+
+	free((void*) data);
+};
 
 /* USER CODE END 0 */
 
@@ -289,16 +330,7 @@ int main(void)
         txCAN();
 //        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 
-        uint8_t read_eeprom = 0; // address in eeprom to write to
         uint16_t eeprom_address = 321;
-
-        uint8_t device_identifier = 0b10100000;
-        uint8_t a2_pin = 0;
-        uint8_t a1_pin = 0;
-
-        uint8_t i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
-                | (eeprom_address >> 8) << 1 | read_eeprom;
-
         EEPROM_STRUCT eeprom_data = {
         		90,
 				RAD_TYPE_DRIVETRAIN,
@@ -315,49 +347,18 @@ int main(void)
 				6
         };
         uint32_t eeprom_data_size = sizeof(eeprom_data) / sizeof(uint8_t);
-        uint8_t* eeprom_data_p = (uint8_t*) &eeprom_data;
 
-        uint8_t* i2c_send_data = (uint8_t*) malloc(eeprom_data_size + 1);
-
-
-        i2c_send_data[0] = (uint8_t) eeprom_address & 0xff;
-        memcpy((void*) &i2c_send_data[1], (void*) eeprom_data_p, eeprom_data_size);
-
-        while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
-                &i2c_send_data[0], sizeof(i2c_send_data), 10000) != HAL_OK)
-        {
-            /* Error_Handler() function is called when Timeout error occurs.
-             When Acknowledge failure occurs (Slave don't acknowledge its address)
-             Master restarts communication */
-            if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-            {
-                Error_Handler();
-            }
-        }
+        WRITE_EEPROM((uint8_t*) &eeprom_data, eeprom_data_size, eeprom_address);
 
         HAL_Delay(25);
 
         eeprom_address = 321; // address in eeprom to read from
-        i2c_address = device_identifier | (a2_pin << 3) | (a1_pin << 2)
-                | (eeprom_address >> 8) << 1 | read_eeprom;
-        uint8_t i2c_address_write = (uint8_t) (i2c_address & 0xfe);
 
-        uint8_t* i2c_data_buff = (uint8_t*) malloc(eeprom_data_size);
+        uint8_t* eeprom_data_buff = (uint8_t*) malloc(eeprom_data_size);
 
-        while (HAL_I2C_Mem_Read(&hi2c1, (uint16_t) i2c_address_write,
-                (uint16_t) eeprom_address, I2C_MEMADD_SIZE_8BIT, &i2c_data_buff[0],
-				(uint16_t) eeprom_data_size, 10000) != HAL_OK)
-        {
-            /* Error_Handler() function is called when Timeout error occurs.
-             When Acknowledge failure occurs (Slave don't acknowledge its address)
-             Master restarts communication */
-            if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF)
-            {
-                Error_Handler();
-            }
-        }
+        READ_EEPROM((uint8_t*) &eeprom_data_buff, eeprom_data_size, eeprom_address);
 
-        P_EEPROM_STRUCT eeprom_data_reconstructed = (P_EEPROM_STRUCT) &i2c_data_buff[0];
+        P_EEPROM_STRUCT eeprom_data_reconstructed = (P_EEPROM_STRUCT) &eeprom_data_buff[0];
 
         /*
         uint8_t can_data[1];
@@ -366,10 +367,7 @@ int main(void)
         HAL_CAN_AddTxMessage(&hcan, &TxHeader, can_data, &TxMailbox);
         */
 
-
         HAL_Delay(500);
-        free((void*) i2c_send_data);
-        free((void*) i2c_data_buff);
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
