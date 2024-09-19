@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -58,6 +59,12 @@ typedef struct __attribute__((packed)){
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define EEPROM_PAGE_TOTAL 32
+#define EEPROM_PAGE_SIZE 16
+#define DEVICE_IDENTIFIER 0b10100000
+#define A2_PIN 0
+#define A1_PIN 0
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,7 +95,13 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN_Init(void);
 static void MX_I2C1_Init(void);
+
 /* USER CODE BEGIN PFP */
+
+static void READ_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
+static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address);
+static void READ_EEPROM_RAW(uint16_t i2c_address, uint16_t memAddress, uint8_t* pData, uint16_t size);
+static void WRITE_EEPROM_RAW(uint16_t i2c_address, uint8_t* pData, uint16_t size);
 
 /* USER CODE END PFP */
 
@@ -165,6 +178,38 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
 
 }
 
+
+// Write EEPROM Function ------------------------------
+
+static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address) {
+
+	uint16_t pageCounter = 0;
+	uint16_t address;
+
+	uint8_t* data = (uint8_t*) malloc(EEPROM_PAGE_SIZE);
+
+	do {
+
+		address = eeprom_address + pageCounter * EEPROM_PAGE_SIZE;
+
+		data[0] = address;
+
+		uint8_t i2c_address = DEVICE_IDENTIFIER | (A2_PIN << 3) | (A1_PIN << 2)
+			| (address >> 8) << 1 | 0;
+
+		for (int i = 1; i < EEPROM_PAGE_SIZE; i++) {
+			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
+		}
+
+		WRITE_EEPROM_RAW(i2c_address, data, EEPROM_PAGE_SIZE);
+		pageCounter++;
+
+	} while (pageCounter > (size / EEPROM_PAGE_SIZE));
+
+	free((void*) data);
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -237,7 +282,9 @@ int main(void)
         uint32_t eeprom_data_size = sizeof(eeprom_data) / sizeof(uint8_t);
         uint8_t* eeprom_data_p = (uint8_t*) &eeprom_data;
 
-        uint8_t i2c_send_data[eeprom_data_size + 1];
+        uint8_t* i2c_send_data = (uint8_t*) malloc(eeprom_data_size + 1);
+
+
         i2c_send_data[0] = (uint8_t) eeprom_address & 0xff;
         memcpy((void*) &i2c_send_data[1], (void*) eeprom_data_p, eeprom_data_size);
 
@@ -260,7 +307,8 @@ int main(void)
                 | (eeprom_address >> 8) << 1 | read_eeprom;
         uint8_t i2c_address_write = (uint8_t) (i2c_address & 0xfe);
 
-        uint8_t i2c_data_buff[eeprom_data_size];
+        uint8_t* i2c_data_buff = (uint8_t*) malloc(eeprom_data_size);
+
         while (HAL_I2C_Mem_Read(&hi2c1, (uint16_t) i2c_address_write,
                 (uint16_t) eeprom_address, I2C_MEMADD_SIZE_8BIT, &i2c_data_buff[0],
 				(uint16_t) eeprom_data_size, 10000) != HAL_OK)
@@ -283,7 +331,10 @@ int main(void)
         HAL_CAN_AddTxMessage(&hcan, &TxHeader, can_data, &TxMailbox);
         */
 
+
         HAL_Delay(500);
+        free((void*) i2c_send_data);
+        free((void*) i2c_data_buff);
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
