@@ -185,26 +185,61 @@ static void WRITE_EEPROM(uint8_t* pData, uint32_t size, uint16_t eeprom_address)
 
 	uint16_t pageCounter = 0;
 	uint16_t address;
+	uint16_t currentSize;
 
 	uint8_t* data = (uint8_t*) malloc(EEPROM_PAGE_SIZE);
 
 	do {
 
+		// Setting the EEPROM address based on what page we are on
+
 		address = eeprom_address + pageCounter * EEPROM_PAGE_SIZE;
 
+		// Setting the first index of the data array to the EEPROM address
+
 		data[0] = address;
+
+		// Finding the i2c address (from validation code)
 
 		uint8_t i2c_address = DEVICE_IDENTIFIER | (A2_PIN << 3) | (A1_PIN << 2)
 			| (address >> 8) << 1 | 0;
 
-		for (int i = 1; i < EEPROM_PAGE_SIZE; i++) {
+		// Checking if the page counter is equivalent to the size passed in, divided by the EEPROM page size
+		// This is integer division
+		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
+
+		if (pageCounter == (size / EEPROM_PAGE_SIZE)) {
+
+			// Calculate the number of items left to pass in, and set that to the current size
+
+			currentSize = (size + pageCounter + 1) - pageCounter * EEPROM_PAGE_SIZE;
+
+			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
+
+		} else {
+			currentSize = EEPROM_PAGE_SIZE;
+		}
+
+		// Setting the elements in pData to different indices of the array
+		// The forumla makes sure that the proper elements are indexed each time
+
+		for (int i = 1; i < currentSize; i++) {
 			data[i] = pData[i - (pageCounter + 1) + (pageCounter * EEPROM_PAGE_SIZE)];
 		}
 
-		WRITE_EEPROM_RAW(i2c_address, data, EEPROM_PAGE_SIZE);
+		// Calling WRITE_EEPROM_RAW to write data to EEPROM
+
+		WRITE_EEPROM_RAW(i2c_address, data, currentSize);
+
+		// Incrementing the page counter
+
 		pageCounter++;
 
+		// Exiting the loop
+
 	} while (pageCounter > (size / EEPROM_PAGE_SIZE));
+
+	// Deallocating memory needed
 
 	free((void*) data);
 
