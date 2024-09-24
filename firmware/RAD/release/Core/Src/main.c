@@ -42,6 +42,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ENCODER_CONSTANT 370
+#define ROTATION_HIGH_UPPER_BOUND 365
+#define ROTATION_LOW_UPPER_BOUND 330
+#define ROTATION_HIGH_LOWER_BOUND 30
+#define ROTATION_LOW_LOWER_BOUND -5
+#define MIN_ROTATIONS 0
+#define MAX_ROTATIONS 20
+
 
 /* USER CODE END PD */
 
@@ -215,7 +223,89 @@ int main(void)
         // todo stop motor from over-spinning but allow us to move away from limit switch if pressed
         // if (ls_1_state == 1 && ls_2_state == 1)
         // {
-        TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+
+        // Initializing the encoder values
+        float encoder_value;
+        float last_encoder_value;
+        uint8_t RAD_TYPE;
+        uint8_t rotations;
+        uint8_t no_ccw_movement = 0;
+        uint8_t no_cw_movement = 0;
+
+
+        // we set the past encoder value to the one we had before
+
+        encoder_value = AS5048A_ReadAngle(&as5048a_1);
+        if (encover_value != ENCODER_CONSTANT) {
+        	last_encoder_value = encoder_value;
+        }
+
+        // For now, 1 is left and 0 is right
+
+        if (RAD_TYPE == 1) {
+
+        	// Conditions for if the limit switch has been pressed
+        	// Allow for no more CW movement, and only CCW movement
+        	if (ls_1_state == 0) {
+        		rotations = MAX_ROTATIONS;
+        		no_ccw_movement = 0;
+        		no_cw_movement = 1;
+
+        	// Ensuring the limit switch cannot move clockwise if it is at the end of range
+        	// Allow for no more cw movement, but only ccw movement
+        	} else if (rotations == MIN_ROTATIONS) {
+        		no_cw_movement = 0;
+        		no_ccw_movement = 1;
+
+        	// Ensuring the ccw_movement and cw_movement variables are set back to 0 in all other instances
+        	} else {
+        		no_ccw_movement = 0;
+        		no_cw_movement = 0;
+
+        	}
+        } else if (RAD_TYPE == 2) {
+        	// Same as the code for rad type being a left motor, however, the rotation values are flipped
+
+        	if (ls_1_state == 0) {
+        		rotations = MIN_ROTATIONS;
+        		no_cw_movement = 0;
+        		no_ccw_movement = 1;
+
+        	// The other end for a right motor is then when the value is 20
+        	} else if (rotations == MAX_ROTATIONS) {
+        		no_ccw_movement = 0;
+        		no_cw_movement = 1;
+
+        	} else {
+        		no_ccw_movement = 0;
+        		no_cw_movement = 0;
+        	}
+
+
+            	// If a rollover has been detected from 360 to 0, increment the rotations variable
+            	// These are values that will need to be tested depending on read_eeprom
+        } if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_HIGHER_BOUND){
+        	// If these conditions are true,
+
+        	rotations++;
+
+        // Now, check if a rollover has been detected from 360 to 0
+        // 360 <= current value <= 330
+        // 0 <= last value <= 30
+        } else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_HIGHER_BOUND){
+
+        	rotations--;
+        }
+
+        // Moving the wheel
+
+        if (no_ccw_movement == 0 && (int16_t) pid1.output >= 0) {
+        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        } else if (no_cw_movement == 0 && (int16_t) pid1.output <= 0) {
+        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        }
+
+
         // }
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
             ;
