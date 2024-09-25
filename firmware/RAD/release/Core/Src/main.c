@@ -231,12 +231,13 @@ int main(void)
         uint8_t rotations;
         uint8_t no_ccw_movement = 0;
         uint8_t no_cw_movement = 0;
+        uint8_t condition = 0;
 
 
         // we set the past encoder value to the one we had before
 
         encoder_value = AS5048A_ReadAngle(&as5048a_1);
-        if (encover_value != ENCODER_CONSTANT) {
+        if (condition != 0) {
         	last_encoder_value = encoder_value;
         }
 
@@ -284,25 +285,37 @@ int main(void)
 
             	// If a rollover has been detected from 360 to 0, increment the rotations variable
             	// These are values that will need to be tested depending on read_eeprom
-        } if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_HIGHER_BOUND){
-        	// If these conditions are true,
 
-        	rotations++;
+        // This will not run on the first move (hence the condition variable)
 
-        // Now, check if a rollover has been detected from 360 to 0
-        // 360 <= current value <= 330
-        // 0 <= last value <= 30
-        } else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_HIGHER_BOUND){
+        if (condition != 0) {
+			} if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
+				// If these conditions are true,
 
-        	rotations--;
+				rotations++;
+
+			// Now, check if a rollover has been detected from 360 to 0
+			// 360 <= current value <= 330
+			// 0 <= last value <= 30
+			} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
+
+				rotations--;
+			}
         }
+
 
         // Moving the wheel
 
-        if (no_ccw_movement == 0 && (int16_t) pid1.output >= 0) {
+       if (no_ccw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
         	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-        } else if (no_cw_movement == 0 && (int16_t) pid1.output <= 0) {
+         } else if (no_cw_movement == 0 && (int16_t) pid_1.output <= 0) {
         	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+        }
+
+        // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
+
+        if (condition == 0) {
+        	condition++;
         }
 
 

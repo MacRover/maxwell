@@ -5,7 +5,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-C:/Users/Ethan/Documents/Repos/maxwell/firmware/STM32\ Drivers/PID_lib/Drivers/PID_lib/Src/PID_lib.c 
+C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32\ Drivers/PID_lib/Drivers/PID_lib/Src/PID_lib.c 
 
 OBJS += \
 ./Drivers/PID_lib/Src/PID_lib.o 
@@ -15,8 +15,8 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-Drivers/PID_lib/Src/PID_lib.o: C:/Users/Ethan/Documents/Repos/maxwell/firmware/STM32\ Drivers/PID_lib/Drivers/PID_lib/Src/PID_lib.c Drivers/PID_lib/Src/subdir.mk
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/Ethan/Documents/Repos/maxwell/firmware/STM32 Drivers/TMC_2590/Drivers/TMC_2590/Inc" -I"C:/Users/Ethan/Documents/Repos/maxwell/firmware/STM32 Drivers/AS5048A/Drivers/AS5048A/Inc" -I"C:/Users/Ethan/Documents/Repos/maxwell/firmware/STM32 Drivers/PID_lib/Drivers/PID_lib/Inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
+Drivers/PID_lib/Src/PID_lib.o: C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32\ Drivers/PID_lib/Drivers/PID_lib/Src/PID_lib.c Drivers/PID_lib/Src/subdir.mk
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32 Drivers/TMC_2590/Drivers/TMC_2590/Inc" -I"C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32 Drivers/AS5048A/Drivers/AS5048A/Inc" -I"C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32 Drivers/PID_lib/Drivers/PID_lib/Inc" -I"C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32 Drivers/queue/Drivers/queue/Inc" -I"C:/Users/zokur/OneDrive/Documents/MMRT/maxwell/firmware/STM32 Drivers/AT24C04C/Drivers/AT24C04C/Inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
 
 clean: clean-Drivers-2f-PID_lib-2f-Src
 

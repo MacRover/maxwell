@@ -1,3 +1,6 @@
-../Core/Src/can.c:30:6:MX_CAN_Init	8	static
-../Core/Src/can.c:68:6:HAL_CAN_MspInit	40	static
-../Core/Src/can.c:104:6:HAL_CAN_MspDeInit	16	static
+../Core/Src/can.c:35:6:MX_CAN_Init	16	static
+../Core/Src/can.c:103:6:HAL_CAN_MspInit	40	static
+../Core/Src/can.c:140:6:HAL_CAN_MspDeInit	16	static
+../Core/Src/can.c:173:6:HAL_CAN_RxFifo0MsgPendingCallback	24	static
+../Core/Src/can.c:212:6:MX_CAN_Broadcast_RAD_Status	16	static
+../Core/Src/can.c:247:10:__encode_ext_can_id	16	static

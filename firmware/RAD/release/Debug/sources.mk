@@ -25,7 +25,9 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/AS5048A/Src \
+Drivers/AT24C04C/Src \
 Drivers/PID_lib/Src \
 Drivers/STM32F1xx_HAL_Driver/Src \
 Drivers/TMC_2590/Src \
+Drivers/queue/Src \
 
