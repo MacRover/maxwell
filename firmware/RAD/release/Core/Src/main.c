@@ -244,6 +244,30 @@ int main(void)
 
         encoder_value = AS5048A_ReadAngle(&as5048a_1);
 
+    	// If a rollover has been detected from 360 to 0, increment the rotations variable
+    	// These are values that will need to be tested depending on read_eeprom
+
+// This will not run on the first move (hence the condition variable)
+
+        if (condition != 0) {
+
+
+        	if ((rotations != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+        		// If these conditions are true,
+
+        		rotations++;
+
+        			// Now, check if a rollover has been detected from 360 to 0
+        			// 360 <= current value <= 330
+        			// 0 <= last value <= 30
+        	} else if ((rotations != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+        		rotations--;
+
+        		}
+
+        }
+
+
         // For now, 1 is left and 0 is right
 
         if (RAD_TYPE == 1) {
@@ -284,27 +308,7 @@ int main(void)
         		no_ccw_movement = 0;
         		no_cw_movement = 0;
         	}
-
-
-            	// If a rollover has been detected from 360 to 0, increment the rotations variable
-            	// These are values that will need to be tested depending on read_eeprom
-
-        // This will not run on the first move (hence the condition variable)
-
-        if (condition != 0) {
-			} if ((rotations != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
-				// If these conditions are true,
-
-				rotations++;
-
-			// Now, check if a rollover has been detected from 360 to 0
-			// 360 <= current value <= 330
-			// 0 <= last value <= 30
-		} else if ((rotations != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
-
-				rotations--;
-			}
-       }
+        }
 
 
         // Moving the wheel

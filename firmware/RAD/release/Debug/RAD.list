@@ -35,17 +35,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_rnglists 00000ea0  00000000  00000000  00025bf8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  0001a790  00000000  00000000  00026a98  2**0
+ 16 .debug_macro  0001a78a  00000000  00000000  00026a98  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001d3a6  00000000  00000000  00041228  2**0
+ 17 .debug_line   0001d3bb  00000000  00000000  00041222  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0008fd75  00000000  00000000  0005e5ce  2**0
+ 18 .debug_str    0008fd60  00000000  00000000  0005e5dd  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  000ee343  2**0
+ 19 .comment      00000043  00000000  00000000  000ee33d  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000052f0  00000000  00000000  000ee388  2**2
+ 20 .debug_frame  000052f0  00000000  00000000  000ee380  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000072  00000000  00000000  000f3678  2**0
+ 21 .debug_line_str 00000072  00000000  00000000  000f3670  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2426,654 +2426,660 @@ int main(void)
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
  8001536:	f001 fac9 	bl	8002acc <HAL_Init>
+
     /* USER CODE BEGIN Init */
+
+    uint8_t no_ccw_movement = 0;
+ 800153a:	2300      	movs	r3, #0
+ 800153c:	77fb      	strb	r3, [r7, #31]
+    uint8_t no_cw_movement = 0;
+ 800153e:	2300      	movs	r3, #0
+ 8001540:	77bb      	strb	r3, [r7, #30]
+    uint8_t condition = 0;
+ 8001542:	2300      	movs	r3, #0
+ 8001544:	777b      	strb	r3, [r7, #29]
 
     /* USER CODE END Init */
 
     /* Configure the system clock */
     SystemClock_Config();
- 800153a:	f000 fa33 	bl	80019a4 <SystemClock_Config>
+ 8001546:	f000 fa2d 	bl	80019a4 <SystemClock_Config>
     /* USER CODE BEGIN SysInit */
 
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
- 800153e:	f7ff fed7 	bl	80012f0 <MX_GPIO_Init>
+ 800154a:	f7ff fed1 	bl	80012f0 <MX_GPIO_Init>
     MX_DMA_Init();
- 8001542:	f7ff fe73 	bl	800122c <MX_DMA_Init>
+ 800154e:	f7ff fe6d 	bl	800122c <MX_DMA_Init>
     MX_CAN_Init();
- 8001546:	f7ff fc97 	bl	8000e78 <MX_CAN_Init>
+ 8001552:	f7ff fc91 	bl	8000e78 <MX_CAN_Init>
     MX_I2C1_Init();
- 800154a:	f7ff ff6f 	bl	800142c <MX_I2C1_Init>
+ 8001556:	f7ff ff69 	bl	800142c <MX_I2C1_Init>
     MX_SPI1_Init();
- 800154e:	f000 fae3 	bl	8001b18 <MX_SPI1_Init>
+ 800155a:	f000 fadd 	bl	8001b18 <MX_SPI1_Init>
     MX_SPI2_Init();
- 8001552:	f000 fb17 	bl	8001b84 <MX_SPI2_Init>
+ 800155e:	f000 fb11 	bl	8001b84 <MX_SPI2_Init>
     MX_TIM2_Init();
- 8001556:	f000 fc7f 	bl	8001e58 <MX_TIM2_Init>
+ 8001562:	f000 fc79 	bl	8001e58 <MX_TIM2_Init>
     /* USER CODE BEGIN 2 */
     MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
- 800155a:	f7ff fc71 	bl	8000e40 <MX_AT24C04C_1_Init>
+ 8001566:	f7ff fc6b 	bl	8000e40 <MX_AT24C04C_1_Init>
     MX_TMC_2590_1_Init();
- 800155e:	f000 fd83 	bl	8002068 <MX_TMC_2590_1_Init>
+ 800156a:	f000 fd7d 	bl	8002068 <MX_TMC_2590_1_Init>
     MX_AS5048A_1_Init();
- 8001562:	f7ff fc47 	bl	8000df4 <MX_AS5048A_1_Init>
+ 800156e:	f7ff fc41 	bl	8000df4 <MX_AS5048A_1_Init>
     MX_PID_1_Init();
- 8001566:	f000 fa83 	bl	8001a70 <MX_PID_1_Init>
+ 8001572:	f000 fa7d 	bl	8001a70 <MX_PID_1_Init>
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
     while (1)
     {
         if (!queue_empty(&can_message_queue_1))
- 800156a:	489d      	ldr	r0, [pc, #628]	@ (80017e0 <main+0x2b0>)
- 800156c:	f007 fdb9 	bl	80090e2 <queue_empty>
- 8001570:	4603      	mov	r3, r0
- 8001572:	2b00      	cmp	r3, #0
- 8001574:	f040 80b5 	bne.w	80016e2 <main+0x1b2>
+ 8001576:	48ac      	ldr	r0, [pc, #688]	@ (8001828 <main+0x2f8>)
+ 8001578:	f007 fdb3 	bl	80090e2 <queue_empty>
+ 800157c:	4603      	mov	r3, r0
+ 800157e:	2b00      	cmp	r3, #0
+ 8001580:	f040 80b5 	bne.w	80016ee <main+0x1be>
         {
             RAD_CAN_Message_TypeDef *new_message =
                     (RAD_CAN_Message_TypeDef*) queue_front(
- 8001578:	4899      	ldr	r0, [pc, #612]	@ (80017e0 <main+0x2b0>)
- 800157a:	f007 fe2c 	bl	80091d6 <queue_front>
- 800157e:	6138      	str	r0, [r7, #16]
+ 8001584:	48a8      	ldr	r0, [pc, #672]	@ (8001828 <main+0x2f8>)
+ 8001586:	f007 fe26 	bl	80091d6 <queue_front>
+ 800158a:	60f8      	str	r0, [r7, #12]
                             &can_message_queue_1);
 
             switch (new_message->command_id)
- 8001580:	693b      	ldr	r3, [r7, #16]
- 8001582:	781b      	ldrb	r3, [r3, #0]
- 8001584:	2b04      	cmp	r3, #4
- 8001586:	d035      	beq.n	80015f4 <main+0xc4>
- 8001588:	2b04      	cmp	r3, #4
- 800158a:	f2c0 80a2 	blt.w	80016d2 <main+0x1a2>
- 800158e:	2b49      	cmp	r3, #73	@ 0x49
- 8001590:	f300 809f 	bgt.w	80016d2 <main+0x1a2>
- 8001594:	2b37      	cmp	r3, #55	@ 0x37
- 8001596:	f2c0 809c 	blt.w	80016d2 <main+0x1a2>
- 800159a:	3b37      	subs	r3, #55	@ 0x37
- 800159c:	2b12      	cmp	r3, #18
- 800159e:	f200 8098 	bhi.w	80016d2 <main+0x1a2>
- 80015a2:	a201      	add	r2, pc, #4	@ (adr r2, 80015a8 <main+0x78>)
- 80015a4:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
- 80015a8:	08001691 	.word	0x08001691
- 80015ac:	080016d3 	.word	0x080016d3
- 80015b0:	080016d3 	.word	0x080016d3
- 80015b4:	080016d3 	.word	0x080016d3
- 80015b8:	080016d3 	.word	0x080016d3
- 80015bc:	080016d3 	.word	0x080016d3
- 80015c0:	080016d3 	.word	0x080016d3
- 80015c4:	080016d3 	.word	0x080016d3
- 80015c8:	080016d3 	.word	0x080016d3
- 80015cc:	080016d3 	.word	0x080016d3
- 80015d0:	080016d3 	.word	0x080016d3
- 80015d4:	080016d3 	.word	0x080016d3
- 80015d8:	080016d3 	.word	0x080016d3
- 80015dc:	080016ad 	.word	0x080016ad
- 80015e0:	080016d3 	.word	0x080016d3
- 80015e4:	08001613 	.word	0x08001613
- 80015e8:	0800163d 	.word	0x0800163d
- 80015ec:	08001667 	.word	0x08001667
- 80015f0:	080016cf 	.word	0x080016cf
+ 800158c:	68fb      	ldr	r3, [r7, #12]
+ 800158e:	781b      	ldrb	r3, [r3, #0]
+ 8001590:	2b04      	cmp	r3, #4
+ 8001592:	d035      	beq.n	8001600 <main+0xd0>
+ 8001594:	2b04      	cmp	r3, #4
+ 8001596:	f2c0 80a2 	blt.w	80016de <main+0x1ae>
+ 800159a:	2b49      	cmp	r3, #73	@ 0x49
+ 800159c:	f300 809f 	bgt.w	80016de <main+0x1ae>
+ 80015a0:	2b37      	cmp	r3, #55	@ 0x37
+ 80015a2:	f2c0 809c 	blt.w	80016de <main+0x1ae>
+ 80015a6:	3b37      	subs	r3, #55	@ 0x37
+ 80015a8:	2b12      	cmp	r3, #18
+ 80015aa:	f200 8098 	bhi.w	80016de <main+0x1ae>
+ 80015ae:	a201      	add	r2, pc, #4	@ (adr r2, 80015b4 <main+0x84>)
+ 80015b0:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 80015b4:	0800169d 	.word	0x0800169d
+ 80015b8:	080016df 	.word	0x080016df
+ 80015bc:	080016df 	.word	0x080016df
+ 80015c0:	080016df 	.word	0x080016df
+ 80015c4:	080016df 	.word	0x080016df
+ 80015c8:	080016df 	.word	0x080016df
+ 80015cc:	080016df 	.word	0x080016df
+ 80015d0:	080016df 	.word	0x080016df
+ 80015d4:	080016df 	.word	0x080016df
+ 80015d8:	080016df 	.word	0x080016df
+ 80015dc:	080016df 	.word	0x080016df
+ 80015e0:	080016df 	.word	0x080016df
+ 80015e4:	080016df 	.word	0x080016df
+ 80015e8:	080016b9 	.word	0x080016b9
+ 80015ec:	080016df 	.word	0x080016df
+ 80015f0:	0800161f 	.word	0x0800161f
+ 80015f4:	08001649 	.word	0x08001649
+ 80015f8:	08001673 	.word	0x08001673
+ 80015fc:	080016db 	.word	0x080016db
             {
             case SET_TARGET_ANGLE:
             {
                 float new_setpoint = decode_float_big_endian(new_message->data);
- 80015f4:	693b      	ldr	r3, [r7, #16]
- 80015f6:	685b      	ldr	r3, [r3, #4]
- 80015f8:	4618      	mov	r0, r3
- 80015fa:	f7ff fe5b 	bl	80012b4 <decode_float_big_endian>
- 80015fe:	60f8      	str	r0, [r7, #12]
+ 8001600:	68fb      	ldr	r3, [r7, #12]
+ 8001602:	685b      	ldr	r3, [r3, #4]
+ 8001604:	4618      	mov	r0, r3
+ 8001606:	f7ff fe55 	bl	80012b4 <decode_float_big_endian>
+ 800160a:	60b8      	str	r0, [r7, #8]
                 // todo get angle multiplier factor (ex for gearbox)
                 PID_ChangeSetPoint(&pid_1, new_setpoint);
- 8001600:	68f8      	ldr	r0, [r7, #12]
- 8001602:	f7fe ff09 	bl	8000418 <__aeabi_f2d>
- 8001606:	4602      	mov	r2, r0
- 8001608:	460b      	mov	r3, r1
- 800160a:	4876      	ldr	r0, [pc, #472]	@ (80017e4 <main+0x2b4>)
- 800160c:	f001 fa24 	bl	8002a58 <PID_ChangeSetPoint>
+ 800160c:	68b8      	ldr	r0, [r7, #8]
+ 800160e:	f7fe ff03 	bl	8000418 <__aeabi_f2d>
+ 8001612:	4602      	mov	r2, r0
+ 8001614:	460b      	mov	r3, r1
+ 8001616:	4885      	ldr	r0, [pc, #532]	@ (800182c <main+0x2fc>)
+ 8001618:	f001 fa1e 	bl	8002a58 <PID_ChangeSetPoint>
                 break;
- 8001610:	e05f      	b.n	80016d2 <main+0x1a2>
+ 800161c:	e05f      	b.n	80016de <main+0x1ae>
             }
             case SET_P_VALUE:
             {
                 pid_1.Init.kp = (double) decode_float_big_endian(
- 8001612:	693b      	ldr	r3, [r7, #16]
- 8001614:	685b      	ldr	r3, [r3, #4]
- 8001616:	4618      	mov	r0, r3
- 8001618:	f7ff fe4c 	bl	80012b4 <decode_float_big_endian>
- 800161c:	4603      	mov	r3, r0
- 800161e:	4618      	mov	r0, r3
- 8001620:	f7fe fefa 	bl	8000418 <__aeabi_f2d>
- 8001624:	4602      	mov	r2, r0
- 8001626:	460b      	mov	r3, r1
- 8001628:	496e      	ldr	r1, [pc, #440]	@ (80017e4 <main+0x2b4>)
- 800162a:	e9c1 2302 	strd	r2, r3, [r1, #8]
+ 800161e:	68fb      	ldr	r3, [r7, #12]
+ 8001620:	685b      	ldr	r3, [r3, #4]
+ 8001622:	4618      	mov	r0, r3
+ 8001624:	f7ff fe46 	bl	80012b4 <decode_float_big_endian>
+ 8001628:	4603      	mov	r3, r0
+ 800162a:	4618      	mov	r0, r3
+ 800162c:	f7fe fef4 	bl	8000418 <__aeabi_f2d>
+ 8001630:	4602      	mov	r2, r0
+ 8001632:	460b      	mov	r3, r1
+ 8001634:	497d      	ldr	r1, [pc, #500]	@ (800182c <main+0x2fc>)
+ 8001636:	e9c1 2302 	strd	r2, r3, [r1, #8]
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
- 800162e:	2308      	movs	r3, #8
- 8001630:	4a6d      	ldr	r2, [pc, #436]	@ (80017e8 <main+0x2b8>)
- 8001632:	2160      	movs	r1, #96	@ 0x60
- 8001634:	486d      	ldr	r0, [pc, #436]	@ (80017ec <main+0x2bc>)
- 8001636:	f000 ff9f 	bl	8002578 <AT24C04C_WriteData>
+ 800163a:	2308      	movs	r3, #8
+ 800163c:	4a7c      	ldr	r2, [pc, #496]	@ (8001830 <main+0x300>)
+ 800163e:	2160      	movs	r1, #96	@ 0x60
+ 8001640:	487c      	ldr	r0, [pc, #496]	@ (8001834 <main+0x304>)
+ 8001642:	f000 ff99 	bl	8002578 <AT24C04C_WriteData>
                         (uint8_t*) &pid_1.Init.kp, sizeof(double));
                 break;
- 800163a:	e04a      	b.n	80016d2 <main+0x1a2>
+ 8001646:	e04a      	b.n	80016de <main+0x1ae>
             }
             case SET_I_VALUE:
             {
                 pid_1.Init.ki = (double) decode_float_big_endian(
- 800163c:	693b      	ldr	r3, [r7, #16]
- 800163e:	685b      	ldr	r3, [r3, #4]
- 8001640:	4618      	mov	r0, r3
- 8001642:	f7ff fe37 	bl	80012b4 <decode_float_big_endian>
- 8001646:	4603      	mov	r3, r0
- 8001648:	4618      	mov	r0, r3
- 800164a:	f7fe fee5 	bl	8000418 <__aeabi_f2d>
- 800164e:	4602      	mov	r2, r0
- 8001650:	460b      	mov	r3, r1
- 8001652:	4964      	ldr	r1, [pc, #400]	@ (80017e4 <main+0x2b4>)
- 8001654:	e9c1 2304 	strd	r2, r3, [r1, #16]
+ 8001648:	68fb      	ldr	r3, [r7, #12]
+ 800164a:	685b      	ldr	r3, [r3, #4]
+ 800164c:	4618      	mov	r0, r3
+ 800164e:	f7ff fe31 	bl	80012b4 <decode_float_big_endian>
+ 8001652:	4603      	mov	r3, r0
+ 8001654:	4618      	mov	r0, r3
+ 8001656:	f7fe fedf 	bl	8000418 <__aeabi_f2d>
+ 800165a:	4602      	mov	r2, r0
+ 800165c:	460b      	mov	r3, r1
+ 800165e:	4973      	ldr	r1, [pc, #460]	@ (800182c <main+0x2fc>)
+ 8001660:	e9c1 2304 	strd	r2, r3, [r1, #16]
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
- 8001658:	2308      	movs	r3, #8
- 800165a:	4a65      	ldr	r2, [pc, #404]	@ (80017f0 <main+0x2c0>)
- 800165c:	2160      	movs	r1, #96	@ 0x60
- 800165e:	4863      	ldr	r0, [pc, #396]	@ (80017ec <main+0x2bc>)
- 8001660:	f000 ff8a 	bl	8002578 <AT24C04C_WriteData>
+ 8001664:	2308      	movs	r3, #8
+ 8001666:	4a74      	ldr	r2, [pc, #464]	@ (8001838 <main+0x308>)
+ 8001668:	2160      	movs	r1, #96	@ 0x60
+ 800166a:	4872      	ldr	r0, [pc, #456]	@ (8001834 <main+0x304>)
+ 800166c:	f000 ff84 	bl	8002578 <AT24C04C_WriteData>
                         (uint8_t*) &pid_1.Init.ki, sizeof(double));
                 break;
- 8001664:	e035      	b.n	80016d2 <main+0x1a2>
+ 8001670:	e035      	b.n	80016de <main+0x1ae>
             }
             case SET_D_VALUE:
             {
                 pid_1.Init.kd = (double) decode_float_big_endian(
- 8001666:	693b      	ldr	r3, [r7, #16]
- 8001668:	685b      	ldr	r3, [r3, #4]
- 800166a:	4618      	mov	r0, r3
- 800166c:	f7ff fe22 	bl	80012b4 <decode_float_big_endian>
- 8001670:	4603      	mov	r3, r0
- 8001672:	4618      	mov	r0, r3
- 8001674:	f7fe fed0 	bl	8000418 <__aeabi_f2d>
- 8001678:	4602      	mov	r2, r0
- 800167a:	460b      	mov	r3, r1
- 800167c:	4959      	ldr	r1, [pc, #356]	@ (80017e4 <main+0x2b4>)
- 800167e:	e9c1 2306 	strd	r2, r3, [r1, #24]
+ 8001672:	68fb      	ldr	r3, [r7, #12]
+ 8001674:	685b      	ldr	r3, [r3, #4]
+ 8001676:	4618      	mov	r0, r3
+ 8001678:	f7ff fe1c 	bl	80012b4 <decode_float_big_endian>
+ 800167c:	4603      	mov	r3, r0
+ 800167e:	4618      	mov	r0, r3
+ 8001680:	f7fe feca 	bl	8000418 <__aeabi_f2d>
+ 8001684:	4602      	mov	r2, r0
+ 8001686:	460b      	mov	r3, r1
+ 8001688:	4968      	ldr	r1, [pc, #416]	@ (800182c <main+0x2fc>)
+ 800168a:	e9c1 2306 	strd	r2, r3, [r1, #24]
                         new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
- 8001682:	2308      	movs	r3, #8
- 8001684:	4a5b      	ldr	r2, [pc, #364]	@ (80017f4 <main+0x2c4>)
- 8001686:	2160      	movs	r1, #96	@ 0x60
- 8001688:	4858      	ldr	r0, [pc, #352]	@ (80017ec <main+0x2bc>)
- 800168a:	f000 ff75 	bl	8002578 <AT24C04C_WriteData>
+ 800168e:	2308      	movs	r3, #8
+ 8001690:	4a6a      	ldr	r2, [pc, #424]	@ (800183c <main+0x30c>)
+ 8001692:	2160      	movs	r1, #96	@ 0x60
+ 8001694:	4867      	ldr	r0, [pc, #412]	@ (8001834 <main+0x304>)
+ 8001696:	f000 ff6f 	bl	8002578 <AT24C04C_WriteData>
                         (uint8_t*) &pid_1.Init.kd, sizeof(double));
                 break;
- 800168e:	e020      	b.n	80016d2 <main+0x1a2>
+ 800169a:	e020      	b.n	80016de <main+0x1ae>
 //                PID_Update(&pid_1);
                 break;
             }
             case UPDATE_PID_POS_OFFSET:
             {
                 PID_SetZeroPoint(&pid_1);
- 8001690:	4854      	ldr	r0, [pc, #336]	@ (80017e4 <main+0x2b4>)
- 8001692:	f001 fa05 	bl	8002aa0 <PID_SetZeroPoint>
+ 800169c:	4863      	ldr	r0, [pc, #396]	@ (800182c <main+0x2fc>)
+ 800169e:	f001 f9ff 	bl	8002aa0 <PID_SetZeroPoint>
                 PID_ChangeSetPoint(&pid_1, 0.0);
- 8001696:	f04f 0200 	mov.w	r2, #0
- 800169a:	f04f 0300 	mov.w	r3, #0
- 800169e:	4851      	ldr	r0, [pc, #324]	@ (80017e4 <main+0x2b4>)
- 80016a0:	f001 f9da 	bl	8002a58 <PID_ChangeSetPoint>
+ 80016a2:	f04f 0200 	mov.w	r2, #0
+ 80016a6:	f04f 0300 	mov.w	r3, #0
+ 80016aa:	4860      	ldr	r0, [pc, #384]	@ (800182c <main+0x2fc>)
+ 80016ac:	f001 f9d4 	bl	8002a58 <PID_ChangeSetPoint>
                 PID_Update(&pid_1);
- 80016a4:	484f      	ldr	r0, [pc, #316]	@ (80017e4 <main+0x2b4>)
- 80016a6:	f001 f87f 	bl	80027a8 <PID_Update>
+ 80016b0:	485e      	ldr	r0, [pc, #376]	@ (800182c <main+0x2fc>)
+ 80016b2:	f001 f879 	bl	80027a8 <PID_Update>
                 break;
- 80016aa:	e012      	b.n	80016d2 <main+0x1a2>
+ 80016b6:	e012      	b.n	80016de <main+0x1ae>
             }
             case SET_CAN_ID:
             {
                 uint8_t new_id = new_message->data[0];
- 80016ac:	693b      	ldr	r3, [r7, #16]
- 80016ae:	685b      	ldr	r3, [r3, #4]
- 80016b0:	781b      	ldrb	r3, [r3, #0]
- 80016b2:	717b      	strb	r3, [r7, #5]
+ 80016b8:	68fb      	ldr	r3, [r7, #12]
+ 80016ba:	685b      	ldr	r3, [r3, #4]
+ 80016bc:	781b      	ldrb	r3, [r3, #0]
+ 80016be:	70bb      	strb	r3, [r7, #2]
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_CAN_ID, &new_id,
- 80016b4:	1d7a      	adds	r2, r7, #5
- 80016b6:	2301      	movs	r3, #1
- 80016b8:	2110      	movs	r1, #16
- 80016ba:	484c      	ldr	r0, [pc, #304]	@ (80017ec <main+0x2bc>)
- 80016bc:	f000 ff5c 	bl	8002578 <AT24C04C_WriteData>
+ 80016c0:	1cba      	adds	r2, r7, #2
+ 80016c2:	2301      	movs	r3, #1
+ 80016c4:	2110      	movs	r1, #16
+ 80016c6:	485b      	ldr	r0, [pc, #364]	@ (8001834 <main+0x304>)
+ 80016c8:	f000 ff56 	bl	8002578 <AT24C04C_WriteData>
                         sizeof(uint8_t));
 
                 // test code
                 uint8_t eeprom_buff[1];
                 AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff,
- 80016c0:	1d3a      	adds	r2, r7, #4
- 80016c2:	2301      	movs	r3, #1
- 80016c4:	2110      	movs	r1, #16
- 80016c6:	4849      	ldr	r0, [pc, #292]	@ (80017ec <main+0x2bc>)
- 80016c8:	f000 ff15 	bl	80024f6 <AT24C04C_ReadData>
+ 80016cc:	463a      	mov	r2, r7
+ 80016ce:	2301      	movs	r3, #1
+ 80016d0:	2110      	movs	r1, #16
+ 80016d2:	4858      	ldr	r0, [pc, #352]	@ (8001834 <main+0x304>)
+ 80016d4:	f000 ff0f 	bl	80024f6 <AT24C04C_ReadData>
                         sizeof(uint8_t));
 
                 // will require a reset command to apply updated CAN ID
                 break;
- 80016cc:	e001      	b.n	80016d2 <main+0x1a2>
+ 80016d8:	e001      	b.n	80016de <main+0x1ae>
             }
             case RESET_BOARD:
             {
                 NVIC_SystemReset(); // resets/reboots board
- 80016ce:	f7ff ff19 	bl	8001504 <__NVIC_SystemReset>
+ 80016da:	f7ff ff13 	bl	8001504 <__NVIC_SystemReset>
                 break;
             }
             }
             free(new_message->data);
- 80016d2:	693b      	ldr	r3, [r7, #16]
- 80016d4:	685b      	ldr	r3, [r3, #4]
- 80016d6:	4618      	mov	r0, r3
- 80016d8:	f007 fdb4 	bl	8009244 <free>
+ 80016de:	68fb      	ldr	r3, [r7, #12]
+ 80016e0:	685b      	ldr	r3, [r3, #4]
+ 80016e2:	4618      	mov	r0, r3
+ 80016e4:	f007 fdae 	bl	8009244 <free>
             queue_dequeue(&can_message_queue_1);
- 80016dc:	4840      	ldr	r0, [pc, #256]	@ (80017e0 <main+0x2b0>)
- 80016de:	f007 fd57 	bl	8009190 <queue_dequeue>
+ 80016e8:	484f      	ldr	r0, [pc, #316]	@ (8001828 <main+0x2f8>)
+ 80016ea:	f007 fd51 	bl	8009190 <queue_dequeue>
 
         }
 
         // limit switches are active LOW
         GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
- 80016e2:	2101      	movs	r1, #1
- 80016e4:	4844      	ldr	r0, [pc, #272]	@ (80017f8 <main+0x2c8>)
- 80016e6:	f003 f965 	bl	80049b4 <HAL_GPIO_ReadPin>
- 80016ea:	4603      	mov	r3, r0
- 80016ec:	72fb      	strb	r3, [r7, #11]
-        GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
- 80016ee:	2102      	movs	r1, #2
- 80016f0:	4841      	ldr	r0, [pc, #260]	@ (80017f8 <main+0x2c8>)
+ 80016ee:	2101      	movs	r1, #1
+ 80016f0:	4853      	ldr	r0, [pc, #332]	@ (8001840 <main+0x310>)
  80016f2:	f003 f95f 	bl	80049b4 <HAL_GPIO_ReadPin>
  80016f6:	4603      	mov	r3, r0
- 80016f8:	72bb      	strb	r3, [r7, #10]
-        GPIO_PinState fsr_1_state = HAL_GPIO_ReadPin(FSR_1_GPIO_Port,
- 80016fa:	2104      	movs	r1, #4
- 80016fc:	483e      	ldr	r0, [pc, #248]	@ (80017f8 <main+0x2c8>)
+ 80016f8:	71fb      	strb	r3, [r7, #7]
+        GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
+ 80016fa:	2102      	movs	r1, #2
+ 80016fc:	4850      	ldr	r0, [pc, #320]	@ (8001840 <main+0x310>)
  80016fe:	f003 f959 	bl	80049b4 <HAL_GPIO_ReadPin>
  8001702:	4603      	mov	r3, r0
- 8001704:	727b      	strb	r3, [r7, #9]
-                FSR_1_Pin);
-        GPIO_PinState fsr_2_state = HAL_GPIO_ReadPin(FSR_2_GPIO_Port,
- 8001706:	2108      	movs	r1, #8
- 8001708:	483b      	ldr	r0, [pc, #236]	@ (80017f8 <main+0x2c8>)
+ 8001704:	71bb      	strb	r3, [r7, #6]
+        GPIO_PinState fsr_1_state = HAL_GPIO_ReadPin(FSR_1_GPIO_Port,
+ 8001706:	2104      	movs	r1, #4
+ 8001708:	484d      	ldr	r0, [pc, #308]	@ (8001840 <main+0x310>)
  800170a:	f003 f953 	bl	80049b4 <HAL_GPIO_ReadPin>
  800170e:	4603      	mov	r3, r0
- 8001710:	723b      	strb	r3, [r7, #8]
-        // Initializing the encoder values
-        float encoder_value;
-        float last_encoder_value;
-        uint8_t RAD_TYPE;
+ 8001710:	717b      	strb	r3, [r7, #5]
+                FSR_1_Pin);
+        GPIO_PinState fsr_2_state = HAL_GPIO_ReadPin(FSR_2_GPIO_Port,
+ 8001712:	2108      	movs	r1, #8
+ 8001714:	484a      	ldr	r0, [pc, #296]	@ (8001840 <main+0x310>)
+ 8001716:	f003 f94d 	bl	80049b4 <HAL_GPIO_ReadPin>
+ 800171a:	4603      	mov	r3, r0
+ 800171c:	713b      	strb	r3, [r7, #4]
         uint8_t rotations;
-        uint8_t no_ccw_movement = 0;
- 8001712:	2300      	movs	r3, #0
- 8001714:	75bb      	strb	r3, [r7, #22]
-        uint8_t no_cw_movement = 0;
- 8001716:	2300      	movs	r3, #0
- 8001718:	757b      	strb	r3, [r7, #21]
-        uint8_t condition = 0;
- 800171a:	2300      	movs	r3, #0
- 800171c:	71fb      	strb	r3, [r7, #7]
 
 
         // we set the past encoder value to the one we had before
 
         if (condition != 0) {
- 800171e:	79fb      	ldrb	r3, [r7, #7]
+ 800171e:	7f7b      	ldrb	r3, [r7, #29]
  8001720:	2b00      	cmp	r3, #0
  8001722:	d001      	beq.n	8001728 <main+0x1f8>
         	last_encoder_value = encoder_value;
- 8001724:	69fb      	ldr	r3, [r7, #28]
- 8001726:	61bb      	str	r3, [r7, #24]
+ 8001724:	69bb      	ldr	r3, [r7, #24]
+ 8001726:	617b      	str	r3, [r7, #20]
         }
 
         encoder_value = AS5048A_ReadAngle(&as5048a_1);
- 8001728:	4834      	ldr	r0, [pc, #208]	@ (80017fc <main+0x2cc>)
+ 8001728:	4846      	ldr	r0, [pc, #280]	@ (8001844 <main+0x314>)
  800172a:	f000 fdb5 	bl	8002298 <AS5048A_ReadAngle>
  800172e:	4603      	mov	r3, r0
  8001730:	4618      	mov	r0, r3
  8001732:	f7ff fa91 	bl	8000c58 <__aeabi_ui2f>
  8001736:	4603      	mov	r3, r0
- 8001738:	61fb      	str	r3, [r7, #28]
+ 8001738:	61bb      	str	r3, [r7, #24]
+    	// If a rollover has been detected from 360 to 0, increment the rotations variable
+    	// These are values that will need to be tested depending on read_eeprom
+
+// This will not run on the first move (hence the condition variable)
+
+        if (condition != 0) {
+ 800173a:	7f7b      	ldrb	r3, [r7, #29]
+ 800173c:	2b00      	cmp	r3, #0
+ 800173e:	d044      	beq.n	80017ca <main+0x29a>
+
+
+        	if ((rotations != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+ 8001740:	7cfb      	ldrb	r3, [r7, #19]
+ 8001742:	2b14      	cmp	r3, #20
+ 8001744:	d01f      	beq.n	8001786 <main+0x256>
+ 8001746:	4940      	ldr	r1, [pc, #256]	@ (8001848 <main+0x318>)
+ 8001748:	6978      	ldr	r0, [r7, #20]
+ 800174a:	f7ff fb3f 	bl	8000dcc <__aeabi_fcmpge>
+ 800174e:	4603      	mov	r3, r0
+ 8001750:	2b00      	cmp	r3, #0
+ 8001752:	d018      	beq.n	8001786 <main+0x256>
+ 8001754:	493d      	ldr	r1, [pc, #244]	@ (800184c <main+0x31c>)
+ 8001756:	6978      	ldr	r0, [r7, #20]
+ 8001758:	f7ff fb2e 	bl	8000db8 <__aeabi_fcmple>
+ 800175c:	4603      	mov	r3, r0
+ 800175e:	2b00      	cmp	r3, #0
+ 8001760:	d011      	beq.n	8001786 <main+0x256>
+ 8001762:	493b      	ldr	r1, [pc, #236]	@ (8001850 <main+0x320>)
+ 8001764:	69b8      	ldr	r0, [r7, #24]
+ 8001766:	f7ff fb31 	bl	8000dcc <__aeabi_fcmpge>
+ 800176a:	4603      	mov	r3, r0
+ 800176c:	2b00      	cmp	r3, #0
+ 800176e:	d00a      	beq.n	8001786 <main+0x256>
+ 8001770:	4938      	ldr	r1, [pc, #224]	@ (8001854 <main+0x324>)
+ 8001772:	69b8      	ldr	r0, [r7, #24]
+ 8001774:	f7ff fb20 	bl	8000db8 <__aeabi_fcmple>
+ 8001778:	4603      	mov	r3, r0
+ 800177a:	2b00      	cmp	r3, #0
+ 800177c:	d003      	beq.n	8001786 <main+0x256>
+        		// If these conditions are true,
+
+        		rotations++;
+ 800177e:	7cfb      	ldrb	r3, [r7, #19]
+ 8001780:	3301      	adds	r3, #1
+ 8001782:	74fb      	strb	r3, [r7, #19]
+ 8001784:	e021      	b.n	80017ca <main+0x29a>
+
+        			// Now, check if a rollover has been detected from 360 to 0
+        			// 360 <= current value <= 330
+        			// 0 <= last value <= 30
+        	} else if ((rotations != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+ 8001786:	7cfb      	ldrb	r3, [r7, #19]
+ 8001788:	2b00      	cmp	r3, #0
+ 800178a:	d01e      	beq.n	80017ca <main+0x29a>
+ 800178c:	492e      	ldr	r1, [pc, #184]	@ (8001848 <main+0x318>)
+ 800178e:	69b8      	ldr	r0, [r7, #24]
+ 8001790:	f7ff fb1c 	bl	8000dcc <__aeabi_fcmpge>
+ 8001794:	4603      	mov	r3, r0
+ 8001796:	2b00      	cmp	r3, #0
+ 8001798:	d017      	beq.n	80017ca <main+0x29a>
+ 800179a:	492c      	ldr	r1, [pc, #176]	@ (800184c <main+0x31c>)
+ 800179c:	69b8      	ldr	r0, [r7, #24]
+ 800179e:	f7ff fb0b 	bl	8000db8 <__aeabi_fcmple>
+ 80017a2:	4603      	mov	r3, r0
+ 80017a4:	2b00      	cmp	r3, #0
+ 80017a6:	d010      	beq.n	80017ca <main+0x29a>
+ 80017a8:	4929      	ldr	r1, [pc, #164]	@ (8001850 <main+0x320>)
+ 80017aa:	6978      	ldr	r0, [r7, #20]
+ 80017ac:	f7ff fb0e 	bl	8000dcc <__aeabi_fcmpge>
+ 80017b0:	4603      	mov	r3, r0
+ 80017b2:	2b00      	cmp	r3, #0
+ 80017b4:	d009      	beq.n	80017ca <main+0x29a>
+ 80017b6:	4927      	ldr	r1, [pc, #156]	@ (8001854 <main+0x324>)
+ 80017b8:	6978      	ldr	r0, [r7, #20]
+ 80017ba:	f7ff fafd 	bl	8000db8 <__aeabi_fcmple>
+ 80017be:	4603      	mov	r3, r0
+ 80017c0:	2b00      	cmp	r3, #0
+ 80017c2:	d002      	beq.n	80017ca <main+0x29a>
+        		rotations--;
+ 80017c4:	7cfb      	ldrb	r3, [r7, #19]
+ 80017c6:	3b01      	subs	r3, #1
+ 80017c8:	74fb      	strb	r3, [r7, #19]
+        }
+
 
         // For now, 1 is left and 0 is right
 
         if (RAD_TYPE == 1) {
- 800173a:	79bb      	ldrb	r3, [r7, #6]
- 800173c:	2b01      	cmp	r3, #1
- 800173e:	d116      	bne.n	800176e <main+0x23e>
+ 80017ca:	78fb      	ldrb	r3, [r7, #3]
+ 80017cc:	2b01      	cmp	r3, #1
+ 80017ce:	d116      	bne.n	80017fe <main+0x2ce>
 
         	// Conditions for if the limit switch has been pressed
         	// Allow for no more CW movement, and only CCW movement
         	if (ls_1_state == 0) {
- 8001740:	7afb      	ldrb	r3, [r7, #11]
- 8001742:	2b00      	cmp	r3, #0
- 8001744:	d106      	bne.n	8001754 <main+0x224>
+ 80017d0:	79fb      	ldrb	r3, [r7, #7]
+ 80017d2:	2b00      	cmp	r3, #0
+ 80017d4:	d106      	bne.n	80017e4 <main+0x2b4>
         		rotations = MAX_ROTATIONS;
- 8001746:	2314      	movs	r3, #20
- 8001748:	75fb      	strb	r3, [r7, #23]
+ 80017d6:	2314      	movs	r3, #20
+ 80017d8:	74fb      	strb	r3, [r7, #19]
         		no_ccw_movement = 0;
- 800174a:	2300      	movs	r3, #0
- 800174c:	75bb      	strb	r3, [r7, #22]
+ 80017da:	2300      	movs	r3, #0
+ 80017dc:	77fb      	strb	r3, [r7, #31]
         		no_cw_movement = 1;
- 800174e:	2301      	movs	r3, #1
- 8001750:	757b      	strb	r3, [r7, #21]
- 8001752:	e07c      	b.n	800184e <main+0x31e>
+ 80017de:	2301      	movs	r3, #1
+ 80017e0:	77bb      	strb	r3, [r7, #30]
+ 80017e2:	e03d      	b.n	8001860 <main+0x330>
 
         	// Ensuring the limit switch cannot move clockwise if it is at the end of range
         	// Allow for no more cw movement, but only ccw movement
         	} else if (rotations == MIN_ROTATIONS) {
- 8001754:	7dfb      	ldrb	r3, [r7, #23]
- 8001756:	2b00      	cmp	r3, #0
- 8001758:	d104      	bne.n	8001764 <main+0x234>
+ 80017e4:	7cfb      	ldrb	r3, [r7, #19]
+ 80017e6:	2b00      	cmp	r3, #0
+ 80017e8:	d104      	bne.n	80017f4 <main+0x2c4>
         		no_cw_movement = 0;
- 800175a:	2300      	movs	r3, #0
- 800175c:	757b      	strb	r3, [r7, #21]
+ 80017ea:	2300      	movs	r3, #0
+ 80017ec:	77bb      	strb	r3, [r7, #30]
         		no_ccw_movement = 1;
- 800175e:	2301      	movs	r3, #1
- 8001760:	75bb      	strb	r3, [r7, #22]
- 8001762:	e074      	b.n	800184e <main+0x31e>
+ 80017ee:	2301      	movs	r3, #1
+ 80017f0:	77fb      	strb	r3, [r7, #31]
+ 80017f2:	e035      	b.n	8001860 <main+0x330>
 
         	// Ensuring the ccw_movement and cw_movement variables are set back to 0 in all other instances
         	} else {
         		no_ccw_movement = 0;
- 8001764:	2300      	movs	r3, #0
- 8001766:	75bb      	strb	r3, [r7, #22]
+ 80017f4:	2300      	movs	r3, #0
+ 80017f6:	77fb      	strb	r3, [r7, #31]
         		no_cw_movement = 0;
- 8001768:	2300      	movs	r3, #0
- 800176a:	757b      	strb	r3, [r7, #21]
- 800176c:	e06f      	b.n	800184e <main+0x31e>
+ 80017f8:	2300      	movs	r3, #0
+ 80017fa:	77bb      	strb	r3, [r7, #30]
+ 80017fc:	e030      	b.n	8001860 <main+0x330>
 
         	}
         } else if (RAD_TYPE == 2) {
- 800176e:	79bb      	ldrb	r3, [r7, #6]
- 8001770:	2b02      	cmp	r3, #2
- 8001772:	d16c      	bne.n	800184e <main+0x31e>
+ 80017fe:	78fb      	ldrb	r3, [r7, #3]
+ 8001800:	2b02      	cmp	r3, #2
+ 8001802:	d12d      	bne.n	8001860 <main+0x330>
         	// Same as the code for rad type being a left motor, however, the rotation values are flipped
 
         	if (ls_1_state == 0) {
- 8001774:	7afb      	ldrb	r3, [r7, #11]
- 8001776:	2b00      	cmp	r3, #0
- 8001778:	d106      	bne.n	8001788 <main+0x258>
+ 8001804:	79fb      	ldrb	r3, [r7, #7]
+ 8001806:	2b00      	cmp	r3, #0
+ 8001808:	d106      	bne.n	8001818 <main+0x2e8>
         		rotations = MIN_ROTATIONS;
- 800177a:	2300      	movs	r3, #0
- 800177c:	75fb      	strb	r3, [r7, #23]
+ 800180a:	2300      	movs	r3, #0
+ 800180c:	74fb      	strb	r3, [r7, #19]
         		no_cw_movement = 0;
- 800177e:	2300      	movs	r3, #0
- 8001780:	757b      	strb	r3, [r7, #21]
+ 800180e:	2300      	movs	r3, #0
+ 8001810:	77bb      	strb	r3, [r7, #30]
         		no_ccw_movement = 1;
- 8001782:	2301      	movs	r3, #1
- 8001784:	75bb      	strb	r3, [r7, #22]
- 8001786:	e00b      	b.n	80017a0 <main+0x270>
+ 8001812:	2301      	movs	r3, #1
+ 8001814:	77fb      	strb	r3, [r7, #31]
+ 8001816:	e023      	b.n	8001860 <main+0x330>
 
         	// The other end for a right motor is then when the value is 20
         	} else if (rotations == MAX_ROTATIONS) {
- 8001788:	7dfb      	ldrb	r3, [r7, #23]
- 800178a:	2b14      	cmp	r3, #20
- 800178c:	d104      	bne.n	8001798 <main+0x268>
+ 8001818:	7cfb      	ldrb	r3, [r7, #19]
+ 800181a:	2b14      	cmp	r3, #20
+ 800181c:	d11c      	bne.n	8001858 <main+0x328>
         		no_ccw_movement = 0;
- 800178e:	2300      	movs	r3, #0
- 8001790:	75bb      	strb	r3, [r7, #22]
+ 800181e:	2300      	movs	r3, #0
+ 8001820:	77fb      	strb	r3, [r7, #31]
         		no_cw_movement = 1;
- 8001792:	2301      	movs	r3, #1
- 8001794:	757b      	strb	r3, [r7, #21]
- 8001796:	e003      	b.n	80017a0 <main+0x270>
+ 8001822:	2301      	movs	r3, #1
+ 8001824:	77bb      	strb	r3, [r7, #30]
+ 8001826:	e01b      	b.n	8001860 <main+0x330>
+ 8001828:	20000258 	.word	0x20000258
+ 800182c:	200001e0 	.word	0x200001e0
+ 8001830:	200001e8 	.word	0x200001e8
+ 8001834:	200000a0 	.word	0x200000a0
+ 8001838:	200001f0 	.word	0x200001f0
+ 800183c:	200001f8 	.word	0x200001f8
+ 8001840:	40010800 	.word	0x40010800
+ 8001844:	20000080 	.word	0x20000080
+ 8001848:	43a50000 	.word	0x43a50000
+ 800184c:	43b68000 	.word	0x43b68000
+ 8001850:	c0a00000 	.word	0xc0a00000
+ 8001854:	41f00000 	.word	0x41f00000
 
         	} else {
         		no_ccw_movement = 0;
- 8001798:	2300      	movs	r3, #0
- 800179a:	75bb      	strb	r3, [r7, #22]
+ 8001858:	2300      	movs	r3, #0
+ 800185a:	77fb      	strb	r3, [r7, #31]
         		no_cw_movement = 0;
- 800179c:	2300      	movs	r3, #0
- 800179e:	757b      	strb	r3, [r7, #21]
-            	// These are values that will need to be tested depending on read_eeprom
-
-        // This will not run on the first move (hence the condition variable)
-
-        if (condition != 0) {
-			} if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
- 80017a0:	4917      	ldr	r1, [pc, #92]	@ (8001800 <main+0x2d0>)
- 80017a2:	69b8      	ldr	r0, [r7, #24]
- 80017a4:	f7ff fb12 	bl	8000dcc <__aeabi_fcmpge>
- 80017a8:	4603      	mov	r3, r0
- 80017aa:	2b00      	cmp	r3, #0
- 80017ac:	d030      	beq.n	8001810 <main+0x2e0>
- 80017ae:	4915      	ldr	r1, [pc, #84]	@ (8001804 <main+0x2d4>)
- 80017b0:	69b8      	ldr	r0, [r7, #24]
- 80017b2:	f7ff fb01 	bl	8000db8 <__aeabi_fcmple>
- 80017b6:	4603      	mov	r3, r0
- 80017b8:	2b00      	cmp	r3, #0
- 80017ba:	d029      	beq.n	8001810 <main+0x2e0>
- 80017bc:	4912      	ldr	r1, [pc, #72]	@ (8001808 <main+0x2d8>)
- 80017be:	69f8      	ldr	r0, [r7, #28]
- 80017c0:	f7ff fb04 	bl	8000dcc <__aeabi_fcmpge>
- 80017c4:	4603      	mov	r3, r0
- 80017c6:	2b00      	cmp	r3, #0
- 80017c8:	d022      	beq.n	8001810 <main+0x2e0>
- 80017ca:	4910      	ldr	r1, [pc, #64]	@ (800180c <main+0x2dc>)
- 80017cc:	69f8      	ldr	r0, [r7, #28]
- 80017ce:	f7ff faf3 	bl	8000db8 <__aeabi_fcmple>
- 80017d2:	4603      	mov	r3, r0
- 80017d4:	2b00      	cmp	r3, #0
- 80017d6:	d01b      	beq.n	8001810 <main+0x2e0>
-				// If these conditions are true,
-
-				rotations++;
- 80017d8:	7dfb      	ldrb	r3, [r7, #23]
- 80017da:	3301      	adds	r3, #1
- 80017dc:	75fb      	strb	r3, [r7, #23]
- 80017de:	e036      	b.n	800184e <main+0x31e>
- 80017e0:	20000258 	.word	0x20000258
- 80017e4:	200001e0 	.word	0x200001e0
- 80017e8:	200001e8 	.word	0x200001e8
- 80017ec:	200000a0 	.word	0x200000a0
- 80017f0:	200001f0 	.word	0x200001f0
- 80017f4:	200001f8 	.word	0x200001f8
- 80017f8:	40010800 	.word	0x40010800
- 80017fc:	20000080 	.word	0x20000080
- 8001800:	41f00000 	.word	0x41f00000
- 8001804:	43b68000 	.word	0x43b68000
- 8001808:	c0a00000 	.word	0xc0a00000
- 800180c:	43a50000 	.word	0x43a50000
-
-			// Now, check if a rollover has been detected from 360 to 0
-			// 360 <= current value <= 330
-			// 0 <= last value <= 30
-			} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
- 8001810:	495a      	ldr	r1, [pc, #360]	@ (800197c <main+0x44c>)
- 8001812:	69f8      	ldr	r0, [r7, #28]
- 8001814:	f7ff fada 	bl	8000dcc <__aeabi_fcmpge>
- 8001818:	4603      	mov	r3, r0
- 800181a:	2b00      	cmp	r3, #0
- 800181c:	d017      	beq.n	800184e <main+0x31e>
- 800181e:	4958      	ldr	r1, [pc, #352]	@ (8001980 <main+0x450>)
- 8001820:	69f8      	ldr	r0, [r7, #28]
- 8001822:	f7ff fac9 	bl	8000db8 <__aeabi_fcmple>
- 8001826:	4603      	mov	r3, r0
- 8001828:	2b00      	cmp	r3, #0
- 800182a:	d010      	beq.n	800184e <main+0x31e>
- 800182c:	4955      	ldr	r1, [pc, #340]	@ (8001984 <main+0x454>)
- 800182e:	69b8      	ldr	r0, [r7, #24]
- 8001830:	f7ff facc 	bl	8000dcc <__aeabi_fcmpge>
- 8001834:	4603      	mov	r3, r0
- 8001836:	2b00      	cmp	r3, #0
- 8001838:	d009      	beq.n	800184e <main+0x31e>
- 800183a:	4953      	ldr	r1, [pc, #332]	@ (8001988 <main+0x458>)
- 800183c:	69b8      	ldr	r0, [r7, #24]
- 800183e:	f7ff fabb 	bl	8000db8 <__aeabi_fcmple>
- 8001842:	4603      	mov	r3, r0
- 8001844:	2b00      	cmp	r3, #0
- 8001846:	d002      	beq.n	800184e <main+0x31e>
-
-				rotations--;
- 8001848:	7dfb      	ldrb	r3, [r7, #23]
- 800184a:	3b01      	subs	r3, #1
- 800184c:	75fb      	strb	r3, [r7, #23]
+ 800185c:	2300      	movs	r3, #0
+ 800185e:	77bb      	strb	r3, [r7, #30]
         }
 
 
         // Moving the wheel
 
        if (no_ccw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
- 800184e:	7dbb      	ldrb	r3, [r7, #22]
- 8001850:	2b00      	cmp	r3, #0
- 8001852:	d118      	bne.n	8001886 <main+0x356>
- 8001854:	4b4d      	ldr	r3, [pc, #308]	@ (800198c <main+0x45c>)
- 8001856:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
- 800185a:	4610      	mov	r0, r2
- 800185c:	4619      	mov	r1, r3
- 800185e:	f7ff f8cd 	bl	80009fc <__aeabi_d2iz>
- 8001862:	4603      	mov	r3, r0
- 8001864:	b21b      	sxth	r3, r3
- 8001866:	2b00      	cmp	r3, #0
- 8001868:	db0d      	blt.n	8001886 <main+0x356>
+ 8001860:	7ffb      	ldrb	r3, [r7, #31]
+ 8001862:	2b00      	cmp	r3, #0
+ 8001864:	d118      	bne.n	8001898 <main+0x368>
+ 8001866:	4b49      	ldr	r3, [pc, #292]	@ (800198c <main+0x45c>)
+ 8001868:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
+ 800186c:	4610      	mov	r0, r2
+ 800186e:	4619      	mov	r1, r3
+ 8001870:	f7ff f8c4 	bl	80009fc <__aeabi_d2iz>
+ 8001874:	4603      	mov	r3, r0
+ 8001876:	b21b      	sxth	r3, r3
+ 8001878:	2b00      	cmp	r3, #0
+ 800187a:	db0d      	blt.n	8001898 <main+0x368>
         	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
- 800186a:	4b48      	ldr	r3, [pc, #288]	@ (800198c <main+0x45c>)
- 800186c:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
- 8001870:	4610      	mov	r0, r2
- 8001872:	4619      	mov	r1, r3
- 8001874:	f7ff f8c2 	bl	80009fc <__aeabi_d2iz>
- 8001878:	4603      	mov	r3, r0
- 800187a:	b21b      	sxth	r3, r3
- 800187c:	4619      	mov	r1, r3
- 800187e:	4844      	ldr	r0, [pc, #272]	@ (8001990 <main+0x460>)
- 8001880:	f007 f98e 	bl	8008ba0 <TMC_2590_MoveSteps>
- 8001884:	e01a      	b.n	80018bc <main+0x38c>
+ 800187c:	4b43      	ldr	r3, [pc, #268]	@ (800198c <main+0x45c>)
+ 800187e:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
+ 8001882:	4610      	mov	r0, r2
+ 8001884:	4619      	mov	r1, r3
+ 8001886:	f7ff f8b9 	bl	80009fc <__aeabi_d2iz>
+ 800188a:	4603      	mov	r3, r0
+ 800188c:	b21b      	sxth	r3, r3
+ 800188e:	4619      	mov	r1, r3
+ 8001890:	483f      	ldr	r0, [pc, #252]	@ (8001990 <main+0x460>)
+ 8001892:	f007 f985 	bl	8008ba0 <TMC_2590_MoveSteps>
+ 8001896:	e01a      	b.n	80018ce <main+0x39e>
          } else if (no_cw_movement == 0 && (int16_t) pid_1.output <= 0) {
- 8001886:	7d7b      	ldrb	r3, [r7, #21]
- 8001888:	2b00      	cmp	r3, #0
- 800188a:	d117      	bne.n	80018bc <main+0x38c>
- 800188c:	4b3f      	ldr	r3, [pc, #252]	@ (800198c <main+0x45c>)
- 800188e:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
- 8001892:	4610      	mov	r0, r2
- 8001894:	4619      	mov	r1, r3
- 8001896:	f7ff f8b1 	bl	80009fc <__aeabi_d2iz>
- 800189a:	4603      	mov	r3, r0
- 800189c:	b21b      	sxth	r3, r3
- 800189e:	2b00      	cmp	r3, #0
- 80018a0:	dc0c      	bgt.n	80018bc <main+0x38c>
+ 8001898:	7fbb      	ldrb	r3, [r7, #30]
+ 800189a:	2b00      	cmp	r3, #0
+ 800189c:	d117      	bne.n	80018ce <main+0x39e>
+ 800189e:	4b3b      	ldr	r3, [pc, #236]	@ (800198c <main+0x45c>)
+ 80018a0:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
+ 80018a4:	4610      	mov	r0, r2
+ 80018a6:	4619      	mov	r1, r3
+ 80018a8:	f7ff f8a8 	bl	80009fc <__aeabi_d2iz>
+ 80018ac:	4603      	mov	r3, r0
+ 80018ae:	b21b      	sxth	r3, r3
+ 80018b0:	2b00      	cmp	r3, #0
+ 80018b2:	dc0c      	bgt.n	80018ce <main+0x39e>
         	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
- 80018a2:	4b3a      	ldr	r3, [pc, #232]	@ (800198c <main+0x45c>)
- 80018a4:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
- 80018a8:	4610      	mov	r0, r2
- 80018aa:	4619      	mov	r1, r3
- 80018ac:	f7ff f8a6 	bl	80009fc <__aeabi_d2iz>
- 80018b0:	4603      	mov	r3, r0
- 80018b2:	b21b      	sxth	r3, r3
- 80018b4:	4619      	mov	r1, r3
- 80018b6:	4836      	ldr	r0, [pc, #216]	@ (8001990 <main+0x460>)
- 80018b8:	f007 f972 	bl	8008ba0 <TMC_2590_MoveSteps>
+ 80018b4:	4b35      	ldr	r3, [pc, #212]	@ (800198c <main+0x45c>)
+ 80018b6:	e9d3 230c 	ldrd	r2, r3, [r3, #48]	@ 0x30
+ 80018ba:	4610      	mov	r0, r2
+ 80018bc:	4619      	mov	r1, r3
+ 80018be:	f7ff f89d 	bl	80009fc <__aeabi_d2iz>
+ 80018c2:	4603      	mov	r3, r0
+ 80018c4:	b21b      	sxth	r3, r3
+ 80018c6:	4619      	mov	r1, r3
+ 80018c8:	4831      	ldr	r0, [pc, #196]	@ (8001990 <main+0x460>)
+ 80018ca:	f007 f969 	bl	8008ba0 <TMC_2590_MoveSteps>
         }
 
         // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
 
         if (condition == 0) {
- 80018bc:	79fb      	ldrb	r3, [r7, #7]
- 80018be:	2b00      	cmp	r3, #0
- 80018c0:	d102      	bne.n	80018c8 <main+0x398>
-        	condition++;
- 80018c2:	79fb      	ldrb	r3, [r7, #7]
- 80018c4:	3301      	adds	r3, #1
- 80018c6:	71fb      	strb	r3, [r7, #7]
+ 80018ce:	7f7b      	ldrb	r3, [r7, #29]
+ 80018d0:	2b00      	cmp	r3, #0
+ 80018d2:	d101      	bne.n	80018d8 <main+0x3a8>
+        	condition = 1;
+ 80018d4:	2301      	movs	r3, #1
+ 80018d6:	777b      	strb	r3, [r7, #29]
         }
 
 
         // }
         while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
- 80018c8:	bf00      	nop
- 80018ca:	4832      	ldr	r0, [pc, #200]	@ (8001994 <main+0x464>)
- 80018cc:	f000 fce4 	bl	8002298 <AS5048A_ReadAngle>
- 80018d0:	4603      	mov	r3, r0
- 80018d2:	2b00      	cmp	r3, #0
- 80018d4:	d1f9      	bne.n	80018ca <main+0x39a>
+ 80018d8:	bf00      	nop
+ 80018da:	482e      	ldr	r0, [pc, #184]	@ (8001994 <main+0x464>)
+ 80018dc:	f000 fcdc 	bl	8002298 <AS5048A_ReadAngle>
+ 80018e0:	4603      	mov	r3, r0
+ 80018e2:	2b00      	cmp	r3, #0
+ 80018e4:	d1f9      	bne.n	80018da <main+0x3aa>
             ;
         PID_Update(&pid_1);
- 80018d6:	482d      	ldr	r0, [pc, #180]	@ (800198c <main+0x45c>)
- 80018d8:	f000 ff66 	bl	80027a8 <PID_Update>
+ 80018e6:	4829      	ldr	r0, [pc, #164]	@ (800198c <main+0x45c>)
+ 80018e8:	f000 ff5e 	bl	80027a8 <PID_Update>
 
         if (HAL_GetTick() % 50 == 0)
- 80018dc:	f001 f94e 	bl	8002b7c <HAL_GetTick>
- 80018e0:	4602      	mov	r2, r0
- 80018e2:	4b2d      	ldr	r3, [pc, #180]	@ (8001998 <main+0x468>)
- 80018e4:	fba3 1302 	umull	r1, r3, r3, r2
- 80018e8:	091b      	lsrs	r3, r3, #4
- 80018ea:	2132      	movs	r1, #50	@ 0x32
- 80018ec:	fb01 f303 	mul.w	r3, r1, r3
- 80018f0:	1ad3      	subs	r3, r2, r3
- 80018f2:	2b00      	cmp	r3, #0
- 80018f4:	f47f ae39 	bne.w	800156a <main+0x3a>
+ 80018ec:	f001 f946 	bl	8002b7c <HAL_GetTick>
+ 80018f0:	4602      	mov	r2, r0
+ 80018f2:	4b29      	ldr	r3, [pc, #164]	@ (8001998 <main+0x468>)
+ 80018f4:	fba3 1302 	umull	r1, r3, r3, r2
+ 80018f8:	091b      	lsrs	r3, r3, #4
+ 80018fa:	2132      	movs	r1, #50	@ 0x32
+ 80018fc:	fb01 f303 	mul.w	r3, r1, r3
+ 8001900:	1ad3      	subs	r3, r2, r3
+ 8001902:	2b00      	cmp	r3, #0
+ 8001904:	f47f ae37 	bne.w	8001576 <main+0x46>
         {
             rad_status.current_angle = (float) pid_1.feedback_adj;
- 80018f8:	4b24      	ldr	r3, [pc, #144]	@ (800198c <main+0x45c>)
- 80018fa:	e9d3 230e 	ldrd	r2, r3, [r3, #56]	@ 0x38
- 80018fe:	4610      	mov	r0, r2
- 8001900:	4619      	mov	r1, r3
- 8001902:	f7ff f8a3 	bl	8000a4c <__aeabi_d2f>
- 8001906:	4603      	mov	r3, r0
- 8001908:	4a24      	ldr	r2, [pc, #144]	@ (800199c <main+0x46c>)
- 800190a:	6013      	str	r3, [r2, #0]
+ 8001908:	4b20      	ldr	r3, [pc, #128]	@ (800198c <main+0x45c>)
+ 800190a:	e9d3 230e 	ldrd	r2, r3, [r3, #56]	@ 0x38
+ 800190e:	4610      	mov	r0, r2
+ 8001910:	4619      	mov	r1, r3
+ 8001912:	f7ff f89b 	bl	8000a4c <__aeabi_d2f>
+ 8001916:	4603      	mov	r3, r0
+ 8001918:	4a20      	ldr	r2, [pc, #128]	@ (800199c <main+0x46c>)
+ 800191a:	6013      	str	r3, [r2, #0]
 //            rad_status.limit_switch_state = (uint8_t) ls_1_state;
 //            rad_status.upper_bound_state = (uint8_t) ls_2_state; // TODO change this to the right value
             rad_status.ls_1 = ls_1_state;
- 800190c:	4a23      	ldr	r2, [pc, #140]	@ (800199c <main+0x46c>)
- 800190e:	7afb      	ldrb	r3, [r7, #11]
- 8001910:	7113      	strb	r3, [r2, #4]
+ 800191c:	4a1f      	ldr	r2, [pc, #124]	@ (800199c <main+0x46c>)
+ 800191e:	79fb      	ldrb	r3, [r7, #7]
+ 8001920:	7113      	strb	r3, [r2, #4]
             rad_status.ls_2 = ls_2_state;
- 8001912:	4a22      	ldr	r2, [pc, #136]	@ (800199c <main+0x46c>)
- 8001914:	7abb      	ldrb	r3, [r7, #10]
- 8001916:	7153      	strb	r3, [r2, #5]
+ 8001922:	4a1e      	ldr	r2, [pc, #120]	@ (800199c <main+0x46c>)
+ 8001924:	79bb      	ldrb	r3, [r7, #6]
+ 8001926:	7153      	strb	r3, [r2, #5]
             rad_status.fsr_1 = fsr_1_state;
- 8001918:	4a20      	ldr	r2, [pc, #128]	@ (800199c <main+0x46c>)
- 800191a:	7a7b      	ldrb	r3, [r7, #9]
- 800191c:	7193      	strb	r3, [r2, #6]
+ 8001928:	4a1c      	ldr	r2, [pc, #112]	@ (800199c <main+0x46c>)
+ 800192a:	797b      	ldrb	r3, [r7, #5]
+ 800192c:	7193      	strb	r3, [r2, #6]
             rad_status.fsr_2 = fsr_2_state;
- 800191e:	4a1f      	ldr	r2, [pc, #124]	@ (800199c <main+0x46c>)
- 8001920:	7a3b      	ldrb	r3, [r7, #8]
- 8001922:	71d3      	strb	r3, [r2, #7]
+ 800192e:	4a1b      	ldr	r2, [pc, #108]	@ (800199c <main+0x46c>)
+ 8001930:	793b      	ldrb	r3, [r7, #4]
+ 8001932:	71d3      	strb	r3, [r2, #7]
             rad_status.kp = pid_1.Init.kp;
- 8001924:	4b19      	ldr	r3, [pc, #100]	@ (800198c <main+0x45c>)
- 8001926:	e9d3 2302 	ldrd	r2, r3, [r3, #8]
- 800192a:	4610      	mov	r0, r2
- 800192c:	4619      	mov	r1, r3
- 800192e:	f7ff f88d 	bl	8000a4c <__aeabi_d2f>
- 8001932:	4603      	mov	r3, r0
- 8001934:	4a19      	ldr	r2, [pc, #100]	@ (800199c <main+0x46c>)
- 8001936:	6093      	str	r3, [r2, #8]
+ 8001934:	4b15      	ldr	r3, [pc, #84]	@ (800198c <main+0x45c>)
+ 8001936:	e9d3 2302 	ldrd	r2, r3, [r3, #8]
+ 800193a:	4610      	mov	r0, r2
+ 800193c:	4619      	mov	r1, r3
+ 800193e:	f7ff f885 	bl	8000a4c <__aeabi_d2f>
+ 8001942:	4603      	mov	r3, r0
+ 8001944:	4a15      	ldr	r2, [pc, #84]	@ (800199c <main+0x46c>)
+ 8001946:	6093      	str	r3, [r2, #8]
             rad_status.ki = pid_1.Init.ki;
- 8001938:	4b14      	ldr	r3, [pc, #80]	@ (800198c <main+0x45c>)
- 800193a:	e9d3 2304 	ldrd	r2, r3, [r3, #16]
- 800193e:	4610      	mov	r0, r2
- 8001940:	4619      	mov	r1, r3
- 8001942:	f7ff f883 	bl	8000a4c <__aeabi_d2f>
- 8001946:	4603      	mov	r3, r0
- 8001948:	4a14      	ldr	r2, [pc, #80]	@ (800199c <main+0x46c>)
- 800194a:	60d3      	str	r3, [r2, #12]
+ 8001948:	4b10      	ldr	r3, [pc, #64]	@ (800198c <main+0x45c>)
+ 800194a:	e9d3 2304 	ldrd	r2, r3, [r3, #16]
+ 800194e:	4610      	mov	r0, r2
+ 8001950:	4619      	mov	r1, r3
+ 8001952:	f7ff f87b 	bl	8000a4c <__aeabi_d2f>
+ 8001956:	4603      	mov	r3, r0
+ 8001958:	4a10      	ldr	r2, [pc, #64]	@ (800199c <main+0x46c>)
+ 800195a:	60d3      	str	r3, [r2, #12]
             rad_status.kd = pid_1.Init.kd;
- 800194c:	4b0f      	ldr	r3, [pc, #60]	@ (800198c <main+0x45c>)
- 800194e:	e9d3 2306 	ldrd	r2, r3, [r3, #24]
- 8001952:	4610      	mov	r0, r2
- 8001954:	4619      	mov	r1, r3
- 8001956:	f7ff f879 	bl	8000a4c <__aeabi_d2f>
- 800195a:	4603      	mov	r3, r0
- 800195c:	4a0f      	ldr	r2, [pc, #60]	@ (800199c <main+0x46c>)
- 800195e:	6113      	str	r3, [r2, #16]
+ 800195c:	4b0b      	ldr	r3, [pc, #44]	@ (800198c <main+0x45c>)
+ 800195e:	e9d3 2306 	ldrd	r2, r3, [r3, #24]
+ 8001962:	4610      	mov	r0, r2
+ 8001964:	4619      	mov	r1, r3
+ 8001966:	f7ff f871 	bl	8000a4c <__aeabi_d2f>
+ 800196a:	4603      	mov	r3, r0
+ 800196c:	4a0b      	ldr	r2, [pc, #44]	@ (800199c <main+0x46c>)
+ 800196e:	6113      	str	r3, [r2, #16]
             MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
- 8001960:	4b0e      	ldr	r3, [pc, #56]	@ (800199c <main+0x46c>)
- 8001962:	466c      	mov	r4, sp
- 8001964:	f103 020c 	add.w	r2, r3, #12
- 8001968:	e892 0003 	ldmia.w	r2, {r0, r1}
- 800196c:	e884 0003 	stmia.w	r4, {r0, r1}
- 8001970:	cb0e      	ldmia	r3, {r1, r2, r3}
- 8001972:	480b      	ldr	r0, [pc, #44]	@ (80019a0 <main+0x470>)
- 8001974:	f7ff fbb4 	bl	80010e0 <MX_CAN_Broadcast_RAD_Status>
+ 8001970:	4b0a      	ldr	r3, [pc, #40]	@ (800199c <main+0x46c>)
+ 8001972:	466c      	mov	r4, sp
+ 8001974:	f103 020c 	add.w	r2, r3, #12
+ 8001978:	e892 0003 	ldmia.w	r2, {r0, r1}
+ 800197c:	e884 0003 	stmia.w	r4, {r0, r1}
+ 8001980:	cb0e      	ldmia	r3, {r1, r2, r3}
+ 8001982:	4807      	ldr	r0, [pc, #28]	@ (80019a0 <main+0x470>)
+ 8001984:	f7ff fbac 	bl	80010e0 <MX_CAN_Broadcast_RAD_Status>
     {
- 8001978:	e5f7      	b.n	800156a <main+0x3a>
- 800197a:	bf00      	nop
- 800197c:	41f00000 	.word	0x41f00000
- 8001980:	43b68000 	.word	0x43b68000
- 8001984:	c0a00000 	.word	0xc0a00000
- 8001988:	43a50000 	.word	0x43a50000
+ 8001988:	e5f5      	b.n	8001576 <main+0x46>
+ 800198a:	bf00      	nop
  800198c:	200001e0 	.word	0x200001e0
  8001990:	200003a0 	.word	0x200003a0
  8001994:	20000080 	.word	0x20000080
