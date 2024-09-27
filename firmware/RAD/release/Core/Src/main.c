@@ -292,7 +292,7 @@ int main(void)
         // This will not run on the first move (hence the condition variable)
 
         if (condition != 0) {
-			} if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
+			} if ((rotations != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
 				// If these conditions are true,
 
 				rotations++;
@@ -300,11 +300,11 @@ int main(void)
 			// Now, check if a rollover has been detected from 360 to 0
 			// 360 <= current value <= 330
 			// 0 <= last value <= 30
-			} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
+		} else if ((rotations != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
 
 				rotations--;
 			}
-        }
+       }
 
 
         // Moving the wheel
@@ -318,7 +318,7 @@ int main(void)
         // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
 
         if (condition == 0) {
-        	condition++;
+        	condition = 1;
         }
 
 
