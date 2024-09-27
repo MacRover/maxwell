@@ -42,10 +42,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ENCODER_CONSTANT 370
 #define ROTATION_HIGH_UPPER_BOUND 365
-#define ROTATION_LOW_UPPER_BOUND 330
-#define ROTATION_HIGH_LOWER_BOUND 30
+#define ROTATION_LOW_UPPER_BOUND 30
+#define ROTATION_HIGH_LOWER_BOUND 330
 #define ROTATION_LOW_LOWER_BOUND -5
 #define MIN_ROTATIONS 0
 #define MAX_ROTATIONS 20
@@ -84,6 +83,8 @@ int main(void)
 
     /* USER CODE BEGIN 1 */
 
+
+
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -92,6 +93,10 @@ int main(void)
     HAL_Init();
 
     /* USER CODE BEGIN Init */
+
+    uint8_t no_ccw_movement = 0;
+    uint8_t no_cw_movement = 0;
+    uint8_t condition = 0;
 
     /* USER CODE END Init */
 
@@ -229,17 +234,15 @@ int main(void)
         float last_encoder_value;
         uint8_t RAD_TYPE;
         uint8_t rotations;
-        uint8_t no_ccw_movement = 0;
-        uint8_t no_cw_movement = 0;
-        uint8_t condition = 0;
 
 
         // we set the past encoder value to the one we had before
 
-        encoder_value = AS5048A_ReadAngle(&as5048a_1);
         if (condition != 0) {
         	last_encoder_value = encoder_value;
         }
+
+        encoder_value = AS5048A_ReadAngle(&as5048a_1);
 
         // For now, 1 is left and 0 is right
 

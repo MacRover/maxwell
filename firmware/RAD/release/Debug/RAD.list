@@ -2477,11 +2477,11 @@ int main(void)
                     (RAD_CAN_Message_TypeDef*) queue_front(
  8001578:	4899      	ldr	r0, [pc, #612]	@ (80017e0 <main+0x2b0>)
  800157a:	f007 fe2c 	bl	80091d6 <queue_front>
- 800157e:	6178      	str	r0, [r7, #20]
+ 800157e:	6138      	str	r0, [r7, #16]
                             &can_message_queue_1);
 
             switch (new_message->command_id)
- 8001580:	697b      	ldr	r3, [r7, #20]
+ 8001580:	693b      	ldr	r3, [r7, #16]
  8001582:	781b      	ldrb	r3, [r3, #0]
  8001584:	2b04      	cmp	r3, #4
  8001586:	d035      	beq.n	80015f4 <main+0xc4>
@@ -2519,14 +2519,14 @@ int main(void)
             case SET_TARGET_ANGLE:
             {
                 float new_setpoint = decode_float_big_endian(new_message->data);
- 80015f4:	697b      	ldr	r3, [r7, #20]
+ 80015f4:	693b      	ldr	r3, [r7, #16]
  80015f6:	685b      	ldr	r3, [r3, #4]
  80015f8:	4618      	mov	r0, r3
  80015fa:	f7ff fe5b 	bl	80012b4 <decode_float_big_endian>
- 80015fe:	6138      	str	r0, [r7, #16]
+ 80015fe:	60f8      	str	r0, [r7, #12]
                 // todo get angle multiplier factor (ex for gearbox)
                 PID_ChangeSetPoint(&pid_1, new_setpoint);
- 8001600:	6938      	ldr	r0, [r7, #16]
+ 8001600:	68f8      	ldr	r0, [r7, #12]
  8001602:	f7fe ff09 	bl	8000418 <__aeabi_f2d>
  8001606:	4602      	mov	r2, r0
  8001608:	460b      	mov	r3, r1
@@ -2538,7 +2538,7 @@ int main(void)
             case SET_P_VALUE:
             {
                 pid_1.Init.kp = (double) decode_float_big_endian(
- 8001612:	697b      	ldr	r3, [r7, #20]
+ 8001612:	693b      	ldr	r3, [r7, #16]
  8001614:	685b      	ldr	r3, [r3, #4]
  8001616:	4618      	mov	r0, r3
  8001618:	f7ff fe4c 	bl	80012b4 <decode_float_big_endian>
@@ -2563,7 +2563,7 @@ int main(void)
             case SET_I_VALUE:
             {
                 pid_1.Init.ki = (double) decode_float_big_endian(
- 800163c:	697b      	ldr	r3, [r7, #20]
+ 800163c:	693b      	ldr	r3, [r7, #16]
  800163e:	685b      	ldr	r3, [r3, #4]
  8001640:	4618      	mov	r0, r3
  8001642:	f7ff fe37 	bl	80012b4 <decode_float_big_endian>
@@ -2588,7 +2588,7 @@ int main(void)
             case SET_D_VALUE:
             {
                 pid_1.Init.kd = (double) decode_float_big_endian(
- 8001666:	697b      	ldr	r3, [r7, #20]
+ 8001666:	693b      	ldr	r3, [r7, #16]
  8001668:	685b      	ldr	r3, [r3, #4]
  800166a:	4618      	mov	r0, r3
  800166c:	f7ff fe22 	bl	80012b4 <decode_float_big_endian>
@@ -2631,12 +2631,12 @@ int main(void)
             case SET_CAN_ID:
             {
                 uint8_t new_id = new_message->data[0];
- 80016ac:	697b      	ldr	r3, [r7, #20]
+ 80016ac:	693b      	ldr	r3, [r7, #16]
  80016ae:	685b      	ldr	r3, [r3, #4]
  80016b0:	781b      	ldrb	r3, [r3, #0]
- 80016b2:	70bb      	strb	r3, [r7, #2]
+ 80016b2:	717b      	strb	r3, [r7, #5]
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_CAN_ID, &new_id,
- 80016b4:	1cba      	adds	r2, r7, #2
+ 80016b4:	1d7a      	adds	r2, r7, #5
  80016b6:	2301      	movs	r3, #1
  80016b8:	2110      	movs	r1, #16
  80016ba:	484c      	ldr	r0, [pc, #304]	@ (80017ec <main+0x2bc>)
@@ -2646,7 +2646,7 @@ int main(void)
                 // test code
                 uint8_t eeprom_buff[1];
                 AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff,
- 80016c0:	463a      	mov	r2, r7
+ 80016c0:	1d3a      	adds	r2, r7, #4
  80016c2:	2301      	movs	r3, #1
  80016c4:	2110      	movs	r1, #16
  80016c6:	4849      	ldr	r0, [pc, #292]	@ (80017ec <main+0x2bc>)
@@ -2665,7 +2665,7 @@ int main(void)
             }
             }
             free(new_message->data);
- 80016d2:	697b      	ldr	r3, [r7, #20]
+ 80016d2:	693b      	ldr	r3, [r7, #16]
  80016d4:	685b      	ldr	r3, [r3, #4]
  80016d6:	4618      	mov	r0, r3
  80016d8:	f007 fdb4 	bl	8009244 <free>
@@ -2681,26 +2681,26 @@ int main(void)
  80016e4:	4844      	ldr	r0, [pc, #272]	@ (80017f8 <main+0x2c8>)
  80016e6:	f003 f965 	bl	80049b4 <HAL_GPIO_ReadPin>
  80016ea:	4603      	mov	r3, r0
- 80016ec:	73fb      	strb	r3, [r7, #15]
+ 80016ec:	72fb      	strb	r3, [r7, #11]
         GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
  80016ee:	2102      	movs	r1, #2
  80016f0:	4841      	ldr	r0, [pc, #260]	@ (80017f8 <main+0x2c8>)
  80016f2:	f003 f95f 	bl	80049b4 <HAL_GPIO_ReadPin>
  80016f6:	4603      	mov	r3, r0
- 80016f8:	73bb      	strb	r3, [r7, #14]
+ 80016f8:	72bb      	strb	r3, [r7, #10]
         GPIO_PinState fsr_1_state = HAL_GPIO_ReadPin(FSR_1_GPIO_Port,
  80016fa:	2104      	movs	r1, #4
  80016fc:	483e      	ldr	r0, [pc, #248]	@ (80017f8 <main+0x2c8>)
  80016fe:	f003 f959 	bl	80049b4 <HAL_GPIO_ReadPin>
  8001702:	4603      	mov	r3, r0
- 8001704:	737b      	strb	r3, [r7, #13]
+ 8001704:	727b      	strb	r3, [r7, #9]
                 FSR_1_Pin);
         GPIO_PinState fsr_2_state = HAL_GPIO_ReadPin(FSR_2_GPIO_Port,
  8001706:	2108      	movs	r1, #8
  8001708:	483b      	ldr	r0, [pc, #236]	@ (80017f8 <main+0x2c8>)
  800170a:	f003 f953 	bl	80049b4 <HAL_GPIO_ReadPin>
  800170e:	4603      	mov	r3, r0
- 8001710:	733b      	strb	r3, [r7, #12]
+ 8001710:	723b      	strb	r3, [r7, #8]
         // Initializing the encoder values
         float encoder_value;
         float last_encoder_value;
@@ -2708,124 +2708,125 @@ int main(void)
         uint8_t rotations;
         uint8_t no_ccw_movement = 0;
  8001712:	2300      	movs	r3, #0
- 8001714:	76bb      	strb	r3, [r7, #26]
+ 8001714:	75bb      	strb	r3, [r7, #22]
         uint8_t no_cw_movement = 0;
  8001716:	2300      	movs	r3, #0
- 8001718:	767b      	strb	r3, [r7, #25]
+ 8001718:	757b      	strb	r3, [r7, #21]
         uint8_t condition = 0;
  800171a:	2300      	movs	r3, #0
- 800171c:	72fb      	strb	r3, [r7, #11]
+ 800171c:	71fb      	strb	r3, [r7, #7]
 
 
         // we set the past encoder value to the one we had before
 
-        encoder_value = AS5048A_ReadAngle(&as5048a_1);
- 800171e:	4837      	ldr	r0, [pc, #220]	@ (80017fc <main+0x2cc>)
- 8001720:	f000 fdba 	bl	8002298 <AS5048A_ReadAngle>
- 8001724:	4603      	mov	r3, r0
- 8001726:	4618      	mov	r0, r3
- 8001728:	f7ff fa96 	bl	8000c58 <__aeabi_ui2f>
- 800172c:	4603      	mov	r3, r0
- 800172e:	607b      	str	r3, [r7, #4]
         if (condition != 0) {
- 8001730:	7afb      	ldrb	r3, [r7, #11]
- 8001732:	2b00      	cmp	r3, #0
- 8001734:	d001      	beq.n	800173a <main+0x20a>
+ 800171e:	79fb      	ldrb	r3, [r7, #7]
+ 8001720:	2b00      	cmp	r3, #0
+ 8001722:	d001      	beq.n	8001728 <main+0x1f8>
         	last_encoder_value = encoder_value;
- 8001736:	687b      	ldr	r3, [r7, #4]
- 8001738:	61fb      	str	r3, [r7, #28]
+ 8001724:	69fb      	ldr	r3, [r7, #28]
+ 8001726:	61bb      	str	r3, [r7, #24]
         }
+
+        encoder_value = AS5048A_ReadAngle(&as5048a_1);
+ 8001728:	4834      	ldr	r0, [pc, #208]	@ (80017fc <main+0x2cc>)
+ 800172a:	f000 fdb5 	bl	8002298 <AS5048A_ReadAngle>
+ 800172e:	4603      	mov	r3, r0
+ 8001730:	4618      	mov	r0, r3
+ 8001732:	f7ff fa91 	bl	8000c58 <__aeabi_ui2f>
+ 8001736:	4603      	mov	r3, r0
+ 8001738:	61fb      	str	r3, [r7, #28]
 
         // For now, 1 is left and 0 is right
 
         if (RAD_TYPE == 1) {
- 800173a:	78fb      	ldrb	r3, [r7, #3]
+ 800173a:	79bb      	ldrb	r3, [r7, #6]
  800173c:	2b01      	cmp	r3, #1
  800173e:	d116      	bne.n	800176e <main+0x23e>
 
         	// Conditions for if the limit switch has been pressed
         	// Allow for no more CW movement, and only CCW movement
         	if (ls_1_state == 0) {
- 8001740:	7bfb      	ldrb	r3, [r7, #15]
+ 8001740:	7afb      	ldrb	r3, [r7, #11]
  8001742:	2b00      	cmp	r3, #0
  8001744:	d106      	bne.n	8001754 <main+0x224>
         		rotations = MAX_ROTATIONS;
  8001746:	2314      	movs	r3, #20
- 8001748:	76fb      	strb	r3, [r7, #27]
+ 8001748:	75fb      	strb	r3, [r7, #23]
         		no_ccw_movement = 0;
  800174a:	2300      	movs	r3, #0
- 800174c:	76bb      	strb	r3, [r7, #26]
+ 800174c:	75bb      	strb	r3, [r7, #22]
         		no_cw_movement = 1;
  800174e:	2301      	movs	r3, #1
- 8001750:	767b      	strb	r3, [r7, #25]
+ 8001750:	757b      	strb	r3, [r7, #21]
  8001752:	e07c      	b.n	800184e <main+0x31e>
 
         	// Ensuring the limit switch cannot move clockwise if it is at the end of range
         	// Allow for no more cw movement, but only ccw movement
         	} else if (rotations == MIN_ROTATIONS) {
- 8001754:	7efb      	ldrb	r3, [r7, #27]
+ 8001754:	7dfb      	ldrb	r3, [r7, #23]
  8001756:	2b00      	cmp	r3, #0
  8001758:	d104      	bne.n	8001764 <main+0x234>
         		no_cw_movement = 0;
  800175a:	2300      	movs	r3, #0
- 800175c:	767b      	strb	r3, [r7, #25]
+ 800175c:	757b      	strb	r3, [r7, #21]
         		no_ccw_movement = 1;
  800175e:	2301      	movs	r3, #1
- 8001760:	76bb      	strb	r3, [r7, #26]
+ 8001760:	75bb      	strb	r3, [r7, #22]
  8001762:	e074      	b.n	800184e <main+0x31e>
 
         	// Ensuring the ccw_movement and cw_movement variables are set back to 0 in all other instances
         	} else {
         		no_ccw_movement = 0;
  8001764:	2300      	movs	r3, #0
- 8001766:	76bb      	strb	r3, [r7, #26]
+ 8001766:	75bb      	strb	r3, [r7, #22]
         		no_cw_movement = 0;
  8001768:	2300      	movs	r3, #0
- 800176a:	767b      	strb	r3, [r7, #25]
+ 800176a:	757b      	strb	r3, [r7, #21]
  800176c:	e06f      	b.n	800184e <main+0x31e>
 
         	}
         } else if (RAD_TYPE == 2) {
- 800176e:	78fb      	ldrb	r3, [r7, #3]
+ 800176e:	79bb      	ldrb	r3, [r7, #6]
  8001770:	2b02      	cmp	r3, #2
  8001772:	d16c      	bne.n	800184e <main+0x31e>
         	// Same as the code for rad type being a left motor, however, the rotation values are flipped
 
         	if (ls_1_state == 0) {
- 8001774:	7bfb      	ldrb	r3, [r7, #15]
+ 8001774:	7afb      	ldrb	r3, [r7, #11]
  8001776:	2b00      	cmp	r3, #0
  8001778:	d106      	bne.n	8001788 <main+0x258>
         		rotations = MIN_ROTATIONS;
  800177a:	2300      	movs	r3, #0
- 800177c:	76fb      	strb	r3, [r7, #27]
+ 800177c:	75fb      	strb	r3, [r7, #23]
         		no_cw_movement = 0;
  800177e:	2300      	movs	r3, #0
- 8001780:	767b      	strb	r3, [r7, #25]
+ 8001780:	757b      	strb	r3, [r7, #21]
         		no_ccw_movement = 1;
  8001782:	2301      	movs	r3, #1
- 8001784:	76bb      	strb	r3, [r7, #26]
+ 8001784:	75bb      	strb	r3, [r7, #22]
  8001786:	e00b      	b.n	80017a0 <main+0x270>
 
         	// The other end for a right motor is then when the value is 20
         	} else if (rotations == MAX_ROTATIONS) {
- 8001788:	7efb      	ldrb	r3, [r7, #27]
+ 8001788:	7dfb      	ldrb	r3, [r7, #23]
  800178a:	2b14      	cmp	r3, #20
  800178c:	d104      	bne.n	8001798 <main+0x268>
         		no_ccw_movement = 0;
  800178e:	2300      	movs	r3, #0
- 8001790:	76bb      	strb	r3, [r7, #26]
+ 8001790:	75bb      	strb	r3, [r7, #22]
         		no_cw_movement = 1;
  8001792:	2301      	movs	r3, #1
- 8001794:	767b      	strb	r3, [r7, #25]
+ 8001794:	757b      	strb	r3, [r7, #21]
  8001796:	e003      	b.n	80017a0 <main+0x270>
 
         	} else {
         		no_ccw_movement = 0;
  8001798:	2300      	movs	r3, #0
- 800179a:	76bb      	strb	r3, [r7, #26]
+ 800179a:	75bb      	strb	r3, [r7, #22]
         		no_cw_movement = 0;
  800179c:	2300      	movs	r3, #0
- 800179e:	767b      	strb	r3, [r7, #25]
+ 800179e:	757b      	strb	r3, [r7, #21]
             	// These are values that will need to be tested depending on read_eeprom
 
         // This will not run on the first move (hence the condition variable)
@@ -2833,25 +2834,25 @@ int main(void)
         if (condition != 0) {
 			} if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
  80017a0:	4917      	ldr	r1, [pc, #92]	@ (8001800 <main+0x2d0>)
- 80017a2:	69f8      	ldr	r0, [r7, #28]
+ 80017a2:	69b8      	ldr	r0, [r7, #24]
  80017a4:	f7ff fb12 	bl	8000dcc <__aeabi_fcmpge>
  80017a8:	4603      	mov	r3, r0
  80017aa:	2b00      	cmp	r3, #0
  80017ac:	d030      	beq.n	8001810 <main+0x2e0>
  80017ae:	4915      	ldr	r1, [pc, #84]	@ (8001804 <main+0x2d4>)
- 80017b0:	69f8      	ldr	r0, [r7, #28]
+ 80017b0:	69b8      	ldr	r0, [r7, #24]
  80017b2:	f7ff fb01 	bl	8000db8 <__aeabi_fcmple>
  80017b6:	4603      	mov	r3, r0
  80017b8:	2b00      	cmp	r3, #0
  80017ba:	d029      	beq.n	8001810 <main+0x2e0>
  80017bc:	4912      	ldr	r1, [pc, #72]	@ (8001808 <main+0x2d8>)
- 80017be:	6878      	ldr	r0, [r7, #4]
+ 80017be:	69f8      	ldr	r0, [r7, #28]
  80017c0:	f7ff fb04 	bl	8000dcc <__aeabi_fcmpge>
  80017c4:	4603      	mov	r3, r0
  80017c6:	2b00      	cmp	r3, #0
  80017c8:	d022      	beq.n	8001810 <main+0x2e0>
  80017ca:	4910      	ldr	r1, [pc, #64]	@ (800180c <main+0x2dc>)
- 80017cc:	6878      	ldr	r0, [r7, #4]
+ 80017cc:	69f8      	ldr	r0, [r7, #28]
  80017ce:	f7ff faf3 	bl	8000db8 <__aeabi_fcmple>
  80017d2:	4603      	mov	r3, r0
  80017d4:	2b00      	cmp	r3, #0
@@ -2859,9 +2860,9 @@ int main(void)
 				// If these conditions are true,
 
 				rotations++;
- 80017d8:	7efb      	ldrb	r3, [r7, #27]
+ 80017d8:	7dfb      	ldrb	r3, [r7, #23]
  80017da:	3301      	adds	r3, #1
- 80017dc:	76fb      	strb	r3, [r7, #27]
+ 80017dc:	75fb      	strb	r3, [r7, #23]
  80017de:	e036      	b.n	800184e <main+0x31e>
  80017e0:	20000258 	.word	0x20000258
  80017e4:	200001e0 	.word	0x200001e0
@@ -2881,41 +2882,41 @@ int main(void)
 			// 0 <= last value <= 30
 			} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
  8001810:	495a      	ldr	r1, [pc, #360]	@ (800197c <main+0x44c>)
- 8001812:	6878      	ldr	r0, [r7, #4]
+ 8001812:	69f8      	ldr	r0, [r7, #28]
  8001814:	f7ff fada 	bl	8000dcc <__aeabi_fcmpge>
  8001818:	4603      	mov	r3, r0
  800181a:	2b00      	cmp	r3, #0
  800181c:	d017      	beq.n	800184e <main+0x31e>
  800181e:	4958      	ldr	r1, [pc, #352]	@ (8001980 <main+0x450>)
- 8001820:	6878      	ldr	r0, [r7, #4]
+ 8001820:	69f8      	ldr	r0, [r7, #28]
  8001822:	f7ff fac9 	bl	8000db8 <__aeabi_fcmple>
  8001826:	4603      	mov	r3, r0
  8001828:	2b00      	cmp	r3, #0
  800182a:	d010      	beq.n	800184e <main+0x31e>
  800182c:	4955      	ldr	r1, [pc, #340]	@ (8001984 <main+0x454>)
- 800182e:	69f8      	ldr	r0, [r7, #28]
+ 800182e:	69b8      	ldr	r0, [r7, #24]
  8001830:	f7ff facc 	bl	8000dcc <__aeabi_fcmpge>
  8001834:	4603      	mov	r3, r0
  8001836:	2b00      	cmp	r3, #0
  8001838:	d009      	beq.n	800184e <main+0x31e>
  800183a:	4953      	ldr	r1, [pc, #332]	@ (8001988 <main+0x458>)
- 800183c:	69f8      	ldr	r0, [r7, #28]
+ 800183c:	69b8      	ldr	r0, [r7, #24]
  800183e:	f7ff fabb 	bl	8000db8 <__aeabi_fcmple>
  8001842:	4603      	mov	r3, r0
  8001844:	2b00      	cmp	r3, #0
  8001846:	d002      	beq.n	800184e <main+0x31e>
 
 				rotations--;
- 8001848:	7efb      	ldrb	r3, [r7, #27]
+ 8001848:	7dfb      	ldrb	r3, [r7, #23]
  800184a:	3b01      	subs	r3, #1
- 800184c:	76fb      	strb	r3, [r7, #27]
+ 800184c:	75fb      	strb	r3, [r7, #23]
         }
 
 
         // Moving the wheel
 
        if (no_ccw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
- 800184e:	7ebb      	ldrb	r3, [r7, #26]
+ 800184e:	7dbb      	ldrb	r3, [r7, #22]
  8001850:	2b00      	cmp	r3, #0
  8001852:	d118      	bne.n	8001886 <main+0x356>
  8001854:	4b4d      	ldr	r3, [pc, #308]	@ (800198c <main+0x45c>)
@@ -2940,7 +2941,7 @@ int main(void)
  8001880:	f007 f98e 	bl	8008ba0 <TMC_2590_MoveSteps>
  8001884:	e01a      	b.n	80018bc <main+0x38c>
          } else if (no_cw_movement == 0 && (int16_t) pid_1.output <= 0) {
- 8001886:	7e7b      	ldrb	r3, [r7, #25]
+ 8001886:	7d7b      	ldrb	r3, [r7, #21]
  8001888:	2b00      	cmp	r3, #0
  800188a:	d117      	bne.n	80018bc <main+0x38c>
  800188c:	4b3f      	ldr	r3, [pc, #252]	@ (800198c <main+0x45c>)
@@ -2968,13 +2969,13 @@ int main(void)
         // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
 
         if (condition == 0) {
- 80018bc:	7afb      	ldrb	r3, [r7, #11]
+ 80018bc:	79fb      	ldrb	r3, [r7, #7]
  80018be:	2b00      	cmp	r3, #0
  80018c0:	d102      	bne.n	80018c8 <main+0x398>
         	condition++;
- 80018c2:	7afb      	ldrb	r3, [r7, #11]
+ 80018c2:	79fb      	ldrb	r3, [r7, #7]
  80018c4:	3301      	adds	r3, #1
- 80018c6:	72fb      	strb	r3, [r7, #11]
+ 80018c6:	71fb      	strb	r3, [r7, #7]
         }
 
 
@@ -3016,19 +3017,19 @@ int main(void)
 //            rad_status.upper_bound_state = (uint8_t) ls_2_state; // TODO change this to the right value
             rad_status.ls_1 = ls_1_state;
  800190c:	4a23      	ldr	r2, [pc, #140]	@ (800199c <main+0x46c>)
- 800190e:	7bfb      	ldrb	r3, [r7, #15]
+ 800190e:	7afb      	ldrb	r3, [r7, #11]
  8001910:	7113      	strb	r3, [r2, #4]
             rad_status.ls_2 = ls_2_state;
  8001912:	4a22      	ldr	r2, [pc, #136]	@ (800199c <main+0x46c>)
- 8001914:	7bbb      	ldrb	r3, [r7, #14]
+ 8001914:	7abb      	ldrb	r3, [r7, #10]
  8001916:	7153      	strb	r3, [r2, #5]
             rad_status.fsr_1 = fsr_1_state;
  8001918:	4a20      	ldr	r2, [pc, #128]	@ (800199c <main+0x46c>)
- 800191a:	7b7b      	ldrb	r3, [r7, #13]
+ 800191a:	7a7b      	ldrb	r3, [r7, #9]
  800191c:	7193      	strb	r3, [r2, #6]
             rad_status.fsr_2 = fsr_2_state;
  800191e:	4a1f      	ldr	r2, [pc, #124]	@ (800199c <main+0x46c>)
- 8001920:	7b3b      	ldrb	r3, [r7, #12]
+ 8001920:	7a3b      	ldrb	r3, [r7, #8]
  8001922:	71d3      	strb	r3, [r2, #7]
             rad_status.kp = pid_1.Init.kp;
  8001924:	4b19      	ldr	r3, [pc, #100]	@ (800198c <main+0x45c>)
