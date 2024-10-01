@@ -232,9 +232,7 @@ int main(void)
         // Initializing the encoder values
         float encoder_value;
         float last_encoder_value;
-        uint8_t RAD_TYPE;
-        uint8_t rotations;
-
+        uint8_t RAD_TYPE = 1; // Just doing this for now for analysis of behaviour
 
         // we set the past encoder value to the one we had before
 
@@ -274,7 +272,7 @@ int main(void)
 
         	// Conditions for if the limit switch has been pressed
         	// Allow for no more CW movement, and only CCW movement
-        	if (ls_1_state == 0) {
+        	if (ls_1_state == GPIO_PIN_RESET) {
         		pid_1.__rollovers = MAX_ROTATIONS;
         		no_ccw_movement = 0;
         		no_cw_movement = 1;
@@ -294,7 +292,7 @@ int main(void)
         } else if (RAD_TYPE == 2) {
         	// Same as the code for rad type being a left motor, however, the rotation values are flipped
 
-        	if (ls_1_state == 0) {
+        	if (ls_1_state == GPIO_PIN_RESET) {
         		pid_1.__rollovers = MIN_ROTATIONS;
         		no_cw_movement = 0;
         		no_ccw_movement = 1;
