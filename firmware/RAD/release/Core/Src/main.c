@@ -252,16 +252,16 @@ int main(void)
         if (condition != 0) {
 
 
-        	if ((rotations != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+        	if ((pid_1.__rollovers != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
         		// If these conditions are true,
 
-        		rotations++;
+        		pid_1.__rollovers++;
 
         			// Now, check if a rollover has been detected from 360 to 0
         			// 360 <= current value <= 330
         			// 0 <= last value <= 30
-        	} else if ((rotations != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
-        		rotations--;
+        	} else if ((pid_1.__rollovers != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+        		pid_1.__rollovers--;
 
         		}
 
@@ -275,13 +275,13 @@ int main(void)
         	// Conditions for if the limit switch has been pressed
         	// Allow for no more CW movement, and only CCW movement
         	if (ls_1_state == 0) {
-        		rotations = MAX_ROTATIONS;
+        		pid_1.__rollovers = MAX_ROTATIONS;
         		no_ccw_movement = 0;
         		no_cw_movement = 1;
 
         	// Ensuring the limit switch cannot move clockwise if it is at the end of range
         	// Allow for no more cw movement, but only ccw movement
-        	} else if (rotations == MIN_ROTATIONS) {
+        	} else if (pid_1.__rollovers == MIN_ROTATIONS) {
         		no_cw_movement = 0;
         		no_ccw_movement = 1;
 
@@ -295,12 +295,12 @@ int main(void)
         	// Same as the code for rad type being a left motor, however, the rotation values are flipped
 
         	if (ls_1_state == 0) {
-        		rotations = MIN_ROTATIONS;
+        		pid_1.__rollovers = MIN_ROTATIONS;
         		no_cw_movement = 0;
         		no_ccw_movement = 1;
 
         	// The other end for a right motor is then when the value is 20
-        	} else if (rotations == MAX_ROTATIONS) {
+        	} else if (pid_1.__rollovers == MAX_ROTATIONS) {
         		no_ccw_movement = 0;
         		no_cw_movement = 1;
 
