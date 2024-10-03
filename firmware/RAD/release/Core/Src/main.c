@@ -259,18 +259,24 @@ int main(void)
         if (condition != 0) {
 
 
-        	if ((pid_1.__rollovers != MAX_ROTATIONS) && (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND)){
+        	if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
         		// If these conditions are true,
 
-        		pid_1.__rollovers++;
+        		if (pid_1.__rollovers != MAX_ROTATIONS) {
+
+        			pid_1.__rollovers++;
+        		}
 
         			// Now, check if a rollover has been detected from 360 to 0
         			// 360 <= current value <= 330
         			// 0 <= last value <= 30
-        	} else if ((pid_1.__rollovers != MIN_ROTATIONS) && (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND)){
-        		pid_1.__rollovers--;
+        	} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
+
+        		if (pid_1.__rollovers != MIN_ROTATIONS) {
+        			pid_1.__rollovers--;
 
         		}
+        	}
 
         }
 
@@ -281,50 +287,50 @@ int main(void)
 
         	// Conditions for if the limit switch has been pressed
         	// Allow for no more CW movement, and only CCW movement
-        	if (ls_1_state == GPIO_PIN_RESET) {
+        	if (ls_1_state == GPIO_PIN_SET || pid_1.__rollovers == MAX_ROTATIONS) {
         		pid_1.__rollovers = MAX_ROTATIONS;
-        		no_ccw_movement = 0;
-        		no_cw_movement = 1;
+        		no_cw_movement = 0;
+        		no_ccw_movement = 1;
 
         	// Ensuring the limit switch cannot move clockwise if it is at the end of range
         	// Allow for no more cw movement, but only ccw movement
         	} else if (pid_1.__rollovers == MIN_ROTATIONS) {
-        		no_cw_movement = 0;
-        		no_ccw_movement = 1;
+        		no_ccw_movement = 0;
+        		no_cw_movement = 1;
 
         	// Ensuring the ccw_movement and cw_movement variables are set back to 0 in all other instances
         	} else {
-        		no_ccw_movement = 0;
         		no_cw_movement = 0;
+        		no_ccw_movement = 0;
 
         	}
         } else if (RAD_TYPE == 2) {
         	// Same as the code for rad type being a left motor, however, the rotation values are flipped
 
-        	if (ls_1_state == GPIO_PIN_RESET) {
+        	if (ls_1_state == GPIO_PIN_SET || ls_1_state == MIN_ROTATIONS) {
         		pid_1.__rollovers = MIN_ROTATIONS;
-        		no_cw_movement = 0;
-        		no_ccw_movement = 1;
-
-        	// The other end for a right motor is then when the value is 20
-        	} else if (pid_1.__rollovers == MAX_ROTATIONS) {
         		no_ccw_movement = 0;
         		no_cw_movement = 1;
 
-        	} else {
-        		no_ccw_movement = 0;
+        	// The other end for a right motor is then when the value is 20
+        	} else if (pid_1.__rollovers == MAX_ROTATIONS) {
         		no_cw_movement = 0;
+        		no_ccw_movement = 1;
+
+        	} else {
+        		no_cw_movement = 0;
+        		no_ccw_movement = 0;
         	}
         }
 
 
         // Moving the wheel
 
-       if (no_ccw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
-        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-         } else if (no_cw_movement == 0 && (int16_t) pid_1.output <= 0) {
-        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-        }
+//       if (no_cw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
+//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+//         } else if (no_ccw_movement == 0 && (int16_t) pid_1.output <= 0) {
+//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+//        }
 
         // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
 
@@ -334,9 +340,9 @@ int main(void)
 
 
         // }
-        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
-            ;
-        PID_Update(&pid_1);
+//        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
+//            ;
+//        PID_Update(&pid_1);
 
         if (HAL_GetTick() % 50 == 0)
         {
