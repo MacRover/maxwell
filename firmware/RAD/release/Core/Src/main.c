@@ -46,10 +46,7 @@
 #define ROTATION_LOW_UPPER_BOUND 30
 #define ROTATION_HIGH_LOWER_BOUND 330
 #define ROTATION_LOW_LOWER_BOUND -5
-#define MIN_ROTATIONS 0
 #define MAX_ROTATIONS 20
-
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -83,9 +80,6 @@ int main(void)
 {
 
     /* USER CODE BEGIN 1 */
-
-
-
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -94,11 +88,12 @@ int main(void)
     HAL_Init();
 
     /* USER CODE BEGIN Init */
-
-    uint8_t no_ccw_movement = 0;
-    uint8_t no_cw_movement = 0;
-    uint8_t condition = 0;
-
+    uint8_t RAD_TYPE = 0; // Indicating left or right RAD, for now
+    float software_stop = 0;
+    float hardware_stop = 0; // not needed, debug only
+    uint8_t ls_initialized = 0;
+    uint8_t cw_enable = 0;
+    uint8_t ccw_enable = 0;
     /* USER CODE END Init */
 
     /* Configure the system clock */
@@ -218,7 +213,7 @@ int main(void)
 
         }
 
-        // limit switches are active LOW
+        // STEP 1: Read limit switches
         GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
         GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
         GPIO_PinState fsr_1_state = HAL_GPIO_ReadPin(FSR_1_GPIO_Port,
@@ -226,123 +221,98 @@ int main(void)
         GPIO_PinState fsr_2_state = HAL_GPIO_ReadPin(FSR_2_GPIO_Port,
                 FSR_2_Pin);
 
-        // todo stop motor from over-spinning but allow us to move away from limit switch if pressed
-        // if (ls_1_state == 1 && ls_2_state == 1)
-        // {
+        // STEP 2: Read angle, and update PID object (rollovers included)
+        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK);
+        PID_Update(&pid_1);
 
-        // Initializing the encoder values
-        float encoder_value;
-        float last_encoder_value;
-        uint8_t RAD_TYPE = 1; // Just doing this for now for analysis of behaviour
+        // RAD ON THE RIGHT OF THE ROVER --> looking topdown, then CCW is limit switch and CW is software stop
+        // RAD ON THE LEFT --> looking topdown, then CW is limit switch and CCW is software stop
+        // RAD_TYPE 0 --> right, RAD_TYPE 1 --> left
 
-        // we set the past encoder value to the one we had before
+        // LOOKING TOP DOWN, ENCODER CCW is decreasing
 
-        if (condition != 0) {
-        	last_encoder_value = encoder_value;
-        }
+        if (!ls_initialized) {
+        	float current_angle = as5048a_1.Angle_double + 360 * pid_1.__rollovers;
 
+        	// STEP 3.1 (Initialization only): allow rotation only towards limit switch for calibration
+        	switch (RAD_TYPE) {
+        	case 0:
+        		cw_enable = 0;
+        		ccw_enable = 1;
+        		break;
+        	case 1:
+        		cw_enable = 1;
+        		ccw_enable = 0;
+        		break;
+        	default:
+        		break;
+        	}
 
-        // Reading the encoder value
-        // 1. Ensure that the angle can be read and does not error
-        // 2. Run the read angle command
-        // 3. Capture the angle_double value in the encoder value local variable
+        	// STEP 3.2 (Initialization only): check if we hit the limit switch, then set software stops
+        	if (ls_1_state == GPIO_PIN_RESET) {
+        		switch (RAD_TYPE) {
+				case 0:
+					hardware_stop = current_angle; // debug only
+					software_stop = current_angle + MAX_ROTATIONS * 360;
+					break;
+				case 1:
+					hardware_stop = current_angle; // debug only
+					software_stop = current_angle - MAX_ROTATIONS * 360;
+					break;
+				default:
+					break;
+				}
+        		ls_initialized = 1;
+        	}
 
-        if (AS5048A_ReadAngle(&as5048a_1) == AS5048A_OK){
-        	encoder_value = as5048a_1.Angle_double;
-        }
+        } else {
+        	cw_enable = 1;
+        	ccw_enable = 1;
+        	float current_angle = as5048a_1.Angle_double + 360 * pid_1.__rollovers;
 
-    	// If a rollover has been detected from 360 to 0, increment the rotations variable
-    	// These are values that will need to be tested depending on read_eeprom
-
-// This will not run on the first move (hence the condition variable)
-
-        if (condition != 0) {
-
-
-        	if (last_encoder_value >= ROTATION_HIGH_LOWER_BOUND && last_encoder_value <= ROTATION_HIGH_UPPER_BOUND && encoder_value >= ROTATION_LOW_LOWER_BOUND && encoder_value <= ROTATION_LOW_UPPER_BOUND){
-        		// If these conditions are true,
-
-        		if (pid_1.__rollovers != MAX_ROTATIONS) {
-
-        			pid_1.__rollovers++;
+        	// STEP 4.1: check if we hit software stop
+        	switch (RAD_TYPE) {
+        	case 0:
+        		if (current_angle >= software_stop) {
+        			cw_enable = 0;
+        			ccw_enable = 1;
         		}
-
-        			// Now, check if a rollover has been detected from 360 to 0
-        			// 360 <= current value <= 330
-        			// 0 <= last value <= 30
-        	} else if (encoder_value >= ROTATION_HIGH_LOWER_BOUND && encoder_value <= ROTATION_HIGH_UPPER_BOUND && last_encoder_value >= ROTATION_LOW_LOWER_BOUND && last_encoder_value <= ROTATION_LOW_UPPER_BOUND){
-
-        		if (pid_1.__rollovers != MIN_ROTATIONS) {
-        			pid_1.__rollovers--;
-
+        		break;
+        	case 1:
+        		if (current_angle <= software_stop) {
+        			cw_enable = 1;
+        			ccw_enable = 0;
         		}
+        		break;
+        	default:
+        		break;
         	}
 
-        }
-
-
-        // For now, 1 is left and 0 is right
-
-        if (RAD_TYPE == 1) {
-
-        	// Conditions for if the limit switch has been pressed
-        	// Allow for no more CW movement, and only CCW movement
-        	if (ls_1_state == GPIO_PIN_SET || pid_1.__rollovers == MAX_ROTATIONS) {
-        		pid_1.__rollovers = MAX_ROTATIONS;
-        		no_cw_movement = 0;
-        		no_ccw_movement = 1;
-
-        	// Ensuring the limit switch cannot move clockwise if it is at the end of range
-        	// Allow for no more cw movement, but only ccw movement
-        	} else if (pid_1.__rollovers == MIN_ROTATIONS) {
-        		no_ccw_movement = 0;
-        		no_cw_movement = 1;
-
-        	// Ensuring the ccw_movement and cw_movement variables are set back to 0 in all other instances
-        	} else {
-        		no_cw_movement = 0;
-        		no_ccw_movement = 0;
-
-        	}
-        } else if (RAD_TYPE == 2) {
-        	// Same as the code for rad type being a left motor, however, the rotation values are flipped
-
-        	if (ls_1_state == GPIO_PIN_SET || ls_1_state == MIN_ROTATIONS) {
-        		pid_1.__rollovers = MIN_ROTATIONS;
-        		no_ccw_movement = 0;
-        		no_cw_movement = 1;
-
-        	// The other end for a right motor is then when the value is 20
-        	} else if (pid_1.__rollovers == MAX_ROTATIONS) {
-        		no_cw_movement = 0;
-        		no_ccw_movement = 1;
-
-        	} else {
-        		no_cw_movement = 0;
-        		no_ccw_movement = 0;
+        	// STEP 4.2: check if we hit hardware stop
+        	if (ls_1_state == GPIO_PIN_RESET) {
+        		switch (RAD_TYPE) {
+				case 0:
+					cw_enable = 1;
+					ccw_enable = 0;
+					break;
+				case 1:
+					cw_enable = 0;
+					ccw_enable = 1;
+					break;
+				default:
+					break;
+				}
         	}
         }
 
+        // STEP 5: Move the wheel accordingly
 
-        // Moving the wheel
-
-//       if (no_cw_movement == 0 && ((int16_t) pid_1.output) >= 0) {
-//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-//         } else if (no_ccw_movement == 0 && (int16_t) pid_1.output <= 0) {
-//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-//        }
-
-        // Incrementing condition, since we now want to be running through all of the checking of the last encoder value
-
-        if (condition == 0) {
-        	condition = 1;
+        if (ccw_enable == 1 && ((int16_t) pid_1.output) >= 0) {
+        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+         } else if (cw_enable == 1 && (int16_t) pid_1.output <= 0) {
+        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
         }
 
-
-        // }
-//        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
-//            ;
-//        PID_Update(&pid_1);
 
         if (HAL_GetTick() % 50 == 0)
         {
