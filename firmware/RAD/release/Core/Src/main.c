@@ -61,6 +61,7 @@
 
 /* USER CODE BEGIN PV */
 RAD_status_TypeDef rad_status;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -240,7 +241,16 @@ int main(void)
         	last_encoder_value = encoder_value;
         }
 
-        encoder_value = AS5048A_ReadAngle(&as5048a_1);
+
+        // Reading the encoder value
+        // 1. Ensure that the angle can be read and does not error
+        // 2. Run the read angle command
+        // 3. Capture the angle_double value in the encoder value local variable
+
+        if (AS5048A_ReadAngle(&as5048a_1) == AS5048A_OK){
+        	__read_angle_command(&as5048a_1);
+        	encoder_value = as5048a_1.Angle_double;
+        }
 
     	// If a rollover has been detected from 360 to 0, increment the rotations variable
     	// These are values that will need to be tested depending on read_eeprom
