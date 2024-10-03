@@ -248,7 +248,6 @@ int main(void)
         // 3. Capture the angle_double value in the encoder value local variable
 
         if (AS5048A_ReadAngle(&as5048a_1) == AS5048A_OK){
-        	__read_angle_command(&as5048a_1);
         	encoder_value = as5048a_1.Angle_double;
         }
 
