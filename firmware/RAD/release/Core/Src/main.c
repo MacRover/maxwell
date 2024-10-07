@@ -54,6 +54,9 @@
 
 /* USER CODE BEGIN PV */
 RAD_status_TypeDef rad_status;
+
+uint8_t ESTOP = 0;
+uint8_t DISABLE = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,6 +116,14 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
+    //READ eeprom and populate local EEPROM struct
+
+    //Health check for EEPROM
+
+    //SEND ERROR CODES OF EACH INIT MODULE
+    MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
+
+
     while (1)
     {
         if (!queue_empty(&can_message_queue_1))
@@ -123,6 +134,20 @@ int main(void)
 
             switch (new_message->command_id)
             {
+            case ESTOP_MESSAGE:
+            {
+                ESTOP = 0xFF;
+                break;
+            }
+            case DISABLE_MESSAGE:
+            {
+                DISABLE = 0xFF;
+                break;
+            }
+            case ENABLE_MESSAGE:
+            {
+                DISABLE = 0x00;
+            }
             case SET_TARGET_ANGLE:
             {
                 float new_setpoint = decode_float_big_endian(new_message->data);
@@ -204,6 +229,17 @@ int main(void)
 
         }
 
+        //CHECK FOR ESTOP
+        if (ESTOP == 0XFF)
+        {
+            break;
+        }
+        //CHECK FOR ENABLE/DISABLE
+        if (DISABLE == 0xFF)
+        {
+            continue;
+        }
+        
         // limit switches are active LOW
         GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
         GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
@@ -221,6 +257,14 @@ int main(void)
             ;
         PID_Update(&pid_1);
 
+
+        //SEND ODOM HEARTBEAT MESSAGE HERE
+    
+        //SEND HEARTBEAT MESSAGE HERE
+            //ERRORS, LS
+        //PARAMS ON REQUEST ONLY
+
+        
         if (HAL_GetTick() % 50 == 0)
         {
             rad_status.current_angle = (float) pid_1.feedback_adj;

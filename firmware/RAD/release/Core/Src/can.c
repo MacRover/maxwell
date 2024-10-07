@@ -80,6 +80,7 @@ void MX_CAN_Init(void)
     rad_can.TxHeader.TransmitGlobalTime = DISABLE;
 
     // filter any messages not addressed to self
+    //ADD ABILITY TO READ ESTOP
     // see 24.7.4 Identifier Filtering in STM32F103C8T6 reference manual for filter configuration
     rad_can.canfilterconfig.FilterBank = 0;
     rad_can.canfilterconfig.FilterIdLow = (rad_can.id << 3) & 0xffff;
@@ -200,7 +201,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         // todo handle error
         return;
     }
-
+    
+    //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
     new_message->data = memcpy(data_ptr, rad_can.RxData,
             sizeof(uint8_t) * new_message->dlc);
 

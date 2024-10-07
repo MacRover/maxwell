@@ -52,6 +52,8 @@ typedef struct
 
 typedef struct
 {
+    //UPDATE THIS TO INCLUDE ERRORS
+    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
     float current_angle;
 //    float current_speed;
 
@@ -68,6 +70,9 @@ typedef struct
 // enum of message IDs
 typedef enum
 {
+    ESTOP_MESSAGE = 0x0,
+    DISABLE_MESSAGE = 0x01,
+    ENABLE_MESSAGE = 0x02,
     // match VESC tool
     SET_TARGET_ANGLE = 0x4,
 //    SET_STEPPER_SPEED = 0x3,
