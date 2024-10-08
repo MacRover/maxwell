@@ -90,7 +90,6 @@ int main(void)
     /* USER CODE BEGIN Init */
     uint8_t RAD_TYPE = 0; // Indicating left or right RAD, for now
     float software_stop = 0;
-    float hardware_stop = 0; // not needed, debug only
     uint8_t ls_initialized = 0;
     uint8_t cw_enable = 0;
     uint8_t ccw_enable = 0;
@@ -232,8 +231,6 @@ int main(void)
         // LOOKING TOP DOWN, ENCODER CCW is decreasing
 
         if (!ls_initialized) {
-        	float current_angle = as5048a_1.Angle_double + 360 * pid_1.__rollovers;
-
         	// STEP 3.1 (Initialization only): allow rotation only towards limit switch for calibration
         	switch (RAD_TYPE) {
         	case 0:
@@ -250,14 +247,13 @@ int main(void)
 
         	// STEP 3.2 (Initialization only): check if we hit the limit switch, then set software stops
         	if (ls_1_state == GPIO_PIN_RESET) {
+        		PID_SetZeroPoint(&pid_1);
         		switch (RAD_TYPE) {
 				case 0:
-					hardware_stop = current_angle; // debug only
-					software_stop = current_angle + MAX_ROTATIONS * 360;
+					software_stop = as5048a_1.Angle_double + (MAX_ROTATIONS * 360);
 					break;
 				case 1:
-					hardware_stop = current_angle; // debug only
-					software_stop = current_angle - MAX_ROTATIONS * 360;
+					software_stop = as5048a_1.Angle_double - (MAX_ROTATIONS * 360);
 					break;
 				default:
 					break;
@@ -268,7 +264,8 @@ int main(void)
         } else {
         	cw_enable = 1;
         	ccw_enable = 1;
-        	float current_angle = as5048a_1.Angle_double + 360 * pid_1.__rollovers;
+
+        	float current_angle = as5048a_1.Angle_double + (360 * pid_1.__rollovers);
 
         	// STEP 4.1: check if we hit software stop
         	switch (RAD_TYPE) {
@@ -307,11 +304,11 @@ int main(void)
 
         // STEP 5: Move the wheel accordingly
 
-        if (ccw_enable == 1 && ((int16_t) pid_1.output) >= 0) {
-        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-         } else if (cw_enable == 1 && (int16_t) pid_1.output <= 0) {
-        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-        }
+//        if (ccw_enable == 1 && ((int16_t) pid_1.output) >= 0) {
+//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+//         } else if (cw_enable == 1 && (int16_t) pid_1.output <= 0) {
+//        	TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+//        }
 
 
         if (HAL_GetTick() % 50 == 0)

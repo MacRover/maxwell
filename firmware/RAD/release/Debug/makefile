@@ -65,8 +65,8 @@ all: main-build
 main-build: RAD.elf secondary-outputs
 
 # Tool invocations
-RAD.elf RAD.map: $(OBJS) $(USER_OBJS) C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\RAD\release\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RAD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\zokur\OneDrive\Documents\MMRT\maxwell\firmware\RAD\release\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RAD.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RAD.elf RAD.map: $(OBJS) $(USER_OBJS) /Users/vaibhavgopal/Projects/maxwell/firmware/RAD/release/STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RAD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"/Users/vaibhavgopal/Projects/maxwell/firmware/RAD/release/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RAD.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
