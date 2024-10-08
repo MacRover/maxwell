@@ -36,6 +36,11 @@ extern CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN Private defines */
 
+#define CAN_MESSAGE_IDENTIFIER_RAD 0x02
+#define CAN_MESSAGE_IDENTIFIER_GLOBAL 0x00
+#define CAN_MESSAGE_IDENTIFIER_MASK 0b1111
+#define CAN_MESSAGE_IDENTIFIER_OFFSET 25
+
 typedef struct
 {
     CAN_HandleTypeDef hcan;
@@ -68,11 +73,17 @@ typedef struct
 } RAD_status_TypeDef;
 
 // enum of message IDs
+
 typedef enum
 {
     ESTOP_MESSAGE = 0x0,
     DISABLE_MESSAGE = 0x01,
-    ENABLE_MESSAGE = 0x02,
+    ENABLE_MESSAGE = 0x02
+} GLOBAL_CAN_CommandId;
+
+typedef enum
+{
+   
     // match VESC tool
     SET_TARGET_ANGLE = 0x4,
 //    SET_STEPPER_SPEED = 0x3,

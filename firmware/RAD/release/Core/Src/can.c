@@ -206,7 +206,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
     new_message->data = memcpy(data_ptr, rad_can.RxData,
             sizeof(uint8_t) * new_message->dlc);
 
-    queue_enqueue(&can_message_queue_1, new_message);
+    if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_GLOBAL)
+    {
+        queue_enqueue(&can_message_queue_global, new_message);
+    }
+    else if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_RAD)
+    {
+        queue_enqueue(&can_message_queue_rad, new_message);
+    }
+
 
 }
 

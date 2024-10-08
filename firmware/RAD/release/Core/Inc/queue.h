@@ -10,7 +10,8 @@
 
 #include <queue_lib.h>
 
-extern Queue_TypeDef can_message_queue_1;
+extern Queue_TypeDef can_message_queue_rad;
+extern Queue_TypeDef can_message_queue_global;
 
 void MX_Queue_1_Init(void);
 

@@ -126,28 +126,47 @@ int main(void)
 
     while (1)
     {
-        if (!queue_empty(&can_message_queue_1))
+        //Check and process global messages first
+        if (!queue_empty(&can_message_queue_global))
         {
             RAD_CAN_Message_TypeDef *new_message =
                     (RAD_CAN_Message_TypeDef*) queue_front(
-                            &can_message_queue_1);
+                            &can_message_queue_global);
 
             switch (new_message->command_id)
             {
-            case ESTOP_MESSAGE:
-            {
-                ESTOP = 0xFF;
-                break;
+                case ESTOP_MESSAGE:
+                {
+                    ESTOP = 0xFF;
+                    break;
+                }
+                case DISABLE_MESSAGE:
+                {
+                    DISABLE = 0xFF;
+                    break;
+                }
+                case ENABLE_MESSAGE:
+                {
+                    DISABLE = 0x00;
+                }
+                default:
+                {
+                    break;
+                }
             }
-            case DISABLE_MESSAGE:
+
+            free(new_message->data);
+            queue_dequeue(&can_message_queue_rad);
+        }
+        //Only check rad queue after. This allows global messages to be addressed immediately
+        else if (!queue_empty(&can_message_queue_rad))
+        {
+            RAD_CAN_Message_TypeDef *new_message =
+                    (RAD_CAN_Message_TypeDef*) queue_front(
+                            &can_message_queue_rad);
+
+            switch (new_message->command_id)
             {
-                DISABLE = 0xFF;
-                break;
-            }
-            case ENABLE_MESSAGE:
-            {
-                DISABLE = 0x00;
-            }
             case SET_TARGET_ANGLE:
             {
                 float new_setpoint = decode_float_big_endian(new_message->data);
@@ -225,12 +244,12 @@ int main(void)
             }
             }
             free(new_message->data);
-            queue_dequeue(&can_message_queue_1);
+            queue_dequeue(&can_message_queue_rad);
 
         }
 
         //CHECK FOR ESTOP
-        if (ESTOP == 0XFF)
+        if (ESTOP == 0xFF)
         {
             break;
         }
