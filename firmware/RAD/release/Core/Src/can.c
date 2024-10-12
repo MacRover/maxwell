@@ -218,6 +218,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 }
 
+void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status)
+{
+    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
+    rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_ODOM_ANGLE);
+}
+
+
+void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status)
+{
+    rad_can_handle->TxData[0] = status.EEPROM_STATUS;
+    rad_can_handle->TxData[1] = status.TMC_STATUS;
+    rad_can_handle->TxData[2] = status.ENCODER_STATUS;
+    rad_can_handle->TxData[3] = status.RAD_STATE;
+    rad_can_handle->TxData[4] = status.ls_1;
+
+
+    rad_can_handle->TxHeader.DLC = 5; //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_HEALTH_STATUS);
+}
+
 // todo status return value?
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status)
@@ -258,7 +279,9 @@ uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
 {
     // return a value that combines both the device ID and the
     // message ID so that the message can be identified
-    return (message_id << 8) | (device_id);
+    return (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+            (CAN_MESSAGE_RESPONSE_RAD << CAN_MESSAGE_RESPONSE_OFFSET) |
+            (message_id << 8) | (device_id);
 }
 
 /* USER CODE END 1 */

@@ -41,6 +41,9 @@ extern CAN_HandleTypeDef hcan;
 #define CAN_MESSAGE_IDENTIFIER_MASK 0b1111
 #define CAN_MESSAGE_IDENTIFIER_OFFSET 25
 
+#define CAN_MESSAGE_RESPONSE_RAD 0x01
+#define CAN_MESSAGE_RESPONSE_OFFSET 18
+
 typedef struct
 {
     CAN_HandleTypeDef hcan;
@@ -62,14 +65,12 @@ typedef struct
     float current_angle;
 //    float current_speed;
 
+    uint8_t EEPROM_STATUS;
+    uint8_t TMC_STATUS;
+    uint8_t ENCODER_STATUS;
+    uint8_t RAD_STATE;
     uint8_t ls_1;
-    uint8_t ls_2;
-    uint8_t fsr_1;
-    uint8_t fsr_2;
 
-    float kp;
-    float ki;
-    float kd;
 } RAD_status_TypeDef;
 
 // enum of message IDs
@@ -100,6 +101,8 @@ typedef enum
     SET_I_VALUE = 0x47,
     SET_D_VALUE = 0x48,
     RESET_BOARD = 0X49,
+    SEND_ODOM_ANGLE = 0xFB,
+    SEND_HEALTH_STATUS = 0xFC
 } RAD_CAN_CommandId;
 
 typedef struct
@@ -116,6 +119,11 @@ extern RAD_CAN_TypeDef rad_can;
 void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
+
+void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
+
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status);
 

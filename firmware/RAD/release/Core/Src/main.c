@@ -38,6 +38,8 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -106,10 +108,19 @@ int main(void)
     MX_SPI2_Init();
     MX_TIM2_Init();
     /* USER CODE BEGIN 2 */
+
+    //apply default params
     MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
+
+    static enum 
+    {
+        RAD_STATE_INIT = 0,
+        RAD_STATE_CALIBRATION,
+        RAD_STATE_ACTIVE
+    } rad_state = RAD_STATE_INIT;
 
     /* USER CODE END 2 */
 
@@ -117,6 +128,7 @@ int main(void)
     /* USER CODE BEGIN WHILE */
 
     //READ eeprom and populate local EEPROM struct
+    // if successful, apply EEPROM params to modules
 
     //Health check for EEPROM
 
@@ -147,6 +159,7 @@ int main(void)
                 }
                 case ENABLE_MESSAGE:
                 {
+                    rad_state = RAD_STATE_ACTIVE;
                     DISABLE = 0x00;
                 }
                 default:
@@ -200,20 +213,6 @@ int main(void)
             }
             case CALIBRATE_PID_POS_OFFSET:
             {
-                // todo determine if ls is active high or low
-//                while (!HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin))
-//                {
-//                    // step back max amount
-//                    while (TMC_2590_MoveSteps(&tmc_2590_1,
-//                            -1.0 * tmc_2590_1.Init.max_steps) != TMC_2590_OK)
-//                        ;
-//                    // blocking wait for steps to complete before reading limit switch state again
-//                    while (tmc_2590_1.State == TMC_2590_STATE_BUSY)
-//                        ;
-//                }
-//                PID_SetZeroPoint(&pid_1);
-//                PID_ChangeSetPoint(&pid_1, 0.0);
-//                PID_Update(&pid_1);
                 break;
             }
             case UPDATE_PID_POS_OFFSET:
@@ -253,28 +252,60 @@ int main(void)
         {
             break;
         }
-        //CHECK FOR ENABLE/DISABLE
         if (DISABLE == 0xFF)
         {
             continue;
         }
-        
-        // limit switches are active LOW
-        GPIO_PinState ls_1_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
-        GPIO_PinState ls_2_state = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
-        GPIO_PinState fsr_1_state = HAL_GPIO_ReadPin(FSR_1_GPIO_Port,
-                FSR_1_Pin);
-        GPIO_PinState fsr_2_state = HAL_GPIO_ReadPin(FSR_2_GPIO_Port,
-                FSR_2_Pin);
 
-        // todo stop motor from over-spinning but allow us to move away from limit switch if pressed
-        // if (ls_1_state == 1 && ls_2_state == 1)
-        // {
-        TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
-        // }
-        while (AS5048A_ReadAngle(&as5048a_1) != AS5048A_OK)
-            ;
-        PID_Update(&pid_1);
+        switch (rad_state)
+        {
+
+            case RAD_STATE_INIT:
+            {
+                //init stuff
+                rad_state = RAD_STATE_ACTIVE;
+                break;
+            }
+            case RAD_STATE_CALIBRATION:
+            {
+                
+                // calibration routine
+                // non blocking!
+
+                break;
+            }
+            case RAD_STATE_ACTIVE:
+            {
+
+                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
+                rad_status.ls_1 = ls_state;
+        
+                int i = 0;
+                while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
+                {
+                    if (i++ > 10){break;} //safety check
+                }
+
+                PID_Update(&pid_1);
+    
+
+                //check if limit switch is pressed
+                //if pressed, set direction limit based on RAD_TYPE
+                    //Zero PID as
+
+
+                //if direction is disabled, don't move steps. else move steps
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+
+                break;
+            }
+            default:
+            {
+                rad_state = RAD_STATE_INIT;
+                break;
+            }
+        }
+        
 
 
         //SEND ODOM HEARTBEAT MESSAGE HERE
@@ -282,6 +313,7 @@ int main(void)
         //SEND HEARTBEAT MESSAGE HERE
             //ERRORS, LS
         //PARAMS ON REQUEST ONLY
+
 
         
         if (HAL_GetTick() % 50 == 0)
