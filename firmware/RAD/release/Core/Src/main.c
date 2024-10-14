@@ -58,7 +58,7 @@
 RAD_status_TypeDef rad_status;
 
 uint8_t ESTOP = 0;
-uint8_t DISABLE = 0;
+uint8_t DISABLED = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,6 +122,8 @@ int main(void)
         RAD_STATE_ACTIVE
     } rad_state = RAD_STATE_INIT;
 
+    RAD_PARAMS rad_params;
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -133,7 +135,7 @@ int main(void)
     //Health check for EEPROM
 
     //SEND ERROR CODES OF EACH INIT MODULE
-    MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
+    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
 
 
     while (1)
@@ -145,22 +147,32 @@ int main(void)
                     (RAD_CAN_Message_TypeDef*) queue_front(
                             &can_message_queue_global);
 
-            switch (new_message->command_id)
+            switch ((int)(new_message->command_id))
             {
                 case ESTOP_MESSAGE:
                 {
-                    ESTOP = 0xFF;
+                    ESTOP = 1;
                     break;
                 }
                 case DISABLE_MESSAGE:
                 {
-                    DISABLE = 0xFF;
+                    DISABLED = 1;
                     break;
                 }
                 case ENABLE_MESSAGE:
                 {
                     rad_state = RAD_STATE_ACTIVE;
-                    DISABLE = 0x00;
+                    DISABLED = 0;
+                    break;
+                }
+                case HEALTH_STATUS_PING:
+                {
+                    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+                    break;
+                }
+                case ASSIGN_DEVICE_ID:
+                {
+                    rad_can.id = new_message->data[7];
                 }
                 default:
                 {
@@ -178,21 +190,30 @@ int main(void)
                     (RAD_CAN_Message_TypeDef*) queue_front(
                             &can_message_queue_rad);
 
-            switch (new_message->command_id)
+            switch ((int)(new_message->command_id))
             {
             case SET_TARGET_ANGLE:
             {
                 float new_setpoint = decode_float_big_endian(new_message->data);
-                // todo get angle multiplier factor (ex for gearbox)
                 PID_ChangeSetPoint(&pid_1, new_setpoint);
+                break;
+            }
+            case GET_ENCODER_VALUE:
+            {
+                rad_status.current_angle = (float) pid_1.feedback_adj;
+                MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
                 break;
             }
             case SET_P_VALUE:
             {
-                pid_1.Init.kp = (double) decode_float_big_endian(
-                        new_message->data);
+                pid_1.Init.kp = (double) decode_float_big_endian(new_message->data);
                 AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
                         (uint8_t*) &pid_1.Init.kp, sizeof(double));
+                break;
+            }
+            case GET_P_VALUE:
+            {
+                MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.kp, GET_P_VALUE);
                 break;
             }
             case SET_I_VALUE:
@@ -203,6 +224,11 @@ int main(void)
                         (uint8_t*) &pid_1.Init.ki, sizeof(double));
                 break;
             }
+            case GET_I_VALUE:
+            {
+                MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.ki, GET_I_VALUE);
+                break;
+            }
             case SET_D_VALUE:
             {
                 pid_1.Init.kd = (double) decode_float_big_endian(
@@ -211,36 +237,75 @@ int main(void)
                         (uint8_t*) &pid_1.Init.kd, sizeof(double));
                 break;
             }
-            case CALIBRATE_PID_POS_OFFSET:
+            case GET_D_VALUE:
             {
+                MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.kd, GET_D_VALUE);
                 break;
             }
-            case UPDATE_PID_POS_OFFSET:
+            case SET_DRVCTRL_REGISTER:
             {
-                PID_SetZeroPoint(&pid_1);
-                PID_ChangeSetPoint(&pid_1, 0.0);
-                PID_Update(&pid_1);
+                rad_params.DRVCTRL = decode_uint32_big_endian(new_message->data);
+                //decdoe
+                TMC_2590_WriteConfRegisters(&tmc_2590_1);
                 break;
-            }
-            case SET_CAN_ID:
-            {
-                uint8_t new_id = new_message->data[0];
-                AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_CAN_ID, &new_id,
-                        sizeof(uint8_t));
+            }  
 
-                // test code
-                uint8_t eeprom_buff[1];
-                AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff,
-                        sizeof(uint8_t));
-
-                // will require a reset command to apply updated CAN ID
-                break;
-            }
-            case RESET_BOARD:
+            case SET_RAD_TYPE:
             {
-                NVIC_SystemReset(); // resets/reboots board
+                rad_params.RAD_TYPE = decode_uint32_big_endian(new_message->data);
                 break;
             }
+            case GET_RAD_TYPE:
+            {
+                MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.RAD_TYPE, GET_RAD_TYPE);
+                break;
+            }
+            case SET_HOME_POSITION:
+            {
+                rad_params.HOME_POSITION = decode_uint32_big_endian(new_message->data);
+                break;
+            }
+            case GET_HOME_POSITION:
+            {
+                MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.HOME_POSITION, GET_HOME_POSITION);
+                break;
+            } 
+            case SET_ODOM_INTERVAL:
+            {
+                rad_params.ODOM_INTERVAL = decode_uint32_big_endian(new_message->data);
+                break;
+            }
+            case GET_ODOM_INTERVAL:
+            {
+                MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.ODOM_INTERVAL, GET_ODOM_INTERVAL);
+                break;
+            }
+            case SAVE_TO_EEPROM:
+            {
+                //WRITE rad_params to EEPROM HERE
+                break;
+            }
+            case SET_HEALTH_INTERVAL:
+            {
+                rad_params.HEALTH_INTERVAL = decode_uint32_big_endian(new_message->data);
+                break;
+            }
+            case GET_HEALTH_INTERVAL:
+            {
+                MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.HEALTH_INTERVAL, GET_HEALTH_INTERVAL);
+                break;
+            }     
+            case START_CALIBRATION_ROUTINE:
+            {
+                rad_state = RAD_STATE_CALIBRATION;
+                break;
+            }     
+            case CANCEL_CALIBRATION_ROUTINE:
+            {
+                rad_state = RAD_STATE_INIT;
+                break;
+            }
+
             }
             free(new_message->data);
             queue_dequeue(&can_message_queue_rad);
@@ -248,11 +313,11 @@ int main(void)
         }
 
         //CHECK FOR ESTOP
-        if (ESTOP == 0xFF)
+        if (ESTOP)
         {
             break;
         }
-        if (DISABLE == 0xFF)
+        if (DISABLED)
         {
             continue;
         }
@@ -316,19 +381,16 @@ int main(void)
 
 
         
-        if (HAL_GetTick() % 50 == 0)
+        if (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0)
         {
             rad_status.current_angle = (float) pid_1.feedback_adj;
-//            rad_status.limit_switch_state = (uint8_t) ls_1_state;
-//            rad_status.upper_bound_state = (uint8_t) ls_2_state; // TODO change this to the right value
-            rad_status.ls_1 = ls_1_state;
-            rad_status.ls_2 = ls_2_state;
-            rad_status.fsr_1 = fsr_1_state;
-            rad_status.fsr_2 = fsr_2_state;
-            rad_status.kp = pid_1.Init.kp;
-            rad_status.ki = pid_1.Init.ki;
-            rad_status.kd = pid_1.Init.kd;
-            MX_CAN_Broadcast_RAD_Status(&rad_can, rad_status);
+
+            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+        }
+        
+        if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
+        {
+            MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 
         /* USER CODE END WHILE */

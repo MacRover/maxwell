@@ -79,28 +79,46 @@ typedef enum
 {
     ESTOP_MESSAGE = 0x0,
     DISABLE_MESSAGE = 0x01,
-    ENABLE_MESSAGE = 0x02
+    ENABLE_MESSAGE = 0x02,
+    HEALTH_STATUS_PING = 0x03,
+    ASSIGN_DEVICE_ID = 0x04
 } GLOBAL_CAN_CommandId;
 
 typedef enum
 {
    
-    // match VESC tool
-    SET_TARGET_ANGLE = 0x4,
-//    SET_STEPPER_SPEED = 0x3,
-//    PACKET_PING = 0x11,
-    UPDATE_PID_POS_OFFSET = 0x37, // sets current position as the 0 offset point
-    // Custom
-//    SET_RAD_FLAGS = 0x40,
-//    SET_WATCHDOG_INTERVAL = 0x41,
-//    SAVE_TO_EEPROM = 0x42,
-    CALIBRATE_PID_POS_OFFSET = 0x43, // moves motor until it hits limit switch and then sets as zero point
-    SET_CAN_ID = 0x44,
-//    SET_OUTPUT_RATIO = 0x45,
-    SET_P_VALUE = 0x46,
-    SET_I_VALUE = 0x47,
-    SET_D_VALUE = 0x48,
-    RESET_BOARD = 0X49,
+    SET_TARGET_ANGLE = 0x01,
+    GET_ENCODER_VALUE = 0x02,
+    SET_STEPPER_SPEED = 0x03,
+    GET_STEPPER_SPEED = 0x04,
+    SET_P_VALUE = 0x05,
+    GET_P_VALUE = 0x06,
+    SET_I_VALUE = 0x07,
+    GET_I_VALUE = 0x08,
+    SET_D_VALUE = 0x09,
+    GET_D_VALUE = 0x10,
+    SET_DRVCTRL_REGISTER = 0x11,
+    GET_DRVCTRL_REGISTER = 0x12,
+    SET_CHOPCONF_REGISTER = 0x13,
+    GET_CHOPCONF_REGISTER = 0x14,
+    SET_SMARTEN_REGISTER = 0x15,
+    GET_SMARTEN_REGISTER = 0x16,
+    SET_SGSCONF_REGISTER = 0x17,
+    GET_SGSCONF_REGISTER = 0x18,
+    SET_DRVCONF_REGISTER = 0x19,
+    GET_DRVCONF_REGISTER = 0x20,
+    SET_RAD_TYPE = 0x21,
+    GET_RAD_TYPE = 0x22,
+    SET_HOME_POSITION = 0x23,
+    GET_HOME_POSITION = 0x24,
+    SET_ODOM_INTERVAL = 0x35,
+    GET_ODOM_INTERVAL = 0x36,
+    SAVE_TO_EEPROM = 0x37,
+    SET_HEALTH_INTERVAL = 0x39,
+    GET_HEALTH_INTERVAL = 0x40,
+    START_CALIBRATION_ROUTINE = 0x41,
+    CANCEL_CALIBRATION_ROUTINE = 0x42,
+    
     SEND_ODOM_ANGLE = 0xFB,
     SEND_HEALTH_STATUS = 0xFC
 } RAD_CAN_CommandId;
@@ -123,6 +141,10 @@ void MX_CAN_Init(void);
 void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
 
 void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
+
+void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value, uint16_t message_id);
+void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id);
+
 
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_status_TypeDef status);

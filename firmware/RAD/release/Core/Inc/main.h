@@ -37,6 +37,33 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+typedef enum {
+	RAD_TYPE_DRIVETRAIN,
+	RAD_TYPE_ARM_BASE,
+	RAD_TYPE_ARM_ELBOW,
+	RAD_TYPE_ARM_WRIST,
+	RAD_TYPE_ARM_GRIPPER,
+} RAD_TYPE;
+
+
+typedef struct __attribute__((packed)){
+	uint8_t RAD_ID;
+	RAD_TYPE RAD_TYPE;
+	uint8_t HOME_POSITION;
+	float P;
+	float I;
+	float D;
+	uint32_t DRVCTRL;
+	uint32_t CHOPCONF;
+	uint32_t SMARTEN;
+	uint32_t SGSCONF;
+	uint32_t DRVCONF;
+	uint16_t STEPPER_SPEED;
+	uint16_t ODOM_INTERVAL;
+  uint16_t HEALTH_INTERVAL;
+} RAD_PARAMS;
+
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -95,6 +122,9 @@ void Error_Handler(void);
 #define DRIVER_DIR_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+#define RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS 20
+#define RAD_TYPE_DRIVETRAIN_GEARING 30
 
 /* USER CODE END Private defines */
 

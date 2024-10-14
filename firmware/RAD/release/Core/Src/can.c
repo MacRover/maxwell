@@ -220,9 +220,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status)
 {
-    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
+    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
     rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_ODOM_ANGLE);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 }
 
 
@@ -237,43 +240,66 @@ void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status
 
     rad_can_handle->TxHeader.DLC = 5; //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_HEALTH_STATUS);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value, uint16_t message_id)
+{
+    encode_float_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(double); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id)
+{
+    encode_uint32_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(uint32_t); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 }
 
 // todo status return value?
-void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
-        RAD_status_TypeDef status)
-{
-    // status message 1
-    rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
-            | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
-            | (status.ls_1 & 0x01);
-    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
-    rad_can_handle->TxHeader.DLC = 5;
-    // status message 1 is ID 9 according to VESC
-    // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
-    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+// void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
+//         RAD_status_TypeDef status)
+// {
+//     // status message 1
+//     rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
+//             | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
+//             | (status.ls_1 & 0x01);
+//     encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
+//     rad_can_handle->TxHeader.DLC = 5;
+//     // status message 1 is ID 9 according to VESC
+//     // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 
-    // status message 2
-    encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
-    encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
-    rad_can_handle->TxHeader.DLC = 8;
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-            14);
-    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+//     // status message 2
+//     encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
+//     encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
+//     rad_can_handle->TxHeader.DLC = 8;
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+//             14);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 
-    // status message 3
-    encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
-//    todo include rad motor speed
-//    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
-    rad_can_handle->TxHeader.DLC = 4;
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-            15);
-    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
-}
+//     // status message 3
+//     encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
+// //    todo include rad motor speed
+// //    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
+//     rad_can_handle->TxHeader.DLC = 4;
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+//             15);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+// }
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
 {
