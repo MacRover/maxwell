@@ -34,6 +34,7 @@ void MX_TMC_2590_1_Init(void)
     tmc_2590_1.Init.SG_TST_Pin = DRIVER_SG_TEST_Pin;
 
     // this data should stored in EEPROM
+    //These are default params if EEPROM cannot be read
     tmc_2590_1.ConfRegisters.CHOPCONF.chm = 0b0;
     tmc_2590_1.ConfRegisters.CHOPCONF.hdec = 0b00;
     tmc_2590_1.ConfRegisters.CHOPCONF.hend = 0b0100;

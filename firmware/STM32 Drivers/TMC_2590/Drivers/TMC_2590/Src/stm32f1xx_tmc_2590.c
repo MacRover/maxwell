@@ -161,14 +161,16 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
     }
 
     // TODO check conf registers
+    
+    TMC_2590_StateTypeDef set_register_error;
 
     // set driver state
     htmc2590->State = TMC_2590_STATE_BUSY;
-    __send_conf_registers(htmc2590);
+    set_register_error = __send_conf_registers(htmc2590);
 
     htmc2590->State = TMC_2590_STATE_READY;
 
-    return TMC_2590_OK;
+    return set_register_error;
 }
 
 TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,

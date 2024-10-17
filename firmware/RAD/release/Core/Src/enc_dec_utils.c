@@ -41,6 +41,14 @@ void encode_uint32_big_endian(uint32_t value, uint8_t *data)
     data[3] = (*fpt_bin_ptr) & 0x000000ff;
 }
 
+void encode_uint16_big_endian(uint16_t value, uint8_t *data)
+{
+    uint16_t *fpt_bin_ptr = (uint16_t*) &value;
+
+    data[0] = ((*fpt_bin_ptr) & 0xff00) >> 8;
+    data[1] = (*fpt_bin_ptr) & 0x00ff;
+}
+
 float decode_float_big_endian(uint8_t *data)
 {
     uint32_t fpt_bin = (data[0] << 24) | (data[1] << 16) | (data[2] << 8)
@@ -52,6 +60,12 @@ uint32_t decode_uint32_big_endian(uint8_t *data)
 {
     uint32_t fpt_bin = (data[0] << 24) | (data[1] << 16) | (data[2] << 8)
             | data[3];
+    return fpt_bin;
+}
+
+uint16_t decode_uint16_big_endian(uint8_t *data)
+{
+    uint32_t fpt_bin = (data[0] << 8) | (data[1]);
     return fpt_bin;
 }
 

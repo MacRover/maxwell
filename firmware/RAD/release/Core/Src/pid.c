@@ -17,17 +17,7 @@ void MX_PID_1_Init(void)
     uint8_t eeprom_buff[8];
     pid_1.Init.feedback = &(as5048a_1.Angle_double);
 
-    // todo pull from eeprom
-//    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_P_VALUE, eeprom_buff,
-//            sizeof(double));
-//    pid_1.Init.kp = *((double*) eeprom_buff);
-//    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_I_VALUE, eeprom_buff,
-//            sizeof(double));
-//    pid_1.Init.ki = *((double*) eeprom_buff);
-//    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_D_VALUE, eeprom_buff,
-//            sizeof(double));
-//    pid_1.Init.kd = *((double*) eeprom_buff);
-
+    //default params. Will be used if EEPROM cannot be read
     pid_1.Init.kp = 0.06;
     pid_1.Init.ki = 0.0001;
     pid_1.Init.kd = 0;
