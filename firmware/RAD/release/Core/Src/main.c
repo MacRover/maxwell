@@ -38,8 +38,6 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -55,10 +53,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-RAD_status_TypeDef rad_status;
+RAD_STATUS_TypeDef rad_status;
+RAD_PARAMS_TypeDef rad_params;
 
 uint8_t ESTOP = 0;
 uint8_t DISABLED = 0;
+
+uint16_t min_angle;
+uint16_t max_angle;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,6 +83,51 @@ int main(void)
 {
 
     /* USER CODE BEGIN 1 */
+
+    //SET DEFAULT VALUES
+    rad_params.RAD_ID = 0x99;
+    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN;
+    rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
+    //Stepper speed
+    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; //every second
+    rad_params.P = 0.06;
+    rad_params.I = 0.0001;
+    rad_params.D = 0;
+    
+    rad_params.CHOPCONF_CHM = 0b0;
+    rad_params.CHOPCONF_HDEC = 0b00;
+    rad_params.CHOPCONF_HEND = 0b0100;
+    rad_params.CHOPCONF_HSTRT = 0b110;
+    rad_params.CHOPCONF_RNDTF = 0b0;
+    rad_params.CHOPCONF_TBL = 0b10;
+    rad_params.CHOPCONF_TOFF = 0b100;
+
+    rad_params.DRVCONF_DIS_S2G = 0b0;
+    rad_params.DRVCONF_EN_PFD = 0b1;
+    rad_params.DRVCONF_EN_S2VS = 0b1;
+    rad_params.DRVCONF_OTSENS = 0b0;
+    rad_params.DRVCONF_RDSEL = 0b11;
+    rad_params.DRVCONF_SDOFF = 0b0;
+    rad_params.DRVCONF_SHRTSENS = 0b1;
+    rad_params.DRVCONF_SLP = 0b11110;
+    rad_params.DRVCONF_TS2G = 0b00;
+    rad_params.DRVCONF_TST = 0b0;
+    rad_params.DRVCONF_VSENSE = 0b0;
+
+    rad_params.DRVCTRL_DEDGE = 0b0;
+    rad_params.DRVCTRL_INTPOL = 0b1;
+    rad_params.DRVCTRL_MRES = 0b1000;
+
+    rad_params.SGCSCONF_CS = 5;
+    rad_params.SGCSCONF_SFILT = 0b0;
+    rad_params.SGCSCONF_SGT = 0b0000010;
+
+    rad_params.SMARTEN_SEDN = 0b00;
+    rad_params.SMARTEN_SEIMIN = 0b0;
+    rad_params.SMARTEN_SEMAX = 0b0000;
+    rad_params.SMARTEN_SEMIN = 0b0000;
+    rad_params.SMARTEN_SEUP = 0b00;
 
     /* USER CODE END 1 */
 
@@ -109,11 +157,34 @@ int main(void)
     MX_TIM2_Init();
     /* USER CODE BEGIN 2 */
 
+    //READ EEPROM HERE. Update rad_params if successful read
+
+
     //apply default params
     MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
+
+
+    switch(rad_params.RAD_TYPE)
+    {
+        case RAD_TYPE_DRIVETRAIN:
+        {
+            min_angle = 0;
+            max_angle = 360 * RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS / RAD_TYPE_DRIVETRAIN_GEARING;
+            break;
+        }
+    }
+
+    
+    //SEND ERROR CODES OF EACH INIT MODULE
+    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+
+    /* USER CODE END 2 */
+
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
 
     static enum 
     {
@@ -121,22 +192,6 @@ int main(void)
         RAD_STATE_CALIBRATION,
         RAD_STATE_ACTIVE
     } rad_state = RAD_STATE_INIT;
-
-    RAD_PARAMS rad_params;
-
-    /* USER CODE END 2 */
-
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
-
-    //READ eeprom and populate local EEPROM struct
-    // if successful, apply EEPROM params to modules
-
-    //Health check for EEPROM
-
-    //SEND ERROR CODES OF EACH INIT MODULE
-    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
-
 
     while (1)
     {
@@ -196,6 +251,15 @@ int main(void)
                 case SET_TARGET_ANGLE:
                 {
                     float new_setpoint = decode_float_big_endian(new_message->data);
+
+                    if (new_setpoint < min_angle)
+                    {
+                        new_setpoint = min_angle;
+                    }
+                    else if (new_setpoint > max_angle)
+                    {
+                        new_setpoint = max_angle;
+                    }
                     PID_ChangeSetPoint(&pid_1, new_setpoint);
                     break;
                 }
@@ -641,6 +705,8 @@ int main(void)
         {
             continue;
         }
+
+        
 
         switch (rad_state)
         {

@@ -10,17 +10,18 @@
 #include "at24c04c.h"
 #include "enc_dec_utils.h"
 
+#include "main.h"
+
 PID_HandleTypeDef pid_1;
 
 void MX_PID_1_Init(void)
 {
-    uint8_t eeprom_buff[8];
     pid_1.Init.feedback = &(as5048a_1.Angle_double);
 
     //default params. Will be used if EEPROM cannot be read
-    pid_1.Init.kp = 0.06;
-    pid_1.Init.ki = 0.0001;
-    pid_1.Init.kd = 0;
+    pid_1.Init.kp = rad_params.P;
+    pid_1.Init.ki = rad_params.I;
+    pid_1.Init.kd = rad_params.D;
 
     pid_1.Init.max_output_abs = 1000.0;
     pid_1.Init.rollover_max = 360.0;

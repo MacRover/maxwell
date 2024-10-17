@@ -71,7 +71,7 @@ typedef struct
     uint8_t RAD_STATE;
     uint8_t ls_1;
 
-} RAD_status_TypeDef;
+} RAD_STATUS_TypeDef;
 
 // enum of message IDs
 
@@ -187,9 +187,9 @@ void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
-void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
+void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status);
 
-void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status);
+void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status);
 
 void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id);
@@ -199,7 +199,7 @@ void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value,
 
 
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
-        RAD_status_TypeDef status);
+        RAD_STATUS_TypeDef status);
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id);
 

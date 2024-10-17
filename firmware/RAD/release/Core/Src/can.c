@@ -218,7 +218,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 }
 
-void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status)
+void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
 {
     encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
     rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //float
@@ -229,7 +229,7 @@ void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_stat
 }
 
 
-void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_status_TypeDef status)
+void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
 {
     rad_can_handle->TxData[0] = status.EEPROM_STATUS;
     rad_can_handle->TxData[1] = status.TMC_STATUS;
@@ -286,7 +286,7 @@ void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value,
 }
 // todo status return value?
 // void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
-//         RAD_status_TypeDef status)
+//         RAD_STATUS_TypeDef status)
 // {
 //     // status message 1
 //     rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)

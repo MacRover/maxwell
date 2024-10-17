@@ -85,8 +85,9 @@ typedef struct __attribute__((packed)){
 	uint8_t DRVCTRL_INTPOL;// : 1;
 	uint8_t DRVCTRL_DEDGE;// : 1;
 	uint8_t DRVCTRL_MRES;// : 4;
-} RAD_PARAMS;
+} RAD_PARAMS_TypeDef;
 
+extern RAD_PARAMS_TypeDef rad_params;
 
 /* USER CODE END ET */
 
