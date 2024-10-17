@@ -42,6 +42,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define RAD_PARAMS_EEPROM_PAGE 0
+#define HARDSTOP_SAFETY_MARGIN 5
 
 /* USER CODE END PD */
 
@@ -61,6 +63,10 @@ uint8_t DISABLED = 0;
 
 uint16_t min_angle;
 uint16_t max_angle;
+
+float software_stop = 0;
+uint8_t cw_enable = 0;
+uint8_t ccw_enable = 0;
 
 /* USER CODE END PV */
 
@@ -86,7 +92,7 @@ int main(void)
 
     //SET DEFAULT VALUES
     rad_params.RAD_ID = 0x99;
-    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN;
+    rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
     //Stepper speed
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
@@ -162,6 +168,16 @@ int main(void)
 
     //apply default params
     MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
+
+    //READ THE EEPROM HERE
+    //assume succeful
+    uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
+    AT24C04C_ReadPages(&at24c04c_1, temp, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
+    memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
+    free(temp);
+
+
+
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
@@ -169,10 +185,17 @@ int main(void)
 
     switch(rad_params.RAD_TYPE)
     {
-        case RAD_TYPE_DRIVETRAIN:
+        case RAD_TYPE_DRIVETRAIN_LEFT:
+        case RAD_TYPE_DRIVETRAIN_RIGHT:
         {
             min_angle = 0;
             max_angle = 360 * RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS / RAD_TYPE_DRIVETRAIN_GEARING;
+            break;
+        }
+        default:
+        {
+            min_angle = 0;
+            max_angle = 90;
             break;
         }
     }
@@ -282,7 +305,8 @@ int main(void)
                 case SET_P_VALUE:
                 {
                     pid_1.Init.kp = (double) decode_float_big_endian(new_message->data);
-                    AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE, (uint8_t*) &pid_1.Init.kp, sizeof(double));
+                    rad_params.P = pid_1.Init.kp;
+                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE, (uint8_t*) &pid_1.Init.kp, sizeof(double));
                     break;
                 }
                 case GET_P_VALUE:
@@ -294,8 +318,7 @@ int main(void)
                 {
                     pid_1.Init.ki = (double) decode_float_big_endian(
                             new_message->data);
-                    AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                            (uint8_t*) &pid_1.Init.ki, sizeof(double));
+                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,(uint8_t*) &pid_1.Init.ki, sizeof(double));
                     break;
                 }
                 case GET_I_VALUE:
@@ -307,8 +330,8 @@ int main(void)
                 {
                     pid_1.Init.kd = (double) decode_float_big_endian(
                             new_message->data);
-                    AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                            (uint8_t*) &pid_1.Init.kd, sizeof(double));
+                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
+                            //(uint8_t*) &pid_1.Init.kd, sizeof(double));
                     break;
                 }
                 case GET_D_VALUE:
@@ -348,8 +371,17 @@ int main(void)
                 }
                 case SAVE_TO_EEPROM:
                 {
-                    
+                    AT24C04C_WritePages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
                     break;
+                }
+                case RELOAD_FROM_EEPROM:
+                {
+                    //uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
+
+                    //TODO - TEST
+                    AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
+                    // memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
+                    // free(temp);
                 }
                 case SET_HEALTH_INTERVAL:
                 {
@@ -719,14 +751,62 @@ int main(void)
             }
             case RAD_STATE_CALIBRATION:
             {
+
+                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
+                rad_status.ls_1 = ls_state;
                 
-                // calibration routine
-                // non blocking!
+                if (ls_state == GPIO_PIN_RESET) 
+                {
+                    switch (rad_params.RAD_TYPE) 
+                    {
+                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS);
+                            software_stop = min_angle;
+                            break;
+                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                            PID_SetZeroPoint(&pid_1);
+                            software_stop = max_angle;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    PID_Update(&pid_1);
+                    PID_Update(&pid_1);
+                    PID_Update(&pid_1);
+
+                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS / RAD_TYPE_DRIVETRAIN_GEARING);
+
+                    PID_Update(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
+        	    }
+                else
+                {
+                    switch (rad_params.RAD_TYPE)
+                    {
+                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        {
+                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 50);
+                            break;
+                        }
+                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        {
+                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, -50);
+                            break;
+                        }
+                    
+                    default:
+                        break;
+                    }
+                }
 
                 break;
             }
             case RAD_STATE_ACTIVE:
             {
+
+                cw_enable = 1;
+        	    ccw_enable = 1;
 
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
@@ -738,15 +818,65 @@ int main(void)
                 }
 
                 PID_Update(&pid_1);
-    
 
-                //check if limit switch is pressed
-                //if pressed, set direction limit based on RAD_TYPE
-                    //Zero PID as
+                if (ls_state == GPIO_PIN_RESET) 
+                {
+                    switch (rad_params.RAD_TYPE) 
+                    {
 
+                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        {
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS);
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
+                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        {
+                            PID_SetZeroPoint(&pid_1);
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+                        default:
+                            break;
+				    }
+                }
+                else 
+                {
+                    switch (rad_params.RAD_TYPE)
+                    {
+                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        {
+                            if (pid_1.feedback_adj <= (software_stop + HARDSTOP_SAFETY_MARGIN)) 
+                            {
+                                cw_enable = 1;
+                                ccw_enable = 0;
+                            }
+                            break;
+                        }
+                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        {
+                            if (pid_1.feedback_adj >= (software_stop - HARDSTOP_SAFETY_MARGIN)) 
+                            {
+                                cw_enable = 0;
+                                ccw_enable = 1;
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
 
-                //if direction is disabled, don't move steps. else move steps
+                if ((pid_1.output > 0) && cw_enable)
+                {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                }
+                else if ((pid_1.output < 0) && ccw_enable)
+                {
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                }
 
                 break;
             }
@@ -757,7 +887,7 @@ int main(void)
             }
         }
                 
-        if ((rad_params.ODOM_INTERVAL != 0) &&(HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
+        if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
             rad_status.current_angle = (float) pid_1.feedback_adj;
 

@@ -173,8 +173,7 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
     return set_register_error;
 }
 
-TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
-        int16_t steps)
+TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int16_t steps)
 {
     // check tmc2590 handle allocation
     if (htmc2590 == NULL)

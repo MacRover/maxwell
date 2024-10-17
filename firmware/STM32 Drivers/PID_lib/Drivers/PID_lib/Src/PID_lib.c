@@ -95,4 +95,10 @@ void PID_SetZeroPoint(PID_HandleTypeDef *PID)
     PID->__rollovers = 0;
 }
 
+void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers)
+{
+    PID->__offset = -1.0 * PID->__feedback_raw_old;
+    PID->__rollovers = max_rollovers;
+}
+
 // todo add return statuses and error codes

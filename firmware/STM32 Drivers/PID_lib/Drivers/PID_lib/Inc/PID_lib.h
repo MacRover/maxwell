@@ -42,5 +42,7 @@ void PID_Update(PID_HandleTypeDef *PID);
 void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point);
 
 void PID_SetZeroPoint(PID_HandleTypeDef *PID);
+void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers);
+
 
 #endif /* PID_LIB_INC_PID_LIB_H_ */
