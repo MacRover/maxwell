@@ -6,67 +6,101 @@
 #include "custom_interfaces/msg/rad_status.hpp"
 
 #define BIG_ENDIANNESS
+#define CAN_MESSAGE_IDENTIFIER_RAD 0x02
+#define CAN_MESSAGE_IDENTIFIER_OFFSET 25
 
 
 using namespace custom_interfaces::msg;
 
 typedef enum RAD_CAN_MSG : uint8_t
 {
-    CAN_SET_TARGET_ANGLE      = 0x04,
-    CAN_SET_STEPPER_SPEED     = 0x03,
-
-    CAN_UPDATE_POS            = 0x37,
-    CAN_CALIBRATE_POS         = 0x43,
-    CAN_SET_P_VALUE           = 0x46,
-    CAN_SET_I_VALUE           = 0x47,
-    CAN_SET_D_VALUE           = 0x48,
-
-    // CAN_SET_DRVCTRL_REGISTER  = 0x11,
-    // CAN_SET_CHOPCONF_REGISTER = 0x13,
-    // CAN_SET_SMARTEN_REGISTER  = 0x15,
-    // CAN_SET_SGSCONF_REGISTER  = 0x17,
-    // CAN_SET_DRVCONF_REGISTER  = 0x19,
-
-    // CAN_SET_RAD_TYPE          = 0x21,
-    // CAN_CAPTURE_HOME_POSITION = 0x23,
-
-    // CAN_SET_ADC1_LOW          = 0x25,
-    // CAN_SET_ADC1_HIGH         = 0x27,
-    // CAN_SET_ADC2_LOW          = 0x29,
-    // CAN_SET_ADC2_HIGH         = 0x31,
-
-    // CAN_SET_RAD_FLAGS         = 0x33,
-    // CAN_SET_WATCHDOG_INTERVAL = 0x35,
-    // CAN_SAVE_TO_EEPROM        = 0x37,
+    CAN_SET_TARGET_ANGLE      = 1,
+    CAN_SET_STEPPER_SPEED     = 3,
+    
+    CAN_SET_P_VALUE           = 5,
+    CAN_SET_I_VALUE           = 7,
+    CAN_SET_D_VALUE           = 9,
+    CAN_SET_RAD_TYPE          = 11,
+    CAN_SET_HOME_POSITION     = 13,
+    CAN_SET_ODOM_INTERVAL     = 15,
+    CAN_SAVE_TO_EEPROM        = 17,
+    CAN_SET_HEALTH_INTERVAL   = 19,
+    CAN_CALIBRATE_POS         = 21,
+    CAN_SET_DRVCONF_TST       = 23,
+    CAN_SET_DRVCONF_SLP       = 25,
+    CAN_SET_DRVCONF_S2G       = 27,
+    CAN_SET_DRVCONF_TS2G      = 29,
+    CAN_SET_DRVCONF_SDOFF     = 31,
+    CAN_SET_DRVCONF_VSENSE    = 33,
+    CAN_SET_DRVCONF_RDSEL     = 35,
+    CAN_SET_DRVCONF_OTSENS    = 37,
+    CAN_SET_DRVCONF_SHRTSENS  = 39,
+    CAN_SET_DRVCONF_EN_PFD    = 41,
+    CAN_SET_DRVCONF_EN_S2VS   = 43,
+    CAN_SET_SGCSCONF_SFILT    = 45,
+    CAN_SET_SGCSCONF_SGT      = 47,
+    CAN_SET_SGCSCONF_CS       = 49,
+    CAN_SET_SMARTEN_SEIMIN    = 51,
+    CAN_SET_SMARTEN_SEDN      = 53,
+    CAN_SET_SMARTEN_SEMAX     = 55,
+    CAN_SET_SMARTEN_SEUP      = 57,
+    CAN_SET_SMARTEN_SEMIN     = 59,
+    CAN_SET_CHOPCONF_TBL      = 61,
+    CAN_SET_CHOPCONF_CHM      = 63,
+    CAN_SET_CHOPCONF_RNDTF    = 65,
+    CAN_SET_CHOPCONF_HDEC     = 67,
+    CAN_SET_CHOPCONF_HEND     = 69,
+    CAN_SET_CHOPCONF_HSTRT    = 71,
+    CAN_SET_CHOPCONF_TOFF     = 73,
+    CAN_SET_DRVCTRL_INTPOL    = 75,
+    CAN_SET_DRVCTRL_DEDGE     = 77,
+    CAN_SET_DRVCTRL_MRES      = 79,
 
 // ------------------------------------
-    // CAN_GET_TARGET_ANGLE      = 0x02,
-    // CAN_GET_STEPPER_SPEED     = 0x04,
+    CAN_GET_TARGET_ANGLE      = 2,
+    CAN_GET_STEPPER_SPEED     = 4,
+    
+    CAN_GET_P_VALUE           = 6,
+    CAN_GET_I_VALUE           = 8,
+    CAN_GET_D_VALUE           = 10,
+    CAN_GET_RAD_TYPE          = 12,
+    CAN_GET_HOME_POSITION     = 14,
+    CAN_GET_ODOM_INTERVAL     = 16,
+    CAN_RELOAD_FROM_EEPROM    = 18,
+    CAN_GET_HEALTH_INTERVAL   = 20,
+    CAN_CANCEL_CALIBRATE_POS  = 22,
+    CAN_GET_DRVCONF_TST       = 24,
+    CAN_GET_DRVCONF_SLP       = 26,
+    CAN_GET_DRVCONF_S2G       = 28,
+    CAN_GET_DRVCONF_TS2G      = 30,
+    CAN_GET_DRVCONF_SDOFF     = 32,
+    CAN_GET_DRVCONF_VSENSE    = 34,
+    CAN_GET_DRVCONF_RDSEL     = 36,
+    CAN_GET_DRVCONF_OTSENS    = 38,
+    CAN_GET_DRVCONF_SHRTSENS  = 40,
+    CAN_GET_DRVCONF_EN_PFD    = 42,
+    CAN_GET_DRVCONF_EN_S2VS   = 44,
+    CAN_GET_SGCSCONF_SFILT    = 46,
+    CAN_GET_SGCSCONF_SGT      = 48,
+    CAN_GET_SGCSCONF_CS       = 50,
+    CAN_GET_SMARTEN_SEIMIN    = 52,
+    CAN_GET_SMARTEN_SEDN      = 54,
+    CAN_GET_SMARTEN_SEMAX     = 56,
+    CAN_GET_SMARTEN_SEUP      = 58,
+    CAN_GET_SMARTEN_SEMIN     = 60,
+    CAN_GET_CHOPCONF_TBL      = 62,
+    CAN_GET_CHOPCONF_CHM      = 64,
+    CAN_GET_CHOPCONF_RNDTF    = 66,
+    CAN_GET_CHOPCONF_HDEC     = 68,
+    CAN_GET_CHOPCONF_HEND     = 70,
+    CAN_GET_CHOPCONF_HSTRT    = 72,
+    CAN_GET_CHOPCONF_TOFF     = 74,
+    CAN_GET_DRVCTRL_INTPOL    = 76,
+    CAN_GET_DRVCTRL_DEDGE     = 78,
+    CAN_GET_DRVCTRL_MRES      = 80,
 
-    // CAN_GET_P_VALUE           = 0x06,
-    // CAN_GET_I_VALUE           = 0x08,
-    // CAN_GET_D_VALUE           = 0x10,
-
-    // CAN_GET_DRVCTRL_REGISTER  = 0x12,
-    // CAN_GET_CHOPCONF_REGISTER = 0x14,
-    // CAN_GET_SMARTEN_REGISTER  = 0x16,
-    // CAN_GET_SGSCONF_REGISTER  = 0x18,
-    // CAN_GET_DRVCONF_REGISTER  = 0x20,
-
-    // CAN_GET_RAD_TYPE          = 0x22,
-    // CAN_RESET_HOME_POSITION   = 0x24,
-
-    // CAN_GET_ADC1_LOW          = 0x26,
-    // CAN_GET_ADC1_HIGH         = 0x28,
-    // CAN_GET_ADC2_LOW          = 0x30,
-    // CAN_GET_ADC2_HIGH         = 0x32,
-
-    // CAN_GET_RAD_FLAGS         = 0x34,
-    // CAN_GET_WATCHDOG_INTERVAL = 0x36
-
-    CAN_STATUS_1                 = 0x09,
-    CAN_STATUS_2                 = 0x0E,
-    CAN_STATUS_3                 = 0x0F
+    CAN_SEND_ODOM_ANGLE       = 251,
+    CAN_SEND_HEALTH_STATUS    = 252
 
 } RAD_CAN_MSG;
 
@@ -125,11 +159,6 @@ public:
      * @brief Calibrates zero position of RAD motor
      */
     void calibrate_zero_pos();
-
-    /**
-     * @brief Set current position of RAD motor to zero
-     */
-    void set_zero_pos();
 
     /**
      * @brief Set target angle of RAD motor (in degrees)
