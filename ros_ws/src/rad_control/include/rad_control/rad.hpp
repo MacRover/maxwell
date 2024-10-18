@@ -124,6 +124,14 @@ typedef enum __rad_gear_ratios : uint16_t
     
 } RAD_GEAR_RATIO;
 
+typedef enum __rad_status : uint8_t
+{
+    OK = 0x00U,
+    ERROR = 0x01U,
+    BUSY = 0x02U,
+    TIMEOUT = 0x03U
+} RAD_STATUS;
+
 
 class RAD
 {
