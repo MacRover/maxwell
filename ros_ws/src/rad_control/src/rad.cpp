@@ -1,9 +1,9 @@
 #include "rad_control/rad.hpp"
 
 
-RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg) { }
+RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0) { }
 
-RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg)
+RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0)
 {
     l_can_msg->address = (uint32_t)can_id;
 }
@@ -42,21 +42,17 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
     uint8_t i = 0;
 
-    switch((can_msg->address) >> 8)
+    switch(((can_msg->address) >> 8) & 0xff)
     {
-        case CAN_STATUS_1:
-            status->ls_state = (bool)(buf[0] & 2);
-            status->upper_bound_state = (bool)(buf[0] & 1);
-            i = i + 1;
+        case CAN_SEND_ODOM_ANGLE:
             status->angle = __buffer_get_float32(buf, &i);
             break;
-        case CAN_STATUS_2:
-            status->p = __buffer_get_float32(buf, &i);
-            status->i = __buffer_get_float32(buf, &i);
-            break;
-        case CAN_STATUS_3:
-            status->d = __buffer_get_float32(buf, &i);
-            status->speed = __buffer_get_float32(buf, &i);
+        case CAN_SEND_HEALTH_STATUS:
+            status->eeprom_status = buf[0];
+            status->tmc_status = buf[1];
+            status->encoder_status = buf[2];
+            status->rad_state = buf[3];
+            status->ls_state = (bool)buf[4];
             break;
         default:
             return 0;
@@ -64,12 +60,32 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
     return 1;
 }
 
+void RAD::set_pid_angle_offset(float offset_angle)
+{
+    this->l_offset = offset_angle;
+}
+
+void RAD::set_mul_factor(float factor)
+{
+    this->l_factor = factor;
+}
+
+void RAD::calibrate_zero_pos()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_CALIBRATE_POS) << 8);
+    _update_can_data(buf, 1);
+}
+
 void RAD::set_target_angle(float angle)
 {
     uint8_t ind = 0;
     uint8_t buf[4];
-    __buffer_append_float32(buf, angle, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_TARGET_ANGLE) << 8);
+    __buffer_append_float32(buf, l_factor*(angle + l_offset), &ind);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_TARGET_ANGLE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -78,7 +94,8 @@ void RAD::set_stepper_speed(float speed)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, speed, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_STEPPER_SPEED) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_STEPPER_SPEED) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -87,7 +104,8 @@ void RAD::set_p_value(float P)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, P, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_P_VALUE) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_P_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -96,7 +114,8 @@ void RAD::set_i_value(float I)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, I, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_I_VALUE) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_I_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -105,7 +124,8 @@ void RAD::set_d_value(float D)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, D, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_D_VALUE) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_D_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 

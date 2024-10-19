@@ -10,8 +10,8 @@ def generate_launch_description():
         parameters=[{
             "topic": "/can/rad_can_in",
             "channel": "can0",
-            "can_ids": [0x900, 0xE00, 0xF00],
-            "can_masks": [0x1FFFFFE0, 0x1FFFFFE0, 0x1FFFFFE0]
+            "can_ids": [0x404FB00, 0x404FC00],
+            "can_masks": [0x1FFFFFF0, 0x1FFFFFF0]
         }]
     )
 
@@ -21,7 +21,7 @@ def generate_launch_description():
         name="rad_status_node",
         parameters=[{
             "can_topic": "/can/rad_can_in",
-            "status_rate": 10
+            "status_rate": 15
         }]
     )
 
