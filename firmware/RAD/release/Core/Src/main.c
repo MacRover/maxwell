@@ -44,6 +44,10 @@
 /* USER CODE BEGIN PD */
 #define RAD_PARAMS_EEPROM_PAGE 0
 #define HARDSTOP_SAFETY_MARGIN 5
+#define AVERAGING_WINDOW_SIZE 10
+
+#define MOTOR_GEARING gearing
+#define MAX_ROTATIONS max_rotations
 
 /* USER CODE END PD */
 
@@ -63,10 +67,15 @@ uint8_t DISABLED = 0;
 
 uint16_t min_angle;
 uint16_t max_angle;
+uint16_t gearing;
+uint16_t max_rotations;
 
 float software_stop = 0;
 uint8_t cw_enable = 0;
 uint8_t ccw_enable = 0;
+
+double* angle_average_buffer;
+uint8_t buffer_head;
 
 /* USER CODE END PV */
 
@@ -188,18 +197,22 @@ int main(void)
         case RAD_TYPE_DRIVETRAIN_LEFT:
         case RAD_TYPE_DRIVETRAIN_RIGHT:
         {
-            min_angle = 0;
-            max_angle = 360 * RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS / RAD_TYPE_DRIVETRAIN_GEARING;
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             break;
         }
         default:
         {
-            min_angle = 0;
-            max_angle = 90;
+            MAX_ROTATIONS = 5; //60 degrees
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             break;
         }
     }
 
+    min_angle = 0;
+    max_angle = 360 * MAX_ROTATIONS / MOTOR_GEARING;
+
+    angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
     //SEND ERROR CODES OF EACH INIT MODULE
     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
@@ -288,7 +301,7 @@ int main(void)
                 }
                 case GET_ENCODER_VALUE:
                 {
-                    rad_status.current_angle = (float) pid_1.feedback_adj;
+                    rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING); //skip the buffer
                     MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
                     break;
                 }
@@ -760,7 +773,7 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_DRIVETRAIN_LEFT:
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS);
+                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
                             software_stop = min_angle;
                             break;
                         case RAD_TYPE_DRIVETRAIN_RIGHT:
@@ -775,7 +788,7 @@ int main(void)
                     PID_Update(&pid_1);
                     PID_Update(&pid_1);
 
-                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS / RAD_TYPE_DRIVETRAIN_GEARING);
+                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * MAX_ROTATIONS / MOTOR_GEARING);
 
                     PID_Update(&pid_1);
                     rad_state = RAD_STATE_ACTIVE;
@@ -826,7 +839,7 @@ int main(void)
 
                         case RAD_TYPE_DRIVETRAIN_LEFT:
                         {
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS);
+                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
@@ -848,7 +861,7 @@ int main(void)
                     {
                         case RAD_TYPE_DRIVETRAIN_LEFT:
                         {
-                            if (pid_1.feedback_adj <= (software_stop + HARDSTOP_SAFETY_MARGIN)) 
+                            if ((pid_1.feedback_adj / MOTOR_GEARING) <= (software_stop + HARDSTOP_SAFETY_MARGIN)) 
                             {
                                 cw_enable = 1;
                                 ccw_enable = 0;
@@ -857,7 +870,7 @@ int main(void)
                         }
                         case RAD_TYPE_DRIVETRAIN_RIGHT:
                         {
-                            if (pid_1.feedback_adj >= (software_stop - HARDSTOP_SAFETY_MARGIN)) 
+                            if ((pid_1.feedback_adj / MOTOR_GEARING) >= (software_stop - HARDSTOP_SAFETY_MARGIN)) 
                             {
                                 cw_enable = 0;
                                 ccw_enable = 1;
@@ -886,10 +899,19 @@ int main(void)
                 break;
             }
         }
+
+        angle_average_buffer[buffer_head++ % AVERAGING_WINDOW_SIZE] = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+
                 
         if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
-            rad_status.current_angle = (float) pid_1.feedback_adj;
+            double sum;
+            for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
+            {
+                sum = sum + angle_average_buffer[i];
+            }
+            rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
+            //rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
 
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }

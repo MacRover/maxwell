@@ -62,7 +62,7 @@ typedef struct
 {
     //UPDATE THIS TO INCLUDE ERRORS
     //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
-    float current_angle;
+    double current_angle;
 //    float current_speed;
 
     uint8_t EEPROM_STATUS;

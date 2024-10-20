@@ -220,8 +220,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
 {
-    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
-    rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //float
+    encode_double_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //double
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_ODOM_ANGLE);
 
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
