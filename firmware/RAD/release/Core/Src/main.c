@@ -77,6 +77,8 @@ uint8_t ccw_enable = 0;
 double* angle_average_buffer;
 uint8_t buffer_head;
 
+int16_t steps_to_move;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -175,16 +177,17 @@ int main(void)
     //READ EEPROM HERE. Update rad_params if successful read
 
 
-    //apply default params
-    MX_AT24C04C_1_Init(); // config eeprom first so other init funcs can use it
-
-    //READ THE EEPROM HERE
-    //assume succeful
+    MX_AT24C04C_1_Init(); 
+    
     uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
-    AT24C04C_ReadPages(&at24c04c_1, temp, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-    memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
-    free(temp);
 
+    rad_status.EEPROM_STATUS = AT24C04C_ReadPages(&at24c04c_1, temp, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
+    
+    if (rad_status.EEPROM_STATUS == AT24C04C_OK)
+    {
+        memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
+    }
+    free(temp);
 
 
     MX_TMC_2590_1_Init();
@@ -201,6 +204,7 @@ int main(void)
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             break;
         }
+        case RAD_TYPE_UNDEFINED:
         default:
         {
             MAX_ROTATIONS = 5; //60 degrees
@@ -225,6 +229,7 @@ int main(void)
     static enum 
     {
         RAD_STATE_INIT = 0,
+        RAD_STATE_PULSE_CONTROL,
         RAD_STATE_CALIBRATION,
         RAD_STATE_ACTIVE
     } rad_state = RAD_STATE_INIT;
@@ -413,6 +418,7 @@ int main(void)
                 }
                 case CANCEL_CALIBRATION:
                 {
+                    //cancel mid calibration OR ignore calibrated params and return to pulse
                     rad_state = RAD_STATE_INIT;
                     break;
                 }
@@ -735,6 +741,14 @@ int main(void)
                     MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCTRL.mres, GET_DRVCTRL_MRES);
                     break;
                 }
+                case PULSE_STEPPER:
+                {
+                    uint32_t pulses = decode_double_big_endian(new_message->data);
+                    steps_to_move = (int16_t) pulses;
+                    break;
+                }
+                default:
+                    break;
             }
             free(new_message->data);
             queue_dequeue(&can_message_queue_rad);
@@ -758,8 +772,48 @@ int main(void)
 
             case RAD_STATE_INIT:
             {
-                //init stuff
-                rad_state = RAD_STATE_ACTIVE;
+                //init stuff here
+                rad_state = RAD_STATE_PULSE_CONTROL;
+                break;
+            }
+            case RAD_STATE_PULSE_CONTROL:
+            {
+                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
+                rad_status.ls_1 = ls_state;
+
+                if (ls_state == GPIO_PIN_RESET) 
+                {
+                    switch (rad_params.RAD_TYPE) 
+                    {
+
+                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        {
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
+                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        {
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+                        default:
+                            break;
+				    }
+                }
+
+                if ((steps_to_move > 0) && cw_enable)
+                {
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
+                }
+                else if ((steps_to_move < 0) && ccw_enable)
+                {
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
+                }
+
+                steps_to_move = 0;
+
                 break;
             }
             case RAD_STATE_CALIBRATION:
@@ -791,6 +845,7 @@ int main(void)
                     PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * MAX_ROTATIONS / MOTOR_GEARING);
 
                     PID_Update(&pid_1);
+
                     rad_state = RAD_STATE_ACTIVE;
         	    }
                 else
@@ -824,12 +879,31 @@ int main(void)
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
         
-                int i = 0;
+                uint8_t i = 0; //safety limit
+                static uint8_t consecutive_encoder_failures = 0;
                 while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
                 {
-                    if (i++ > 10){break;} //safety check
+                    if (i++ > 10)
+                    {
+                        break;
+                    } 
                 }
 
+                if (rad_status.ENCODER_STATUS != AS5048A_OK)
+                {
+                    if (consecutive_encoder_failures++ > 3)
+                    {
+                         //encoder has failed
+                        rad_state = RAD_STATE_PULSE_CONTROL;
+                    }
+                }   
+                else
+                {
+                    //reset failure counter
+                    consecutive_encoder_failures = 0;
+                }
+
+                
                 PID_Update(&pid_1);
 
                 if (ls_state == GPIO_PIN_RESET) 
@@ -918,6 +992,7 @@ int main(void)
         
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
+            rad_status.RAD_STATE = rad_state;
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 

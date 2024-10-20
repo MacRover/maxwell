@@ -82,12 +82,43 @@ void MX_CAN_Init(void)
     // filter any messages not addressed to self
     //ADD ABILITY TO READ ESTOP
     // see 24.7.4 Identifier Filtering in STM32F103C8T6 reference manual for filter configuration
-    rad_can.canfilterconfig.FilterBank = 0;
-    rad_can.canfilterconfig.FilterIdLow = (rad_can.id << 3) & 0xffff;
-    rad_can.canfilterconfig.FilterIdHigh = ((rad_can.id << 3) & 0xffff0000)
+
+    //WANT THESE TWO SPECIFIC IDS
+    //0x31FF
+    //0x00FF
+    rad_can.canfilter_global1.FilterBank = 0;
+    rad_can.canfilter_global1.FilterIdLow = (((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilter_global1.FilterIdHigh = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
-    rad_can.canfilterconfig.FilterMaskIdLow = (0x00ff << 3) & 0xffff;
-    rad_can.canfilterconfig.FilterMaskIdHigh = ((0x00ff << 3) & 0xffff0000)
+    rad_can.canfilter_global1.FilterMaskIdLow = (((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilter_global1.FilterMaskIdHigh = ((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global1.FilterMode = CAN_FILTERMODE_IDLIST;
+    rad_can.canfilter_global1.FilterScale = CAN_FILTERSCALE_32BIT;
+    rad_can.canfilter_global1.FilterFIFOAssignment = CAN_RX_FIFO0;
+    rad_can.canfilter_global1.FilterActivation = ENABLE;
+    rad_can.canfilter_global1.SlaveStartFilterBank = 14;
+
+    //WANT ALL ZEROS EXCEPT COMMAND ID
+    rad_can.canfilter_global2.FilterBank = 1;
+    rad_can.canfilter_global2.FilterIdLow = ((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff;
+    rad_can.canfilter_global2.FilterIdHigh = (((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global2.FilterMaskIdLow = (!(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff;
+    rad_can.canfilter_global2.FilterMaskIdHigh = ((!(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global2.FilterMode = CAN_FILTERMODE_IDMASK;
+    rad_can.canfilter_global2.FilterScale = CAN_FILTERSCALE_32BIT;
+    rad_can.canfilter_global2.FilterFIFOAssignment = CAN_RX_FIFO0;
+    rad_can.canfilter_global2.FilterActivation = ENABLE;
+    rad_can.canfilter_global2.SlaveStartFilterBank = 14;
+
+    rad_can.canfilterconfig.FilterBank = 2;
+    rad_can.canfilterconfig.FilterIdLow = (((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can.id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterIdHigh = ((((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can.id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilterconfig.FilterMaskIdLow = (((CAN_MESSAGE_IDENTIFIER_MASK << CAN_MESSAGE_IDENTIFIER_OFFSET) | (CAN_MESSAGE_DEVICE_ID_MASK << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterMaskIdHigh = ((((CAN_MESSAGE_IDENTIFIER_MASK << CAN_MESSAGE_IDENTIFIER_OFFSET) | (CAN_MESSAGE_DEVICE_ID_MASK << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
     rad_can.canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
     rad_can.canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
@@ -190,7 +221,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         return;
     }
 
-    new_message->command_id = (rad_can.RxHeader.ExtId & 0xff00) >> 8;
+    new_message->command_id = (rad_can.RxHeader.ExtId >> CAN_MESSAGE_COMMAND_OFFSET) & (CAN_MESSAGE_COMMAND_MASK);
 //    memcpy(new_message->data, rad_can.RxData, 8);
     new_message->dlc = rad_can.RxHeader.DLC;
 
@@ -326,7 +357,7 @@ uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
     // message ID so that the message can be identified
     return (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) |
             (CAN_MESSAGE_RESPONSE_RAD << CAN_MESSAGE_RESPONSE_OFFSET) |
-            (message_id << 8) | (device_id);
+            (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET);
 }
 
 /* USER CODE END 1 */

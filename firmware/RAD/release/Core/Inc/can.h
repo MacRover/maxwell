@@ -44,6 +44,12 @@ extern CAN_HandleTypeDef hcan;
 #define CAN_MESSAGE_RESPONSE_RAD 0x01
 #define CAN_MESSAGE_RESPONSE_OFFSET 18
 
+#define CAN_MESSAGE_COMMAND_MASK 0b1111111
+#define CAN_MESSAGE_COMMAND_OFFSET 8
+
+#define CAN_MESSAGE_DEVICE_ID_MASK 0b1111111
+#define CAN_MESSAGE_DEVICE_ID_OFFSET 0
+
 typedef struct
 {
     CAN_HandleTypeDef hcan;
@@ -56,29 +62,16 @@ typedef struct
     CAN_RxHeaderTypeDef RxHeader;
     uint8_t RxData[8];
     CAN_FilterTypeDef canfilterconfig;
+    CAN_FilterTypeDef canfilter_global1;
+    CAN_FilterTypeDef canfilter_global2;
 } RAD_CAN_TypeDef;
-
-typedef struct
-{
-    //UPDATE THIS TO INCLUDE ERRORS
-    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
-    double current_angle;
-//    float current_speed;
-
-    uint8_t EEPROM_STATUS;
-    uint8_t TMC_STATUS;
-    uint8_t ENCODER_STATUS;
-    uint8_t RAD_STATE;
-    uint8_t ls_1;
-
-} RAD_STATUS_TypeDef;
 
 // enum of message IDs
 
 typedef enum
 {
-    ESTOP_MESSAGE = 0x00,
-    DISABLE_MESSAGE = 0x01,
+    ESTOP_MESSAGE = 0x31,
+    DISABLE_MESSAGE = 0x00,
     ENABLE_MESSAGE = 0x02,
     HEALTH_STATUS_PING = 0x03,
     ASSIGN_DEVICE_ID = 0x04
@@ -167,6 +160,7 @@ typedef enum
     GET_DRVCTRL_DEDGE = 0x4E,
     SET_DRVCTRL_MRES = 0x4F,
     GET_DRVCTRL_MRES = 0x50,
+    PULSE_STEPPER = 0x51,
 
     
     SEND_ODOM_ANGLE = 0xFB,

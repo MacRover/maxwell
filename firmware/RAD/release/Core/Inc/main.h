@@ -89,6 +89,21 @@ typedef struct __attribute__((packed)){
 	uint8_t DRVCTRL_MRES;// : 4;
 } RAD_PARAMS_TypeDef;
 
+typedef struct
+{
+    //UPDATE THIS TO INCLUDE ERRORS
+    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
+    double current_angle;
+//    float current_speed;
+
+    uint8_t EEPROM_STATUS;
+    uint8_t TMC_STATUS;
+    uint8_t ENCODER_STATUS;
+    uint8_t RAD_STATE;
+    uint8_t ls_1;
+
+} RAD_STATUS_TypeDef;
+
 extern RAD_PARAMS_TypeDef rad_params;
 
 /* USER CODE END ET */
