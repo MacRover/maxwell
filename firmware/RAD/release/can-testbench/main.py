@@ -10,10 +10,21 @@ def main():
     sleep_time = 3
     with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=500_000) as bus:
 
-        send_can_id(bus=bus, id=0x1A54, value=0xB0)
+        #send_can_id(bus=bus, id=0x1A54, value=0xB0)
 
+        send_p_value(bus=bus, id=0x14, value=0.04)
+        time.sleep(1)
+        get_p_value(bus=bus, id=0x14, value=0.04)
+        step_motor(bus=bus, id=0x14, value=-50)
         for msg in bus:
             print(msg)
+            #get_p_value(bus=bus, id=0x99, value=0.04)
+            
+
+        
+        
+                
+
 
         # send_p_value(bus=bus, id=0x29, value=0.06)
         # send_i_value(bus=bus, id=0x29, value=0.0001)
@@ -100,7 +111,23 @@ def send_reset(bus: can.BusABC, id: int):
 
 def send_p_value(bus: can.BusABC, id: int, value: float):
     new_msg = can.Message(
-        arbitration_id=__can_message_id(id, 0x46),
+        arbitration_id=__can_message_id(id, 0x05),
+        data=struct.pack(">f", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+def get_p_value(bus: can.BusABC, id: int, value: float):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(id, 0x06),
+        data=struct.pack(">f", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+def step_motor(bus: can.BusABC, id: int, value: float):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(id, 0x51),
         data=struct.pack(">f", value),
         is_extended_id=True,
     )
@@ -135,7 +162,8 @@ def send_can_id(bus: can.BusABC, id: int, value: int):
 
 
 def __can_message_id(device_id, command_id):
-    return (command_id << 8) | device_id
+    print((2 << 25) | (command_id << 8) | device_id)
+    return (2 << 25) | (command_id << 8) | device_id
 
 
 if __name__ == "__main__":

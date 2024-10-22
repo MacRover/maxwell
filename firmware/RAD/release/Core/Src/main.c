@@ -269,6 +269,7 @@ int main(void)
                 case ASSIGN_DEVICE_ID:
                 {
                     rad_can.id = new_message->data[7];
+                    rad_params.RAD_ID = rad_can.id;
                 }
                 default:
                 {
@@ -743,7 +744,7 @@ int main(void)
                 }
                 case PULSE_STEPPER:
                 {
-                    uint32_t pulses = decode_double_big_endian(new_message->data);
+                    float pulses = decode_float_big_endian(new_message->data);
                     steps_to_move = (int16_t) pulses;
                     break;
                 }
@@ -780,6 +781,9 @@ int main(void)
             {
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
+
+                cw_enable = 1;
+        	    ccw_enable = 1;
 
                 if (ls_state == GPIO_PIN_RESET) 
                 {
