@@ -181,13 +181,19 @@ int main(void)
     
     uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
 
+    //temporary so we don't cook stepper settings from reading garbage data from eeprom
+    RAD_PARAMS_TypeDef backup;
+
     rad_status.EEPROM_STATUS = AT24C04C_ReadPages(&at24c04c_1, temp, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
     
     if (rad_status.EEPROM_STATUS == AT24C04C_OK)
     {
-        memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
+        memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
     }
     free(temp);
+
+    rad_params.ODOM_INTERVAL = backup.ODOM_INTERVAL;
+    rad_params.HEALTH_INTERVAL = backup.HEALTH_INTERVAL;
 
 
     MX_TMC_2590_1_Init();
@@ -270,6 +276,7 @@ int main(void)
                 {
                     rad_can.id = new_message->data[7];
                     rad_params.RAD_ID = rad_can.id;
+                    break;
                 }
                 default:
                 {
@@ -278,7 +285,7 @@ int main(void)
             }
 
             free(new_message->data);
-            queue_dequeue(&can_message_queue_rad);
+            queue_dequeue(&can_message_queue_global);
         }
         //Only check rad queue after. This allows global messages to be addressed immediately
         else if (!queue_empty(&can_message_queue_rad))
@@ -395,12 +402,18 @@ int main(void)
                 }
                 case RELOAD_FROM_EEPROM:
                 {
-                    //uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
+                	//uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
 
                     //TODO - TEST
                     AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-                    // memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
-                    // free(temp);
+                    
+                    //RAD_PARAMS_TypeDef* reconstructed = (RAD_PARAMS_TypeDef*)temp;
+
+
+                    //memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
+
+
+                    free(temp);
                 }
                 case SET_HEALTH_INTERVAL:
                 {
@@ -846,7 +859,7 @@ int main(void)
                     PID_Update(&pid_1);
                     PID_Update(&pid_1);
 
-                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * MAX_ROTATIONS / MOTOR_GEARING);
+                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * MAX_ROTATIONS / MOTOR_GEARING); //change to home position * 360?
 
                     PID_Update(&pid_1);
 

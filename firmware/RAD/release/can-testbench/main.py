@@ -11,85 +11,57 @@ def main():
     with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=500_000) as bus:
 
         #send_can_id(bus=bus, id=0x1A54, value=0xB0)
-
-        send_p_value(bus=bus, id=0x14, value=0.04)
-        time.sleep(1)
-        get_p_value(bus=bus, id=0x14, value=0.04)
-        step_motor(bus=bus, id=0x14, value=-50)
-        for msg in bus:
-            print(msg)
-            #get_p_value(bus=bus, id=0x99, value=0.04)
-            
-
-        
-        
+        while True:
+            try: 
+                for msg in bus:
+                    print(msg)
+            except KeyboardInterrupt:
+                i = input('command? ')
                 
+                if (i == 'exit'):
+                    exit()
+                elif(i == "set pid"):
+                    send_p_value(bus=bus, id=0x14, value=0.04)
+                elif(i == "get pid"):
+                    get_p_value(bus=bus, id=0x14, value=0.04)
+                elif(i == "step motor"):
+                    j = input("num pulses? ")
+                    step_motor(bus=bus, id=0x14, value=int(j))
+                elif(i == "set odom"):
+                    j = input("odom value? ")
+                    send_uint32_value(bus=bus, can_id=0x0F, device_id=0x14, value = int(j))
+                elif(i == "set health"):
+                    j = input("health value? ")
+                    send_uint32_value(bus=bus, can_id=0x13, device_id=0x14, value = int(j))
+                elif(i == "get health" or i == "get odom"):
+                    send_uint32_value(bus=bus, can_id=0x10, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x14, device_id=0x14, value = 0)
+                elif(i == "eeprom save"):
+                    send_uint32_value(bus=bus, can_id=0x11, device_id=0x14, value = 0)
+                elif(i == "eeprom reload"):
+                    send_uint32_value(bus=bus, can_id=0x12, device_id=0x14, value = 0)
+                elif(i == "start calibration"):
+                    send_uint32_value(bus=bus, can_id=0x15, device_id=0x14, value = 0)
+                elif(i == "cancel calibration"):
+                    send_uint32_value(bus=bus, can_id=0x16, device_id=0x14, value = 0)
+                elif(i == "set type"):
+                    j = input("type? ")
+                    send_uint32_value(bus=bus, can_id=0x0B, device_id=0x14, value = int(j))
+                elif(i == "get type"):
+                    send_uint32_value(bus=bus, can_id=0x0C, device_id=0x14, value = 0)
+                elif( i == "estop"):
+                    send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
+                elif( i == "disable"):
+                    send_global_message(bus=bus, can_id=0x00, global_id_arg=0xFF)
+                elif( i == "enable"):
+                    send_global_message(bus=bus, can_id=0x02, global_id_arg=0)
+                elif( i == "ping health"):
+                    send_global_message(bus=bus, can_id=0x03, global_id_arg=0)
 
+                
+       
 
-        # send_p_value(bus=bus, id=0x29, value=0.06)
-        # send_i_value(bus=bus, id=0x29, value=0.0001)
-        # send_d_value(bus=bus, id=0x29, value=0.0)
         
-        # print("setpoint 1")
-        # send_setpoint(bus=bus, id=0x29, value=145.8)
-        # time.sleep(sleep_time)
-        # print("setpoint 2")
-        # send_setpoint(bus=bus, id=0x29, value=0.0)
-        # time.sleep(sleep_time)
-        # print("setpoint 3")
-        # send_setpoint(bus=bus, id=0x29, value=970.2)
-        # time.sleep(sleep_time)
-
-    #     # while True:
-    #     #     # new_msg = can.Message(
-    #     #     #     arbitration_id=0x0401,
-    #     #     #     data=[0x43, 0x01, 0x99, 0x9A],
-    #     #     #     is_extended_id=True,
-    #     #     # )
-    #     #     new_msg = can.Message(
-    #     #         arbitration_id=0x0001,
-    #     #         data=[0, 25, 0, 1, 3, 1, 4, 1],
-    #     #         is_extended_id=True,
-    #     #     )
-    #     #     bus.send(msg=new_msg)
-    #     #     time.sleep(0.2)
-
-    #     for msg in bus:
-    #         if ((msg.arbitration_id & 0xFF00) >> 8) == 9:
-    #             angle_float = struct.unpack(">f", msg.data[1:5])[0]
-    #             # ls_state = msg.data[0]
-    #             # ub_state = msg.data[0]
-    #             print(f"{angle_float=}")
-    #             if angle_float > 1849 and angle_float < 1851:
-    #                 # dummy = 256.0
-    #                 # data_dummy = struct.pack(">f", dummy)
-
-    #                 # # 0x4380_0000
-
-    #                 # new_msg = can.Message(
-    #                 #     arbitration_id=0x0100,
-    #                 #     data=[0x43, 0x80, 0x00, 0x00],
-    #                 #     is_extended_id=True,
-    #                 # )
-    #                 # new_msg = can.Message(
-    #                 #     arbitration_id=0x0001,
-    #                 #     data=[0, 25, 0, 1, 3, 1, 4, 1],
-    #                 #     is_extended_id=True,
-    #                 # )
-    #                 new_msg = can.Message(
-    #                     arbitration_id=0x0401,
-    #                     data=[0x43, 0x01, 0x99, 0x9A],
-    #                     is_extended_id=True,
-    #                 )
-    #                 bus.send(msg=new_msg)
-    #         elif ((msg.arbitration_id & 0xFF00) >> 8) == 14:
-    #             kp = struct.unpack(">f", msg.data[0:4])[0]
-    #             ki = struct.unpack(">f", msg.data[4:8])[0]
-    #             print(f"{kp=} {ki=}")
-    #         elif ((msg.arbitration_id & 0xFF00) >> 8) == 15:
-    #             kd = struct.unpack(">f", msg.data[0:4])[0]
-    #             print(f"{kd=}")
-
 
 def send_setpoint(bus: can.BusABC, id: int, value: float):
     new_msg = can.Message(
@@ -100,9 +72,9 @@ def send_setpoint(bus: can.BusABC, id: int, value: float):
     bus.send(msg=new_msg)
 
 
-def send_reset(bus: can.BusABC, id: int):
+def send_global_message(bus: can.BusABC, can_id: int, global_id_arg: int):
     new_msg = can.Message(
-        arbitration_id=__can_message_id(id, 0x49),
+        arbitration_id=(((can_id & 0xFF) << 8) | (global_id_arg & 0xFF)),
         data=[],
         is_extended_id=True,
     )
@@ -147,6 +119,22 @@ def send_d_value(bus: can.BusABC, id: int, value: float):
     new_msg = can.Message(
         arbitration_id=__can_message_id(id, 0x48),
         data=struct.pack(">f", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+def send_float_value(bus: can.BusABC, can_id: int, device_id: int, value: float):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack(">f", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+def send_uint32_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack(">I", value),
         is_extended_id=True,
     )
     bus.send(msg=new_msg)

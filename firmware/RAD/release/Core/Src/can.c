@@ -99,19 +99,23 @@ void MX_CAN_Init(void)
     rad_can.canfilter_global1.FilterActivation = ENABLE;
     rad_can.canfilter_global1.SlaveStartFilterBank = 14;
 
+    HAL_CAN_ConfigFilter(&(rad_can.hcan), &(rad_can.canfilter_global1));
+
     //WANT ALL ZEROS EXCEPT COMMAND ID
     rad_can.canfilter_global2.FilterBank = 1;
     rad_can.canfilter_global2.FilterIdLow = ((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff;
     rad_can.canfilter_global2.FilterIdHigh = (((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff0000)
             >> 16;
-    rad_can.canfilter_global2.FilterMaskIdLow = (!(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff;
-    rad_can.canfilter_global2.FilterMaskIdHigh = ((!(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff0000)
+    rad_can.canfilter_global2.FilterMaskIdLow = (~(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff;
+    rad_can.canfilter_global2.FilterMaskIdHigh = ((~(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff0000)
             >> 16;
     rad_can.canfilter_global2.FilterMode = CAN_FILTERMODE_IDMASK;
     rad_can.canfilter_global2.FilterScale = CAN_FILTERSCALE_32BIT;
     rad_can.canfilter_global2.FilterFIFOAssignment = CAN_RX_FIFO0;
     rad_can.canfilter_global2.FilterActivation = ENABLE;
     rad_can.canfilter_global2.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(&(rad_can.hcan), &(rad_can.canfilter_global2));
 
     rad_can.canfilterconfig.FilterBank = 2;
     rad_can.canfilterconfig.FilterIdLow = (((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can.id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;

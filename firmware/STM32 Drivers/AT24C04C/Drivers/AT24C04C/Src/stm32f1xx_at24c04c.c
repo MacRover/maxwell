@@ -193,7 +193,7 @@ AT24C04C_StatusTypeDef AT24C04C_WritePages(AT24C04C_HandleTypeDef *hat24c04c, ui
 		memcpy((void *) &data[1], (void *) &pData[pageCounter * (hat24c04c->Init.page_size - 1)], currentSize - 1);
 
 
-        status = __mem_write(hat24c04c, address, data, currentSize);
+        status = __mem_write(hat24c04c, address, &data[1], currentSize);
 		// Write data to EEPROM
 		// while (HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) i2c_address,
 		// 		&data[0], currentSize, 10000) != HAL_OK)
