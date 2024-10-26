@@ -37,6 +37,18 @@ void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind)
     buf[(*ind)++] = (*n_ptr & 0x000000ff);
 }
 
+void __buffer_append_uint32(uint8_t* buf, uint32_t n, uint8_t* ind)
+{
+    uint32_t* n_ptr = (uint32_t*) &n;
+#ifdef BIG_ENDIANNESS
+    *n_ptr = __bswap_32(*n_ptr);
+#endif
+    buf[(*ind)++] = (*n_ptr & 0xff000000) >> 24;
+    buf[(*ind)++] = (*n_ptr & 0x00ff0000) >> 16;
+    buf[(*ind)++] = (*n_ptr & 0x0000ff00) >> 8;
+    buf[(*ind)++] = (*n_ptr & 0x000000ff);
+}
+
 uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
 {
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);

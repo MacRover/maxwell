@@ -4,7 +4,7 @@
 #include <string>
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
-#include "custom_interfaces/msg/ca_nraw.hpp"
+#include "custom_interfaces/msg/can_raw.hpp"
 #include "custom_interfaces/msg/rad_status.hpp"
 
 #include "rad.hpp"
