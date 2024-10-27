@@ -106,6 +106,10 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
 void RAD::set_can_id(uint8_t can_id)
 {
     l_can_msg->address = (l_can_msg->address & ~(0xff)) | can_id;
+    uint8_t buf[8];
+    buf[7] = can_id;
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_ASSIGN_DEVICE_ID) << 8);
+    _update_can_data(buf, 8);
 }
 
 void RAD::set_pid_angle_offset(double offset_angle)

@@ -19,13 +19,14 @@ std::map<std::string, uint8_t> get_cmd = {
   {"GET_TARGET_ANGLE", CAN_GET_TARGET_ANGLE},
   {"GET_P_VALUE", CAN_GET_P_VALUE},
   {"GET_I_VALUE", CAN_GET_I_VALUE},
-  {"GET_D_VALUE", CAN_GET_D_VALUE}
+  {"GET_D_VALUE", CAN_GET_D_VALUE},
 };
 std::map<std::string, uint8_t> set_cmd = {
   {"SET_TARGET_ANGLE", CAN_SET_TARGET_ANGLE},
   {"SET_P_VALUE", CAN_SET_P_VALUE},
   {"SET_I_VALUE", CAN_SET_I_VALUE},
-  {"SET_D_VALUE", CAN_SET_D_VALUE}
+  {"SET_D_VALUE", CAN_SET_D_VALUE},
+  {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID}
 };
 
 
@@ -100,6 +101,9 @@ int main(int argc, char ** argv)
 
       switch(command_id)
       {
+        case CAN_ASSIGN_DEVICE_ID:
+          rad.set_can_id((uint8_t)std::stoi(val_in));
+          break;
         case CAN_SET_TARGET_ANGLE:
           rad.set_target_angle(std::stod(val_in));
           break;

@@ -104,6 +104,15 @@ typedef enum RAD_CAN_MSG : uint8_t
 
 } RAD_CAN_MSG;
 
+typedef enum __global_can_msg : uint8_t
+{
+    CAN_ESTOP_MESSAGE = 0x31,
+    CAN_DISABLE_MESSAGE = 0x00,
+    CAN_ENABLE_MESSAGE = 0x02,
+    CAN_HEALTH_STATUS_PING = 0x03,
+    CAN_ASSIGN_DEVICE_ID = 0x04
+} GLOBAL_CAN_MSG;
+
 
 typedef enum __rad_can_id : uint8_t
 {
