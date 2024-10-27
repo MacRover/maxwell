@@ -3,7 +3,7 @@
 
 RAD::RAD(CANraw* can_msg) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0) { }
 
-RAD::RAD(CANraw* can_msg, RAD_ID can_id) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0)
+RAD::RAD(CANraw* can_msg, uint8_t can_id) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0)
 {
     l_can_msg->address = (uint32_t)can_id;
 }
@@ -103,6 +103,11 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
     return 1;
 }
 
+void RAD::set_can_id(uint8_t can_id)
+{
+    l_can_msg->address = (l_can_msg->address & ~(0xff)) | can_id;
+}
+
 void RAD::set_pid_angle_offset(double offset_angle)
 {
     this->l_offset = offset_angle;
@@ -171,6 +176,43 @@ void RAD::set_d_value(float D)
                          (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_D_VALUE) << 8);
     _update_can_data(buf, 4);
 }
+
+void RAD::get_target_angle()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_GET_TARGET_ANGLE) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_p_value()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_GET_P_VALUE) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_i_value()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_GET_I_VALUE) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_d_value()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         (l_can_msg->address & 0xff) | ((uint32_t)(CAN_GET_D_VALUE) << 8);
+    _update_can_data(buf, 1);
+}
+
 
 void RAD::_update_can_data(uint8_t* buf, size_t size)
 {

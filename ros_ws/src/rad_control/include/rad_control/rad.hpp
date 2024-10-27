@@ -145,7 +145,10 @@ public:
      * 
      */
     RAD(CANraw* can_msg);
-    RAD(CANraw* can_msg, RAD_ID can_id);
+    RAD(CANraw* can_msg, uint8_t can_id);
+
+
+    void set_can_id(uint8_t can_id);
 
     /**
      * @brief Set angle offset from zero position (in degrees)
@@ -202,6 +205,15 @@ public:
      * @param D kD value
      */
     void set_d_value(float D);
+
+    void get_target_angle();
+
+    void get_p_value();
+
+    void get_i_value();
+
+    void get_d_value();
+
 
 private:
     void _update_can_data(uint8_t* buf, size_t size);
