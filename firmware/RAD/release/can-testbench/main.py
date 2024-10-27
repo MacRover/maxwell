@@ -5,6 +5,8 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
+rad_id = 0x99
+
 
 def main():
     sleep_time = 3
@@ -20,35 +22,51 @@ def main():
                 
                 if (i == 'exit'):
                     exit()
-                elif(i == "set pid"):
-                    send_p_value(bus=bus, id=0x14, value=0.04)
-                elif(i == "get pid"):
-                    get_p_value(bus=bus, id=0x14, value=0.04)
+                elif(i == "set p"):
+                    j = input("p value? ")
+                    send_float_value(bus=bus, can_id = 0x05, device_id = rad_id, value=float(j))
+                elif(i == "get p"):
+                    send_float_value(bus=bus, can_id = 0x06, device_id = rad_id, value=0)
+                elif(i == "set i"):
+                    j = input("i value? ")
+                    send_float_value(bus=bus, can_id = 0x07, device_id = rad_id, value=float(j))
+                elif(i == "get i"):
+                    send_float_value(bus=bus, can_id = 0x08, device_id = rad_id, value=0)
+                elif(i == "set d"):
+                    j = input("d value? ")
+                    send_float_value(bus=bus, can_id = 0x09, device_id = rad_id, value=float(j))
+                elif(i == "get d"):
+                    send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
+                elif (i == "set target"):
+                    j = input("target? ")
+                    send_float_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
                 elif(i == "step motor"):
                     j = input("num pulses? ")
-                    step_motor(bus=bus, id=0x14, value=int(j))
+                    step_motor(bus=bus, id=rad_id, value=int(j))
                 elif(i == "set odom"):
                     j = input("odom value? ")
-                    send_uint32_value(bus=bus, can_id=0x0F, device_id=0x14, value = int(j))
+                    send_uint32_value(bus=bus, can_id=0x0F, device_id=rad_id, value = int(j))
                 elif(i == "set health"):
                     j = input("health value? ")
-                    send_uint32_value(bus=bus, can_id=0x13, device_id=0x14, value = int(j))
+                    send_uint32_value(bus=bus, can_id=0x13, device_id=rad_id, value = int(j))
                 elif(i == "get health" or i == "get odom"):
-                    send_uint32_value(bus=bus, can_id=0x10, device_id=0x14, value = 0)
-                    send_uint32_value(bus=bus, can_id=0x14, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x10, device_id=rad_id, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x14, device_id=rad_id, value = 0)
                 elif(i == "eeprom save"):
-                    send_uint32_value(bus=bus, can_id=0x11, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x11, device_id=rad_id, value = 0)
                 elif(i == "eeprom reload"):
-                    send_uint32_value(bus=bus, can_id=0x12, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x12, device_id=rad_id, value = 0)
                 elif(i == "start calibration"):
-                    send_uint32_value(bus=bus, can_id=0x15, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x15, device_id=rad_id, value = 0)
                 elif(i == "cancel calibration"):
-                    send_uint32_value(bus=bus, can_id=0x16, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x16, device_id=rad_id, value = 0)
                 elif(i == "set type"):
                     j = input("type? ")
-                    send_uint32_value(bus=bus, can_id=0x0B, device_id=0x14, value = int(j))
+                    send_uint32_value(bus=bus, can_id=0x0B, device_id=rad_id, value = int(j))
                 elif(i == "get type"):
-                    send_uint32_value(bus=bus, can_id=0x0C, device_id=0x14, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x0C, device_id=rad_id, value = 0)
+                elif (i == "reboot"):
+                    send_uint32_value(bus=bus, can_id=0x51, device_id=rad_id, value = 0)
                 elif( i == "estop"):
                     send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
                 elif( i == "disable"):
@@ -57,10 +75,12 @@ def main():
                     send_global_message(bus=bus, can_id=0x02, global_id_arg=0)
                 elif( i == "ping health"):
                     send_global_message(bus=bus, can_id=0x03, global_id_arg=0)
+                elif (i == "assign rad id"):
+                    j = input("rad id? ")
+                    send_global_message(bus=bus, can_id=0x04, global_id_arg=int(j))
 
                 
        
-
         
 
 def send_setpoint(bus: can.BusABC, id: int, value: float):
