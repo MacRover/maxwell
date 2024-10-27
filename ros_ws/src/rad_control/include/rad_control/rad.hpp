@@ -152,14 +152,14 @@ public:
      * 
      * @param offset_angle angle offset
      */
-    void set_pid_angle_offset(float offset_angle);
+    void set_pid_angle_offset(double offset_angle);
 
     /**
      * @brief Set multiplication factor of angle setting
      * 
      * @param factor multiplication factor
      */
-    void set_mul_factor(float factor);
+    void set_mul_factor(double factor);
 
 
     // CAN COMMANDS
@@ -173,7 +173,7 @@ public:
      * 
      * @param angle target angle/setpoint
      */
-    void set_target_angle(float angle);
+    void set_target_angle(double angle);
 
     /**
      * @brief Set stepper speed of RAD motor (STEP/DIR)
@@ -208,11 +208,13 @@ private:
 
     CANraw* l_can_msg;
 
-    float l_offset, l_factor;
+    double l_offset, l_factor;
 };
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind);
+double __buffer_get_float64(uint8_t* buf, uint8_t* ind);
 void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind);
+void __buffer_append_float64(uint8_t* buf, double n, uint8_t* ind);
 
 /**
  * Decode incoming CAN status frame and update RAD status message

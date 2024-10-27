@@ -8,7 +8,7 @@ def generate_launch_description():
         executable="reader.py",
         name="rad1_reader",
         parameters=[{
-            "topic": "/can/rad_can_in",
+            "topic": "/can/status/rad_can_in",
             "channel": "can0",
             "can_ids": [0x404FB00, 0x404FC00],
             "can_masks": [0x1FFFFFF0, 0x1FFFFFF0]
@@ -20,7 +20,7 @@ def generate_launch_description():
         executable="rad_status",
         name="rad_status_node",
         parameters=[{
-            "can_topic": "/can/rad_can_in",
+            "can_topic": "/can/status/rad_can_in",
             "status_rate": 15
         }]
     )

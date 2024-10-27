@@ -1,7 +1,7 @@
 std_msgs/Header header
 
 # Current angle reading (deg)
-float32 angle
+float64 angle
 
 # EEPROM Status
 uint8 eeprom_status

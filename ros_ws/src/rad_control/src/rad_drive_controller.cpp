@@ -46,10 +46,10 @@ void RAD_Drive_Controller::_publish_to_can()
 
 void RAD_Drive_Controller::_callback(const SwerveModulesList& msg)
 {
-  rad_fl_drive.set_target_angle((float)msg.front_left.angle);
-  rad_fr_drive.set_target_angle((float)msg.front_right.angle);
-  rad_bl_drive.set_target_angle((float)msg.rear_left.angle);
-  rad_br_drive.set_target_angle((float)msg.rear_right.angle);
+  rad_fl_drive.set_target_angle(msg.front_left.angle);
+  rad_fr_drive.set_target_angle(msg.front_right.angle);
+  rad_bl_drive.set_target_angle(msg.rear_left.angle);
+  rad_br_drive.set_target_angle(msg.rear_right.angle);
   this->_publish_to_can();
 }
 
