@@ -157,6 +157,11 @@ public:
     RAD(CANraw* can_msg, uint8_t can_id);
 
 
+    /**
+     * @brief Set CAN ID of RAD
+     * 
+     * @param can_id new RAD CAN ID
+     */
     void set_can_id(uint8_t can_id);
 
     /**
@@ -215,13 +220,46 @@ public:
      */
     void set_d_value(float D);
 
+    /**
+     * @brief Get target angle of RAD motor (in deg)
+     *   
+     */
     void get_target_angle();
 
+    /**
+     * @brief Get kP value of RAD motor
+     */
     void get_p_value();
 
+    /**
+     * @brief Get kI value of RAD motor
+     */
     void get_i_value();
 
+    /**
+     * @brief Get kD value of RAD motor
+     */
     void get_d_value();
+
+    /**
+     * @brief Set odometry/angle message interval
+     * 
+     * @param period period of messages (in ms)
+     */
+    void set_odom_interval(uint32_t period);
+
+    /**
+     * @brief Set status message interval
+     * 
+     * @param period period of messages (in ms)
+     */
+    void set_health_interval(uint32_t period);
+
+    /**
+     * @brief Save to EEPROM
+     * 
+     */
+    void save_to_eeprom();
 
 
 private:
@@ -229,13 +267,20 @@ private:
 
     CANraw* l_can_msg;
 
+    uint8_t l_can_id;
+
     double l_offset, l_factor;
 };
 
 float __buffer_get_float32(uint8_t* buf, uint8_t* ind);
 double __buffer_get_float64(uint8_t* buf, uint8_t* ind);
+uint32_t __buffer_get_uint32(uint8_t* buf, uint8_t* ind);
+uint64_t __buffer_get_uint64(uint8_t* buf, uint8_t* ind);
+
 void __buffer_append_float32(uint8_t* buf, float n, uint8_t* ind);
 void __buffer_append_float64(uint8_t* buf, double n, uint8_t* ind);
+void __buffer_append_uint32(uint8_t* buf, uint32_t n, uint8_t* ind);
+void __buffer_append_uint64(uint8_t* buf, uint64_t n, uint8_t* ind);
 
 /**
  * Decode incoming CAN status frame and update RAD status message

@@ -26,7 +26,12 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_P_VALUE", CAN_SET_P_VALUE},
   {"SET_I_VALUE", CAN_SET_I_VALUE},
   {"SET_D_VALUE", CAN_SET_D_VALUE},
-  {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID}
+  {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID},
+  {"SET_ODOM_INTERVAL", CAN_SET_ODOM_INTERVAL},
+  {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL}
+};
+std::map<std::string, uint8_t> other_cmd = {
+  {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM}
 };
 
 
@@ -86,11 +91,14 @@ int main(int argc, char ** argv)
           std::cout << command_name << std::endl;
         for (const auto&[command_name, _] : set_cmd)
           std::cout << command_name << std::endl;
+        for (const auto&[command_name, _] : other_cmd)
+          std::cout << command_name << std::endl;
       }
     }
     while (in == "?");
 
-    command_id = ((get_cmd.count(in) == 1) ? get_cmd.at(in) : set_cmd.at(in));
+    command_id = (get_cmd.count(in) == 1) ? get_cmd.at(in) : 
+                 (set_cmd.count(in) == 1 ? set_cmd.at(in) : other_cmd.at(in));
 
     // SET TYPE COMMAND
     if (set_cmd.count(in) == 1)
@@ -116,9 +124,15 @@ int main(int argc, char ** argv)
         case CAN_SET_D_VALUE:
           rad.set_d_value(std::stof(val_in));
           break;
+        case CAN_SET_HEALTH_INTERVAL:
+          rad.set_health_interval((uint32_t)std::stoi(val_in));
+          break;
+        case CAN_SET_ODOM_INTERVAL:
+          rad.set_odom_interval((uint32_t)std::stoi(val_in));
+          break;
       }
     }
-    else // GET TYPE COMMAND
+    else if (get_cmd.count(in) == 1) // GET TYPE COMMAND
     {
       switch(command_id)
       {
@@ -133,6 +147,15 @@ int main(int argc, char ** argv)
           break;
         case CAN_GET_D_VALUE:
           rad.get_d_value();
+          break;
+      }
+    }
+    else
+    {
+      switch (command_id)
+      {
+        case CAN_SAVE_TO_EEPROM:
+          rad.save_to_eeprom();
           break;
       }
     }
