@@ -377,7 +377,7 @@ int main(void)
                 }
                 case SET_RAD_TYPE:
                 {
-                    rad_params.RAD_TYPE = decode_uint8_big_endian(new_message->data);
+                    rad_params.RAD_TYPE = new_message->data[0];
                     break;
                 }
                 case GET_RAD_TYPE:
