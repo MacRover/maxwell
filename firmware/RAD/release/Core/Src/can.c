@@ -253,10 +253,23 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 }
 
+void MX_CAN_UpdateIdAndFilters(RAD_CAN_TypeDef *rad_can_handle)
+{
+	rad_can_handle->id = rad_params.RAD_ID;
+
+	rad_can_handle->canfilterconfig.FilterIdLow = (((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can_handle->id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+	rad_can_handle->canfilterconfig.FilterIdHigh = ((((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can_handle->id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+			>> 16;
+
+    HAL_CAN_ConfigFilter(&(rad_can_handle->hcan), &(rad_can_handle->canfilterconfig));
+
+
+}
+
 void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
 {
     encode_double_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
-    rad_can_handle->TxHeader.DLC = sizeof(status.current_angle); //double
+    rad_can_handle->TxHeader.DLC = sizeof(double); //double
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_ODOM_ANGLE);
 
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
@@ -282,7 +295,7 @@ void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS
 
 void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value, uint16_t message_id)
 {
-    encode_float_big_endian(value, &(rad_can_handle->TxData[0]));
+    encode_double_big_endian(value, &(rad_can_handle->TxData[0]));
     rad_can_handle->TxHeader.DLC = sizeof(double); //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
 

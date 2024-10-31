@@ -253,6 +253,12 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int1
     return TMC_2590_OK;
 }
 
+TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, uint16_t autoreload)
+{
+    __HAL_TIM_SET_AUTORELOAD(htmc2590->Init.STEP_Tim, autoreload);
+    return TMC_2590_OK;
+}
+
 TMC_2590_StatusTypeDef TMC_2590_SG_Read(TMC_2590_HandleTypeDef *htmc2590)
 {
     // check tmc2590 handle allocation

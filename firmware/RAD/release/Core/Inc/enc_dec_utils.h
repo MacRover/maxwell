@@ -9,6 +9,8 @@
 #define INC_ENC_DEC_UTILS_H_
 
 #include <stdint.h>
+#include <string.h>
+
 
 void encode_float_big_endian(float value, uint8_t *data);
 void encode_double_big_endian(double value, uint8_t *data);

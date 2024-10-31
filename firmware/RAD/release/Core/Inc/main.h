@@ -44,20 +44,20 @@ typedef enum {
 	RAD_TYPE_ARM_ELBOW,
 	RAD_TYPE_ARM_WRIST,
 	RAD_TYPE_ARM_GRIPPER,
-	RAD_TYPE_UNDEFINED
+	RAD_TYPE_UNDEFINED = 0xFF //making enum uint8_t wide
 } RAD_TYPE;
 
 
 typedef struct __attribute__((packed)){
+	double P;
+	double I;
+	double D;
 	uint8_t RAD_ID;
 	RAD_TYPE RAD_TYPE;
 	uint8_t HOME_POSITION;
 	uint16_t STEPPER_SPEED;
 	uint16_t ODOM_INTERVAL;
  	uint16_t HEALTH_INTERVAL;
-	float P;
-	float I;
-	float D;
 	uint8_t DRVCONF_TST;// : 1;
 	uint8_t DRVCONF_SLP;// : 5;
 	uint8_t DRVCONF_DIS_S2G;// : 1;

@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-rad_id = 0x99
+rad_id = 0x11
 
 
 def main():
@@ -24,17 +24,17 @@ def main():
                     exit()
                 elif(i == "set p"):
                     j = input("p value? ")
-                    send_float_value(bus=bus, can_id = 0x05, device_id = rad_id, value=float(j))
+                    send_double_value(bus=bus, can_id = 0x05, device_id = rad_id, value=float(j))
                 elif(i == "get p"):
                     send_float_value(bus=bus, can_id = 0x06, device_id = rad_id, value=0)
                 elif(i == "set i"):
                     j = input("i value? ")
-                    send_float_value(bus=bus, can_id = 0x07, device_id = rad_id, value=float(j))
+                    send_double_value(bus=bus, can_id = 0x07, device_id = rad_id, value=float(j))
                 elif(i == "get i"):
                     send_float_value(bus=bus, can_id = 0x08, device_id = rad_id, value=0)
                 elif(i == "set d"):
                     j = input("d value? ")
-                    send_float_value(bus=bus, can_id = 0x09, device_id = rad_id, value=float(j))
+                    send_double_value(bus=bus, can_id = 0x09, device_id = rad_id, value=float(j))
                 elif(i == "get d"):
                     send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
                 elif (i == "set target"):
@@ -62,11 +62,24 @@ def main():
                     send_uint32_value(bus=bus, can_id=0x16, device_id=rad_id, value = 0)
                 elif(i == "set type"):
                     j = input("type? ")
-                    send_uint32_value(bus=bus, can_id=0x0B, device_id=rad_id, value = int(j))
+                    send_uint8_value(bus=bus, can_id=0x0B, device_id=rad_id, value = int(j))
                 elif(i == "get type"):
                     send_uint32_value(bus=bus, can_id=0x0C, device_id=rad_id, value = 0)
                 elif (i == "reboot"):
-                    send_uint32_value(bus=bus, can_id=0x51, device_id=rad_id, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x53, device_id=rad_id, value = 0)
+                elif (i == "assign rad id"):
+                    j = input("rad id? ")
+                    send_uint8_value(bus=bus, can_id=0x55, device_id=rad_id, value =int(j))
+                elif(i == "drvconf tst"):
+                    send_uint8_value(bus=bus, can_id=0x17, device_id=rad_id, value =0)
+                elif(i == "fix stepper"):
+                    send_uint8_value(bus=bus, can_id=0x4B, device_id=rad_id, value =0b1) #INTPOL
+                    time.sleep(0.1)
+                    send_uint8_value(bus=bus, can_id=0x4F, device_id=rad_id, value =0b0111) #MRES
+                    time.sleep(0.1)
+                    send_uint8_value(bus=bus, can_id=0x4D, device_id=rad_id, value=0) #DEDGE
+                    time.sleep(0.1)
+                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =5) #CS
                 elif( i == "estop"):
                     send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
                 elif( i == "disable"):
@@ -75,9 +88,7 @@ def main():
                     send_global_message(bus=bus, can_id=0x02, global_id_arg=0)
                 elif( i == "ping health"):
                     send_global_message(bus=bus, can_id=0x03, global_id_arg=0)
-                elif (i == "assign rad id"):
-                    j = input("rad id? ")
-                    send_global_message(bus=bus, can_id=0x04, global_id_arg=int(j))
+                
 
                 
        
@@ -143,6 +154,18 @@ def send_d_value(bus: can.BusABC, id: int, value: float):
     )
     bus.send(msg=new_msg)
 
+
+def send_double_value(bus: can.BusABC, can_id: int, device_id: int, value: float):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack("<d", value),
+        is_extended_id=True,
+    )
+    arr = bytearray(new_msg.data)
+    # print(arr.hex())
+    # print(new_msg.data)
+    bus.send(msg=new_msg)
+
 def send_float_value(bus: can.BusABC, can_id: int, device_id: int, value: float):
     new_msg = can.Message(
         arbitration_id=__can_message_id(device_id, can_id),
@@ -159,6 +182,13 @@ def send_uint32_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
     )
     bus.send(msg=new_msg)
 
+def send_uint8_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack(">B", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
 
 def send_can_id(bus: can.BusABC, id: int, value: int):
     new_msg = can.Message(

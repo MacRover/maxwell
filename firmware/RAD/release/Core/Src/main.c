@@ -43,7 +43,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define RAD_PARAMS_EEPROM_PAGE 0
-#define HARDSTOP_SAFETY_MARGIN 5
+#define HARDSTOP_SAFETY_MARGIN 10
 #define AVERAGING_WINDOW_SIZE 10
 
 #define MOTOR_GEARING gearing
@@ -102,7 +102,7 @@ int main(void)
     /* USER CODE BEGIN 1 */
 
     //SET DEFAULT VALUES
-    rad_params.RAD_ID = 0x99;
+    rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
     //Stepper speed
@@ -192,8 +192,13 @@ int main(void)
     }
     free(temp);
 
-    rad_params.ODOM_INTERVAL = backup.ODOM_INTERVAL;
-    rad_params.HEALTH_INTERVAL = backup.HEALTH_INTERVAL;
+//     rad_params.ODOM_INTERVAL = backup.ODOM_INTERVAL;
+//     rad_params.HEALTH_INTERVAL = backup.HEALTH_INTERVAL;
+    rad_params = backup;
+//    rad_params.RAD_ID = 0x11;
+//    rad_params.RAD_TYPE = 0;
+//    rad_params.ODOM_INTERVAL = 1000;
+//    rad_params.HEALTH_INTERVAL = 5000;
 
 
     MX_TMC_2590_1_Init();
@@ -224,6 +229,8 @@ int main(void)
 
     angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
+    MX_CAN_UpdateIdAndFilters(&rad_can);
+
     //SEND ERROR CODES OF EACH INIT MODULE
     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
 
@@ -272,12 +279,6 @@ int main(void)
                     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
                     break;
                 }
-                case ASSIGN_DEVICE_ID:
-                {
-                    rad_can.id = new_message->data[7];
-                    rad_params.RAD_ID = rad_can.id;
-                    break;
-                }
                 default:
                 {
                     break;
@@ -309,7 +310,7 @@ int main(void)
                     {
                         new_setpoint = max_angle;
                     }
-                    PID_ChangeSetPoint(&pid_1, new_setpoint);
+                    PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -320,19 +321,31 @@ int main(void)
                 }
                 case SET_STEPPER_SPEED:
                 {
-                    
+                    //1 calculate ARR from inputted desired freq
+                    //Will be an integer floor divide so will not always be the same as input
+
+                    uint16_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, 
+                        decode_uint16_big_endian(new_message->data));
+
+                    //2 assign ARR to timer
+
+                    TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
+                    //3 update local stepper speed reference to the integer value
+
+                    rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
+
                     break;
                 }
                 case GET_STEPPER_SPEED:
                 {
-                    
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
                     break;
                 }
                 case SET_P_VALUE:
                 {
-                    pid_1.Init.kp = (double) decode_float_big_endian(new_message->data);
+                    pid_1.Init.kp = decode_double_big_endian(new_message->data);
                     rad_params.P = pid_1.Init.kp;
-                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE, (uint8_t*) &pid_1.Init.kp, sizeof(double));
                     break;
                 }
                 case GET_P_VALUE:
@@ -342,9 +355,8 @@ int main(void)
                 }
                 case SET_I_VALUE:
                 {
-                    pid_1.Init.ki = (double) decode_float_big_endian(
-                            new_message->data);
-                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,(uint8_t*) &pid_1.Init.ki, sizeof(double));
+                    pid_1.Init.ki = decode_double_big_endian(new_message->data);
+                    rad_params.I = pid_1.Init.ki;
                     break;
                 }
                 case GET_I_VALUE:
@@ -354,10 +366,8 @@ int main(void)
                 }
                 case SET_D_VALUE:
                 {
-                    pid_1.Init.kd = (double) decode_float_big_endian(
-                            new_message->data);
-                    //AT24C04C_WriteData(&at24c04c_1, EEPROM_ADDR_P_VALUE,
-                            //(uint8_t*) &pid_1.Init.kd, sizeof(double));
+                    pid_1.Init.kd = decode_double_big_endian(new_message->data);
+                    rad_params.D = pid_1.Init.kd;
                     break;
                 }
                 case GET_D_VALUE:
@@ -367,7 +377,7 @@ int main(void)
                 }
                 case SET_RAD_TYPE:
                 {
-                    rad_params.RAD_TYPE = decode_uint32_big_endian(new_message->data);
+                    rad_params.RAD_TYPE = decode_uint8_big_endian(new_message->data);
                     break;
                 }
                 case GET_RAD_TYPE:
@@ -402,18 +412,8 @@ int main(void)
                 }
                 case RELOAD_FROM_EEPROM:
                 {
-                	//uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
-
-                    //TODO - TEST
                     AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-                    
-                    //RAD_PARAMS_TypeDef* reconstructed = (RAD_PARAMS_TypeDef*)temp;
-
-
-                    //memcpy(&rad_params, temp, sizeof(RAD_PARAMS_TypeDef));
-
-
-                    free(temp);
+                    break;
                 }
                 case SET_HEALTH_INTERVAL:
                 {
@@ -440,6 +440,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.tst = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_TST = tmc_2590_1.ConfRegisters.DRVCONF.tst;
                     break;
                 }
                 case GET_DRVCONF_TST:
@@ -451,6 +452,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.slp = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_SLP = tmc_2590_1.ConfRegisters.DRVCONF.slp;
                     break;
                 }
                 case GET_DRVCONF_SLP:
@@ -462,6 +464,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_DIS_S2G= tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g;
                     break;
                 }
                 case GET_DRVCONF_DIS_S2G:
@@ -473,6 +476,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.ts2g = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_TS2G = tmc_2590_1.ConfRegisters.DRVCONF.ts2g;
                     break;
                 }
                 case GET_DRVCONF_TS2G:
@@ -484,6 +488,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.sdoff = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_SDOFF = tmc_2590_1.ConfRegisters.DRVCONF.sdoff;
                     break;
                 }
                 case GET_DRVCONF_SDOFF:
@@ -495,6 +500,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.vsense = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_VSENSE = tmc_2590_1.ConfRegisters.DRVCONF.vsense;
                     break;
                 }
                 case GET_DRVCONF_VSENSE:
@@ -506,6 +512,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.rdsel = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_RDSEL = tmc_2590_1.ConfRegisters.DRVCONF.rdsel;
                     break;
                 }
                 case GET_DRVCONF_RDSEL:
@@ -517,6 +524,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.otsens = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_OTSENS = tmc_2590_1.ConfRegisters.DRVCONF.otsens;
                     break;
                 }
                 case GET_DRVCONF_OTSENS:
@@ -528,6 +536,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.shrtsens = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_SHRTSENS = tmc_2590_1.ConfRegisters.DRVCONF.shrtsens;
                     break;
                 }
                 case GET_DRVCONF_SHRTSENS:
@@ -539,6 +548,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.en_pfd = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_EN_PFD = tmc_2590_1.ConfRegisters.DRVCONF.en_pfd;
                     break;
                 }
                 case GET_DRVCONF_EN_PFD:
@@ -550,6 +560,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCONF_EN_S2VS = tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs;
                     break;
                 }
                 case GET_DRVCONF_EN_S2VS:
@@ -561,6 +572,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SGCSCONF_SFILT = tmc_2590_1.ConfRegisters.SGCSCONF.sfilt;
                     break;
                 }
                 case GET_SGCSCONF_SFILT:
@@ -572,6 +584,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SGCSCONF.sgt = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SGCSCONF_SGT = tmc_2590_1.ConfRegisters.SGCSCONF.sgt;
                     break;
                 }
                 case GET_SGCSCONF_SGT:
@@ -583,6 +596,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SGCSCONF.cs = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SGCSCONF_CS = tmc_2590_1.ConfRegisters.SGCSCONF.cs;
                     break;
                 }
                 case GET_SGCSCONF_CS:
@@ -594,6 +608,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SMARTEN.seimin = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SMARTEN_SEIMIN = tmc_2590_1.ConfRegisters.SMARTEN.seimin;
                     break;
                 }
                 case GET_SMARTEN_SEIMIN:
@@ -605,6 +620,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SMARTEN.sedn = decode_uint16_big_endian(new_message->data); //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SMARTEN_SEDN = tmc_2590_1.ConfRegisters.SMARTEN.sedn;
                     break;
                 }
                 case GET_SMARTEN_SEDN:
@@ -616,6 +632,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SMARTEN.semax = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SMARTEN_SEMAX = tmc_2590_1.ConfRegisters.SMARTEN.semax;
                     break;
                 }
                 case GET_SMARTEN_SEMAX:
@@ -627,6 +644,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SMARTEN.seup = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SMARTEN_SEUP = tmc_2590_1.ConfRegisters.SMARTEN.seup;
                     break;
                 }
                 case GET_SMARTEN_SEUP:
@@ -638,6 +656,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.SMARTEN.semin = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.SMARTEN_SEMIN = tmc_2590_1.ConfRegisters.SMARTEN.semin;
                     break;
                 }
                 case GET_SMARTEN_SEMIN:
@@ -649,6 +668,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.tbl = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_TBL = tmc_2590_1.ConfRegisters.CHOPCONF.tbl;
                     break;
                 }
                 case GET_CHOPCONF_TBL:
@@ -660,6 +680,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.chm = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_CHM = tmc_2590_1.ConfRegisters.CHOPCONF.chm;
                     break;
                 }
                 case GET_CHOPCONF_CHM:
@@ -671,6 +692,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.rndtf = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_RNDTF = tmc_2590_1.ConfRegisters.CHOPCONF.rndtf;
                     break;
                 }
                 case GET_CHOPCONF_RNDTF:
@@ -682,6 +704,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.hdec = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_HDEC = tmc_2590_1.ConfRegisters.CHOPCONF.hdec;
                     break;
                 }
                 case GET_CHOPCONF_HDEC:
@@ -693,6 +716,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.hend = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_HEND = tmc_2590_1.ConfRegisters.CHOPCONF.hend;
                     break;
                 }
                 case GET_CHOPCONF_HEND:
@@ -704,6 +728,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.hstrt = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_HSTRT = tmc_2590_1.ConfRegisters.CHOPCONF.hstrt;
                     break;
                 }
                 case GET_CHOPCONF_HSTRT:
@@ -715,6 +740,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.CHOPCONF.toff = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.CHOPCONF_TOFF = tmc_2590_1.ConfRegisters.CHOPCONF.toff;
                     break;
                 }
                 case GET_CHOPCONF_TOFF:
@@ -726,6 +752,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCTRL.intpol = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCTRL_INTPOL = tmc_2590_1.ConfRegisters.DRVCTRL.intpol;
                     break;
                 }
                 case GET_DRVCTRL_INTPOL:
@@ -737,6 +764,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCTRL.dedge = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCTRL_DEDGE = tmc_2590_1.ConfRegisters.DRVCTRL.dedge;
                     break;
                 }
                 case GET_DRVCTRL_DEDGE:
@@ -748,6 +776,7 @@ int main(void)
                 {
                     tmc_2590_1.ConfRegisters.DRVCTRL.mres = new_message->data[0]; //uint8, big endian
                     rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
+                    rad_params.DRVCTRL_MRES = tmc_2590_1.ConfRegisters.DRVCTRL.mres;
                     break;
                 }
                 case GET_DRVCTRL_MRES:
@@ -759,6 +788,27 @@ int main(void)
                 {
                     float pulses = decode_float_big_endian(new_message->data);
                     steps_to_move = (int16_t) pulses;
+
+                    //cap steps
+                    if (steps_to_move > tmc_2590_1.Init.max_steps)
+                    {
+                        steps_to_move = tmc_2590_1.Init.max_steps;
+                    }
+                    else if (steps_to_move < -1*(tmc_2590_1.Init.max_steps))
+                    {
+                        steps_to_move = -1*tmc_2590_1.Init.max_steps;
+                    }
+                    break;
+                }
+                case REBOOT:
+                {
+                	HAL_NVIC_SystemReset();
+                    break;
+                }
+                case ASSIGN_DEVICE_ID:
+                {
+                    rad_can.id = new_message->data[0];
+                    rad_params.RAD_ID = rad_can.id;
                     break;
                 }
                 default:
@@ -798,7 +848,7 @@ int main(void)
                 cw_enable = 1;
         	    ccw_enable = 1;
 
-                if (ls_state == GPIO_PIN_RESET) 
+                if (ls_state == GPIO_PIN_RESET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -839,7 +889,7 @@ int main(void)
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
                 
-                if (ls_state == GPIO_PIN_RESET) 
+                if (ls_state == GPIO_PIN_RESET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -859,7 +909,7 @@ int main(void)
                     PID_Update(&pid_1);
                     PID_Update(&pid_1);
 
-                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * MAX_ROTATIONS / MOTOR_GEARING); //change to home position * 360?
+                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * 360); 
 
                     PID_Update(&pid_1);
 
@@ -923,7 +973,7 @@ int main(void)
                 
                 PID_Update(&pid_1);
 
-                if (ls_state == GPIO_PIN_RESET) 
+                if (ls_state == GPIO_PIN_RESET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -945,6 +995,7 @@ int main(void)
                         default:
                             break;
 				    }
+
                 }
                 else 
                 {
@@ -996,13 +1047,15 @@ int main(void)
                 
         if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
-            double sum;
-            for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
-            {
-                sum = sum + angle_average_buffer[i];
-            }
-            rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
-            //rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            // double sum;
+            // for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
+            // {
+            //     sum = sum + angle_average_buffer[i];
+            // }
+            //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
+            rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            //AS5048A_ReadAngle(&as5048a_1);
+            //rad_status.current_angle = as5048a_1.Angle_double;
 
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }

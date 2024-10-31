@@ -168,6 +168,21 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 
+uint16_t HAL_TIM_CalculateAutoReload(TIM_HandleTypeDef* tim, uint16_t freq)
+{
+
+  uint16_t arr = 72000000/(tim->Init.Prescaler+1)/freq;
+
+  return arr-1;
+}
+
+uint16_t HAL_TIM_CalculateFrequency(TIM_HandleTypeDef* tim)
+{
+
+  return 72000000/(tim->Init.Prescaler+1)/(__HAL_TIM_GET_AUTORELOAD(tim)+1);
+
+}
+
 //void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 //{
 //    TMC_2590_TIM_PWM_PulseFinishedCallback(&tmc_2590_1, htim);

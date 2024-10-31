@@ -71,7 +71,13 @@ uint16_t decode_uint16_big_endian(uint8_t *data)
 
 double decode_double_big_endian(uint8_t *data)
 {
-    uint64_t fpt_bin = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);  
-    fpt_bin = (fpt_bin << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
-    return *((double*) &fpt_bin);
+	//uint64_t fpt_bin = 0;
+
+    // fpt_bin = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
+    // fpt_bin = (fpt_bin << 32) | (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
+
+	double d;
+
+	memcpy(&d, data, sizeof(d));
+    return d;
 }

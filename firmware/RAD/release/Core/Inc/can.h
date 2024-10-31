@@ -74,7 +74,6 @@ typedef enum
     DISABLE_MESSAGE = 0x00,
     ENABLE_MESSAGE = 0x02,
     HEALTH_STATUS_PING = 0x03,
-    ASSIGN_DEVICE_ID = 0x04
 } GLOBAL_CAN_CommandId;
 
 typedef enum
@@ -161,6 +160,8 @@ typedef enum
     SET_DRVCTRL_MRES = 0x4F,
     GET_DRVCTRL_MRES = 0x50,
     PULSE_STEPPER = 0x51,
+	REBOOT = 0x53,
+    ASSIGN_DEVICE_ID = 0x55,
 
     
     SEND_ODOM_ANGLE = 0xFB,
@@ -181,6 +182,8 @@ extern RAD_CAN_TypeDef rad_can;
 void MX_CAN_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+void MX_CAN_UpdateIdAndFilters(RAD_CAN_TypeDef *rad_can_handle);
 
 void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status);
 
