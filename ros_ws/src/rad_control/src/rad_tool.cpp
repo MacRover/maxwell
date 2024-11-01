@@ -28,9 +28,11 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_D_VALUE", CAN_SET_D_VALUE},
   {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID},
   {"SET_ODOM_INTERVAL", CAN_SET_ODOM_INTERVAL},
-  {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL}
+  {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL},
+  {"SET_RAD_TYPE", CAN_SET_RAD_TYPE}
 };
 std::map<std::string, uint8_t> other_cmd = {
+  {"CALIBRATE_POS", CAN_CALIBRATE_POS},
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM}
 };
 
@@ -130,6 +132,9 @@ int main(int argc, char ** argv)
         case CAN_SET_ODOM_INTERVAL:
           rad.set_odom_interval((uint32_t)std::stoi(val_in));
           break;
+        case CAN_SET_RAD_TYPE:
+          rad.set_rad_type((uint8_t)std::stoi(val_in));
+          break;
       }
     }
     else if (get_cmd.count(in) == 1) // GET TYPE COMMAND
@@ -156,6 +161,9 @@ int main(int argc, char ** argv)
       {
         case CAN_SAVE_TO_EEPROM:
           rad.save_to_eeprom();
+          break;
+        case CAN_CALIBRATE_POS:
+          rad.calibrate_zero_pos();
           break;
       }
     }

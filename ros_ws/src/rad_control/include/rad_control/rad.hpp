@@ -221,6 +221,13 @@ public:
     void set_d_value(double D);
 
     /**
+     * @brief Set RAD type of RAD
+     *
+     * @param type RAD type
+     */
+    void set_rad_type(uint8_t type);
+
+    /**
      * @brief Get target angle of RAD motor (in deg)
      *   
      */
