@@ -204,21 +204,21 @@ public:
      * 
      * @param P kP value
      */
-    void set_p_value(float P);
+    void set_p_value(double P);
 
     /**
      * @brief Set kI value of RAD motor
      * 
      * @param I kI value
      */
-    void set_i_value(float I);
+    void set_i_value(double I);
 
     /**
      * @brief Set kD value of RAD motor
      * 
      * @param D kD value
      */
-    void set_d_value(float D);
+    void set_d_value(double D);
 
     /**
      * @brief Get target angle of RAD motor (in deg)

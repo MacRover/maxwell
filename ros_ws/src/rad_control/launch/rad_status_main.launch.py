@@ -41,6 +41,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             reader1_node,
+            reader2_node,
             rad_status_node,
         ]
     )

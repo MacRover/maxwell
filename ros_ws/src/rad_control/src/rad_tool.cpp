@@ -77,7 +77,7 @@ int main(int argc, char ** argv)
     ack = false;
     std::cout << "Enter RAD ID (q to exit) => ";
     std::getline (std::cin,in);
-    if (in == "q")
+    if (in == "q" || std::cin.fail())
       break;
     rad_id = std::stoi(in);
     rad.set_can_id(rad_id);
@@ -116,13 +116,13 @@ int main(int argc, char ** argv)
           rad.set_target_angle(std::stod(val_in));
           break;
         case CAN_SET_P_VALUE:
-          rad.set_p_value(std::stof(val_in));
+          rad.set_p_value(std::stod(val_in));
           break;
         case CAN_SET_I_VALUE:
-          rad.set_i_value(std::stof(val_in));
+          rad.set_i_value(std::stod(val_in));
           break;
         case CAN_SET_D_VALUE:
-          rad.set_d_value(std::stof(val_in));
+          rad.set_d_value(std::stod(val_in));
           break;
         case CAN_SET_HEALTH_INTERVAL:
           rad.set_health_interval((uint32_t)std::stoi(val_in));
