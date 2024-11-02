@@ -11,7 +11,7 @@ def generate_launch_description():
             "topic": "/can/status/rad_can_in",
             "channel": "can0",
             "can_ids": [0x404FB00, 0x404FC00],
-            "can_masks": [0x1FFFFFF0, 0x1FFFFFF0]
+            "can_masks": [0xFFFFF00, 0xFFFFF00]
         }]
     )
 

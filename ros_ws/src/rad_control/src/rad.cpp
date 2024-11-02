@@ -118,7 +118,7 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
             status->tmc_status = buf[1];
             status->encoder_status = buf[2];
             status->rad_state = buf[3];
-            status->ls_state = !((bool)buf[4]);
+            status->ls_state = (bool)buf[4];
             break;
         default:
             return 0;
