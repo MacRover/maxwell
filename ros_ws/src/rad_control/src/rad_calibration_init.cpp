@@ -22,9 +22,6 @@ RAD_Init::RAD_Init() : Node("rad_init"), fr_ls(false), fl_ls(false), br_ls(false
 
 bool RAD_Init::finished()
 {
-  // Only front motors working
-    this->br_ls = true;
-    this->bl_ls = true;
     return this->fr_ls && this->fl_ls && this->br_ls && this->bl_ls;
 }
 

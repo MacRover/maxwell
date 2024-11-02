@@ -6,13 +6,13 @@ from launch.actions import (RegisterEventHandler, LogInfo,
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, EqualsSubstitution
-from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition, LaunchConfigurationEquals
 
 def generate_launch_description():
     drive_mode_arg = DeclareLaunchArgument(
         "drive_mode",
-        default_value="TANK_STEER_HYBRID",
+        default_value="SWERVE_DRIVE",
         description="Method of Driving (SWERVE_DRIVE | TANK_STEER_HYBRID)"
     )
     can_rate_arg = DeclareLaunchArgument(
@@ -73,11 +73,9 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_calibration_init",
         name="rad_calibration_init",
-        condition=IfCondition(
-            EqualsSubstitution(
-                drive_mode,
+        condition=LaunchConfigurationEquals(
+                "drive_mode",
                 "SWERVE_DRIVE"
-            )
         )
     )
 
@@ -103,11 +101,9 @@ def generate_launch_description():
                     rad_controller_node
                 ]
             ),
-            condition=IfCondition(
-                EqualsSubstitution(
-                    drive_mode,
+            condition=LaunchConfigurationEquals(
+                    "drive_mode",
                     "SWERVE_DRIVE"
-                )
             )
         )
     )

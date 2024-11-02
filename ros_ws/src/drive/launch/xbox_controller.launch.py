@@ -6,7 +6,7 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     drive_mode_arg = DeclareLaunchArgument(
         "drive_mode",
-        default_value="TANK_STEER_HYBRID" 
+        default_value="SWERVE_DRIVE" 
     )
     drive_mode = LaunchConfiguration("drive_mode")
 
