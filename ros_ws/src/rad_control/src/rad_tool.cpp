@@ -29,7 +29,8 @@ std::map<std::string, uint8_t> set_cmd = {
   {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID},
   {"SET_ODOM_INTERVAL", CAN_SET_ODOM_INTERVAL},
   {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL},
-  {"SET_RAD_TYPE", CAN_SET_RAD_TYPE}
+  {"SET_RAD_TYPE", CAN_SET_RAD_TYPE},
+  {"SET_DRVCTRL_MRES", CAN_SET_DRVCTRL_MRES}
 };
 std::map<std::string, uint8_t> other_cmd = {
   {"CALIBRATE_POS", CAN_CALIBRATE_POS},
@@ -134,6 +135,9 @@ int main(int argc, char ** argv)
           break;
         case CAN_SET_RAD_TYPE:
           rad.set_rad_type((uint8_t)std::stoi(val_in));
+          break;
+        case CAN_SET_DRVCTRL_MRES:
+          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in));
           break;
       }
     }

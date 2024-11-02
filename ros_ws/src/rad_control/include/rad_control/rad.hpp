@@ -98,6 +98,7 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_DRVCTRL_INTPOL    = 76,
     CAN_GET_DRVCTRL_DEDGE     = 78,
     CAN_GET_DRVCTRL_MRES      = 80,
+    CAN_ASSIGN_DEVICE_ID      = 85,
 
     CAN_SEND_ODOM_ANGLE       = 251,
     CAN_SEND_HEALTH_STATUS    = 252
@@ -109,8 +110,7 @@ typedef enum __global_can_msg : uint8_t
     CAN_ESTOP_MESSAGE = 0x31,
     CAN_DISABLE_MESSAGE = 0x00,
     CAN_ENABLE_MESSAGE = 0x02,
-    CAN_HEALTH_STATUS_PING = 0x03,
-    CAN_ASSIGN_DEVICE_ID = 0x04
+    CAN_HEALTH_STATUS_PING = 0x03
 } GLOBAL_CAN_MSG;
 
 
@@ -258,6 +258,13 @@ public:
      * @param period period of messages (in ms)
      */
     void set_health_interval(uint32_t period);
+
+    /**
+     * @brief Set Microstep resolution of RAD motor
+     *
+     * @param mres microstep resolution
+     */
+    void set_drvctrl_mres(uint8_t mres);
 
     /**
      * @brief Save to EEPROM
