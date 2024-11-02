@@ -9,6 +9,7 @@
 #define PID_LIB_INC_PID_LIB_H_
 
 #include "stm32f1xx_hal.h"
+#include <math.h>
 
 typedef struct
 {
@@ -17,7 +18,9 @@ typedef struct
     double ki;
     double kd;
     double max_output_abs;
+    double min_output_abs;
     double rollover_max;
+    double error_threshold;
 } PID_InitTypeDef;
 
 typedef struct
@@ -43,6 +46,8 @@ void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point);
 
 void PID_SetZeroPoint(PID_HandleTypeDef *PID);
 void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers);
+
+void PID_ClearIError(PID_HandleTypeDef *PID);
 
 
 #endif /* PID_LIB_INC_PID_LIB_H_ */

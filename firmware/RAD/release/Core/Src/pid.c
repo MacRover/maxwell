@@ -23,9 +23,10 @@ void MX_PID_1_Init(void)
     pid_1.Init.ki = rad_params.I;
     pid_1.Init.kd = rad_params.D;
 
-    pid_1.Init.max_output_abs = 1000.0;
+    pid_1.Init.max_output_abs = 50.0;
+    pid_1.Init.min_output_abs = 5;
     pid_1.Init.rollover_max = 360.0;
-
+    pid_1.Init.error_threshold = 20; //20 steps * (6 deg/200 steps) = 0.6 deg
     PID_Init(&pid_1);
 
 //    if (PID_Init(&pid_1) != PID_OK)

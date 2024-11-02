@@ -16,7 +16,11 @@ def main():
         while True:
             try: 
                 for msg in bus:
-                    print(msg)
+                    if len(msg.data) == 8:
+                        float_convert = struct.unpack(">d",msg.data)[0]
+                        print(msg, round(float_convert, 5))
+                    else:
+                        print(msg)
             except KeyboardInterrupt:
                 i = input('command? ')
                 
@@ -75,7 +79,7 @@ def main():
                 elif(i == "fix stepper"):
                     send_uint8_value(bus=bus, can_id=0x4B, device_id=rad_id, value =0b1) #INTPOL
                     time.sleep(0.1)
-                    send_uint8_value(bus=bus, can_id=0x4F, device_id=rad_id, value =0b0111) #MRES
+                    send_uint8_value(bus=bus, can_id=0x4F, device_id=rad_id, value =0b1000) #MRES
                     time.sleep(0.1)
                     send_uint8_value(bus=bus, can_id=0x4D, device_id=rad_id, value=0) #DEDGE
                     time.sleep(0.1)

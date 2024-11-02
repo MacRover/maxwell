@@ -48,6 +48,13 @@ void PID_Update(PID_HandleTypeDef *PID)
     double dt = (double) (current_time - PID->__time_old);
 
     PID->__error = PID->__set_point - PID->feedback_adj;
+
+    // if (fabs(PID->__error) < PID->Init.error_threshold)
+    // {
+    //     PID->output = 0;
+    //     return;
+    // }
+
     PID->__i_error = PID->__i_error + (PID->__error * dt);
 
     double integral = PID->__i_error;
@@ -75,6 +82,16 @@ void PID_Update(PID_HandleTypeDef *PID)
         return;
     }
 
+    if(output_raw < 0 && output_raw > -1*PID->Init.min_output_abs)
+    {
+        PID->output = -1* PID->Init.min_output_abs;
+    }
+
+    if(output_raw > 0 && output_raw < PID->Init.min_output_abs)
+    {
+        PID->output = PID->Init.min_output_abs;
+    }
+
     PID->output = output_raw;
 }
 
@@ -99,6 +116,11 @@ void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers)
 {
     PID->__offset = -1.0 * PID->__feedback_raw_old;
     PID->__rollovers = max_rollovers;
+}
+
+void PID_ClearIError(PID_HandleTypeDef *PID)
+{
+    PID->__i_error = 0;
 }
 
 // todo add return statuses and error codes

@@ -43,7 +43,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define RAD_PARAMS_EEPROM_PAGE 0
-#define HARDSTOP_SAFETY_MARGIN 10
+#define HARDSTOP_SAFETY_MARGIN 5
 #define AVERAGING_WINDOW_SIZE 10
 
 #define MOTOR_GEARING gearing
@@ -179,27 +179,26 @@ int main(void)
 
     MX_AT24C04C_1_Init(); 
     
-    uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
+    //uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
 
     //temporary so we don't cook stepper settings from reading garbage data from eeprom
-    RAD_PARAMS_TypeDef backup;
+    RAD_PARAMS_TypeDef eeprom_params;
 
-    rad_status.EEPROM_STATUS = AT24C04C_ReadPages(&at24c04c_1, temp, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
+    rad_status.EEPROM_STATUS = AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&eeprom_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
     
     if (rad_status.EEPROM_STATUS == AT24C04C_OK)
     {
-        memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
+        //NORMAL OPERATION
+        rad_params = eeprom_params;
+
+        //IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
+        rad_params.RAD_ID = 0x14;
+        rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
+        rad_params.ODOM_INTERVAL = 1000;
+        rad_params.HEALTH_INTERVAL = 5000;
+        //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
     }
-    free(temp);
-
-//     rad_params.ODOM_INTERVAL = backup.ODOM_INTERVAL;
-//     rad_params.HEALTH_INTERVAL = backup.HEALTH_INTERVAL;
-    rad_params = backup;
-//    rad_params.RAD_ID = 0x11;
-//    rad_params.RAD_TYPE = 0;
-//    rad_params.ODOM_INTERVAL = 1000;
-//    rad_params.HEALTH_INTERVAL = 5000;
-
+    //free(temp);
 
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
@@ -208,8 +207,8 @@ int main(void)
 
     switch(rad_params.RAD_TYPE)
     {
-        case RAD_TYPE_DRIVETRAIN_LEFT:
-        case RAD_TYPE_DRIVETRAIN_RIGHT:
+        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
+        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
         {
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
@@ -300,7 +299,7 @@ int main(void)
            
                 case SET_TARGET_ANGLE:
                 {
-                    float new_setpoint = decode_float_big_endian(new_message->data);
+                    double new_setpoint = decode_double_big_endian(new_message->data);
 
                     if (new_setpoint < min_angle)
                     {
@@ -848,18 +847,18 @@ int main(void)
                 cw_enable = 1;
         	    ccw_enable = 1;
 
-                if (ls_state == GPIO_PIN_RESET)
+                if (ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
 
-                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
                         }
-                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
                             cw_enable = 1;
                             ccw_enable = 0;
@@ -889,16 +888,18 @@ int main(void)
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
                 
-                if (ls_state == GPIO_PIN_RESET)
+                if (ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
-                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                             PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, max_angle*MOTOR_GEARING);
                             software_stop = min_angle;
                             break;
-                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                             PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, min_angle*MOTOR_GEARING);
                             software_stop = max_angle;
                             break;
                         default:
@@ -909,9 +910,9 @@ int main(void)
                     PID_Update(&pid_1);
                     PID_Update(&pid_1);
 
-                    PID_ChangeSetPoint(&pid_1, rad_params.HOME_POSITION * 360); 
+                    
 
-                    PID_Update(&pid_1);
+                    //PID_Update(&pid_1);
 
                     rad_state = RAD_STATE_ACTIVE;
         	    }
@@ -919,12 +920,12 @@ int main(void)
                 {
                     switch (rad_params.RAD_TYPE)
                     {
-                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
                             rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 50);
                             break;
                         }
-                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
                             rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, -50);
                             break;
@@ -973,19 +974,19 @@ int main(void)
                 
                 PID_Update(&pid_1);
 
-                if (ls_state == GPIO_PIN_RESET)
+                if (ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
 
-                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
                             PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
                         }
-                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
                             PID_SetZeroPoint(&pid_1);
                             cw_enable = 1;
@@ -1001,21 +1002,23 @@ int main(void)
                 {
                     switch (rad_params.RAD_TYPE)
                     {
-                        case RAD_TYPE_DRIVETRAIN_LEFT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
                             if ((pid_1.feedback_adj / MOTOR_GEARING) <= (software_stop + HARDSTOP_SAFETY_MARGIN)) 
                             {
                                 cw_enable = 1;
                                 ccw_enable = 0;
+                                PID_ClearIError(&pid_1);
                             }
                             break;
                         }
-                        case RAD_TYPE_DRIVETRAIN_RIGHT:
+                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
                             if ((pid_1.feedback_adj / MOTOR_GEARING) >= (software_stop - HARDSTOP_SAFETY_MARGIN)) 
                             {
                                 cw_enable = 0;
                                 ccw_enable = 1;
+                                PID_ClearIError(&pid_1);
                             }
                             break;
                         }
@@ -1054,6 +1057,7 @@ int main(void)
             // }
             //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
             rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+        	//rad_status.current_angle = (double) pid_1.output;
             //AS5048A_ReadAngle(&as5048a_1);
             //rad_status.current_angle = as5048a_1.Angle_double;
 
