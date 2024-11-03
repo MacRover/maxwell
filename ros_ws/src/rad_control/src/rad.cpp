@@ -69,7 +69,7 @@ void RAD::set_target_angle(float angle)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, angle, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(SET_TARGET_ANGLE) << 8);
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_TARGET_ANGLE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -78,7 +78,7 @@ void RAD::set_stepper_speed(float speed)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, speed, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(SET_STEPPER_SPEED) << 8);
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_STEPPER_SPEED) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -87,7 +87,7 @@ void RAD::set_p_value(float P)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, P, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(SET_P_VALUE) << 8);
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_P_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -96,7 +96,7 @@ void RAD::set_i_value(float I)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, I, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(SET_I_VALUE) << 8);
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_I_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 
@@ -105,7 +105,7 @@ void RAD::set_d_value(float D)
     uint8_t ind = 0;
     uint8_t buf[4];
     __buffer_append_float32(buf, D, &ind);
-    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(SET_D_VALUE) << 8);
+    l_can_msg->address = (l_can_msg->address & 0xff) | ((uint32_t)(CAN_SET_D_VALUE) << 8);
     _update_can_data(buf, 4);
 }
 
