@@ -260,11 +260,18 @@ public:
     void set_health_interval(uint32_t period);
 
     /**
-     * @brief Set Microstep resolution of RAD motor
+     * @brief Set Microstep Resolution of RAD motor
      *
      * @param mres microstep resolution
      */
     void set_drvctrl_mres(uint8_t mres);
+
+    /**
+     * @brief Set Current Scale of RAD motor
+     * 
+     * @param cs current scale
+     */
+    void set_sgcsconf_cs(uint8_t cs);
 
     /**
      * @brief Save to EEPROM

@@ -288,6 +288,15 @@ void RAD::set_drvctrl_mres(uint8_t mres)
     _update_can_data(buf, 1);
 }
 
+void RAD::set_sgcsconf_cs(uint8_t cs)
+{
+    uint8_t buf[1];
+    buf[0] = cs;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_CS) << 8);
+    _update_can_data(buf, 1);
+}
+
 
 void RAD::_update_can_data(uint8_t* buf, size_t size)
 {
