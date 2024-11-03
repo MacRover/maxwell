@@ -31,7 +31,7 @@ void MX_TMC_2590_1_Init(void)
 //    tmc_2590_1.Init.STEP_Pin = ;
     tmc_2590_1.Init.STEP_Tim = &htim2;
     tmc_2590_1.Init.STEP_Channel = TIM_CHANNEL_2;
-    tmc_2590_1.Init.max_steps = 50;
+    tmc_2590_1.Init.max_steps = 1000;
     tmc_2590_1.Init.SG_TST_GPIO_Port = DRIVER_SG_TEST_GPIO_Port;
     tmc_2590_1.Init.SG_TST_Pin = DRIVER_SG_TEST_Pin;
 
