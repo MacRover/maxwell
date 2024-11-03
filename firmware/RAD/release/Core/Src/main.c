@@ -108,8 +108,8 @@ int main(void)
     //Stepper speed
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
     rad_params.HEALTH_INTERVAL = 1000; //every second
-    rad_params.P = 0.06;
-    rad_params.I = 0.0001;
+    rad_params.P = 0.01;
+    rad_params.I = 0.0000001;
     rad_params.D = 0;
     
     rad_params.CHOPCONF_CHM = 0b0;
@@ -192,10 +192,10 @@ int main(void)
         rad_params = eeprom_params;
 
         //IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
-        rad_params.RAD_ID = 0x14;
-        rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
-        rad_params.ODOM_INTERVAL = 1000;
-        rad_params.HEALTH_INTERVAL = 5000;
+        //rad_params.RAD_ID = 0x11;
+//        rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
+//        rad_params.ODOM_INTERVAL = 1000;
+//        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
     }
     //free(temp);
@@ -1045,16 +1045,16 @@ int main(void)
             }
         }
 
-        angle_average_buffer[buffer_head++ % AVERAGING_WINDOW_SIZE] = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+        //angle_average_buffer[buffer_head++ % AVERAGING_WINDOW_SIZE] = (double) (pid_1.feedback_adj / MOTOR_GEARING);
 
                 
         if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
-            // double sum;
-            // for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
-            // {
-            //     sum = sum + angle_average_buffer[i];
-            // }
+//             double sum = 0;
+//             for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
+//             {
+//                 sum = sum + angle_average_buffer[i];
+//             }
             //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
             rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
         	//rad_status.current_angle = (double) pid_1.output;
