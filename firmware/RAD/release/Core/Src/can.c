@@ -87,10 +87,10 @@ void MX_CAN_Init(void)
     //0x31FF
     //0x00FF
     rad_can.canfilter_global1.FilterBank = 0;
-    rad_can.canfilter_global1.FilterIdLow = (((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilter_global1.FilterIdLow = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) | 0b100) & 0xffff;
     rad_can.canfilter_global1.FilterIdHigh = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
-    rad_can.canfilter_global1.FilterMaskIdLow = (((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilter_global1.FilterMaskIdLow = (((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3)) | 0b100) & 0xffff;
     rad_can.canfilter_global1.FilterMaskIdHigh = ((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
     rad_can.canfilter_global1.FilterMode = CAN_FILTERMODE_IDLIST;
