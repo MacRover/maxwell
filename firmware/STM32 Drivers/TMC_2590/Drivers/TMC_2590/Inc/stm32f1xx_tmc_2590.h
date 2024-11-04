@@ -179,7 +179,7 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
         int16_t steps);
 
 TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, 
-        uint16_t autoreload);
+		uint32_t autoreload);
 
 
 // read sg_test?

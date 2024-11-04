@@ -105,7 +105,7 @@ int main(void)
     rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
-    //Stepper speed
+    rad_params.STEPPER_SPEED = 500;
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
     rad_params.HEALTH_INTERVAL = 1000; //every second
     rad_params.P = 0.01;
@@ -200,6 +200,8 @@ int main(void)
     }
     //free(temp);
 
+
+
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
@@ -229,6 +231,17 @@ int main(void)
     angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
     MX_CAN_UpdateIdAndFilters(&rad_can);
+
+    if (rad_params.STEPPER_SPEED == 0)
+	{
+		rad_params.STEPPER_SPEED = 1;
+	}
+
+    uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
+
+
+    TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
 
     //SEND ERROR CODES OF EACH INIT MODULE
     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
@@ -269,7 +282,7 @@ int main(void)
                 }
                 case ENABLE_MESSAGE:
                 {
-                    rad_state = RAD_STATE_ACTIVE;
+                    rad_state = RAD_STATE_PULSE_CONTROL;
                     DISABLED = 0;
                     break;
                 }
@@ -323,8 +336,8 @@ int main(void)
                     //1 calculate ARR from inputted desired freq
                     //Will be an integer floor divide so will not always be the same as input
 
-                    uint16_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, 
-                        decode_uint16_big_endian(new_message->data));
+                	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim,
+                        decode_uint32_big_endian(new_message->data));
 
                     //2 assign ARR to timer
 
@@ -338,7 +351,7 @@ int main(void)
                 }
                 case GET_STEPPER_SPEED:
                 {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
+                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
                     break;
                 }
                 case SET_P_VALUE:
@@ -821,11 +834,18 @@ int main(void)
         //CHECK FOR ESTOP
         if (ESTOP)
         {
+        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
             break;
         }
         if (DISABLED)
         {
+        	steps_to_move = 0;
+        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
             continue;
+        }
+        else
+        {
+        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
         }
 
         

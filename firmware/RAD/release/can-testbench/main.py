@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-rad_id = 0x11
+rad_id = 0x12
 
 
 def main():
@@ -76,6 +76,11 @@ def main():
                     send_uint8_value(bus=bus, can_id=0x55, device_id=rad_id, value =int(j))
                 elif(i == "drvconf tst"):
                     send_uint8_value(bus=bus, can_id=0x17, device_id=rad_id, value =0)
+                elif (i == "set stepper speed"):
+                    j = input("freq? ")
+                    send_uint32_value(bus=bus, can_id=0x03, device_id=rad_id, value = int(j))
+                elif (i == "get stepper speed"):
+                    send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)
                 elif(i == "fix stepper"):
                     send_uint8_value(bus=bus, can_id=0x4B, device_id=rad_id, value =0b1) #INTPOL
                     time.sleep(0.1)
@@ -162,7 +167,7 @@ def send_d_value(bus: can.BusABC, id: int, value: float):
 def send_double_value(bus: can.BusABC, can_id: int, device_id: int, value: float):
     new_msg = can.Message(
         arbitration_id=__can_message_id(device_id, can_id),
-        data=struct.pack("<d", value),
+        data=struct.pack(">d", value),
         is_extended_id=True,
     )
     arr = bytearray(new_msg.data)

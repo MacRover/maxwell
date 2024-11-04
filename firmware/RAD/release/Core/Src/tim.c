@@ -45,7 +45,7 @@ void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 720-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 100-1;
+  htim2.Init.Period = (72000000/(htim2.Init.Prescaler+1)/rad_params.STEPPER_SPEED) - 1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -168,10 +168,10 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 
-uint16_t HAL_TIM_CalculateAutoReload(TIM_HandleTypeDef* tim, uint16_t freq)
+uint32_t HAL_TIM_CalculateAutoReload(TIM_HandleTypeDef* tim, uint16_t freq)
 {
 
-  uint16_t arr = 72000000/(tim->Init.Prescaler+1)/freq;
+  uint32_t arr = 72000000/(tim->Init.Prescaler+1)/freq;
 
   return arr-1;
 }
