@@ -44,6 +44,9 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN Prototypes */
 
+uint16_t HAL_TIM_CalculateFrequency(TIM_HandleTypeDef* tim);
+uint32_t HAL_TIM_CalculateAutoReload(TIM_HandleTypeDef* tim, uint16_t freq);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
