@@ -60,10 +60,10 @@ class SteeringModel:
 				angle = 0.0
 				module.speed *= -1
 
-			if angle < -np.pi / 2:
+			if angle < -(np.pi / 2 + 0.5):
 				module.speed *= -1
 				angle += np.pi
-			elif angle > np.pi / 2:
+			elif angle > (np.pi / 2 + 0.5):
 				module.speed *= -1
 				angle -= np.pi
 			

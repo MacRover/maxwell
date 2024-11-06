@@ -56,7 +56,8 @@ def generate_launch_description():
         executable="vesc_controller.py",
         name="vesc_controller",
         parameters=[{
-            "can_rate": can_rate
+            "can_rate": can_rate,
+            "wait_until_positioned": True
         }]
     )
 
