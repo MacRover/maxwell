@@ -178,7 +178,7 @@ void RAD::set_stepper_speed(float speed)
 {
     uint8_t ind = 0;
     uint8_t buf[4];
-    __buffer_append_float32(buf, speed, &ind);
+    __buffer_append_uint32(buf, speed, &ind);
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_STEPPER_SPEED) << 8);
     _update_can_data(buf, 4);

@@ -116,10 +116,10 @@ typedef enum __global_can_msg : uint8_t
 
 typedef enum __rad_can_id : uint8_t
 {
-    RAD__DRIVE__FRONT_RIGHT = 0x01,
+    RAD__DRIVE__FRONT_RIGHT = 0x11,
     RAD__DRIVE__BACK_RIGHT = 0x02,
-    RAD__DRIVE__BACK_LEFT = 0x12,
-    RAD__DRIVE__FRONT_LEFT = 0x13,
+    RAD__DRIVE__BACK_LEFT = 0x13,
+    RAD__DRIVE__FRONT_LEFT = 0x12,
 
 } RAD_ID;
 

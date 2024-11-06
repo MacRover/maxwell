@@ -31,7 +31,8 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL},
   {"SET_RAD_TYPE", CAN_SET_RAD_TYPE},
   {"SET_DRVCTRL_MRES", CAN_SET_DRVCTRL_MRES},
-  {"SET_SGCSCONF_CS", CAN_SET_SGCSCONF_CS}
+  {"SET_SGCSCONF_CS", CAN_SET_SGCSCONF_CS},
+  {"SET_STEPPER_SPEED", CAN_SET_STEPPER_SPEED}
 };
 std::map<std::string, uint8_t> other_cmd = {
   {"CALIBRATE_POS", CAN_CALIBRATE_POS},
@@ -142,6 +143,9 @@ int main(int argc, char ** argv)
           break;
         case CAN_SET_SGCSCONF_CS:
           rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in));
+          break;
+        case CAN_SET_STEPPER_SPEED:
+          rad.set_stepper_speed((uint32_t)std::stoi(val_in));
           break;
       }
     }
