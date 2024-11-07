@@ -146,6 +146,18 @@ int main(void)
     rad_params.SMARTEN_SEMIN = 0b0000;
     rad_params.SMARTEN_SEUP = 0b00;
 
+
+    //DRIVEDAY HARDCODE
+
+    rad_params.RAD_ID = 0x14;
+    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
+    rad_params.STEPPER_SPEED = 1000;
+    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; //every second
+    rad_params.P = 0.06;
+    rad_params.I = 0.000001;
+    rad_params.D = 0;
+
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -231,11 +243,6 @@ int main(void)
     angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
     MX_CAN_UpdateIdAndFilters(&rad_can);
-
-    if (rad_params.STEPPER_SPEED == 0)
-	{
-		rad_params.STEPPER_SPEED = 1;
-	}
 
     uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
 
@@ -821,6 +828,9 @@ int main(void)
                 {
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
+
+                    MX_CAN_UpdateIdAndFilters(&rad_can);
+
                     break;
                 }
                 default:

@@ -43,7 +43,7 @@ def main():
                     send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
                 elif (i == "set target"):
                     j = input("target? ")
-                    send_float_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
+                    send_double_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
                 elif(i == "step motor"):
                     j = input("num pulses? ")
                     step_motor(bus=bus, id=rad_id, value=int(j))
