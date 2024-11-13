@@ -329,3 +329,4 @@ firmware/**/*.launch
 !firmware/**/.cproject
 !firmware/**/.project
 !firmware/RAD/release
+!firmware/VIPER/release
