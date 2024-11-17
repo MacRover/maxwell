@@ -50,7 +50,7 @@ class SwerveDrive(Drive):
         out.rear_left = modules[1]
         out.front_right = modules[2]
         out.rear_right = modules[3]
-        print("Swerve publishing command %s" % out)
+        # print("Swerve publishing command %s" % out)
         self.pub_modules.publish(out)
     
     def publishOdom(self, modules, stamp):
@@ -78,7 +78,7 @@ class TankSteerDrive(Drive):
         out.rear_left = SwerveModule(speed=left_speed)
         out.front_right = SwerveModule(speed=right_speed)
         out.rear_right = SwerveModule(speed=right_speed)
-        print("Tank publishing command %s" % out)
+        # print("Tank publishing command %s" % out)
         self.pub_modules.publish(out)
     
     def publishOdom(self, modules, stamp):
@@ -131,7 +131,7 @@ class DriveController(Node):
         )
     
     def callback(self, msg):
-        self.get_logger().info("Received message %s" % msg)
+        # self.get_logger().info("Received message %s" % msg)
         self.drive.publishOdom(msg, rclpy.clock.Clock().now().to_msg())
     
     def getDrive(self) -> Drive:

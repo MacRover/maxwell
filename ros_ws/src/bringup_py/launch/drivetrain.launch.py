@@ -51,6 +51,12 @@ def generate_launch_description():
         }]
     )
 
+    odom_controller_node = Node(
+        package="drive",
+        executable="drive_modules_odom.py",
+        name="drive_modules_odom"
+    )
+
     vesc_controller_node = Node(
         package="drive",
         executable="vesc_controller.py",
@@ -117,5 +123,6 @@ def generate_launch_description():
 
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
+    ld.add_action(odom_controller_node)
 
     return ld

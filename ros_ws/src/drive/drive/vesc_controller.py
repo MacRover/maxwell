@@ -16,23 +16,11 @@ class VescController(Node):
             SwerveModulesList, 
             "/modules_command",
             self._callback, 10)
-        self.sub_fr_status = self.create_subscription(
-            RadStatus, 
-            "/front_right/rad_status",
-            self._fr_callback, 10)
-        self.sub_fl_status = self.create_subscription(
-            RadStatus, 
-            "/front_left/rad_status",
-            self._fl_callback, 10)
-        self.sub_br_status = self.create_subscription(
-            RadStatus, 
-            "/rear_right/rad_status",
-            self._br_callback, 10)
-        self.sub_bl_status = self.create_subscription(
-            RadStatus, 
-            "/rear_left/rad_status",
-            self._bl_callback, 10)
-        
+        self.sub_odom = self.create_subscription(
+            SwerveModulesList, 
+            "/drive_modules",
+            self._odom_callback, 10)
+
         self.declare_parameter(
             "can_rate",
             10,
@@ -91,14 +79,11 @@ class VescController(Node):
         time.sleep(self.delay_sec)
         self.pub.publish(self.vbr.get_can_message())
     
-    def _fr_callback(self, msg):
-        self.fr_theta = msg.angle - 120.0
-    def _fl_callback(self, msg):
-        self.fl_theta = msg.angle - 120.0
-    def _br_callback(self, msg):
-        self.br_theta = msg.angle - 120.0
-    def _bl_callback(self, msg):
-        self.bl_theta = msg.angle - 120.0
+    def _odom_callback(self, msg):
+        self.fr_theta = msg.front_right.angle
+        self.fl_theta = msg.front_left.angle
+        self.br_theta = msg.rear_right.angle
+        self.bl_theta = msg.rear_left.angle
 
 def main(args=None):
     rclpy.init(args=args)
