@@ -328,9 +328,6 @@ firmware/**/Debug/
 firmware/RAD/**/.settings/
 firmware/RAD/**/Debug/
 
-#STM32 Drivers specific gitignore
-firmware/STM32 Drivers/**/.settings/
-firmware/STM32 Drivers/**/Debug/
 
 firmware/**/*.launch
 
