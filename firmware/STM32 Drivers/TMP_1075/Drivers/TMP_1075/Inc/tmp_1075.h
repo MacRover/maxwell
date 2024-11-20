@@ -10,6 +10,8 @@
 
 #include "stm32f1xx.h"
 
+#define TMP_1075_ADDR (uint16_t)(0x48 << 1)
+
 typedef enum
 {
     TMP_1075_OK = 0x00U,
@@ -43,6 +45,8 @@ typedef struct
 TMP_1075_StatusTypeDef TMP_1075_Init(TMP_1075_HandleTypeDef* tmp_1075);
 
 TMP_1075_StatusTypeDef TMP_1075_DeInit(TMP_1075_HandleTypeDef* tmp_1075);
+
+TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075);
 
 
 #endif /* TMP_1075_INC_TMP_1075_H_ */
