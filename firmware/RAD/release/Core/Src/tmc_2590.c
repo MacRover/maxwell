@@ -10,6 +10,8 @@
 #include "spi.h"
 #include "tim.h"
 
+#include "main.h"
+
 TMC_2590_HandleTypeDef tmc_2590_1;
 
 void MX_TMC_2590_1_Init(void)
@@ -34,39 +36,40 @@ void MX_TMC_2590_1_Init(void)
     tmc_2590_1.Init.SG_TST_Pin = DRIVER_SG_TEST_Pin;
 
     // this data should stored in EEPROM
-    tmc_2590_1.ConfRegisters.CHOPCONF.chm = 0b0;
-    tmc_2590_1.ConfRegisters.CHOPCONF.hdec = 0b00;
-    tmc_2590_1.ConfRegisters.CHOPCONF.hend = 0b0100;
-    tmc_2590_1.ConfRegisters.CHOPCONF.hstrt = 0b110;
-    tmc_2590_1.ConfRegisters.CHOPCONF.rndtf = 0b0;
-    tmc_2590_1.ConfRegisters.CHOPCONF.tbl = 0b10;
-    tmc_2590_1.ConfRegisters.CHOPCONF.toff = 0b100;
+    //These are default params if EEPROM cannot be read
+    tmc_2590_1.ConfRegisters.CHOPCONF.chm = rad_params.CHOPCONF_CHM;
+    tmc_2590_1.ConfRegisters.CHOPCONF.hdec = rad_params.CHOPCONF_HDEC;
+    tmc_2590_1.ConfRegisters.CHOPCONF.hend = rad_params.CHOPCONF_HEND;
+    tmc_2590_1.ConfRegisters.CHOPCONF.hstrt = rad_params.CHOPCONF_HSTRT;
+    tmc_2590_1.ConfRegisters.CHOPCONF.rndtf = rad_params.CHOPCONF_RNDTF;
+    tmc_2590_1.ConfRegisters.CHOPCONF.tbl = rad_params.CHOPCONF_TBL;
+    tmc_2590_1.ConfRegisters.CHOPCONF.toff = rad_params.CHOPCONF_TOFF;
 
-    tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g = 0b0;
-    tmc_2590_1.ConfRegisters.DRVCONF.en_pfd = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCONF.otsens = 0b0;
-    tmc_2590_1.ConfRegisters.DRVCONF.rdsel = 0b11;
-    tmc_2590_1.ConfRegisters.DRVCONF.sdoff = 0b0;
-    tmc_2590_1.ConfRegisters.DRVCONF.shrtsens = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCONF.slp = 0b11110;
-    tmc_2590_1.ConfRegisters.DRVCONF.ts2g = 0b00;
-    tmc_2590_1.ConfRegisters.DRVCONF.tst = 0b0;
-    tmc_2590_1.ConfRegisters.DRVCONF.vsense = 0b0;
+    tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g = rad_params.DRVCONF_DIS_S2G;
+    tmc_2590_1.ConfRegisters.DRVCONF.en_pfd = rad_params.DRVCONF_EN_PFD;
+    tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs = rad_params.DRVCONF_EN_S2VS;
+    tmc_2590_1.ConfRegisters.DRVCONF.otsens = rad_params.DRVCONF_OTSENS;
+    tmc_2590_1.ConfRegisters.DRVCONF.rdsel = rad_params.DRVCONF_RDSEL;
+    tmc_2590_1.ConfRegisters.DRVCONF.sdoff = rad_params.DRVCONF_SDOFF;
+    tmc_2590_1.ConfRegisters.DRVCONF.shrtsens = rad_params.DRVCONF_SHRTSENS;
+    tmc_2590_1.ConfRegisters.DRVCONF.slp = rad_params.DRVCONF_SLP;
+    tmc_2590_1.ConfRegisters.DRVCONF.ts2g = rad_params.DRVCONF_TS2G;
+    tmc_2590_1.ConfRegisters.DRVCONF.tst = rad_params.DRVCONF_TST;
+    tmc_2590_1.ConfRegisters.DRVCONF.vsense = rad_params.DRVCONF_VSENSE;
 
-    tmc_2590_1.ConfRegisters.DRVCTRL.dedge = 0b0;
-    tmc_2590_1.ConfRegisters.DRVCTRL.intpol = 0b1;
-    tmc_2590_1.ConfRegisters.DRVCTRL.mres = 0b1000;
+    tmc_2590_1.ConfRegisters.DRVCTRL.dedge = rad_params.DRVCTRL_DEDGE;
+    tmc_2590_1.ConfRegisters.DRVCTRL.intpol = rad_params.DRVCTRL_INTPOL;
+    tmc_2590_1.ConfRegisters.DRVCTRL.mres = rad_params.DRVCTRL_MRES;
 
-    tmc_2590_1.ConfRegisters.SGCSCONF.cs = 5;
-    tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = 0b0;
-    tmc_2590_1.ConfRegisters.SGCSCONF.sgt = 0b0000010;
-
-    tmc_2590_1.ConfRegisters.SMARTEN.sedn = 0b00;
-    tmc_2590_1.ConfRegisters.SMARTEN.seimin = 0b0;
-    tmc_2590_1.ConfRegisters.SMARTEN.semax = 0b0000;
-    tmc_2590_1.ConfRegisters.SMARTEN.semin = 0b0000;
-    tmc_2590_1.ConfRegisters.SMARTEN.seup = 0b00;
+    tmc_2590_1.ConfRegisters.SGCSCONF.cs = rad_params.SGCSCONF_CS;
+    tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = rad_params.SGCSCONF_SFILT;
+    tmc_2590_1.ConfRegisters.SGCSCONF.sgt = rad_params.SGCSCONF_SGT;
+    
+    tmc_2590_1.ConfRegisters.SMARTEN.sedn = rad_params.SMARTEN_SEDN;
+    tmc_2590_1.ConfRegisters.SMARTEN.seimin = rad_params.SMARTEN_SEIMIN;
+    tmc_2590_1.ConfRegisters.SMARTEN.semax = rad_params.SMARTEN_SEMAX;
+    tmc_2590_1.ConfRegisters.SMARTEN.semin = rad_params.SMARTEN_SEMIN;
+    tmc_2590_1.ConfRegisters.SMARTEN.seup = rad_params.SMARTEN_SEUP;
 
     if (TMC_2590_Init(&tmc_2590_1) != TMC_2590_OK)
     {
