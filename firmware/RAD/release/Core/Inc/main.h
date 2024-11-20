@@ -37,6 +37,75 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+typedef enum {
+	RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT,
+	RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT,
+	RAD_TYPE_ARM_BASE,
+	RAD_TYPE_ARM_ELBOW,
+	RAD_TYPE_ARM_WRIST,
+	RAD_TYPE_ARM_GRIPPER,
+	RAD_TYPE_UNDEFINED = 0xFF //making enum uint8_t wide
+} RAD_TYPE;
+
+
+typedef struct __attribute__((packed)){
+	double P;
+	double I;
+	double D;
+	uint8_t RAD_ID;
+	RAD_TYPE RAD_TYPE;
+	uint8_t HOME_POSITION;
+	uint16_t STEPPER_SPEED;
+	uint16_t ODOM_INTERVAL;
+ 	uint16_t HEALTH_INTERVAL;
+	uint8_t DRVCONF_TST;// : 1;
+	uint8_t DRVCONF_SLP;// : 5;
+	uint8_t DRVCONF_DIS_S2G;// : 1;
+	uint8_t DRVCONF_TS2G;// : 2;
+	uint8_t DRVCONF_SDOFF;// : 1;
+	uint8_t DRVCONF_VSENSE;// : 1;
+	uint8_t DRVCONF_RDSEL;// : 2;
+	uint8_t DRVCONF_OTSENS;// : 1;
+	uint8_t DRVCONF_SHRTSENS;// : 1;
+	uint8_t DRVCONF_EN_PFD;// : 1;
+	uint8_t DRVCONF_EN_S2VS;// : 1;
+	uint8_t SGCSCONF_SFILT;// : 1;
+	uint8_t SGCSCONF_SGT;// : 7;
+	uint8_t SGCSCONF_CS;// : 8;
+	uint8_t SMARTEN_SEIMIN;// : 1;
+	uint16_t SMARTEN_SEDN;// : 13;
+	uint8_t SMARTEN_SEMAX;// : 4;
+	uint8_t SMARTEN_SEUP;// : 2;
+	uint8_t SMARTEN_SEMIN;// : 4;
+	uint8_t CHOPCONF_TBL;// : 2;
+	uint8_t CHOPCONF_CHM;// : 1;
+	uint8_t CHOPCONF_RNDTF;// : 1;
+	uint8_t CHOPCONF_HDEC;// : 2;
+	uint8_t CHOPCONF_HEND;// : 4;
+	uint8_t CHOPCONF_HSTRT;// : 3;
+	uint8_t CHOPCONF_TOFF;// : 4;
+	uint8_t DRVCTRL_INTPOL;// : 1;
+	uint8_t DRVCTRL_DEDGE;// : 1;
+	uint8_t DRVCTRL_MRES;// : 4;
+} RAD_PARAMS_TypeDef;
+
+typedef struct
+{
+    //UPDATE THIS TO INCLUDE ERRORS
+    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
+    double current_angle;
+//    float current_speed;
+
+    uint8_t EEPROM_STATUS;
+    uint8_t TMC_STATUS;
+    uint8_t ENCODER_STATUS;
+    uint8_t RAD_STATE;
+    uint8_t ls_1;
+
+} RAD_STATUS_TypeDef;
+
+extern RAD_PARAMS_TypeDef rad_params;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -95,6 +164,11 @@ void Error_Handler(void);
 #define DRIVER_DIR_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+#define RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS 20
+#define RAD_TYPE_DRIVETRAIN_GEARING 30
+
+#define ANGLE_ERROR_THRESHOLD 0.4
 
 /* USER CODE END Private defines */
 

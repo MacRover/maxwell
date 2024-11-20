@@ -322,7 +322,15 @@ dkms.conf
 # stmcubeide gitignore
 firmware/**/.settings/
 firmware/**/Debug/
-firmware/**/Release/
+
+
+#rad specific gitignore
+firmware/RAD/**/.settings/
+firmware/RAD/**/Debug/
+
+#STM32 Drivers specific gitignore
+firmware/STM32 Drivers/**/.settings/
+firmware/STM32 Drivers/**/Debug/
 
 firmware/**/*.launch
 

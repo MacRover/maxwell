@@ -161,18 +161,19 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
     }
 
     // TODO check conf registers
+    
+    TMC_2590_StateTypeDef set_register_error;
 
     // set driver state
     htmc2590->State = TMC_2590_STATE_BUSY;
-    __send_conf_registers(htmc2590);
+    set_register_error = __send_conf_registers(htmc2590);
 
     htmc2590->State = TMC_2590_STATE_READY;
 
-    return TMC_2590_OK;
+    return set_register_error;
 }
 
-TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
-        int16_t steps)
+TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int16_t steps)
 {
     // check tmc2590 handle allocation
     if (htmc2590 == NULL)
@@ -249,6 +250,12 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
 
     HAL_TIM_PWM_Start_DMA(htmc2590->Init.STEP_Tim, htmc2590->Init.STEP_Channel,
             (uint32_t*) htmc2590->__pwm_dma_ptr, pwm_pulses);
+    return TMC_2590_OK;
+}
+
+TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, uint32_t autoreload)
+{
+    __HAL_TIM_SET_AUTORELOAD(htmc2590->Init.STEP_Tim, autoreload);
     return TMC_2590_OK;
 }
 

@@ -1,6 +1,0 @@
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:10:24:AT24C04C_Init	6
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:45:24:AT24C04C_DeInit	5
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:75:24:AT24C04C_ReadData	7
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:117:24:AT24C04C_WriteData	7
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:160:10:__mem_read	3
-../Drivers/AT24C04C/Src/stm32f1xx_at24c04c.c:180:10:__mem_write	3

@@ -7,15 +7,23 @@
 
 #include "queue.h"
 
-Queue_TypeDef can_message_queue_1;
+Queue_TypeDef can_message_queue_rad;
+Queue_TypeDef can_message_queue_global;
 
 void MX_Queue_1_Init(void)
 {
-    Queue_TypeDef *queue_ptr = create_queue();
-    if (queue_ptr == NULL)
+    Queue_TypeDef *rad_queue_ptr = create_queue();
+    Queue_TypeDef *global_queue_ptr = create_queue();
+    if (rad_queue_ptr == NULL)
     {
 //       todo handle error
         return;
     }
-    can_message_queue_1 = *queue_ptr;
+    if (global_queue_ptr == NULL)
+    {
+//       todo handle error
+        return;
+    }
+    can_message_queue_rad = *rad_queue_ptr;
+    can_message_queue_global = *global_queue_ptr;
 }

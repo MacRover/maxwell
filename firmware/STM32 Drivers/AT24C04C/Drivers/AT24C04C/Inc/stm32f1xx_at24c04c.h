@@ -10,6 +10,9 @@
 
 #include "stm32f1xx.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 /**
  * @brief  AT24C04C Status structures definition
  */
@@ -35,6 +38,9 @@ typedef struct
 
     uint8_t a1_pin;
 
+    uint8_t page_size;
+
+    uint8_t pages;
 } AT24C04C_InitTypeDef;
 
 /**
@@ -70,6 +76,13 @@ AT24C04C_StatusTypeDef AT24C04C_WriteData(AT24C04C_HandleTypeDef *hat24c04c, uin
 
 // Read Data from EEPROM
 AT24C04C_StatusTypeDef AT24C04C_ReadData(AT24C04C_HandleTypeDef *hat24c04c, uint16_t address, uint8_t *buffer, uint16_t len_bytes);
+
+//Write to multiple pages of the EEPROM
+AT24C04C_StatusTypeDef AT24C04C_WritePages(AT24C04C_HandleTypeDef *hat24c04c, uint8_t* pData, uint32_t size, uint8_t eeprom_page_num);
+
+//Read From multiple pages of the EEPROM
+AT24C04C_StatusTypeDef AT24C04C_ReadPages(AT24C04C_HandleTypeDef *hat24c04c, uint8_t* pData, uint32_t size, uint8_t eeprom_page_num);
+
 
 uint16_t __mem_read(AT24C04C_HandleTypeDef *hat24c04c, uint16_t address, uint8_t *buffer, uint16_t len_bytes);
 
