@@ -2,7 +2,7 @@
  * tmp_1075.h
  *
  *  Created on: Nov 18, 2024
- *      Author: johnn
+ *      Author: John
  */
 
 #ifndef TMP_1075_INC_TMP_1075_H_
@@ -26,16 +26,27 @@ typedef enum
 	TMP_1075_CFGR  = 0x01,
 	TMP_1075_LLIM  = 0x02,
 	TMP_1075_HLIM  = 0x03,
-	TMP_1075_DIEID = 0x0F
+//	TMP_1075_DIEID = 0x0F
 
 } TMP_1075_I2C_Addresses;
 
 typedef struct
 {
-	int16_t temp;
-	uint8_t cfg_reg;
-	int16_t low_limit_reg;
-	int16_t high_limit_reg;
+	uint8_t os;       // One shot conversion mode (1 for single, 0 for continuous)
+	uint8_t faults;   // Number of faults for alert to trigger (00b: 1, 01b: 2, 10b: 4, 11b: 6)
+	uint8_t polarity; // Polarity of the output pin (0 for comparator mode, 1 for interrupt mode)
+	uint8_t tm;       // Function of alert pin (0 for comparator mode, 1 for interrupt mode)
+	uint8_t sd;       // Shutdown mode (0 for continuous, 1 for shutdown/single)
+
+} TMP_1075_ConfTypeDef;
+
+typedef struct
+{
+	int16_t temp;              // Current temperature reading
+	int16_t low_limit;         // low limit temperature
+	int16_t high_limit;        // high limit temperature
+
+	TMP_1075_ConfTypeDef conf; // configuration
 
 	I2C_HandleTypeDef* __hi2c;
 
@@ -48,5 +59,10 @@ TMP_1075_StatusTypeDef TMP_1075_DeInit(TMP_1075_HandleTypeDef* tmp_1075);
 
 TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075);
 
+TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075);
+
+TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075);
+
+TMP_1075_StatusTypeDef TMP_1075_SetConfRegisters(TMP_1075_HandleTypeDef* tmp_1075);
 
 #endif /* TMP_1075_INC_TMP_1075_H_ */
