@@ -31,8 +31,8 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	HAL_StatusTypeDef ret;
 
 	buf[0] = TMP_1075_LLIM;
-	buf[1] = ((tmp_1075->low_limit & 0xff0) >> 4);
-	buf[2] = ((tmp_1075->low_limit & 0xf) << 4);
+	buf[1] = (((uint16_t)(tmp_1075->low_limit * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((uint16_t)(tmp_1075->low_limit * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -56,8 +56,8 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	HAL_StatusTypeDef ret;
 
 	buf[0] = TMP_1075_HLIM;
-	buf[1] = ((tmp_1075->high_limit & 0xff0) >> 4);
-	buf[2] = ((tmp_1075->high_limit & 0xf) << 4);
+	buf[1] = (((uint16_t)(tmp_1075->high_limit * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((uint16_t)(tmp_1075->high_limit * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -109,7 +109,14 @@ TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075)
 		return TMP_1075_TIMEOUT;
 	}
 
-	tmp_1075->temp = (int16_t)( (buf[1] >> 4) | ((uint16_t)buf[0] << 4) );
+	int16_t raw_temp = (int16_t)( (buf[1] >> 4) | ((uint16_t)buf[0] << 4) );
+
+	// convert to 2's complement for int16
+	if (raw_temp & 0x800)
+	{
+		raw_temp |= (0xf000);
+	}
+	tmp_1075->temp = raw_temp / 16.0f;
 
 	return TMP_1075_OK;
 }
@@ -120,7 +127,7 @@ TMP_1075_StatusTypeDef TMP_1075_SetConfRegisters(TMP_1075_HandleTypeDef* tmp_107
 	HAL_StatusTypeDef ret;
 
 	uint8_t conf_reg_high = 0;
-	uint8_t conf_reg_low  = (1 << 7); // Low byte reserved
+	uint8_t conf_reg_low  = 0xa0; // Low byte reserved
 
 	conf_reg_high |= ((tmp_1075->conf.os & 0x01) << 7);
 	conf_reg_high |= (0x03 << 5); // Conversation rate set to 250 ms

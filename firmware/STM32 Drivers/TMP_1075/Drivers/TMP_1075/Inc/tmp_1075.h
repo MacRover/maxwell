@@ -42,9 +42,9 @@ typedef struct
 
 typedef struct
 {
-	int16_t temp;              // Current temperature reading
-	int16_t low_limit;         // low limit temperature
-	int16_t high_limit;        // high limit temperature
+	float temp;              // Current temperature reading (in C)
+	float low_limit;         // low limit temperature
+	float high_limit;        // high limit temperature
 
 	TMP_1075_ConfTypeDef conf; // configuration
 

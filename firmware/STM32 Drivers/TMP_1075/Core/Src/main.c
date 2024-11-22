@@ -22,10 +22,10 @@
 #include "i2c.h"
 #include "tim.h"
 #include "gpio.h"
-#include "tmp_1075.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "tmp.h"
 
 /* USER CODE END Includes */
 
@@ -95,16 +95,23 @@ int main(void)
   MX_I2C2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  MX_TMP_1075_Init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  TMP_1075_SetHighLimit(&h_tmp_1075);
+  TMP_1075_SetLowLimit(&h_tmp_1075);
+  TMP_1075_SetConfRegisters(&h_tmp_1075);
+
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  TMP_1075_ReadTemp(&h_tmp_1075);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
