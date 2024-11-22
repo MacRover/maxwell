@@ -6,6 +6,11 @@
  */
 #include "tmp_1075.h"
 
+/**
+ * TMP_1075_Init
+ *
+ * Initialize TMP 1075 handle
+ */
 TMP_1075_StatusTypeDef TMP_1075_Init(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	if (tmp_1075 == NULL)
@@ -19,12 +24,22 @@ TMP_1075_StatusTypeDef TMP_1075_Init(TMP_1075_HandleTypeDef* tmp_1075)
 	return TMP_1075_OK;
 }
 
+/**
+ * TMP_1075_DeInit
+ *
+ * Uninitialize TMP 1075 handle
+ */
 TMP_1075_StatusTypeDef TMP_1075_DeInit(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	tmp_1075->__hi2c = NULL;
 	return TMP_1075_OK;
 }
 
+/**
+ * TMP_1075_SetLowLimit
+ *
+ * Sets low temperature limit reading of TMP 1075
+ */
 TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	uint8_t buf[3];
@@ -50,6 +65,11 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	return TMP_1075_OK;
 }
 
+/**
+ * TMP_1075_SetHighLimit
+ *
+ * Sets high temperature limit reading of TMP 1075
+ */
 TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	uint8_t buf[3];
@@ -75,6 +95,11 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	return TMP_1075_OK;
 }
 
+/**
+ * TMP_1075_ReadTemp
+ *
+ * Reads temperature (in C) of TMP 1075
+ */
 TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	uint8_t buf[2];
@@ -116,11 +141,16 @@ TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075)
 	{
 		raw_temp |= (0xf000);
 	}
-	tmp_1075->temp = raw_temp / 16.0f;
+	tmp_1075->temp = raw_temp / 16.0f; // Convert to Celsius
 
 	return TMP_1075_OK;
 }
 
+/**
+ * TMP_1075_SetConfRegisters
+ *
+ * Sets configuration register of TMP 1075
+ */
 TMP_1075_StatusTypeDef TMP_1075_SetConfRegisters(TMP_1075_HandleTypeDef* tmp_1075)
 {
 	uint8_t buf[3];
