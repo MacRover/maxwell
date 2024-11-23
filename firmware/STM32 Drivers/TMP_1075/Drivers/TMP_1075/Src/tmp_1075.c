@@ -58,8 +58,8 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 
 	// Transmit 12 bits for LLIM
 	buf[0] = TMP_1075_LLIM;
-	buf[1] = (((uint16_t)(llt * 16.0f) & 0xff0) >> 4);
-	buf[2] = (((uint16_t)(llt * 16.0f) & 0xf) << 4);
+	buf[1] = (((int16_t)(llt * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((int16_t)(llt * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -100,8 +100,8 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 
 	// Transmit 12 bits for HLIM
 	buf[0] = TMP_1075_HLIM;
-	buf[1] = (((uint16_t)(hlt * 16.0f) & 0xff0) >> 4);
-	buf[2] = (((uint16_t)(hlt * 16.0f) & 0xf) << 4);
+	buf[1] = (((int16_t)(hlt * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((int16_t)(hlt * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
