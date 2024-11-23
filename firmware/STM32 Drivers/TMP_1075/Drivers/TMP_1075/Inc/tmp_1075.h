@@ -12,6 +12,9 @@
 
 #define TMP_1075_ADDR (uint16_t)(0x48 << 1)
 
+#define MIN_TEMP_C -50
+#define MAX_TEMP_C 125
+
 typedef enum
 {
     TMP_1075_OK = 0x00U,

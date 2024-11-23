@@ -45,9 +45,20 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	uint8_t buf[3];
 	HAL_StatusTypeDef ret;
 
+	int16_t llt = (int16_t)(tmp_1075->low_limit * 16.0f);
+	// Bound temperature limit
+	if (llt > 16 * MAX_TEMP_C)
+	{
+		llt = 16 * MAX_TEMP_C;
+	}
+	else if (llt < 16 * MIN_TEMP_C)
+	{
+		llt = 16 * MIN_TEMP_C;
+	}
+
 	buf[0] = TMP_1075_LLIM;
-	buf[1] = (((uint16_t)(tmp_1075->low_limit * 16.0f) & 0xff0) >> 4);
-	buf[2] = (((uint16_t)(tmp_1075->low_limit * 16.0f) & 0xf) << 4);
+	buf[1] = ((llt & 0xff0) >> 4);
+	buf[2] = ((llt & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -75,9 +86,20 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	uint8_t buf[3];
 	HAL_StatusTypeDef ret;
 
+	int16_t hlt = (int16_t)(tmp_1075->high_limit * 16.0f);
+	// Bound temperature limit
+	if (hlt > 16 * MAX_TEMP_C)
+	{
+		hlt = 16 * MAX_TEMP_C;
+	}
+	else if (hlt < 16 * MIN_TEMP_C)
+	{
+		hlt = 16 * MIN_TEMP_C;
+	}
+
 	buf[0] = TMP_1075_HLIM;
-	buf[1] = (((uint16_t)(tmp_1075->high_limit * 16.0f) & 0xff0) >> 4);
-	buf[2] = (((uint16_t)(tmp_1075->high_limit * 16.0f) & 0xf) << 4);
+	buf[1] = ((hlt & 0xff0) >> 4);
+	buf[2] = ((hlt & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
