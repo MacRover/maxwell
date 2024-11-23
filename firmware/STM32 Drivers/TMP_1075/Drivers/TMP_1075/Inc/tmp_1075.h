@@ -12,8 +12,8 @@
 
 #define TMP_1075_ADDR (uint16_t)(0x48 << 1)
 
-#define MIN_TEMP_C -50
-#define MAX_TEMP_C 125
+#define MIN_TEMP_C -50.0
+#define MAX_TEMP_C 125.0
 
 typedef enum
 {

@@ -45,20 +45,21 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	uint8_t buf[3];
 	HAL_StatusTypeDef ret;
 
-	int16_t llt = (int16_t)(tmp_1075->low_limit * 16.0f);
+	float llt = (tmp_1075->low_limit);
 	// Bound temperature limit
-	if (llt > 16 * MAX_TEMP_C)
+	if (llt > MAX_TEMP_C)
 	{
-		llt = 16 * MAX_TEMP_C;
+		llt = MAX_TEMP_C;
 	}
-	else if (llt < 16 * MIN_TEMP_C)
+	else if (llt < MIN_TEMP_C)
 	{
-		llt = 16 * MIN_TEMP_C;
+		llt = MIN_TEMP_C;
 	}
 
+	// Transmit 12 bits for LLIM
 	buf[0] = TMP_1075_LLIM;
-	buf[1] = ((llt & 0xff0) >> 4);
-	buf[2] = ((llt & 0xf) << 4);
+	buf[1] = (((uint16_t)(llt * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((uint16_t)(llt * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -86,20 +87,21 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
 	uint8_t buf[3];
 	HAL_StatusTypeDef ret;
 
-	int16_t hlt = (int16_t)(tmp_1075->high_limit * 16.0f);
+	float hlt = (tmp_1075->high_limit);
 	// Bound temperature limit
-	if (hlt > 16 * MAX_TEMP_C)
+	if (hlt > MAX_TEMP_C)
 	{
-		hlt = 16 * MAX_TEMP_C;
+		hlt = MAX_TEMP_C;
 	}
-	else if (hlt < 16 * MIN_TEMP_C)
+	else if (hlt < MIN_TEMP_C)
 	{
-		hlt = 16 * MIN_TEMP_C;
+		hlt = MIN_TEMP_C;
 	}
 
+	// Transmit 12 bits for HLIM
 	buf[0] = TMP_1075_HLIM;
-	buf[1] = ((hlt & 0xff0) >> 4);
-	buf[2] = ((hlt & 0xf) << 4);
+	buf[1] = (((uint16_t)(hlt * 16.0f) & 0xff0) >> 4);
+	buf[2] = (((uint16_t)(hlt * 16.0f) & 0xf) << 4);
 
 	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
@@ -181,18 +183,18 @@ TMP_1075_StatusTypeDef TMP_1075_SetConfRegisters(TMP_1075_HandleTypeDef* tmp_107
 	uint8_t conf_reg_high = 0;
 	uint8_t conf_reg_low  = 0xa0; // Low byte reserved
 
-	conf_reg_high |= ((tmp_1075->conf.os & 0x01) << 7);
+	conf_reg_high |= ((tmp_1075->conf.os & 0x01) << 7); // Used only in shutdown mode, returns 0 when read
 	conf_reg_high |= (0x03 << 5); // Conversation rate set to 250 ms
 	conf_reg_high |= ((tmp_1075->conf.faults & 0x03) << 3);
 	conf_reg_high |= ((tmp_1075->conf.polarity & 0x01) << 2);
 	conf_reg_high |= ((tmp_1075->conf.tm & 0x01) << 1);
-	conf_reg_high |= ((tmp_1075->conf.sd & 0x01) << 0);
+	conf_reg_high |= ((tmp_1075->conf.sd & 0x01) << 0); // If shutdown enabled, set os to 1 to trigger a single conversion
 
 	buf[0] = TMP_1075_CFGR;
 	buf[1] = conf_reg_high;
 	buf[2] = conf_reg_low;
 
-	ret = HAL_I2C_Master_Receive(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
+	ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
 	if (ret == HAL_ERROR)
 	{
 		return TMP_1075_ERROR;
