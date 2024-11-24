@@ -13,6 +13,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(custom_interfaces REQUIRED)
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
@@ -21,7 +23,17 @@ target_include_directories(keyboard_controller PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(keyboard_controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
+
+add_executable(rad_converter src/rad_converter.cpp)
+ament_target_dependencies(rad_converter rclcpp sensor_msgs custom_interfaces trajectory_msgs)
+target_include_directories(rad_converter PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(rad_converter PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+
 install(TARGETS keyboard_controller
+  rad_converter
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files.
