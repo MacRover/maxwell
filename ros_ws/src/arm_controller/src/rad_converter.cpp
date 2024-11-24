@@ -12,8 +12,6 @@ RAD_Converter::RAD_Converter() : Node("rad_arm_converter"),
 {
   joint_trajectory_.joint_names = { "arm_base_joint", "arm_shoulder_joint", "arm_elbow_joint", "arm_wrist_joint", "gripper_joint"};
   joint_trajectory_.points.resize(1);
-  // joint_trajectory_.points.push_back(trajectory_msgs::msg::JointTrajectoryPoint());
-  // joint_trajectory_.points[0].positions = {0.0, 0.0, 0.0, 0.0, 0.0};
   joint_trajectory_.points[0].time_from_start = rclcpp::Duration(1, 0);
   joint_trajectory_.points[0].positions = {0.0, 0.0, 0.0, 0.0, 0.0};
   joint_trajectory_.points[0].velocities = {0.0, 0.0, 0.0, 0.0, 0.0};
@@ -26,9 +24,6 @@ RAD_Converter::RAD_Converter() : Node("rad_arm_converter"),
   }
   pub_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/arm_controller/joint_trajectory", 1);
 
-  // timer_ = this->create_wall_timer(
-  //     std::chrono::milliseconds(1000 / rate),
-  //     std::bind(&RAD_Status::_timer_callback, this));
 }
 
 int main(int argc, char **argv)
