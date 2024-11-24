@@ -16,10 +16,11 @@ class SteerTest : public rclcpp::Node
 public:
     SteerTest(std::string name);
 private:
-    void _callback(const Int64& msg);
+    void _callback_fr(const Int64& msg);
+    void _callback_fl(const Int64& msg);
     void _timer_callback(void);
     std::shared_ptr<rclcpp::Publisher<CANraw> > can_pub_;
-    std::shared_ptr<rclcpp::Subscription<Int64> > sub_;
+    std::shared_ptr<rclcpp::Subscription<Int64> > sub_fr_, sub_fl_;
     std::shared_ptr<rclcpp::TimerBase> timer_;
-    CANraw can_msg;
+    CANraw can_msg_1, can_msg_2;
 };
