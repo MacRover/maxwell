@@ -1,7 +1,19 @@
-float32 angle
-float32 speed
-float32 p
-float32 i
-float32 d
+std_msgs/Header header
+
+# Current angle reading (deg)
+float64 angle
+
+# EEPROM Status
+uint8 eeprom_status
+
+# TMC Status
+uint8 tmc_status
+
+# encoder status
+uint8 encoder_status
+
+# rad state
+uint8 rad_state
+
+# limit switch state
 bool ls_state false
-bool upper_bound_state false

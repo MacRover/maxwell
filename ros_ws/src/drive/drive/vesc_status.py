@@ -95,6 +95,7 @@ class VescStatus(Node):
                 self.max_cur = cur
             self.output = f"RPM:{rpm}, Current:{cur}A, Max Current:{self.max_cur}A, Duty Cycle:{dc}%"
             self.rpm.data = rpm
+            # We only care about rpm, publish as topic
             self.pub_status.publish(self.rpm)
 
         elif (self.status == Status.STATUS_2):
