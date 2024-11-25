@@ -53,6 +53,8 @@ typedef struct
 
 	I2C_HandleTypeDef* __hi2c;
 
+	uint8_t a0_pin;
+
 } TMP_1075_HandleTypeDef;
 
 

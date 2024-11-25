@@ -61,7 +61,7 @@ TMP_1075_StatusTypeDef TMP_1075_SetLowLimit(TMP_1075_HandleTypeDef* tmp_1075)
     buf[1] = (((int16_t)(llt * 16.0f) & 0xff0) >> 4);
     buf[2] = (((int16_t)(llt * 16.0f) & 0xf) << 4);
 
-    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
+    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR | (tmp_1075->a0_pin << 1), buf, 3, 1000);
     if (ret == HAL_ERROR)
     {
         return TMP_1075_ERROR;
@@ -103,7 +103,7 @@ TMP_1075_StatusTypeDef TMP_1075_SetHighLimit(TMP_1075_HandleTypeDef* tmp_1075)
     buf[1] = (((int16_t)(hlt * 16.0f) & 0xff0) >> 4);
     buf[2] = (((int16_t)(hlt * 16.0f) & 0xf) << 4);
 
-    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
+    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR | (tmp_1075->a0_pin << 1), buf, 3, 1000);
     if (ret == HAL_ERROR)
     {
         return TMP_1075_ERROR;
@@ -130,7 +130,7 @@ TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075)
     HAL_StatusTypeDef ret;
 
     buf[0] = TMP_1075_TEMP;
-    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 1, 1000);
+    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR | (tmp_1075->a0_pin << 1), buf, 1, 1000);
     if (ret == HAL_ERROR)
     {
         return TMP_1075_ERROR;
@@ -144,7 +144,7 @@ TMP_1075_StatusTypeDef TMP_1075_ReadTemp(TMP_1075_HandleTypeDef* tmp_1075)
         return TMP_1075_TIMEOUT;
     }
 
-    ret = HAL_I2C_Master_Receive(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 2, 1000);
+    ret = HAL_I2C_Master_Receive(tmp_1075->__hi2c, TMP_1075_ADDR | (tmp_1075->a0_pin << 1), buf, 2, 1000);
     if (ret == HAL_ERROR)
     {
         return TMP_1075_ERROR;
@@ -194,7 +194,7 @@ TMP_1075_StatusTypeDef TMP_1075_SetConfRegisters(TMP_1075_HandleTypeDef* tmp_107
     buf[1] = conf_reg_high;
     buf[2] = conf_reg_low;
 
-    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR, buf, 3, 1000);
+    ret = HAL_I2C_Master_Transmit(tmp_1075->__hi2c, TMP_1075_ADDR | (tmp_1075->a0_pin << 1), buf, 3, 1000);
     if (ret == HAL_ERROR)
     {
         return TMP_1075_ERROR;
