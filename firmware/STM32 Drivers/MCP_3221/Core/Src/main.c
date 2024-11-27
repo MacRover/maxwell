@@ -22,6 +22,7 @@
 #include "i2c.h"
 #include "tim.h"
 #include "gpio.h"
+#include "viper_mcp3221.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -94,7 +95,14 @@ int main(void)
   MX_I2C2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  //////////////// TESTING DRIVER /////////////////////////
+  float input_voltage = 0.0;
+  float input_current = 0.0;
 
+  if (VIPER_MCP3221_Init(&hi2c1) != HAL_OK) {
+      Error_Handler(); // Handle init error
+  }
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET); // indicate successful init
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -104,7 +112,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+/*
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
 	  HAL_Delay(1000);
@@ -112,7 +120,32 @@ int main(void)
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 	  HAL_Delay(1000);
+*/
+      // Read input voltage
+      input_voltage = VIPER_GetInputVoltage();
+      if (input_voltage >= 0) {
+          // Indicate successful voltage read by toggling LED
+          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      } else {
+          // Error in reading voltage - blink error LED quickly
+          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+          HAL_Delay(100); // Faster blink to indicate an error
+      }
 
+      HAL_Delay(1000); // Delay for stability between reads
+
+      // read input current
+      input_current = VIPER_GetInputCurrent();
+      if (input_current >= 0) {
+          // Indicate successful voltage read by toggling LED
+          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      } else {
+          // Error in reading voltage - blink error LED quickly
+          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+          HAL_Delay(100); // Faster blink to indicate an error
+      }
+
+      HAL_Delay(1000); // Delay for stability between reads
 
   }
   /* USER CODE END 3 */
