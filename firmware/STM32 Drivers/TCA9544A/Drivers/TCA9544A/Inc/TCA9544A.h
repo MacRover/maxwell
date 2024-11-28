@@ -41,6 +41,6 @@ TCA9544A_StatusTypeDef TCA9544A_Init(TCA9544A_HandleTypeDef *device);
 
 TCA9544A_StatusTypeDef TCA9544A_SelectChannel(TCA9544A_HandleTypeDef *device, TCA9544A_ChannelSelect channel);
 
-TCA9544A_ChannelSelect TCA9544A_ReadCurrentChannel(TCA9544A_HandleTypeDef *device);
+TCA9544A_ChannelSelect TCA9544A_ReadChannel(TCA9544A_HandleTypeDef *device);
 
 #endif /* TCA9544A_INC_TCA9544A_H_ */

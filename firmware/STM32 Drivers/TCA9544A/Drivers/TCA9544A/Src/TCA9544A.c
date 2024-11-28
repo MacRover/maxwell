@@ -49,6 +49,36 @@ TCA9544A_StatusTypeDef TCA9544A_SelectChannel(TCA9544A_HandleTypeDef *device, TC
 	return status;
 }
 
-TCA9544A_ChannelSelect TCA9544A_ReadCurrentChannel(TCA9544A_HandleTypeDef *device) {
-	return device->current_channel;
+TCA9544A_StatusTypeDef TCA9544A_ReadChannel(TCA9544A_HandleTypeDef *device) {
+	HAL_StatusTypeDef i2c_status;
+	TCA9544A_StatusTypeDef status;
+
+	uint8_t register_read_buffer;
+	i2c_status = HAL_I2C_Master_Receive(device->__hi2c, (TCA9544A_DevAddr | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), &register_read_buffer, 1, 1000);
+
+	switch (i2c_status) {
+	case HAL_OK:
+		status = TCA9544A_OK;
+		break;
+	case HAL_BUSY:
+		status = TCA9544A_BUSY;
+		break;
+	case HAL_TIMEOUT:
+		status = TCA9544A_TIMEOUT;
+		break;
+	case HAL_ERROR:
+	default:
+		status = TCA9544A_ERROR;
+		break;
+	};
+
+	if (status == TCA9544A_OK) {
+		if ((register_read_buffer & 0b00000100) == 0){
+			device->current_channel = CHANNEL_NONE;
+		} else {
+			device->current_channel = (register_read_buffer & 0b00000011);
+		}
+	}
+
+	return status;
 };
