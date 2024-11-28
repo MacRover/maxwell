@@ -17,17 +17,17 @@ TCA9544A_StatusTypeDef TCA9544A_Init(TCA9544A_HandleTypeDef *device) {
 	return TCA9544A_OK;
 }
 
-TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA9544A_CardSelect card) {
-	device->current_card = card;
+TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA9544A_ChannelSelect channel) {
+	device->current_channel = channel;
 	HAL_StatusTypeDef i2c_status;
 	TCA9544A_StatusTypeDef status;
 
-	if (device->current_card == CARD_NONE) {
+	if (device->current_channel == CHANNEL_NONE) {
 		uint8_t register_write_buffer = 0b00000000;
-		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (TCA9544A_DevAddr | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), &register_write_buffer, 1, 1000);
+		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (TCA9544A_DevAddr | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 0), &register_write_buffer, 1, 1000);
 	} else {
-		uint8_t register_write_buffer = 0b00000100 | (device->current_card - 1);
-		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (TCA9544A_DevAddr | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), &register_write_buffer, 1, 1000);
+		uint8_t register_write_buffer = 0b00000100 | device->current_channel;
+		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (TCA9544A_DevAddr | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 0), &register_write_buffer, 1, 1000);
 	}
 
 	switch (i2c_status) {

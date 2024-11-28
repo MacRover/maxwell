@@ -16,7 +16,7 @@ void TCA_Init() {
 	tca.A1 = 0;
 	tca.A0 = 0;
 
-	tca.current_card = CARD_NONE;
+	tca.current_channel = CHANNEL_NONE;
 
 	if (TCA9544A_Init(&tca) != TCA9544A_OK) {
 		Error_Handler();

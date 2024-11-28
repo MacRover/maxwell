@@ -13,12 +13,12 @@
 #define TCA9544A_DevAddr 0b11100000
 
 typedef enum {
-	CARD_NONE,
-	CARD_0,
-	CARD_1,
-	CARD_2,
-	CARD_3
-} TCA9544A_CardSelect;
+	CHANNEL_0,
+	CHANNEL_1,
+	CHANNEL_2,
+	CHANNEL_3,
+	CHANNEL_NONE
+} TCA9544A_ChannelSelect;
 
 typedef enum {
 	TCA9544A_OK,
@@ -32,13 +32,13 @@ typedef struct {
 	uint8_t A1;
 	uint8_t A0;
 
-	TCA9544A_CardSelect current_card;
+	TCA9544A_ChannelSelect current_channel;
 
 	I2C_HandleTypeDef *__hi2c;
 } TCA9544A_HandleTypeDef;
 
 TCA9544A_StatusTypeDef TCA9544A_Init(TCA9544A_HandleTypeDef *device);
 
-TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA9544A_CardSelect card);
+TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA9544A_ChannelSelect channel);
 
 #endif /* TCA9544A_INC_TCA9544A_H_ */

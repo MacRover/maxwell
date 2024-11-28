@@ -117,7 +117,7 @@ int main(void)
 	  TCA_Init();
 	  TCA9544A_StatusTypeDef status;
 	  for (int i = 0; i < 4; i++) {
-		  status = TCA9544A_SelectCard(&tca, CARD_0 + i);
+		  status = TCA9544A_SelectCard(&tca, CHANNEL_0 + i);
 
 		  if (status != TCA9544A_OK) {
 			  Error_Handler();
