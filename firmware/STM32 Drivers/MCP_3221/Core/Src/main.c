@@ -20,12 +20,12 @@
 #include "main.h"
 #include "can.h"
 #include "i2c.h"
-#include "tim.h"
+#include "usart.h"
 #include "gpio.h"
-#include "viper_mcp3221.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "viper_mcp3221.h"
 
 /* USER CODE END Includes */
 
@@ -76,8 +76,8 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
   /* USER CODE BEGIN Init */
+  HAL_StatusTypeDef i2c_status;
 
   /* USER CODE END Init */
 
@@ -93,13 +93,15 @@ int main(void)
   MX_CAN_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
-  MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  uint8_t register_write_buffer = 0b00000100 | 0;
+  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
   //////////////// TESTING DRIVER /////////////////////////
-  float input_voltage = 0.0;
-  float input_current = 0.0;
+  uint32_t input_voltage = 0.0;
+  uint32_t input_current = 0.0;
 
-  if (VIPER_MCP3221_Init(&hi2c1) != HAL_OK) {
+  if (VIPER_MCP3221_Init(&hi2c2) != HAL_OK) {
       Error_Handler(); // Handle init error
   }
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET); // indicate successful init
@@ -110,7 +112,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  uint8_t register_write_buffer = 0b00000100 | 0;
+	  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
     /* USER CODE BEGIN 3 */
 /*
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);

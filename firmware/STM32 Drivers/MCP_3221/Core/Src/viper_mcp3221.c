@@ -1,9 +1,9 @@
 #include "viper_mcp3221.h"
 
 // Define project-specific parameters
-#define VIPER_VREF_MV        3300.0
-#define VIPER_SCALING_FACTOR 17.6
-#define VIPER_SENSE_RES      0.1
+#define VIPER_VREF_MV        (float)3300.0
+#define VIPER_SCALING_FACTOR (float)17.6
+#define VIPER_SENSE_RES      (float)0.1
 #define VIPER_ADC_ADDRESS    0x4D
 
 MCP3221 viper_adc;
@@ -18,10 +18,10 @@ HAL_StatusTypeDef VIPER_MCP3221_Init(I2C_HandleTypeDef *hi2c) {
 }
 
 float VIPER_GetInputVoltage() {
-    uint16_t adc_value = MCP3221_readADC(&viper_adc);
+    uint16_t adc_value = MCP3221_readADC(&viper_adc); // get ADC value
     if (adc_value == 0xFFFF) return -1.0; // Error
     float v_adc = MCP3221_getADCVoltage(&viper_adc, adc_value);
-    return v_adc * VIPER_SCALING_FACTOR;
+    return (v_adc * VIPER_SCALING_FACTOR);
 }
 
 float VIPER_GetInputCurrent() {
