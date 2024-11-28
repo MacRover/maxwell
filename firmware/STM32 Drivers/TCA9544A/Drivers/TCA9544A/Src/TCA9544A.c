@@ -17,7 +17,7 @@ TCA9544A_StatusTypeDef TCA9544A_Init(TCA9544A_HandleTypeDef *device) {
 	return TCA9544A_OK;
 }
 
-TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA9544A_ChannelSelect channel) {
+TCA9544A_StatusTypeDef TCA9544A_SelectChannel(TCA9544A_HandleTypeDef *device, TCA9544A_ChannelSelect channel) {
 	device->current_channel = channel;
 	HAL_StatusTypeDef i2c_status;
 	TCA9544A_StatusTypeDef status;
@@ -48,3 +48,7 @@ TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_HandleTypeDef *device, TCA95
 
 	return status;
 }
+
+TCA9544A_ChannelSelect TCA9544A_ReadCurrentChannel(TCA9544A_HandleTypeDef *device) {
+	return device->current_channel;
+};
