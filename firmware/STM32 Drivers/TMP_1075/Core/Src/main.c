@@ -78,6 +78,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  HAL_StatusTypeDef i2c_status;
+  TMP_1075_StatusTypeDef status;
 
   /* USER CODE END Init */
 
@@ -101,6 +103,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t register_write_buffer = 0b00000100 | 0;
+  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
   TMP_1075_SetHighLimit(&h_tmp_1075);
   TMP_1075_SetLowLimit(&h_tmp_1075);
   TMP_1075_SetConfRegisters(&h_tmp_1075);
@@ -111,7 +115,10 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  TMP_1075_ReadTemp(&h_tmp_1075);
+      register_write_buffer = 0b00000100 | 0;
+      i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+
+	  status = TMP_1075_ReadTemp(&h_tmp_1075);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 

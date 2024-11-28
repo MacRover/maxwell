@@ -12,7 +12,7 @@
 #include "i2c.h"
 #include "tmp_1075.h"
 
-extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 
 extern TMP_1075_HandleTypeDef h_tmp_1075;
 

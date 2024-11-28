@@ -11,7 +11,7 @@ TMP_1075_HandleTypeDef h_tmp_1075;
 
 void MX_TMP_1075_Init()
 {
-    h_tmp_1075.__hi2c = &hi2c1;
+    h_tmp_1075.__hi2c = &hi2c2;
     h_tmp_1075.a0_pin = 0;
 
     h_tmp_1075.temp = 0.0;
