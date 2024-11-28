@@ -94,6 +94,7 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
+  TCA_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -106,15 +107,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-
-	  HAL_Delay(1000);
-
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-
-	  HAL_Delay(1000);
-
-	  TCA_Init();
 	  TCA9544A_StatusTypeDef status;
 	  for (int i = 0; i < 4; i++) {
 		  status = TCA9544A_SelectChannel(&tca, CHANNEL_0 + i);
