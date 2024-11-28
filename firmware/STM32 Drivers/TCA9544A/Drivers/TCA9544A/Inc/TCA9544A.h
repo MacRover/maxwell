@@ -16,10 +16,19 @@ typedef enum {
 	CARD_3
 } TCA9544A_CardSelect;
 
+typedef enum {
+	TCA9544A_OK,
+	TCA9544A_ERROR,
+	TCA9544A_BUSY,
+	TCA9544A_TIMEOUT
+} TCA9544A_StatusTypeDef;
+
 typedef struct {
 	uint8_t A2;
 	uint8_t A1;
 	uint8_t A0;
+
+	uint8_t address;
 
 	uint8_t INT0;
 	uint8_t INT1;
@@ -27,14 +36,14 @@ typedef struct {
 	uint8_t INT3;
 
 	TCA9544A_CardSelect current_card;
+
+	I2C_HandleTypeDef *hi2c;
 } TCA9544A_DeviceType;
 
- ITCA9544A_DeviceType TCA9544A_Device;
+ITCA9544A_DeviceType TCA9544A_Device;
 
 void TCA9544A_Init(TCA9544A_DeviceType *device);
 
-void TCA9544A_EnableCard(TCA9544A_DeviceType *device, TCA9544A_CardSelect card);
-
-void TCA9544A_DisableAll(TCA9544A_DeviceType *device);
+TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_DeviceType *device, TCA9544A_CardSelect card);
 
 #endif /* TCA9544A_INC_TCA9544A_H_ */
