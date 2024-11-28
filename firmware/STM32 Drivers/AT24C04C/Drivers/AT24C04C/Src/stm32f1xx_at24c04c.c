@@ -157,6 +157,113 @@ AT24C04C_StatusTypeDef AT24C04C_WriteData(AT24C04C_HandleTypeDef *hat24c04c, uin
     return AT24C04C_OK;
 }
 
+AT24C04C_StatusTypeDef AT24C04C_WritePages(AT24C04C_HandleTypeDef *hat24c04c, uint8_t* pData, uint32_t size, uint8_t eeprom_page_num) {
+	uint16_t eeprom_address = eeprom_page_num * hat24c04c->Init.pages;
+	uint16_t pageCounter = 0;
+	uint16_t address;
+	uint16_t currentSize;
+
+    uint8_t bytesPerPage = hat24c04c->Init.page_size - 1;
+
+	uint8_t* data = (uint8_t*) malloc(bytesPerPage);
+
+    uint16_t status;
+
+	do {
+		// Setting the EEPROM address based on what page we are on
+		address = eeprom_address + pageCounter * hat24c04c->Init.page_size;
+
+		// Checking if the page counter is equivalent to the size passed in, divided by the EEPROM page size
+		// This is integer division
+		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
+		if (pageCounter == (size / (bytesPerPage))) {
+			// Calculate the number of items left to pass in, and set that to the current size
+
+			currentSize = size - (pageCounter * (bytesPerPage));
+
+		} else {
+			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
+			currentSize = bytesPerPage;
+		}
+
+		// Copy elements from pData to data for use
+		memcpy((void *) &data[0], (void *) &pData[pageCounter * (bytesPerPage)], currentSize);
+
+
+        status = __mem_write(hat24c04c, address, &data[0], currentSize);
+
+        if (status != HAL_I2C_ERROR_NONE)
+        {
+            break;
+        }
+		// Incrementing the page counter
+		pageCounter++;
+
+	} while (pageCounter <= (size / (bytesPerPage)));
+	// Deallocating memory needed
+	free((void*) data);
+
+    if (status != HAL_I2C_ERROR_NONE)
+    {
+        return AT24C04C_ERROR;
+    }
+
+    return AT24C04C_OK;
+}
+
+AT24C04C_StatusTypeDef AT24C04C_ReadPages(AT24C04C_HandleTypeDef *hat24c04c, uint8_t* pData, uint32_t size, uint8_t eeprom_page_num) {
+	uint16_t eeprom_address = eeprom_page_num * hat24c04c->Init.pages;
+	uint16_t pageCounter = 0;
+	uint16_t address;
+	uint16_t currentSize;
+
+    uint8_t bytesPerPage = hat24c04c->Init.page_size - 1;
+
+	uint8_t* data = (uint8_t*) malloc(bytesPerPage);
+    uint16_t status;
+
+	do {
+		// Setting the EEPROM address based on what page we are on
+		address = eeprom_address + pageCounter * hat24c04c->Init.page_size;
+
+		// Checking if the page counter is equivalent to the size passed in, divided by the EEPROM page size
+		// This is integer division
+		// If we are passed the last whole multiple of EEPROM Page Size, this will evaluate to true
+		if (pageCounter == (size / (bytesPerPage))) {
+			// Calculate the number of items left to pass in, and set that to the current size
+			currentSize = size - (pageCounter * (bytesPerPage));
+
+		} else {
+			// If we are not passed the last whole multiple of EEPROM page size, set the data size to EEPROM page size
+			currentSize = bytesPerPage;
+		}
+
+        status = __mem_read(hat24c04c, address, data, currentSize);
+
+        if (status != HAL_I2C_ERROR_NONE)
+        {
+            break;
+        }
+
+		memcpy((void *) &pData[pageCounter * (bytesPerPage)], (void *) &data[0], currentSize);
+
+		// Incrementing the page counter
+		pageCounter++;
+
+	} while (pageCounter <= (size / (bytesPerPage)));
+
+	free((void*) data);
+
+    if (status != HAL_I2C_ERROR_NONE)
+    {
+        return AT24C04C_ERROR;
+    }
+
+    return AT24C04C_OK;
+};
+
+
+
 uint16_t __mem_read(AT24C04C_HandleTypeDef *hat24c04c, uint16_t address, uint8_t *buffer, uint16_t len_bytes)
 {
 

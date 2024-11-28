@@ -80,13 +80,49 @@ void MX_CAN_Init(void)
     rad_can.TxHeader.TransmitGlobalTime = DISABLE;
 
     // filter any messages not addressed to self
+    //ADD ABILITY TO READ ESTOP
     // see 24.7.4 Identifier Filtering in STM32F103C8T6 reference manual for filter configuration
-    rad_can.canfilterconfig.FilterBank = 0;
-    rad_can.canfilterconfig.FilterIdLow = (rad_can.id << 3) & 0xffff;
-    rad_can.canfilterconfig.FilterIdHigh = ((rad_can.id << 3) & 0xffff0000)
+
+    //WANT THESE TWO SPECIFIC IDS
+    //0x31FF
+    //0x00FF
+    rad_can.canfilter_global1.FilterBank = 0;
+    rad_can.canfilter_global1.FilterIdLow = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) | 0b100) & 0xffff;
+    rad_can.canfilter_global1.FilterIdHigh = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
-    rad_can.canfilterconfig.FilterMaskIdLow = (0x00ff << 3) & 0xffff;
-    rad_can.canfilterconfig.FilterMaskIdHigh = ((0x00ff << 3) & 0xffff0000)
+    rad_can.canfilter_global1.FilterMaskIdLow = (((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3)) | 0b100) & 0xffff;
+    rad_can.canfilter_global1.FilterMaskIdHigh = ((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global1.FilterMode = CAN_FILTERMODE_IDLIST;
+    rad_can.canfilter_global1.FilterScale = CAN_FILTERSCALE_32BIT;
+    rad_can.canfilter_global1.FilterFIFOAssignment = CAN_RX_FIFO0;
+    rad_can.canfilter_global1.FilterActivation = ENABLE;
+    rad_can.canfilter_global1.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(&(rad_can.hcan), &(rad_can.canfilter_global1));
+
+    //WANT ALL ZEROS EXCEPT COMMAND ID
+    rad_can.canfilter_global2.FilterBank = 1;
+    rad_can.canfilter_global2.FilterIdLow = ((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff;
+    rad_can.canfilter_global2.FilterIdHigh = (((CAN_MESSAGE_IDENTIFIER_GLOBAL << CAN_MESSAGE_IDENTIFIER_OFFSET) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global2.FilterMaskIdLow = (~(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff;
+    rad_can.canfilter_global2.FilterMaskIdHigh = ((~(CAN_MESSAGE_COMMAND_MASK << CAN_MESSAGE_COMMAND_OFFSET) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilter_global2.FilterMode = CAN_FILTERMODE_IDMASK;
+    rad_can.canfilter_global2.FilterScale = CAN_FILTERSCALE_32BIT;
+    rad_can.canfilter_global2.FilterFIFOAssignment = CAN_RX_FIFO0;
+    rad_can.canfilter_global2.FilterActivation = ENABLE;
+    rad_can.canfilter_global2.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(&(rad_can.hcan), &(rad_can.canfilter_global2));
+
+    rad_can.canfilterconfig.FilterBank = 2;
+    rad_can.canfilterconfig.FilterIdLow = (((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can.id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterIdHigh = ((((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can.id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+            >> 16;
+    rad_can.canfilterconfig.FilterMaskIdLow = (((CAN_MESSAGE_IDENTIFIER_MASK << CAN_MESSAGE_IDENTIFIER_OFFSET) | (CAN_MESSAGE_DEVICE_ID_MASK << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+    rad_can.canfilterconfig.FilterMaskIdHigh = ((((CAN_MESSAGE_IDENTIFIER_MASK << CAN_MESSAGE_IDENTIFIER_OFFSET) | (CAN_MESSAGE_DEVICE_ID_MASK << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
             >> 16;
     rad_can.canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
     rad_can.canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
@@ -189,7 +225,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         return;
     }
 
-    new_message->command_id = (rad_can.RxHeader.ExtId & 0xff00) >> 8;
+    new_message->command_id = (rad_can.RxHeader.ExtId >> CAN_MESSAGE_COMMAND_OFFSET) & (CAN_MESSAGE_COMMAND_MASK);
 //    memcpy(new_message->data, rad_can.RxData, 8);
     new_message->dlc = rad_can.RxHeader.DLC;
 
@@ -200,55 +236,145 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         // todo handle error
         return;
     }
-
+    
+    //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
     new_message->data = memcpy(data_ptr, rad_can.RxData,
             sizeof(uint8_t) * new_message->dlc);
 
-    queue_enqueue(&can_message_queue_1, new_message);
+    if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_GLOBAL)
+    {
+        queue_enqueue(&can_message_queue_global, new_message);
+    }
+    else if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_RAD)
+    {
+        queue_enqueue(&can_message_queue_rad, new_message);
+    }
+
 
 }
 
-// todo status return value?
-void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
-        RAD_status_TypeDef status)
+void MX_CAN_UpdateIdAndFilters(RAD_CAN_TypeDef *rad_can_handle)
 {
-    // status message 1
-    rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
-            | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
-            | (status.ls_1 & 0x01);
-    encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
-    rad_can_handle->TxHeader.DLC = 5;
-    // status message 1 is ID 9 according to VESC
-    // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
-    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+	rad_can_handle->id = rad_params.RAD_ID;
 
-    // status message 2
-    encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
-    encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
-    rad_can_handle->TxHeader.DLC = 8;
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-            14);
-    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+	rad_can_handle->canfilterconfig.FilterIdLow = (((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can_handle->id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff;
+	rad_can_handle->canfilterconfig.FilterIdHigh = ((((CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | (rad_can_handle->id << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+			>> 16;
 
-    // status message 3
-    encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
-//    todo include rad motor speed
-//    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
-    rad_can_handle->TxHeader.DLC = 4;
-    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-            15);
+    HAL_CAN_ConfigFilter(&(rad_can_handle->hcan), &(rad_can_handle->canfilterconfig));
+
+
+}
+
+void MX_CAN_Broadcast_Odometry_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
+{
+    encode_double_big_endian(status.current_angle, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(double); //double
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_ODOM_ANGLE);
+
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 }
+
+
+void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS_TypeDef status)
+{
+    rad_can_handle->TxData[0] = status.EEPROM_STATUS;
+    rad_can_handle->TxData[1] = status.TMC_STATUS;
+    rad_can_handle->TxData[2] = status.ENCODER_STATUS;
+    rad_can_handle->TxData[3] = status.RAD_STATE;
+    rad_can_handle->TxData[4] = status.ls_1;
+
+
+    rad_can_handle->TxHeader.DLC = 5; //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_HEALTH_STATUS);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value, uint16_t message_id)
+{
+    encode_double_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(double); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id)
+{
+    encode_uint32_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(uint32_t); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Uint16_Data(RAD_CAN_TypeDef *rad_can_handle, uint16_t value, uint16_t message_id)
+{
+    encode_uint32_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(uint16_t); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value, uint16_t message_id)
+{
+    rad_can_handle->TxData[0] = value;
+    rad_can_handle->TxHeader.DLC = sizeof(uint8_t); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+// todo status return value?
+// void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
+//         RAD_STATUS_TypeDef status)
+// {
+//     // status message 1
+//     rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
+//             | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
+//             | (status.ls_1 & 0x01);
+//     encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
+//     rad_can_handle->TxHeader.DLC = 5;
+//     // status message 1 is ID 9 according to VESC
+//     // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+
+//     // status message 2
+//     encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
+//     encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
+//     rad_can_handle->TxHeader.DLC = 8;
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+//             14);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+
+//     // status message 3
+//     encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
+// //    todo include rad motor speed
+// //    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
+//     rad_can_handle->TxHeader.DLC = 4;
+//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
+//             15);
+//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+// }
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
 {
     // return a value that combines both the device ID and the
     // message ID so that the message can be identified
-    return (message_id << 8) | (device_id);
+    return (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+            (CAN_MESSAGE_RESPONSE_RAD << CAN_MESSAGE_RESPONSE_OFFSET) |
+            (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET);
 }
 
 /* USER CODE END 1 */
