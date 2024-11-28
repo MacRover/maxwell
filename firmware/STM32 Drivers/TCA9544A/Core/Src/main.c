@@ -22,6 +22,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
+#include "tca.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -113,7 +114,11 @@ int main(void)
 
 	  HAL_Delay(1000);
 
-
+	  TCA_Init();
+	  TCA9544A_StatusTypeDef status;
+	  for (int i = 0; i < 4; i++) {
+		  status = TCA9544A_SelectCard(&tca, CARD_0 + i);
+	  }
   }
   /* USER CODE END 3 */
 }
