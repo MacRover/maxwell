@@ -118,8 +118,20 @@ int main(void)
 	  TCA9544A_StatusTypeDef status;
 	  for (int i = 0; i < 4; i++) {
 		  status = TCA9544A_SelectChannel(&tca, CHANNEL_0 + i);
+		  TCA9544A_ChannelSelect set = tca->current_channel;
 
 		  if (status != TCA9544A_OK) {
+			  Error_Handler();
+		  }
+
+		  status = TCA9544A_ReadChannel(&tca);
+		  TCA9544A_ChannelSelect get = tca->current_channel;
+
+		  if (status != TCA9544A_OK) {
+			  Error_Handler();
+		  }
+
+		  if (set != get) {
 			  Error_Handler();
 		  }
 	  }
