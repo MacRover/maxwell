@@ -31,10 +31,10 @@ TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_DeviceType *device, TCA9544A
 
 	if (device->current_card == CARD_NONE) {
 		uint8_t register_write_buffer = 0b00000000;
-		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (device->address | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), *register_write_buffer, 1, 1000);
+		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (device->address | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), &register_write_buffer, 1, 1000);
 	} else {
 		uint8_t register_write_buffer = 0b00000100 | (device->current_card - 1);
-		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (device->address | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), *register_write_buffer, 1, 1000);
+		i2c_status = HAL_I2C_Master_Transmit(device->__hi2c, (device->address | device->A2 << 3 | device->A1 << 2 | device->A0 << 1 | 1), &register_write_buffer, 1, 1000);
 	}
 
 	switch (i2c_status) {

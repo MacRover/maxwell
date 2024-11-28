@@ -8,6 +8,8 @@
 #ifndef TCA9544A_INC_TCA9544A_H_
 #define TCA9544A_INC_TCA9544A_H_
 
+#include "stm32f1xx.h"
+
 typedef enum {
 	CARD_NONE,
 	CARD_0,
@@ -37,12 +39,12 @@ typedef struct {
 
 	TCA9544A_CardSelect current_card;
 
-	I2C_HandleTypeDef *hi2c;
+	I2C_HandleTypeDef *__hi2c;
 } TCA9544A_DeviceType;
 
-ITCA9544A_DeviceType TCA9544A_Device;
+TCA9544A_DeviceType TCA9544A_Device;
 
-void TCA9544A_Init(TCA9544A_DeviceType *device);
+void TCA9544A_Init(TCA9544A_DeviceType *device, I2C_HandleTypeDef *hi2c);
 
 TCA9544A_StatusTypeDef TCA9544A_SelectCard(TCA9544A_DeviceType *device, TCA9544A_CardSelect card);
 
