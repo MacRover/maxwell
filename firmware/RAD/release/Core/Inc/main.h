@@ -87,6 +87,7 @@ typedef struct __attribute__((packed)){
 	uint8_t DRVCTRL_INTPOL;// : 1;
 	uint8_t DRVCTRL_DEDGE;// : 1;
 	uint8_t DRVCTRL_MRES;// : 4;
+	uint8_t PID_ERROR_THRESHOLD;
 } RAD_PARAMS_TypeDef;
 
 typedef struct

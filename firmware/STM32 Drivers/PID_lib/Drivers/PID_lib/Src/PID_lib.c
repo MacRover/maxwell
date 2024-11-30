@@ -49,11 +49,11 @@ void PID_Update(PID_HandleTypeDef *PID)
 
     PID->__error = PID->__set_point - PID->feedback_adj;
 
-    // if (fabs(PID->__error) < PID->Init.error_threshold)
-    // {
-    //     PID->output = 0;
-    //     return;
-    // }
+    if (fabs(PID->__error) < PID->Init.error_threshold)
+    {
+        PID->output = 0;
+        return;
+    }
 
     PID->__i_error = PID->__i_error + (PID->__error * dt);
 
@@ -80,16 +80,6 @@ void PID_Update(PID_HandleTypeDef *PID)
     {
         PID->output = -1.0 * PID->Init.max_output_abs;
         return;
-    }
-
-    if(output_raw < 0 && output_raw > -1*PID->Init.min_output_abs)
-    {
-        PID->output = -1* PID->Init.min_output_abs;
-    }
-
-    if(output_raw > 0 && output_raw < PID->Init.min_output_abs)
-    {
-        PID->output = PID->Init.min_output_abs;
     }
 
     PID->output = output_raw;

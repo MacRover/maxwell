@@ -18,7 +18,6 @@ typedef struct
     double ki;
     double kd;
     double max_output_abs;
-    double min_output_abs;
     double rollover_max;
     double error_threshold;
 } PID_InitTypeDef;
