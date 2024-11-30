@@ -99,6 +99,9 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_DRVCTRL_DEDGE     = 78,
     CAN_GET_DRVCTRL_MRES      = 80,
     CAN_ASSIGN_DEVICE_ID      = 85,
+    CAN_SET_PID_ERROR_THRESHOLD = 87,
+    CAN_GET_PID_ERROR_THRESHOLD = 88,
+
 
     CAN_SEND_ODOM_ANGLE       = 251,
     CAN_SEND_HEALTH_STATUS    = 252
@@ -117,7 +120,7 @@ typedef enum __global_can_msg : uint8_t
 typedef enum __rad_can_id : uint8_t
 {
     RAD__DRIVE__FRONT_RIGHT = 0x11,
-    RAD__DRIVE__BACK_RIGHT = 0x02,
+    RAD__DRIVE__BACK_RIGHT = 0x14,
     RAD__DRIVE__BACK_LEFT = 0x13,
     RAD__DRIVE__FRONT_LEFT = 0x12,
 
@@ -278,6 +281,19 @@ public:
      * 
      */
     void save_to_eeprom();
+
+    /**
+     * @brief Set PID Error Threshold
+     * 
+     * @param thres pid threshold
+     */
+    void set_error_thres(uint8_t thres);
+
+    /**
+     * @brief Get PID Error Threshold
+     * 
+     */
+    void get_error_thres();
 
 
 private:

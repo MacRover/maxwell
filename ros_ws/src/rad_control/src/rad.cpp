@@ -297,6 +297,24 @@ void RAD::set_sgcsconf_cs(uint8_t cs)
     _update_can_data(buf, 1);
 }
 
+void RAD::set_error_thres(uint8_t thres)
+{
+    uint8_t buf[1];
+    buf[0] = thres;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_ERROR_THRESHOLD) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_error_thres()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_ERROR_THRESHOLD) << 8);
+    _update_can_data(buf, 1);
+}
+
 
 void RAD::_update_can_data(uint8_t* buf, size_t size)
 {
