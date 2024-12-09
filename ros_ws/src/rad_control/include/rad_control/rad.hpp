@@ -55,6 +55,7 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_SET_DRVCTRL_INTPOL    = 75,
     CAN_SET_DRVCTRL_DEDGE     = 77,
     CAN_SET_DRVCTRL_MRES      = 79,
+    CAN_PULSE_STEPPER         = 81,
 
 // ------------------------------------
     CAN_GET_TARGET_ANGLE      = 2,
@@ -186,6 +187,12 @@ public:
     void calibrate_zero_pos();
 
     /**
+     * @brief Cancel calibration of RAD motor
+     * 
+     */
+    void cancel_calibration();
+
+    /**
      * @brief Set target angle of RAD motor (in degrees)
      * 
      * @param angle target angle/setpoint
@@ -294,6 +301,13 @@ public:
      * 
      */
     void get_error_thres();
+
+    /**
+     * @brief Pulse motor with given number of steps
+     * 
+     * @param steps number of steps to move
+     */
+    void pulse_stepper(float steps);
 
 
 private:

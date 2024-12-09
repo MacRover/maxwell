@@ -34,10 +34,12 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_DRVCTRL_MRES", CAN_SET_DRVCTRL_MRES},
   {"SET_SGCSCONF_CS", CAN_SET_SGCSCONF_CS},
   {"SET_STEPPER_SPEED", CAN_SET_STEPPER_SPEED},
-  {"SET_PID_ERROR_THRESHOLD", CAN_SET_PID_ERROR_THRESHOLD}
+  {"SET_PID_ERROR_THRESHOLD", CAN_SET_PID_ERROR_THRESHOLD},
+  {"PULSE_STEPPER", CAN_PULSE_STEPPER}
 };
 std::map<std::string, uint8_t> other_cmd = {
-  {"CALIBRATE_POS", CAN_CALIBRATE_POS},
+  {"CALIBRATE", CAN_CALIBRATE_POS},
+  {"CANCEL_CALIBRATE", CAN_CANCEL_CALIBRATE_POS},
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM}
 };
 
@@ -152,6 +154,9 @@ int main(int argc, char ** argv)
         case CAN_SET_PID_ERROR_THRESHOLD:
           rad.set_error_thres((uint8_t)std::stoi(val_in));
           break;
+        case CAN_PULSE_STEPPER:
+          rad.pulse_stepper(std::stof(val_in));
+          break;
       }
     }
     else if (get_cmd.count(in) == 1) // GET TYPE COMMAND
@@ -185,6 +190,8 @@ int main(int argc, char ** argv)
         case CAN_CALIBRATE_POS:
           rad.calibrate_zero_pos();
           break;
+        case CAN_CANCEL_CALIBRATE_POS:
+          rad.cancel_calibration();
       }
     }
 

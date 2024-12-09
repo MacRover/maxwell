@@ -155,6 +155,15 @@ void RAD::calibrate_zero_pos()
     _update_can_data(buf, 1);
 }
 
+void RAD::cancel_calibration()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_CANCEL_CALIBRATE_POS) << 8);
+    _update_can_data(buf, 1);
+}
+
 void RAD::set_rad_type(uint8_t type)
 {
     uint8_t buf[1];
@@ -313,6 +322,16 @@ void RAD::get_error_thres()
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_ERROR_THRESHOLD) << 8);
     _update_can_data(buf, 1);
+}
+
+void RAD::pulse_stepper(float steps)
+{
+    uint8_t buf[4];
+    uint8_t i = 0;
+    __buffer_append_float32(buf, steps, &i);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                    ((uint32_t)l_can_id) | ((uint32_t)(CAN_PULSE_STEPPER) << 8);
+    _update_can_data(buf, 4);
 }
 
 
