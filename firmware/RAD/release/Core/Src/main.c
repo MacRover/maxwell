@@ -147,11 +147,12 @@ int main(void)
     rad_params.SMARTEN_SEUP = 0b00;
 
     rad_params.PID_ERROR_THRESHOLD = 20;
+    rad_params.PID_MAX_OUTPUT = 50;
 
 
     //DRIVEDAY HARDCODE
 
-    rad_params.RAD_ID = 0x13;
+    rad_params.RAD_ID = 0x11;
     rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
     rad_params.STEPPER_SPEED = 1000;
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
@@ -847,6 +848,18 @@ int main(void)
                 case GET_PID_ERROR_THRESHOLD:
                 {
                     MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
+                    break;
+                }
+                case SET_PID_MAX_OUTPUT:
+                {
+                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
+
+                    break;
+                }
+                case GET_PID_MAX_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
                     break;
                 }
                 default:
