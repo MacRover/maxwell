@@ -25,6 +25,54 @@ void PID_Init(PID_HandleTypeDef *PID)
     // todo zero out error & other values
 }
 
+void PID_Update_BangBang(PID_HandleTypeDef *PID)
+{
+    double feedback_raw = *(PID->Init.feedback);
+
+    // adjust rollover count
+    if (feedback_raw < PID->Init.rollover_max * 0.1
+            && PID->__feedback_raw_old > PID->Init.rollover_max * 0.9)
+    {
+        PID->__rollovers++;
+    }
+
+    if (feedback_raw > PID->Init.rollover_max * 0.9
+            && PID->__feedback_raw_old < PID->Init.rollover_max * 0.1)
+    {
+        PID->__rollovers--;
+    }
+
+    PID->feedback_adj = feedback_raw + PID->__rollovers * PID->Init.rollover_max
+            + PID->__offset;
+
+    //Number of steps we are away from our target
+    PID->__error = PID->__set_point - PID->feedback_adj;
+
+    // set old values for next update
+    PID->__error_old = PID->__error;
+    PID->__feedback_raw_old = feedback_raw;
+
+    // fit output to bounds
+    if (PID->__error > PID->Init.max_output_abs)
+    {
+        PID->output = PID->Init.max_output_abs;
+    }
+
+    else if (PID->__error < -1.0 * PID->Init.max_output_abs)
+    {
+        PID->output = -1.0 * PID->Init.max_output_abs;
+    }
+
+    //Apply deadzone
+    else if (fabs(PID->__error) < PID->Init.min_output_abs)
+	{
+		PID->output = 0;
+	}
+
+    return;
+
+}
+
 void PID_Update(PID_HandleTypeDef *PID)
 {
     double feedback_raw = *(PID->Init.feedback);
@@ -49,11 +97,6 @@ void PID_Update(PID_HandleTypeDef *PID)
 
     PID->__error = PID->__set_point - PID->feedback_adj;
 
-    if (fabs(PID->__error) < PID->Init.error_threshold)
-    {
-        PID->output = 0;
-        return;
-    }
 
     PID->__i_error = PID->__i_error + (PID->__error * dt);
 
@@ -76,11 +119,18 @@ void PID_Update(PID_HandleTypeDef *PID)
         return;
     }
 
-    if (output_raw < -1.0 * PID->Init.max_output_abs)
+    else if (output_raw < -1.0 * PID->Init.max_output_abs)
     {
         PID->output = -1.0 * PID->Init.max_output_abs;
         return;
     }
+
+    else if (fabs(output_raw) < PID->Init.min_output_abs)
+	{
+		PID->output = 0;
+        PID->__i_error = 0.0;
+		return;
+	}
 
     PID->output = output_raw;
 }

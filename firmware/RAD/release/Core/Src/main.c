@@ -151,8 +151,8 @@ int main(void)
 
     //DRIVEDAY HARDCODE
 
-    rad_params.RAD_ID = 0x14;
-    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
+    rad_params.RAD_ID = 0x13;
+    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
     rad_params.STEPPER_SPEED = 1000;
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
     rad_params.HEALTH_INTERVAL = 1000; //every second
@@ -212,6 +212,7 @@ int main(void)
 //        rad_params.ODOM_INTERVAL = 1000;
 //        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
+
     }
     //free(temp);
 
@@ -838,14 +839,14 @@ int main(void)
                 }
                 case SET_PID_ERROR_THRESHOLD:
                 {
-                    pid_1.Init.error_threshold = (double) new_message->data[0];
-                    rad_params.PID_ERROR_THRESHOLD = pid_1.Init.error_threshold;
+                    pid_1.Init.min_output_abs = (double) new_message->data[0];
+                    rad_params.PID_ERROR_THRESHOLD = pid_1.Init.min_output_abs;
 
                     break;
                 }
                 case GET_PID_ERROR_THRESHOLD:
                 {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.error_threshold, GET_PID_ERROR_THRESHOLD);
+                    MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
                     break;
                 }
                 default:
@@ -951,9 +952,9 @@ int main(void)
                             break;
                     }
 
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
 
                     
 
@@ -1017,7 +1018,7 @@ int main(void)
                 }
 
                 
-                PID_Update(&pid_1);
+                PID_Update_BangBang(&pid_1);
 
                 if (ls_state == GPIO_PIN_SET)
                 {
