@@ -214,6 +214,7 @@ int main(void)
 //        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
 
+
     }
     //free(temp);
 
@@ -840,14 +841,14 @@ int main(void)
                 }
                 case SET_PID_ERROR_THRESHOLD:
                 {
-                    pid_1.Init.min_output_abs = (double) new_message->data[0];
+                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
                     rad_params.PID_ERROR_THRESHOLD = pid_1.Init.min_output_abs;
 
                     break;
                 }
                 case GET_PID_ERROR_THRESHOLD:
                 {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
                     break;
                 }
                 case SET_PID_MAX_OUTPUT:
@@ -859,7 +860,7 @@ int main(void)
                 }
                 case GET_PID_MAX_OUTPUT:
                 {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
                     break;
                 }
                 default:
@@ -1023,15 +1024,19 @@ int main(void)
                          //encoder has failed
                         rad_state = RAD_STATE_PULSE_CONTROL;
                     }
+                    ccw_enable = 0;
+                    cw_enable = 0;
                 }   
                 else
                 {
                     //reset failure counter
                     consecutive_encoder_failures = 0;
+
+                    //Don't update PID unless we have a new value
+                    PID_Update_BangBang(&pid_1);
                 }
 
                 
-                PID_Update_BangBang(&pid_1);
 
                 if (ls_state == GPIO_PIN_SET)
                 {
@@ -1126,6 +1131,8 @@ int main(void)
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
+            //Update TMC state as it changes asynchrnously
+            rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 

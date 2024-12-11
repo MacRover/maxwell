@@ -170,6 +170,8 @@ typedef struct __TMC_2590_HandleTypeDef
 TMC_2590_StatusTypeDef TMC_2590_Init(TMC_2590_HandleTypeDef *htmc2590);
 TMC_2590_StatusTypeDef TMC_2590_DeInit(TMC_2590_HandleTypeDef *htmc2590);
 
+TMC_2590_StatusTypeDef TMC_2590_CheckState(TMC_2590_HandleTypeDef *htmc2590);
+
 // write registers
 TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
         TMC_2590_HandleTypeDef *htmc2590);

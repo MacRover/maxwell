@@ -135,6 +135,33 @@ TMC_2590_StatusTypeDef TMC_2590_DeInit(TMC_2590_HandleTypeDef *htmc2590)
     return TMC_2590_OK;
 }
 
+//Used to indicate if the driver is free or not
+TMC_2590_StatusTypeDef TMC_2590_CheckState(TMC_2590_HandleTypeDef *htmc2590)
+{
+    if (htmc2590 == NULL)
+    {
+        return TMC_2590_ERROR;
+    }
+    // check driver state
+    if (htmc2590->State == TMC_2590_STATE_RESET)
+    {
+        // Peripheral is not initialized
+        return TMC_2590_ERROR;
+    }
+
+    if (htmc2590->State == TMC_2590_STATE_BUSY)
+    {
+        return TMC_2590_BUSY;
+    }
+
+    if (htmc2590->State == TMC_2590_STATE_ERROR)
+    {
+        return TMC_2590_ERROR;
+    }
+
+    return TMC_2590_OK;
+}
+
 TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
         TMC_2590_HandleTypeDef *htmc2590)
 {

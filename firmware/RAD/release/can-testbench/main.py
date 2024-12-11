@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-rad_id = 0x12
+rad_id = 0x13
 
 
 def main():
@@ -79,8 +79,11 @@ def main():
                 elif (i == "set stepper speed"):
                     j = input("freq? ")
                     send_uint32_value(bus=bus, can_id=0x03, device_id=rad_id, value = int(j))
+                elif (i == "set pid max output"):
+                    j = input("max? ")
+                    send_uint16_value(bus=bus, can_id=0x59, device_id=rad_id, value = int(j))
                 elif (i == "get stepper speed"):
-                    send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)                    
                 elif(i == "fix stepper"):
                     send_uint8_value(bus=bus, can_id=0x4B, device_id=rad_id, value =0b1) #INTPOL
                     time.sleep(0.1)
@@ -187,6 +190,15 @@ def send_uint32_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
     new_msg = can.Message(
         arbitration_id=__can_message_id(device_id, can_id),
         data=struct.pack(">I", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+
+def send_uint16_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack(">H", value),
         is_extended_id=True,
     )
     bus.send(msg=new_msg)
