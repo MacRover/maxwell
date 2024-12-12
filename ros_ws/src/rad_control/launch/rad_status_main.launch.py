@@ -8,10 +8,23 @@ def generate_launch_description():
         executable="reader.py",
         name="rad1_reader",
         parameters=[{
-            "topic": "/can/rad_can_in",
+            "topic": "/can/status/rad_can_in",
             "channel": "can0",
-            "can_ids": [0x900, 0xE00, 0xF00],
-            "can_masks": [0x1FFFFFE0, 0x1FFFFFE0, 0x1FFFFFE0]
+            "can_ids": [0x404FB00, 0x404FC00],
+            "can_masks": [0xFFFFF00, 0xFFFFF00]
+        }]
+    )
+
+    # CONFIG READER NODE
+    reader2_node = Node(
+        package="spidercan",
+        executable="reader.py",
+        name="rad2_reader",
+        parameters=[{
+            "topic": "/can/config/rad_can_in",
+            "channel": "can0",
+            "can_ids": [0x4040000],
+            "can_masks": [0xFFF8000]
         }]
     )
 
@@ -20,14 +33,15 @@ def generate_launch_description():
         executable="rad_status",
         name="rad_status_node",
         parameters=[{
-            "can_topic": "/can/rad_can_in",
-            "status_rate": 10
+            "can_topic": "/can/status/rad_can_in",
+            "status_rate": 15
         }]
     )
 
     return LaunchDescription(
         [
             reader1_node,
+            reader2_node,
             rad_status_node,
         ]
     )
