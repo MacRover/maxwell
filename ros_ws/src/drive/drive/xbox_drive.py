@@ -10,14 +10,9 @@ from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 from .drive_controller import DriveMode
 
-from math import atan2
-
-DEAD_ZONE = 0.01
+DEAD_ZONE = 0.05
 TOP_SPEED = 0.5
 TURBO_FACTOR = 3
-
-AXIS_LOCK_ANGLE = 5
-
 
 class XboxDrive:
     # Joystick callback function
@@ -43,15 +38,6 @@ class XboxSwerveDrive(XboxDrive):
 
         x = msg.axes[1]
         y = msg.axes[0]
-
-        x_axis_lock = atan2(y, x) < AXIS_LOCK_ANGLE
-        y_axis_lock = atan2(x, y) < AXIS_LOCK_ANGLE
-
-        if (x_axis_lock):
-            x = 0
-        
-        if (y_axis_lock):
-            y = 0
             
         self.vel_msg.linear.x = self._scale_with_deadzone(x,speed)
         self.vel_msg.linear.y = self._scale_with_deadzone(y,speed)
