@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>RAD</name>
+	<name>Motion_Profiler</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -29,36 +29,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>Drivers/AS5048A</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AS5048A/Drivers/AS5048A</locationURI>
-		</link>
-		<link>
-			<name>Drivers/AT24C04C</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AT24C04C/Drivers/AT24C04C</locationURI>
-		</link>
-		<link>
-			<name>Drivers/PID_lib</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/PID_lib/Drivers/PID_lib</locationURI>
-		</link>
-		<link>
-			<name>Drivers/TMC_2590</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMC_2590/Drivers/TMC_2590</locationURI>
-		</link>
-		<link>
-			<name>Drivers/queue</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/queue/Drivers/queue</locationURI>
-		</link>
-		<link>
-			<name>Drivers/Motion_Profiler</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/Motion_Profiler/Drivers/Motion_Profiler</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>

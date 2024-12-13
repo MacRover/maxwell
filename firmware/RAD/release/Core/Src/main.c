@@ -33,6 +33,7 @@
 #include "pid.h"
 #include "queue.h"
 #include "enc_dec_utils.h"
+#include "motionprofile.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -223,6 +224,7 @@ int main(void)
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
+    MX_Motion_Profile_1_Init();
 
 
     switch(rad_params.RAD_TYPE)
@@ -336,6 +338,8 @@ int main(void)
                         new_setpoint = max_angle;
                     }
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+
+                    Motion_Profiler_GenerateNewTrajectory(&motion_profile_1, (double) (pid_1.feedback_adj / MOTOR_GEARING), new_setpoint);
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -1034,6 +1038,23 @@ int main(void)
 
                     //Don't update PID unless we have a new value
                     PID_Update_BangBang(&pid_1);
+
+                    Motion_Profiler_GetVelocity(&motion_profile_1, (double) (pid_1.feedback_adj / MOTOR_GEARING));
+
+                    //find autoreloadregister value associated with new velocity
+                    uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim,
+                       motion_profile_1.current_velocity);
+
+                    //2 assign ARR to timer
+
+                    TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
+                    //3 update local stepper speed reference to the integer value
+
+                    rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
+
+
+
                 }
 
                 
@@ -1098,6 +1119,10 @@ int main(void)
                 else if ((pid_1.output < 0) && ccw_enable)
                 {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                }
+                else
+                {
+                    TMC_2590_Stop(&tmc_2590_1);
                 }
 
                 break;
