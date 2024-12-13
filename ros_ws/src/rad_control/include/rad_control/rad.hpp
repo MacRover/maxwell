@@ -102,6 +102,8 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_ASSIGN_DEVICE_ID      = 85,
     CAN_SET_PID_ERROR_THRESHOLD = 87,
     CAN_GET_PID_ERROR_THRESHOLD = 88,
+    CAN_SET_PID_MAX_OUTPUT      = 89,
+    CAN_GET_PID_MAX_OUTPUT      = 90,
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
@@ -294,13 +296,25 @@ public:
      * 
      * @param thres pid threshold
      */
-    void set_error_thres(uint8_t thres);
+    void set_error_thres(uint16_t thres);
 
     /**
      * @brief Get PID Error Threshold
      * 
      */
     void get_error_thres();
+
+    /**
+     * @brief Set PID Max Output
+     * 
+     * @param max_output pid max output
+     */
+    void set_max_output(uint16_t max_output);
+
+    /**
+     * @brief Get PID Max Output
+     */
+    void get_max_output();
 
     /**
      * @brief Pulse motor with given number of steps
