@@ -10,9 +10,13 @@ from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 from .drive_controller import DriveMode
 
+from math import atan2
+
 DEAD_ZONE = 0.01
 TOP_SPEED = 0.5
 TURBO_FACTOR = 3
+
+AXIS_LOCK_ANGLE = 5
 
 
 class XboxDrive:
@@ -36,9 +40,21 @@ class XboxSwerveDrive(XboxDrive):
     
     def joy_callback(self, msg: Joy) -> None:
         speed = TOP_SPEED*self._map(msg.axes[5], 1.0, -1.0, 1.0, TURBO_FACTOR)
+
+        x = msg.axes[1]
+        y = msg.axes[0]
+
+        x_axis_lock = atan2(y, x) < AXIS_LOCK_ANGLE
+        y_axis_lock = atan2(x, y) < AXIS_LOCK_ANGLE
+
+        if (x_axis_lock):
+            x = 0
+        
+        if (y_axis_lock):
+            y = 0
             
-        self.vel_msg.linear.x = self._scale_with_deadzone(msg.axes[1],speed)
-        self.vel_msg.linear.y = self._scale_with_deadzone(msg.axes[0],speed)
+        self.vel_msg.linear.x = self._scale_with_deadzone(x,speed)
+        self.vel_msg.linear.y = self._scale_with_deadzone(y,speed)
         self.vel_msg.angular.z = 0.0
         if (msg.buttons[5]):
             self.vel_msg.linear.x = 0.0
