@@ -52,6 +52,8 @@ void PID_Update_BangBang(PID_HandleTypeDef *PID)
     PID->__error_old = PID->__error;
     PID->__feedback_raw_old = feedback_raw;
 
+    PID->output = PID->__error;
+
     // fit output to bounds
     if (PID->__error > PID->Init.max_output_abs)
     {
@@ -68,6 +70,7 @@ void PID_Update_BangBang(PID_HandleTypeDef *PID)
 	{
 		PID->output = 0;
 	}
+
 
     return;
 
