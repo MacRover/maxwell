@@ -280,6 +280,15 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int1
     return TMC_2590_OK;
 }
 
+void TMC_2590_Stop(TMC_2590_HandleTypeDef *htmc2590)
+{
+    if (htmc2590->State == TMC_2590_STATE_BUSY)
+    {
+        HAL_TIM_PWM_Stop_DMA(htmc2590->Init.STEP_Tim, htmc2590->Init.STEP_Channel);
+        htmc2590->State = TMC_2590_STATE_READY;
+    }
+}
+
 TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, uint32_t autoreload)
 {
     __HAL_TIM_SET_AUTORELOAD(htmc2590->Init.STEP_Tim, autoreload);

@@ -152,7 +152,7 @@ int main(void)
 
     //DRIVEDAY HARDCODE
 
-    rad_params.RAD_ID = 0x11;
+    rad_params.RAD_ID = 0x13;
     rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
     rad_params.STEPPER_SPEED = 1000;
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
@@ -1099,6 +1099,11 @@ int main(void)
                 {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
                 }
+                else
+                {
+                    TMC_2590_Stop(&tmc_2590_1);
+                }
+
 
                 break;
             }
