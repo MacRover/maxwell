@@ -19,7 +19,7 @@ set(Targets
     rad_status
     rad_tool
     rad_calibration_init
-    rover_steer_test
+    rover_steer_pos
     rover_arm_test
   )
 

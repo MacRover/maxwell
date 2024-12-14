@@ -15,6 +15,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SwerveModule.msg"
   "msg/SwerveModulesList.msg"
   "msg/RadStatus.msg"
+  "msg/SwerveModulePulse.msg"
   DEPENDENCIES std_msgs
 )
 
