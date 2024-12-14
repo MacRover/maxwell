@@ -77,7 +77,7 @@ class XboxTankSteerDrive(XboxDrive):
             rad_pulse_msg.rear_right_pulse  = 0.0
             rad_pulse_msg.rear_left_pulse   = 0.0
 
-        pub_rad_pulses.publish(rad_pulse_msg)
+        self.pub_rad_pulses.publish(rad_pulse_msg)
 
         speed = TOP_SPEED*self._map(msg.axes[5], 1.0, -1.0, 1.0, TURBO_FACTOR)   
         self.vel_msg.linear.x = self._scale_with_deadzone(msg.axes[1],speed)
