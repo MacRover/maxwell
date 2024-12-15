@@ -823,6 +823,9 @@ int main(void)
                     {
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
+
+                    rad_state = RAD_STATE_INIT;
+
                     break;
                 }
                 case REBOOT:
@@ -1099,7 +1102,7 @@ int main(void)
                 {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
                 }
-                else
+                else if ((cw_enable == 0) || (ccw_enable) == 0)
                 {
                     TMC_2590_Stop(&tmc_2590_1);
                 }
