@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "tmp.h"
 
 /* USER CODE END Includes */
 
@@ -77,6 +78,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  HAL_StatusTypeDef i2c_status;
+  TMP_1075_StatusTypeDef status;
 
   /* USER CODE END Init */
 
@@ -94,18 +97,28 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8
-                          |GPIO_PIN_9, GPIO_PIN_SET);
+  MX_TMP_1075_Init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t register_write_buffer = 0b00000100 | 0;
+  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+  TMP_1075_SetHighLimit(&h_tmp_1075);
+  TMP_1075_SetLowLimit(&h_tmp_1075);
+  TMP_1075_SetConfRegisters(&h_tmp_1075);
+
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+      register_write_buffer = 0b00000100 | 0;
+      i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+
+	  status = TMP_1075_ReadTemp(&h_tmp_1075);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
