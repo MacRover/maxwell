@@ -171,6 +171,10 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 uint32_t HAL_TIM_CalculateAutoReload(TIM_HandleTypeDef* tim, uint16_t freq)
 {
 
+  if (freq == 0)
+  {
+    freq = 1;
+  }
   uint32_t arr = 72000000/(tim->Init.Prescaler+1)/freq;
 
   return arr-1;
