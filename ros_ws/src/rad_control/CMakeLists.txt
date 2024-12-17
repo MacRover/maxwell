@@ -17,7 +17,9 @@ find_package(trajectory_msgs REQUIRED)
 set(Targets
     rad_drive_controller
     rad_status
-    rover_steer_test
+    rad_tool
+    rad_calibration_init
+    rover_steer_pos
     rover_arm_test
   )
 

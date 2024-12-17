@@ -43,9 +43,16 @@ void RAD_Status::_status_callback(const CANraw& msg)
 
 void RAD_Status::_timer_callback(void)
 {
+  status_1.header.stamp = this->now();
   status_pub_1->publish(status_1);
+
+  status_2.header.stamp = this->now();
   status_pub_2->publish(status_2);
+
+  status_3.header.stamp = this->now();
   status_pub_3->publish(status_3);
+
+  status_4.header.stamp = this->now();
   status_pub_4->publish(status_4);
 }
 
