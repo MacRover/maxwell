@@ -56,6 +56,7 @@ class XboxTankSteerDrive(XboxDrive):
         self.pub_cmd_vel = pub_cmd_vel
         self.pub_rad_pulses = pub_rad_pulses
         self.vel_msg = Twist()
+        self.STEPS = 75.0
     
     def joy_callback(self, msg: Joy) -> None:
         rad_pulse_msg  = SwerveModulePulse()
@@ -63,14 +64,14 @@ class XboxTankSteerDrive(XboxDrive):
         signnum = (lambda n: (n > 0) - (n < 0))
 
         if (abs(msg.axes[3]) > 0.4):
-            rad_pulse_msg.front_left_pulse = 50.0*signnum(msg.axes[3])
-            rad_pulse_msg.front_right_pulse = 50.0*signnum(msg.axes[3])
+            rad_pulse_msg.front_left_pulse = self.STEPS*signnum(msg.axes[3])*-1
+            rad_pulse_msg.front_right_pulse = self.STEPS*signnum(msg.axes[3])*-1
             if (msg.buttons[4]):
                 rad_pulse_msg.front_right_pulse = 0.0
-                rad_pulse_msg.rear_right_pulse = 50.0*signnum(msg.axes[3])
+                rad_pulse_msg.rear_right_pulse = self.STEPS*signnum(msg.axes[3])*-1
             if (msg.buttons[5]):
                 rad_pulse_msg.front_left_pulse = 0.0
-                rad_pulse_msg.rear_left_pulse = 50.0*signnum(msg.axes[3])
+                rad_pulse_msg.rear_left_pulse = self.STEPS*signnum(msg.axes[3])*-1
         else:
             rad_pulse_msg.front_left_pulse  = 0.0
             rad_pulse_msg.front_right_pulse = 0.0

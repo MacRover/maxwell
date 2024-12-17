@@ -63,7 +63,7 @@ def generate_launch_description():
         name="vesc_controller",
         parameters=[{
             "can_rate": can_rate,
-            "wait_until_positioned": True
+            "wait_until_positioned": True # Note: must be set to False when in open loop/pulse control
         }]
     )
 
