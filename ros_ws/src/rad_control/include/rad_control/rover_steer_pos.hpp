@@ -19,7 +19,7 @@ class SteerPos : public rclcpp::Node
 public:
     SteerPos(std::string name);
 private:
-    void _timer_callback(void);
+    void _publish_to_can(void);
     void _pulse_callback(const SwerveModulePulse& msg);
     std::shared_ptr<rclcpp::Publisher<CANraw> > can_pub_;
     std::shared_ptr<rclcpp::Subscription<SwerveModulePulse> > sub_;

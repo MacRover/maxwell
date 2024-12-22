@@ -9,12 +9,21 @@ def generate_launch_description():
         "drive_mode",
         default_value="SWERVE_DRIVE" 
     )
+    can_rate_arg = DeclareLaunchArgument(
+        "can_rate",
+        default_value="10"
+    )
     drive_mode = LaunchConfiguration("drive_mode")
+    can_rate = LaunchConfiguration("can_rate")
 
     heartbeat_node = Node(
         package="drive",
         executable="heartbeat.py",
-        name="heartbeat_node"
+        name="heartbeat_node",
+        parameters=[{
+            "drive_mode": drive_mode,
+            "topic_rate": can_rate
+        }]
     )
 
     xbox_node = Node(
@@ -32,22 +41,12 @@ def generate_launch_description():
         name="joy_node"
     )
 
-    rover_steer_node = Node(
-        package="rad_control",
-        executable="rover_steer_pos",
-        name="steer_node",
-        condition=LaunchConfigurationEquals(
-            "drive_mode",
-            "TANK_STEER_HYBRID"
-        )
-    )
-
     return LaunchDescription(
         [
             drive_mode_arg,
+            can_rate_arg,
             heartbeat_node,
             joy_node, 
             xbox_node,
-            rover_steer_node
         ]
     )
