@@ -1,0 +1,4 @@
+drive_mode: SWERVE_DRIVE
+can_rate: 10
+can_channel: can0
+wait_until_positioned: True
