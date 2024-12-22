@@ -95,6 +95,19 @@ def generate_launch_description():
         }]
     )
 
+    rover_steer_node = Node(
+        package="rad_control",
+        executable="rover_steer_pos",
+        name="steer_node",
+        condition=LaunchConfigurationEquals(
+            "drive_mode",
+            "TANK_STEER_HYBRID"
+        ),
+        parameters=[{
+            "can_rate": can_rate
+        }]
+    )
+
     ld = LaunchDescription()
     ld.add_action(drive_mode_arg)
     ld.add_action(can_rate_arg)
@@ -124,5 +137,6 @@ def generate_launch_description():
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
     ld.add_action(odom_controller_node)
+    ld.add_action(rover_steer_node)
 
     return ld

@@ -18,10 +18,8 @@ SteerPos::SteerPos(std::string name) : Node(name),
 
     can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
     sub_ = this->create_subscription<SwerveModulePulse>(
-        "/rad_pulses", 10, std::bind(&SteerPos::_pulse_callback, this, _1)
+        "/rad_pulses_repeat", 10, std::bind(&SteerPos::_pulse_callback, this, _1)
     );
-    timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(sleep_msec * 4), std::bind(&SteerPos::_timer_callback, this));
 }
 
 void SteerPos::_pulse_callback(const SwerveModulePulse& msg)
@@ -30,9 +28,10 @@ void SteerPos::_pulse_callback(const SwerveModulePulse& msg)
   rad_fl.pulse_stepper(msg.front_left_pulse);
   rad_br.pulse_stepper(msg.rear_right_pulse);
   rad_bl.pulse_stepper(msg.rear_left_pulse);
+  this->_publish_to_can();
 }
 
-void SteerPos::_timer_callback()
+void SteerPos::_publish_to_can()
 {
   rclcpp::Rate rate{std::chrono::milliseconds(sleep_msec)};
   can_pub_->publish(can_msg_1);
