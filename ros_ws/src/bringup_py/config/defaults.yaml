@@ -1,4 +1,12 @@
-drive_mode: SWERVE_DRIVE
-can_rate: 10
-can_channel: can0
-wait_until_positioned: True
+foxglove_enabled: False
+
+microROS_enabled: False
+
+drive_enabled: True
+
+drive:
+  drive_mode: SWERVE_DRIVE
+  wait_until_positioned: True
+  vesc_controller_enabled: True
+  can_rate: 10
+  can_channel: can0
