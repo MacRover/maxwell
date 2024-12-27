@@ -10,7 +10,9 @@ Main launch script for basestation:
 ros2 launch bringup_py bs_main.launch.py
 ```
 
-The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed for it to take effect.
+The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. All of you have to do then is rerun `maxwell_main.launch.py`. 
+
+Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed and rerun `maxwell_main.launch.py` for it to take effect.
 
 ### Arguments
 | **Argument**              | **Description**   | **Value Type**   |
@@ -24,7 +26,7 @@ The parameters used by these launch files (by default) are stored in `config/def
 | `can_rate`                | Rate of CAN transmission per device (RAD and VESC) | Integer (in Hz) |
 | `can_channel`             | socketCAN channel | `can0`, `can1`, `can2`, ... |
 
-
+**NOTE**, ensure that arguments `drive_mode` and `can_rate` are the same value across Orin and basestation WS.
 
 ## Drive
 The drive can be configured in two different modes:
