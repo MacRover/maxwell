@@ -1,5 +1,31 @@
 # Maxwell Bringup
 The following outlines the standard procedures to set up maxwell.
+## Main Way
+Main launch script for maxwell:
+```bash
+ros2 launch bringup_py maxwell_main.launch.py
+```
+Main launch script for basestation:
+```bash
+ros2 launch bringup_py bs_main.launch.py
+```
+
+The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed for it to take effect.
+
+### Arguments
+| **Argument**              | **Description**   | **Value Type**   |
+| :-----------------------: | :---------------: | :-----------------: |
+| `foxglove_enabled`        | Enable websocket for foxglove (foxglove bridge) | `True` or `False` |
+| `microROS_enabled`        | Enable micro-ROS agent | `True` or `False` |
+| `drive_enabled`           | Enable drivetrain (launch `drivetrain.launch.py`)    | `True` or `False` |
+| `drive_mode`              | Current drive mode of rover | `SWERVE_DRIVE` or `TANK_STEER_HYBRID` |
+| `wait_until_positioned`   | Enable drive motors only when RAD motors are positioned at setpoint (`SWERVE_DRIVE` only) | `True` or `False` |
+| `vesc_controller_enabled` | Enable `vesc_controller` node to control VESCs | `True` or `False` |
+| `can_rate`                | Rate of CAN transmission per device (RAD and VESC) | Integer (in Hz) |
+| `can_channel`             | socketCAN channel | `can0`, `can1`, `can2`, ... |
+
+
+
 ## Drive
 The drive can be configured in two different modes:
 - `SWERVE_DRIVE` (default)
