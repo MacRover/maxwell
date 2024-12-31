@@ -146,6 +146,22 @@ int main(void)
     rad_params.SMARTEN_SEMIN = 0b0000;
     rad_params.SMARTEN_SEUP = 0b00;
 
+    rad_params.PID_ERROR_THRESHOLD = 20;
+    rad_params.PID_MAX_OUTPUT = 50;
+
+
+    //DRIVEDAY HARDCODE
+
+    rad_params.RAD_ID = 0x13;
+    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
+    rad_params.STEPPER_SPEED = 1000;
+    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; //every second
+    rad_params.P = 0.06;
+    rad_params.I = 0.000001;
+    rad_params.D = 0;
+    rad_params.PID_ERROR_THRESHOLD = 20;
+
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -197,6 +213,8 @@ int main(void)
 //        rad_params.ODOM_INTERVAL = 1000;
 //        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
+
+
     }
     //free(temp);
 
@@ -231,11 +249,6 @@ int main(void)
     angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
     MX_CAN_UpdateIdAndFilters(&rad_can);
-
-    if (rad_params.STEPPER_SPEED == 0)
-	{
-		rad_params.STEPPER_SPEED = 1;
-	}
 
     uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
 
@@ -810,6 +823,9 @@ int main(void)
                     {
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
+
+                    rad_state = RAD_STATE_INIT;
+
                     break;
                 }
                 case REBOOT:
@@ -821,6 +837,33 @@ int main(void)
                 {
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
+
+                    MX_CAN_UpdateIdAndFilters(&rad_can);
+
+                    break;
+                }
+                case SET_PID_ERROR_THRESHOLD:
+                {
+                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_ERROR_THRESHOLD = pid_1.Init.min_output_abs;
+
+                    break;
+                }
+                case GET_PID_ERROR_THRESHOLD:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
+                    break;
+                }
+                case SET_PID_MAX_OUTPUT:
+                {
+                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
+
+                    break;
+                }
+                case GET_PID_MAX_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
                     break;
                 }
                 default:
@@ -926,9 +969,9 @@ int main(void)
                             break;
                     }
 
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
 
                     
 
@@ -984,15 +1027,19 @@ int main(void)
                          //encoder has failed
                         rad_state = RAD_STATE_PULSE_CONTROL;
                     }
+                    ccw_enable = 0;
+                    cw_enable = 0;
                 }   
                 else
                 {
                     //reset failure counter
                     consecutive_encoder_failures = 0;
+
+                    //Don't update PID unless we have a new value
+                    PID_Update_BangBang(&pid_1);
                 }
 
                 
-                PID_Update(&pid_1);
 
                 if (ls_state == GPIO_PIN_SET)
                 {
@@ -1055,6 +1102,11 @@ int main(void)
                 {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
                 }
+                else if ((cw_enable == 0) || (ccw_enable) == 0)
+                {
+                    TMC_2590_Stop(&tmc_2590_1);
+                }
+
 
                 break;
             }
@@ -1087,6 +1139,8 @@ int main(void)
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
+            //Update TMC state as it changes asynchrnously
+            rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 
