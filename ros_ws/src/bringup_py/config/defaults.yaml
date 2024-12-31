@@ -4,6 +4,9 @@ microROS_enabled: False
 
 drive_enabled: True
 
+microROS:
+  port_number: 9999
+
 drive:
   drive_mode: SWERVE_DRIVE
   wait_until_positioned: True

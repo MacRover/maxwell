@@ -10,9 +10,9 @@ Main launch script for basestation:
 ros2 launch bringup_py bs_main.launch.py
 ```
 
-The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. All of you have to do then is rerun `maxwell_main.launch.py`. 
+The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. All you have to do then is rerun these scripts. 
 
-Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed and rerun `maxwell_main.launch.py` for it to take effect.
+Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed and rerun the script(s) for it to take effect.
 
 ### Arguments
 | **Argument**              | **Description**   | **Value Type**   |
@@ -20,6 +20,7 @@ Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` 
 | `foxglove_enabled`        | Enable websocket for foxglove (foxglove bridge) | `True` or `False` |
 | `microROS_enabled`        | Enable micro-ROS agent | `True` or `False` |
 | `drive_enabled`           | Enable drivetrain (launch `drivetrain.launch.py`)    | `True` or `False` |
+| `port_number`             | UDP4 port number for micro-ROS | Integer
 | `drive_mode`              | Current drive mode of rover | `SWERVE_DRIVE` or `TANK_STEER_HYBRID` |
 | `wait_until_positioned`   | Enable drive motors only when RAD motors are positioned at setpoint (`SWERVE_DRIVE` only) | `True` or `False` |
 | `vesc_controller_enabled` | Enable `vesc_controller` node to control VESCs | `True` or `False` |
@@ -44,4 +45,10 @@ ros2 launch bringup_py drivetrain.launch.py drive_mode:=<DRIVE_MODE>
 Then, on another machine (basestation), run:
 ```bash
 ros2 launch drive xbox_controller.launch.py drive_mode:=<DRIVE_MODE>
+```
+
+## micro-ROS
+Running the micro-ROS agent separately:
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 9999
 ```
