@@ -10,7 +10,7 @@ Main launch script for basestation:
 ros2 launch bringup_py bs_main.launch.py
 ```
 
-The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you run `colcon build --symlink-install`. All you have to do then is rerun these scripts. 
+The parameters used by these launch files (by default) are stored in `config/defaults.yaml`. They can be changed dynamically and automatically as long as you built the workspace with `--symlink-install`. All you have to do then is rerun these scripts. 
 
 Otherwise, rebuild the workspace with `colcon build` every time `defaults.yaml` is changed and rerun the script(s) for it to take effect.
 
