@@ -20,8 +20,27 @@ def generate_launch_description():
         default_value="10",
         description="Rate of CAN Messages (hz)"
     )
+    can_channel_arg = DeclareLaunchArgument(
+        "can_channel",
+        default_value="can0",
+        description="socketCAN channel"
+    )
+    vesc_enabled_arg = DeclareLaunchArgument(
+        "vesc_enabled",
+        default_value="True",
+        description="Enable VESC controller node for drive"
+    )
+    wait_until_positioned_arg = DeclareLaunchArgument(
+        "wait_until_positioned",
+        default_value="True",
+        description="Enable drive only when RAD motors are positioned at setpoint (for swerve drive)"
+    )
     drive_mode = LaunchConfiguration("drive_mode")
     can_rate = LaunchConfiguration("can_rate")
+    vesc_enabled = LaunchConfiguration("vesc_enabled")
+    wait_until_positioned = LaunchConfiguration("wait_until_positioned")
+    can_channel = LaunchConfiguration("can_channel")
+
 
     rad_status_main = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -63,8 +82,10 @@ def generate_launch_description():
         name="vesc_controller",
         parameters=[{
             "can_rate": can_rate,
-            "wait_until_positioned": True # Note: must be set to False when in open loop/pulse control
-        }]
+            "wait_until_positioned": wait_until_positioned 
+            # Note: must be set to False when in open loop/pulse control
+        }],
+        condition=IfCondition(vesc_enabled)
     )
 
     rad_controller_node = Node(
@@ -91,7 +112,7 @@ def generate_launch_description():
         executable="writer.py",
         name="writer",
         parameters=[{
-            "channel": "can0"
+            "channel": can_channel
         }]
     )
 
@@ -111,6 +132,9 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(drive_mode_arg)
     ld.add_action(can_rate_arg)
+    ld.add_action(vesc_enabled_arg)
+    ld.add_action(wait_until_positioned_arg)
+    ld.add_action(can_channel_arg)
 
     ld.add_action(
         RegisterEventHandler(
