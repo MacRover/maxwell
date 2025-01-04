@@ -14,6 +14,7 @@
 
 #include "fans.h"
 #include "TSB.h"
+#include "servo.h" 
 
 #define USING_ROS
 #define USING_IMU_ONBOARD
@@ -21,6 +22,8 @@
 #define USING_GPS
 // #define USING_TSB
 #define USING_FANS
+#define USING_SERVO
+
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -239,6 +242,36 @@ void obc_setup_fans()
 #endif
 }
 
+void obc_setup_servo() {
+
+#ifdef USING_SERVO
+    allocator = rcl_get_default_allocator();
+
+    rclc_support_init(&support, 0, NULL, &allocator);
+
+    rclc_node_init_default(&node, "teensy_subscriber_node", "", &support);
+
+    rclc_subscription_init_default(
+        &servo1_subscriber,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+        "servo1_angle"
+    );
+
+    rclc_subscription_init_default(
+        &servo2_subscriber,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+        "servo2_angle"
+    );
+
+    rclc_executor_init(&executor, &support.context, 2, &allocator);
+    rclc_executor_add_subscription(&executor, &servo1_subscriber, &servo1_msg, &servo1_callback, ON_NEW_DATA);
+    rclc_executor_add_subscription(&executor, &servo2_subscriber, &servo2_msg, &servo2_callback, ON_NEW_DATA);
+#endif
+}
+
+
 void setup()
 {
     Wire1.begin();
@@ -254,6 +287,7 @@ void setup()
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
+    obc_setup_servo();
 }
 
 
@@ -291,6 +325,12 @@ void loop()
   setFanRPM(&fan2, MIN_RPM);
 //   setFanRPM(&fan3, MIN_RPM);
 #endif
+
+#ifdef USING_SERVO
+loop_teensy_subscriber();
+#endif
+
+#ifdef 
 
     delay(1);
 }
