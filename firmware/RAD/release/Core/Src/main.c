@@ -149,6 +149,8 @@ int main(void)
     rad_params.PID_ERROR_THRESHOLD = 20;
     rad_params.PID_MAX_OUTPUT = 50;
 
+    rad_params.HOME_OFFSET = 0;
+
 
     //DRIVEDAY HARDCODE
 
@@ -205,7 +207,7 @@ int main(void)
     if (rad_status.EEPROM_STATUS == AT24C04C_OK)
     {
         //NORMAL OPERATION
-        rad_params = eeprom_params;
+//        rad_params = eeprom_params;
 
         //IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
         //rad_params.RAD_ID = 0x11;
@@ -213,6 +215,16 @@ int main(void)
 //        rad_params.ODOM_INTERVAL = 1000;
 //        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
+//        rad_params.RAD_ID = 0x13;
+//		rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
+//		rad_params.STEPPER_SPEED = 1000;
+//		rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+//		rad_params.HEALTH_INTERVAL = 1000; //every second
+//		rad_params.P = 0.06;
+//		rad_params.I = 0.000001;
+//		rad_params.D = 0;
+//		rad_params.PID_ERROR_THRESHOLD = 20;
+
 
 
     }
@@ -335,6 +347,9 @@ int main(void)
                     {
                         new_setpoint = max_angle;
                     }
+
+                    new_setpoint = new_setpoint + rad_params.HOME_OFFSET;
+                    
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
                 }
@@ -866,6 +881,27 @@ int main(void)
                     MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
                     break;
                 }
+                case SET_HOME_OFFSET:
+                {
+
+                    //don't apply offset without working encoder
+                    if (rad_status.ENCODER_STATUS != AS5048A_OK)
+                    {
+                        break;
+                    }
+
+                    double delta_angle = (pid_1.feedback_adj - pid_1.__set_point)/MOTOR_GEARING;
+
+                    rad_params.HOME_OFFSET = delta_angle;
+
+                    break;
+
+                }
+                case GET_HOME_OFFSET:
+                {
+                    MX_CAN_Broadcast_Double_Data(&rad_can, rad_params.HOME_OFFSET, GET_HOME_OFFSET);
+                    break;
+                }
                 default:
                     break;
             }
@@ -934,14 +970,29 @@ int main(void)
 
                 if ((steps_to_move > 0) && cw_enable)
                 {
+
+                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
+                    {
+                        TMC_2590_Stop(&tmc_2590_1);
+                    }
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
                 }
                 else if ((steps_to_move < 0) && ccw_enable)
                 {
+                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
+                    {
+                        TMC_2590_Stop(&tmc_2590_1);
+                    }
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
                 }
 
                 steps_to_move = 0;
+
+                //keep the encoder updated if we still have it - for open loop
+                if ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) == AS5048A_OK)
+                {
+                    PID_Update_RolloverCount(&pid_1);
+                }
 
                 break;
             }
@@ -1102,7 +1153,7 @@ int main(void)
                 {
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
                 }
-                else if ((cw_enable == 0) || (ccw_enable) == 0)
+                else if ((cw_enable == 0) || (ccw_enable == 0))
                 {
                     TMC_2590_Stop(&tmc_2590_1);
                 }

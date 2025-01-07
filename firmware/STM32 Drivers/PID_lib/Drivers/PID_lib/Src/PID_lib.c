@@ -76,6 +76,24 @@ void PID_Update_BangBang(PID_HandleTypeDef *PID)
 
 }
 
+void PID_Update_RolloverCount(PID_HandleTypeDef *PID)
+{
+    double feedback_raw = *(PID->Init.feedback);
+
+    // adjust rollover count
+    if (feedback_raw < PID->Init.rollover_max * 0.1
+            && PID->__feedback_raw_old > PID->Init.rollover_max * 0.9)
+    {
+        PID->__rollovers++;
+    }
+
+    if (feedback_raw > PID->Init.rollover_max * 0.9
+            && PID->__feedback_raw_old < PID->Init.rollover_max * 0.1)
+    {
+        PID->__rollovers--;
+    }
+}
+
 void PID_Update(PID_HandleTypeDef *PID)
 {
     double feedback_raw = *(PID->Init.feedback);

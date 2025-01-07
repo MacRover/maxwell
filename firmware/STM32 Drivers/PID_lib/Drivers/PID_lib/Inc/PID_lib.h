@@ -40,6 +40,7 @@ typedef struct
 void PID_Init(PID_HandleTypeDef *PID);
 
 void PID_Update(PID_HandleTypeDef *PID);
+void PID_Update_RolloverCount(PID_HandleTypeDef *PID);
 void PID_Update_BangBang(PID_HandleTypeDef *PID);
 
 
