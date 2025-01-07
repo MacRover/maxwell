@@ -92,6 +92,9 @@ void PID_Update_RolloverCount(PID_HandleTypeDef *PID)
     {
         PID->__rollovers--;
     }
+
+    PID->feedback_adj = feedback_raw + PID->__rollovers * PID->Init.rollover_max
+            + PID->__offset;
 }
 
 void PID_Update(PID_HandleTypeDef *PID)
