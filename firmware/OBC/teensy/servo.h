@@ -21,14 +21,7 @@ void servo_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
 
     int angle_deg = (int)msg->data;
-
-
-    if (angle_deg >= 0 && angle_deg <= 180) {
-        myservo.write(angle_deg);
-        delay(100); 
-    } else {
-        Serial.println("Invalid angle received");
-    }
+    myservo.write(angle_deg);
 }
 
 void servo_setup_subscription(
