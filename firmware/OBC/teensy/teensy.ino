@@ -4,6 +4,7 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
+#include <Servo.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -21,7 +22,7 @@
 // #define USING_IMU_OTHER
 #define USING_GPS
 // #define USING_TSB
-#define USING_FANS
+//#define USING_FANS
 #define USING_SERVO
 
 
@@ -57,7 +58,7 @@ TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 111);
+IPAddress agent_ip(192, 168, 1, 199);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
@@ -181,6 +182,12 @@ void obc_setup_uros()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
     );
+    rclc_subscription_init_default(
+    &servo_sub,
+    &teensy_node,  
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+    "/obc/servo1_angle"  
+
 #endif
     digitalWrite(LED_PIN, HIGH);
 }
@@ -242,34 +249,6 @@ void obc_setup_fans()
 #endif
 }
 
-void obc_setup_servo() {
-
-#ifdef USING_SERVO
-    allocator = rcl_get_default_allocator();
-
-    rclc_support_init(&support, 0, NULL, &allocator);
-
-    rclc_node_init_default(&node, "teensy_subscriber_node", "", &support);
-
-    rclc_subscription_init_default(
-        &servo1_subscriber,
-        &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
-        "servo1_angle"
-    );
-
-    rclc_subscription_init_default(
-        &servo2_subscriber,
-        &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
-        "servo2_angle"
-    );
-
-    rclc_executor_init(&executor, &support.context, 2, &allocator);
-    rclc_executor_add_subscription(&executor, &servo1_subscriber, &servo1_msg, &servo1_callback, ON_NEW_DATA);
-    rclc_executor_add_subscription(&executor, &servo2_subscriber, &servo2_msg, &servo2_callback, ON_NEW_DATA);
-#endif
-}
 
 
 void setup()
@@ -282,17 +261,24 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
+
     obc_setup_imu();
     obc_setup_gps();
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
-    obc_setup_servo();
+    servo_setup_subscription(&teensy_node, &support, &allocator, 
+                           "/obc/servo1_angle", 36);
+
 }
 
 
 void loop()
 {
+
+  servo_spin_executor();
+ 
+
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
@@ -326,11 +312,6 @@ void loop()
 //   setFanRPM(&fan3, MIN_RPM);
 #endif
 
-#ifdef USING_SERVO
-loop_teensy_subscriber();
-#endif
 
-#ifdef 
-
-    delay(1);
+delay(1);
 }
