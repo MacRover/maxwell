@@ -21,7 +21,9 @@ std::map<std::string, uint8_t> get_cmd = {
   {"GET_I_VALUE", CAN_GET_I_VALUE},
   {"GET_D_VALUE", CAN_GET_D_VALUE},
   {"GET_PID_ERROR_THRESHOLD", CAN_GET_PID_ERROR_THRESHOLD},
-  {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT}
+  {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT},
+  {"GET_HOME_OFFSET", CAN_GET_HOME_OFFSET}
+
 };
 std::map<std::string, uint8_t> set_cmd = {
   {"SET_TARGET_ANGLE", CAN_SET_TARGET_ANGLE},
@@ -42,7 +44,8 @@ std::map<std::string, uint8_t> set_cmd = {
 std::map<std::string, uint8_t> other_cmd = {
   {"CALIBRATE", CAN_CALIBRATE_POS},
   {"CANCEL_CALIBRATE", CAN_CANCEL_CALIBRATE_POS},
-  {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM}
+  {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
+  {"SET_HOME_OFFSET", CAN_SET_HOME_OFFSET}
 };
 
 
@@ -53,7 +56,7 @@ void response_callback(const CANraw& msg)
     uint8_t i = 0;
     RCLCPP_INFO(can_config->get_logger(), "Message received!");
     if (command_id == CAN_GET_TARGET_ANGLE || command_id == CAN_GET_P_VALUE || 
-        command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE)
+        command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE || command_id == CAN_GET_HOME_OFFSET)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %f", __buffer_get_float64((uint8_t*)&(msg.data[0]),&i));
     }
@@ -197,6 +200,9 @@ int main(int argc, char ** argv)
         case CAN_GET_PID_MAX_OUTPUT:
           rad.get_max_output();
           break;
+        case CAN_GET_HOME_OFFSET:
+          rad.get_home_offset();
+          break;
       }
     }
     else
@@ -211,6 +217,10 @@ int main(int argc, char ** argv)
           break;
         case CAN_CANCEL_CALIBRATE_POS:
           rad.cancel_calibration();
+          break;
+        case CAN_SET_HOME_OFFSET:
+          rad.set_home_offset();
+          break;
       }
     }
 

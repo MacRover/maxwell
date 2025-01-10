@@ -355,6 +355,23 @@ void RAD::pulse_stepper(float steps)
     _update_can_data(buf, 4);
 }
 
+void RAD::set_home_offset()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HOME_OFFSET) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_home_offset()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_HOME_OFFSET) << 8);
+    _update_can_data(buf, 1);
+}
 
 void RAD::_update_can_data(uint8_t* buf, size_t size)
 {

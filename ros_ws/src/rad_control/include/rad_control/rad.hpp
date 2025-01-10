@@ -104,6 +104,8 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_PID_ERROR_THRESHOLD = 88,
     CAN_SET_PID_MAX_OUTPUT      = 89,
     CAN_GET_PID_MAX_OUTPUT      = 90,
+    CAN_SET_HOME_OFFSET         = 91,
+    CAN_GET_HOME_OFFSET         = 92,
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
