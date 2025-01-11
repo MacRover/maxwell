@@ -22,7 +22,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-#include "ina238.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
