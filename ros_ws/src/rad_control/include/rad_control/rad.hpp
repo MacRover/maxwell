@@ -325,6 +325,18 @@ public:
      */
     void pulse_stepper(float steps);
 
+    /**
+     * @brief Set encoder offset for RAD motor
+     * 
+     */
+    void set_home_offset();
+
+    /**
+     * @brief Get encoder offset for RAD motor
+     * 
+     */
+    void get_home_offset();
+
 
 private:
     void _update_can_data(uint8_t* buf, size_t size);
