@@ -37,6 +37,31 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+typedef struct __attribute__((packed)){
+ 	uint16_t HEALTH_INTERVAL;
+ 	uint16_t CARD_INTERVAL;
+ 	// todo: add params to eeprom
+
+} VIPER_PARAMS_TypeDef;
+
+typedef struct
+{
+    //UPDATE THIS TO INCLUDE ERRORS
+    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS
+
+    uint8_t EEPROM_STATUS;
+    uint8_t MUX_STATUS;
+    // todo: fill state 2 with something (viper_can_handle->TxData[2] = status.MUX_STATUS;)
+    uint8_t VIPER_STATE;
+    uint8_t CARD1_STATUS;
+    uint8_t CARD2_STATUS;
+    uint8_t CARD3_STATUS;
+    uint8_t CARD4_STATUS;
+
+} VIPER_STATUS_TypeDef;
+
+extern VIPER_PARAMS_TypeDef viper_params;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -99,6 +124,8 @@ void Error_Handler(void);
 #define EN_CARD_3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+
 
 /* USER CODE END Private defines */
 

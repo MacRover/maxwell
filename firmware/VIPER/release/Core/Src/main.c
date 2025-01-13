@@ -26,6 +26,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "at24c04c.h"
+#include "queue.h"
+#include "enc_dec_utils.h"
+
+// todo: add more if needed
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,6 +41,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define VIPER_PARAMS_EEPROM_PAGE 0
+
 
 /* USER CODE END PD */
 
@@ -46,6 +54,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+VIPER_STATUS_TypeDef viper_status;
+VIPER_PARAMS_TypeDef viper_params;
+
+uint8_t ESTOP = 0;
+uint8_t DISABLED = 0;
 
 /* USER CODE END PV */
 
@@ -68,6 +82,16 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
+	// ##############
+
+	// todo: SET DEFAULT VIPER PARAMS HERE
+
+    viper_params.HEALTH_INTERVAL = 1000; //every second
+    viper_params.CARD_INTERVAL = 20; // may need to tune this
+
+
+	// ###############
 
   /* USER CODE END 1 */
 
@@ -95,15 +119,43 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+
+  	// #############
+
+  	// SET INITIAL EEPROM READ HERE (?)
+
+
+	// ##############
+
+	// SET DRIVER INITIALIZATIONS HERE
+
+	// ###############
+
+  	// 	BROADCAST HEALTH MESSAGE HERE
+
+	// ###############
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  // ###########
+
+  // INITIALIZE VIPER STATES
+
+  // ###########
+
   while (1)
   {
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  // LED STATUS BLINK ----------------------------------------------------
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
@@ -112,6 +164,11 @@ int main(void)
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 	  HAL_Delay(1000);
+
+	  // LED STATUS BLINK ----------------------------------------------------
+
+
+
 
 
   }
