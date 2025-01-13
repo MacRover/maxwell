@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             "keyboard_input.py = angle_publisher.keyboard_input:main",
             "angle_subscriber.py = angle_publisher.angle_subscriber:main",
+            "controller_input.py = angle_publisher.controller_input:main",
         ],
     },
 )
