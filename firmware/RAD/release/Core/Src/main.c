@@ -47,6 +47,7 @@
 #define AVERAGING_WINDOW_SIZE 10
 
 #define MOTOR_GEARING gearing
+#define STEPS_PER_REVOLUTION steps_per_revolution
 #define MAX_ROTATIONS max_rotations
 
 /* USER CODE END PD */
@@ -69,6 +70,7 @@ uint16_t min_angle;
 uint16_t max_angle;
 uint16_t gearing;
 uint16_t max_rotations;
+uint16_t steps_per_revolution;
 
 float software_stop = 0;
 uint8_t cw_enable = 0;
@@ -244,6 +246,7 @@ int main(void)
         {
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
             break;
         }
         case RAD_TYPE_UNDEFINED:
@@ -251,6 +254,7 @@ int main(void)
         {
             MAX_ROTATIONS = 5; //60 degrees
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
             break;
         }
     }
@@ -348,7 +352,7 @@ int main(void)
                         new_setpoint = max_angle;
                     }
 
-                    new_setpoint = new_setpoint + rad_params.HOME_OFFSET;
+                    new_setpoint = new_setpoint;
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
@@ -890,9 +894,11 @@ int main(void)
                         break;
                     }
 
-                    double delta_angle = (pid_1.feedback_adj - pid_1.__set_point)/MOTOR_GEARING;
+                    //number of steps the stepper is offset by
+                    double delta_stepper = (pid_1.feedback_adj - pid_1.__set_point);
 
-                    rad_params.HOME_OFFSET = delta_angle;
+                    //store values in PID reference frame
+                    rad_params.HOME_OFFSET = delta_stepper;
 
                     break;
 
@@ -1145,13 +1151,16 @@ int main(void)
                     }
                 }
 
+                //convert degrees to steps
+                int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0);
+
                 if ((pid_1.output > 0) && cw_enable)
                 {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
                 }
                 else if ((pid_1.output < 0) && ccw_enable)
                 {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
                 }
                 else if ((cw_enable == 0) || (ccw_enable == 0))
                 {

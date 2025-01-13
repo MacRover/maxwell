@@ -91,7 +91,7 @@ def main():
                     time.sleep(0.1)
                     send_uint8_value(bus=bus, can_id=0x4D, device_id=rad_id, value=0) #DEDGE
                     time.sleep(0.1)
-                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =5) #CS
+                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =10) #CS
                 elif( i == "estop"):
                     send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
                 elif( i == "disable"):
