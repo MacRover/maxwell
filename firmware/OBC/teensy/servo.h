@@ -21,6 +21,7 @@ void servo_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
 
     int angle_deg = (int)msg->data;
+    angle_deg += angle_deg;
     myservo.write(angle_deg);
 }
 
