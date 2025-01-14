@@ -38,9 +38,10 @@ extern "C" {
 /* USER CODE BEGIN ET */
 
 typedef struct __attribute__((packed)){
+
+	uint8_t VIPER_ID;
  	uint16_t HEALTH_INTERVAL;
  	uint16_t CARD_INTERVAL;
- 	// todo: add params to eeprom
 
 } VIPER_PARAMS_TypeDef;
 
@@ -51,7 +52,6 @@ typedef struct
 
     uint8_t EEPROM_STATUS;
     uint8_t MUX_STATUS;
-    // todo: fill state 2 with something (viper_can_handle->TxData[2] = status.MUX_STATUS;)
     uint8_t VIPER_STATE;
     uint8_t CARD1_STATUS;
     uint8_t CARD2_STATUS;

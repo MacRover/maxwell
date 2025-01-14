@@ -145,11 +145,170 @@ int main(void)
 
   // INITIALIZE VIPER STATES
 
+  static enum
+  {
+	  VIPER_STATE_INIT,
+	  VIPER_STATE_ACTIVE
+  } viper_state = VIPER_STATE_INIT;
+
   // ###########
 
   while (1)
   {
+	  if (!queue_empty(&can_message_queue_global))
+	  {
+		  VIPER_CAN_Message_TypeDef *new_message =
+				  (VIPER_CAN_Message_TypeDef*) queue_front(
+						  &can_message_queue_global);
 
+		  switch ((int)(new_message->command_id))
+		  {
+			  case ESTOP_MESSAGE:
+			  {
+				  ESTOP = 1;
+				  break;
+			  }
+			  case DISABLE_MESSAGE:
+			  {
+				  DISABLED = 1;
+				  break;
+			  }
+			  case ENABLE_MESSAGE:
+			  {
+				  viper_state = VIPER_STATE_ACTIVE;
+				  DISABLED = 0;
+				  break;
+			  }
+			  case HEALTH_STATUS_PING:
+			  {
+				  MX_CAN_Broadcast_Health_Message(&viper_can, viper_status);
+				  break;
+			  }
+			  default:
+			  {
+				  break;
+			  }
+		  }
+
+		  free(new_message->data);
+		  queue_dequeue(&can_message_queue_global);
+	  }
+
+	  //Only check viper queue after. This allows global messages to be addressed immediately
+	  else if (!queue_empty(&can_message_queue_viper))
+	  {
+		  VIPER_CAN_Message_TypeDef *new_message =
+				  (VIPER_CAN_Message_TypeDef*) queue_front(
+						  &can_message_queue_viper);
+
+		  switch ((int)(new_message->command_id))
+		  {
+		  	  case GET_CARD_1_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_CARD_2_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_CARD_3_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_CARD_4_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case SYNC_EEPROM:
+		  	  {
+		  		break;
+		  	  }
+		  	  case CLEAR_EEPROM:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_EEPROM_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_HEALTH_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_MUX_STATUS:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_HEALTH_INTERVAL:
+		  	  {
+		  		break;
+		  	  }
+		  	  case SET_HEALTH_INTERVAL:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_CARD_INTERVAL:
+		  	  {
+		  		break;
+		  	  }
+		  	  case SET_CARD_INTERVAL:
+		  	  {
+		  		break;
+		  	  }
+		  	  case GET_VIPER_ID:
+		  	  {
+		  		break;
+		  	  }
+		  	  case SET_VIPER_ID:
+		  	  {
+		  		break;
+		  	  }
+		  	  default:
+		  		  break;
+		  }
+		  free(new_message->data);
+		  queue_dequeue(&can_message_queue_viper);
+	  }
+	  //CHECK FOR ESTOP
+	  // todo
+//	  if (ESTOP)
+//	  {
+//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+//		  break;
+//	  }
+//	  if (DISABLED)
+//	  {
+//		steps_to_move = 0;
+//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+//		  continue;
+//	  }
+//	  else
+//	  {
+//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+//	  }
+
+	switch (viper_state) {
+		case VIPER_STATE_INIT: {
+			break;
+		}
+		case VIPER_STATE_ACTIVE: {
+			break;
+		}
+		default:
+			break;
+	}
+
+	if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0))
+	{
+		//todo replace with card status function
+		//MX_CAN_Broadcast_Odometry_Message(&viper_can, viper_status);
+	}
+
+	if ((viper_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0))
+	{
+		viper_status.VIPER_STATE = viper_state;
+		MX_CAN_Broadcast_Health_Message(&viper_can, viper_status);
+	}
 
     /* USER CODE END WHILE */
 
