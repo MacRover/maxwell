@@ -10,8 +10,9 @@
 #include <std_msgs/msg/float32.h>
 
 #define LED_PIN 13
-#define SERVO1_PIN 36  
-#define SERVO2_PIN 44
+#define SERVO1_PIN 36
+#define SERVO2_PIN 22
+
 
 Servo servo1;
 Servo servo2;
@@ -24,8 +25,8 @@ std_msgs__msg__Float32 servo2_msg;
 
 rclc_executor_t servo_executor;
 
-int servo1_angle_send = 0;
-int servo2_angle_send = 0;
+int servo1_angle_send = 90;
+int servo2_angle_send = 90;
 
 void servo1_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
@@ -43,31 +44,16 @@ void servo2_callback(const void *msgin) {
     servo2.write(servo2_angle_send);
 }
 
-/**********************************************************************
- * Initialize Subscriptions and Attach Servos
- **********************************************************************/
+
 void servo_setup_subscription(
     rcl_node_t *node,
     rclc_support_t *support,
     rcl_allocator_t *allocator
 ) {
-    // Attach servos to their respective pins
     servo1.attach(SERVO1_PIN);
-     if (servo2.attach(SERVO2_PIN)) {
-       digitalWrite(LED_PIN, LOW);
-       delay(100);
-       digitalWrite(LED_PIN, HIGH);
-     }
     servo2.attach(SERVO2_PIN);
-     if (servo2.attach(SERVO2_PIN)) {
-       digitalWrite(LED_PIN, LOW);
-       delay(100);
-       digitalWrite(LED_PIN, HIGH);
+     
 
-    
-     }
-
-    // Subscription for Servo 1
     rclc_subscription_init_default(
         &servo1_sub,
         node,
@@ -75,7 +61,7 @@ void servo_setup_subscription(
         "/obc/servo1_angle"
     );
 
-    // Subscription for Servo 2
+ 
     rclc_subscription_init_default(
         &servo2_sub,
         node,
@@ -83,10 +69,9 @@ void servo_setup_subscription(
         "/obc/servo2_angle"
     );
 
-    // Create executor for handling both subscriptions
     rclc_executor_init(&servo_executor, &support->context, 2, allocator);
 
-    // Add Servo 1 subscription to executor
+ 
     rclc_executor_add_subscription(
         &servo_executor,
         &servo1_sub,
@@ -95,7 +80,7 @@ void servo_setup_subscription(
         ON_NEW_DATA
     );
 
-    // Add Servo 2 subscription to executor
+    
     rclc_executor_add_subscription(
         &servo_executor,
         &servo2_sub,
@@ -105,11 +90,8 @@ void servo_setup_subscription(
     );
 }
 
-/**********************************************************************
- * Spin Executor
- **********************************************************************/
 void servo_spin_executor() {
     rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(10));
 }
 
-#endif // SERVO_H
+#endif 
