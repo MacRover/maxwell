@@ -7,8 +7,8 @@ from std_msgs.msg import Float32
 class DpadServoController(Node):
     def __init__(self):
         super().__init__("controller_angle_controller")
-        self.publisher_servo1 = self.create_publisher(Float32, "servo1_angle", 10)
-        self.publisher_servo2 = self.create_publisher(Float32, "servo2_angle", 10)
+        self.publisher_servo1 = self.create_publisher(Float32, "/obc/servo1_angle", 10)
+        self.publisher_servo2 = self.create_publisher(Float32, "/obc/servo2_angle", 10)
         self.create_subscription(Joy, "/joy", self.joy_callback, 10)
         self.get_logger().info("Dpad Servo Controller Node Started")
 
@@ -21,7 +21,7 @@ class DpadServoController(Node):
         dpad_horizontal = msg.axes[6]  # Left: 1.0, Right: -1.0
         dpad_vertical = msg.axes[7]    # Up: 1.0, Down: -1.0
 
-        # D-pad control logic
+    
         if dpad_vertical == 1.0:  # D-pad up
             servo_msg1.data = 1.0
         elif dpad_vertical == -1.0:  # D-pad down
