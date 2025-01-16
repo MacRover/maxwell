@@ -7,7 +7,6 @@
 
 #include "pid.h"
 #include "as5048a.h"
-#include "at24c04c.h"
 #include "enc_dec_utils.h"
 
 #include "main.h"

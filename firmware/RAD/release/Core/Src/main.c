@@ -882,7 +882,7 @@ int main(void)
                 }
                 case GET_PID_MAX_OUTPUT:
                 {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, (uint16_t) pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
                     break;
                 }
                 case SET_HOME_OFFSET:

@@ -82,6 +82,8 @@ def main():
                 elif (i == "set pid max output"):
                     j = input("max? ")
                     send_uint16_value(bus=bus, can_id=0x59, device_id=rad_id, value = int(j))
+                elif (i == "get pid max output"):
+                    send_uint16_value(bus=bus, can_id=0x5A, device_id=rad_id, value = 0)
                 elif (i == "get stepper speed"):
                     send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)                    
                 elif(i == "fix stepper"):
