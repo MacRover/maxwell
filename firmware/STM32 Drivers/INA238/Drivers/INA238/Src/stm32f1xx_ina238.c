@@ -7,46 +7,68 @@
 
 #include "stm32f1xx_ina238.h"
 
-INA_238_StatusTypeDef INA_238_Init(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_Init(INA_238_HandleTypeDef *ina_238)
 {
-
+    if (ina_238 == NULL)
+        return INA_238_ERROR;
+    if (ina_238->state == INA_238_STATE_READY)
+        return INA_238_ERROR;
+    if (ina_238->state == INA_238_STATE_BUSY)
+        return INA_238_BUSY;
+    if (ina_238->state == INA_238_STATE_ERROR)
+        return INA_238_ERROR;
+    if (ina_238->Init.I2C_HandlerInstance == NULL)
+        return INA_238_ERROR;
+    ina_238->state == INA_238_STATE_READY;
+    return INA_238_OK;
 }
 
-INA_238_StatusTypeDef INA_238_DeInit(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_DeInit(INA_238_HandleTypeDef *ina_238)
 {
-
+    if (ina_238 == NULL)
+        return INA_238_ERROR;
+    if (ina_238->state == INA_238_STATE_RESET)
+        return INA_238_ERROR;
+    if (ina_238->state == INA_238_STATE_BUSY)
+        return INA_238_BUSY;
+    if (ina_238->state == INA_238_STATE_ERROR)
+        return INA_238_ERROR;
+    ina_238->state == INA_238_STATE_RESET;
+    return INA_238_OK;
 }
 
-INA_238_StatusTypeDef INA_238_ReadCurrent(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_ReadCurrent(INA_238_HandleTypeDef *ina_238)
 {
-
+    if (__i2c_set_register_pointer(ina_238, INA238_CURRENT_ADDRESS) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    uint16_t current_reading;
+    if (__i2c_read_register(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    double current_LSB = ina_238->Init.max_expected_current / 32768.0;
+    ina_238->current = current_LSB * current_reading;
+    return INA_238_OK;
 }
 
-INA_238_StatusTypeDef INA_238_ReadVoltage(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_ReadVoltage(INA_238_HandleTypeDef *ina_238)
 {
-
 }
 
-INA_238_StatusTypeDef INA_238_ReadPower(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_ReadPower(INA_238_HandleTypeDef *ina_238)
 {
-
 }
 
-INA_238_StatusTypeDef INA_238_ReadDiagnostic(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_ReadDiagnostic(INA_238_HandleTypeDef *ina_238)
 {
-
 }
 
-INA_238_StatusTypeDef INA_238_WriteConfig(INA_238_HandleTypeDef* ina_238)
+INA_238_StatusTypeDef INA_238_WriteConfig(INA_238_HandleTypeDef *ina_238)
 {
-
 }
 
-
-//Below functions come from datasheet page 19
-uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef* ina_238, uint8_t register_address)
+// Below functions come from datasheet page 19
+uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef *ina_238, uint8_t register_address)
 {
-    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0; //a1 pin changes 3rd msb not 2nd msb
+    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0; // a1 pin changes 3rd msb not 2nd msb
 
     while (HAL_I2C_Master_Transmit(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), &register_address, 1, 10000) != HAL_OK)
     {
@@ -62,10 +84,10 @@ uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef* ina_238, uint8_t regi
     return HAL_I2C_ERROR_NONE;
 }
 
-uint16_t __i2c_read_register(INA_238_HandleTypeDef* ina_238, uint8_t *buffer)
+uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
 {
 
-    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0; 
+    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
 
     while (HAL_I2C_Master_Receive(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), buffer, 2, 10000) != HAL_OK)
     {
@@ -79,15 +101,14 @@ uint16_t __i2c_read_register(INA_238_HandleTypeDef* ina_238, uint8_t *buffer)
     }
 
     return HAL_I2C_ERROR_NONE;
-
 }
 
-uint16_t __i2c_write_register(INA_238_HandleTypeDef* ina_238, uint8_t register_address, uint8_t *data)
+uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint8_t *data)
 {
 
-    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0; 
+    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
 
-    while (HAL_I2C_Mem_Write(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), (uint16_t) (register_address & 0xFF), I2C_MEMADD_SIZE_8BIT, data, 2, 10000) != HAL_OK)
+    while (HAL_I2C_Mem_Write(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), (uint16_t)(register_address & 0xFF), I2C_MEMADD_SIZE_8BIT, data, 2, 10000) != HAL_OK)
     {
         uint16_t I2C_Error = HAL_I2C_GetError(ina_238->Init.I2C_HandlerInstance);
 
@@ -98,5 +119,4 @@ uint16_t __i2c_write_register(INA_238_HandleTypeDef* ina_238, uint8_t register_a
     }
 
     return HAL_I2C_ERROR_NONE;
-
 }
