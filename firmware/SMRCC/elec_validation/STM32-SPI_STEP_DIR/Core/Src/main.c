@@ -42,8 +42,6 @@
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 
-TIM_HandleTypeDef htim4;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -52,7 +50,6 @@ TIM_HandleTypeDef htim4;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -113,13 +110,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
-  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
     HAL_GPIO_WritePin(M1_EN_GPIO_Port, M1_EN_Pin, GPIO_PIN_RESET); // Motor driver chip enable
     HAL_GPIO_WritePin(M2_EN_GPIO_Port, M2_EN_Pin, GPIO_PIN_RESET); // Motor driver chip enable
 
-//    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET); // set DIR
+    HAL_GPIO_WritePin(M1_DIR_GPIO_Port, M1_DIR_Pin, GPIO_PIN_RESET); // set DIR
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET); // STEP
 
     uint32_t SPImsg = 0;
@@ -160,10 +156,10 @@ int main(void)
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
-    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
-            1000);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* SGCSCONF */
     SPImsg = 0;
@@ -180,10 +176,10 @@ int main(void)
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
-    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
-            1000);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* SMARTEN */
     SPImsg = 0;
@@ -202,10 +198,10 @@ int main(void)
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
-    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
-            1000);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* CHOPCONF */
     SPImsg = 0;
@@ -226,30 +222,30 @@ int main(void)
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
-    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
-            1000);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
     /* DRVCTRL */
     SPImsg = 0;
     SPImsg |= (0b00 << 18); // DRVCTRL
     SPImsg |= (0b1 << 9); // INTPOL: step interpolation
     SPImsg |= (0b0 << 8); // DEDGE: Double edge step pulses
-    SPImsg |= (0b0111 << 0); // MRES: Microsteps per fullstep
+    SPImsg |= (0b0000 << 0); // MRES: Microsteps per fullstep
 
     SPImsg_bytes[2] = (uint8_t) (SPImsg & 0xFF);
     SPImsg_bytes[1] = (uint8_t) ((SPImsg & 0xFF00) >> 8);
     SPImsg_bytes[0] = (uint8_t) ((SPImsg & 0xFF0000) >> 16);
 
-     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_RESET);
     spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
             1000);
     HAL_GPIO_WritePin(M1_SPI_CS_GPIO_Port, M1_SPI_CS_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
-    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
-            1000);
-    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_RESET);
+//    spi_status = HAL_SPI_TransmitReceive(&hspi1, SPImsg_bytes, SPIread_bytes, 3,
+//            1000);
+//    HAL_GPIO_WritePin(M2_SPI_CS_GPIO_Port, M2_SPI_CS_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
@@ -258,21 +254,25 @@ int main(void)
 
   uint16_t direction_counter;
 
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
     while (1)
     {
-      HAL_GPIO_TogglePin(M1_STEP_GPIO_Port, M1_STEP_Pin);
-      HAL_GPIO_TogglePin(M2_STEP_GPIO_Port, M2_STEP_Pin); // STEP
+      HAL_GPIO_WritePin(M1_STEP_GPIO_Port, M1_STEP_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(M1_DIR_GPIO_Port, M1_DIR_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
 
-      if (direction_counter++ < 200)
-      {
-        HAL_GPIO_TogglePin(M1_DIR_GPIO_Port, M1_DIR_Pin);
-        HAL_GPIO_TogglePin(M2_DIR_GPIO_Port, M2_DIR_Pin); // DIR 
-      }
+      //HAL_Delay(10);
+      delayUs(5);
 
-      HAL_Delay(5);
-      delayUs(5); //10ms step
+      HAL_GPIO_WritePin(M1_STEP_GPIO_Port, M1_STEP_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+
+
+      //HAL_Delay(10);
+      delayUs(5);
+
+
+      //delayUs(50); //10ms step
 
         // Use LED to signal state of ST_TST
 //        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,
@@ -362,59 +362,6 @@ static void MX_SPI1_Init(void)
 }
 
 /**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM4_Init(void)
-{
-
-  /* USER CODE BEGIN TIM4_Init 0 */
-
-  /* USER CODE END TIM4_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM4_Init 1 */
-
-  /* USER CODE END TIM4_Init 1 */
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = (72000000/6000)-1;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 30-1;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM4_Init 2 */
-
-  /* USER CODE END TIM4_Init 2 */
-  HAL_TIM_MspPostInit(&htim4);
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -423,6 +370,9 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
+
+  //__HAL_RCC_AFIO_CLK_ENABLE();
+  __HAL_AFIO_REMAP_SWJ_NOJTAG();
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -432,15 +382,15 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_RED_Pin|M2_SPI_CS_Pin|M1_SPI_CS_Pin|M1_EN_Pin
-                          |M1_DIR_Pin, GPIO_PIN_RESET);
+                          |M1_DIR_Pin|M2_STEP_Pin|M1_STEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, M2_EN_Pin|DRIVER_ENN_Pin|M2_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED_RED_Pin M2_SPI_CS_Pin M1_SPI_CS_Pin M1_EN_Pin
-                           M1_DIR_Pin */
+                           M1_DIR_Pin M2_STEP_Pin M1_STEP_Pin */
   GPIO_InitStruct.Pin = LED_RED_Pin|M2_SPI_CS_Pin|M1_SPI_CS_Pin|M1_EN_Pin
-                          |M1_DIR_Pin;
+                          |M1_DIR_Pin|M2_STEP_Pin|M1_STEP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
