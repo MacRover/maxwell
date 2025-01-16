@@ -176,6 +176,12 @@ void PID_SetZeroPoint(PID_HandleTypeDef *PID)
     PID->__rollovers = 0;
 }
 
+void PID_SetCustomOffset(PID_HandleTypeDef *PID, double offset)
+{
+    PID->__offset = (-1.0 * PID->__feedback_raw_old) + fmod(offset, PID->Init.rollover_max);
+    PID->__rollovers = (int) offset / PID->Init.rollover_max;
+}
+
 void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers)
 {
     PID->__offset = -1.0 * PID->__feedback_raw_old;

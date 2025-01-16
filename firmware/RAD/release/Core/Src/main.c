@@ -895,7 +895,7 @@ int main(void)
                     }
 
                     //number of steps the stepper is offset by
-                    double delta_stepper = (pid_1.feedback_adj - pid_1.__set_point);
+                    double delta_stepper = (pid_1.__set_point - pid_1.feedback_adj);
 
                     //store values in PID reference frame
                     rad_params.HOME_OFFSET = delta_stepper;
@@ -1013,12 +1013,39 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+
+                            if (rad_params.HOME_OFFSET)
+                            {
+                                //if the motor overshoots coming from the right limit switch, the offset is measured as negative
+                                //To correct, shift frame of reference CCW - 240 now becomes 240 - abs(offset). Therefore, offset is added from 240
+
+                                //If the motor undershoots coming from the right limit switch, the offset is measured as positive
+                                //to correct, shift frame of reference CW - 240 now becomes 240 + abs(offset). Therefore, offset is added to 240
+                                PID_SetCustomOffset(&pid_1, 360 * MAX_ROTATIONS + rad_params.HOME_OFFSET); 
+                            }
+                            else
+                            {
+                                PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+                            }
+                            
                             PID_ChangeSetPoint(&pid_1, max_angle*MOTOR_GEARING);
                             software_stop = min_angle;
                             break;
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-                            PID_SetZeroPoint(&pid_1);
+
+                            if (rad_params.HOME_OFFSET)
+                            {
+                                //if the motor overshoots coming from the left limit switch, the offset is measured as positive
+                                //To correct, shift frame of reference CW - 0 now becomes + abs(offset). Therefore, offset is added to 0
+
+                                //If the motor undershoots coming from the right limit switch, the offset is measured as negative
+                                //to correct, shift frame of reference CCW - 0 now becomes 0 - abs(offset). Therefore, offset is added to 0
+                                PID_SetCustomOffset(&pid_1, rad_params.HOME_OFFSET); 
+                            }
+                            else
+                            {
+                                PID_SetZeroPoint(&pid_1);
+                            }
                             PID_ChangeSetPoint(&pid_1, min_angle*MOTOR_GEARING);
                             software_stop = max_angle;
                             break;
@@ -1105,14 +1132,39 @@ int main(void)
 
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
-                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+
+                            if (rad_params.HOME_OFFSET)
+                            {
+                                //if the motor overshoots coming from the right limit switch, the offset is measured as negative
+                                //To correct, shift frame of reference CCW - 240 now becomes 240 - abs(offset). Therefore, offset is added from 240
+
+                                //If the motor undershoots coming from the right limit switch, the offset is measured as positive
+                                //to correct, shift frame of reference CW - 240 now becomes 240 + abs(offset). Therefore, offset is added to 240
+                                PID_SetCustomOffset(&pid_1, 360 * MAX_ROTATIONS + rad_params.HOME_OFFSET); 
+                            }
+                            else
+                            {
+                                PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+                            }
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
                         }
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
-                            PID_SetZeroPoint(&pid_1);
+                            if (rad_params.HOME_OFFSET)
+                            {
+                                //if the motor overshoots coming from the left limit switch, the offset is measured as positive
+                                //To correct, shift frame of reference CW - 0 now becomes + abs(offset). Therefore, offset is added to 0
+
+                                //If the motor undershoots coming from the right limit switch, the offset is measured as negative
+                                //to correct, shift frame of reference CCW - 0 now becomes 0 - abs(offset). Therefore, offset is added to 0
+                                PID_SetCustomOffset(&pid_1, rad_params.HOME_OFFSET); 
+                            }
+                            else
+                            {
+                                PID_SetZeroPoint(&pid_1);
+                            }
                             cw_enable = 1;
                             ccw_enable = 0;
                             break;
@@ -1152,7 +1204,7 @@ int main(void)
                 }
 
                 //convert degrees to steps
-                int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0);
+                int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0); // 0.555555556
 
                 if ((pid_1.output > 0) && cw_enable)
                 {
