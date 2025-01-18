@@ -325,6 +325,10 @@ public:
      */
     void pulse_stepper(float steps);
 
+    void set_home_offset();
+
+    void get_home_offset();
+
 
 private:
     void _update_can_data(uint8_t* buf, size_t size);
