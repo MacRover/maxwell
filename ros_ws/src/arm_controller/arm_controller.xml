@@ -1,0 +1,9 @@
+<library path="arm_controller">
+  <class name="arm_controller/RobotSystem"
+         type="arm_controller::RobotSystem"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Arm Hardware Interface
+    </description>
+  </class>
+</library>

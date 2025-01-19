@@ -5,6 +5,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+
+set(HW_IF_INCLUDE_DEPENDS
+  pluginlib
+  rcpputils
+  hardware_interface
+)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
@@ -15,6 +22,27 @@ find_package(std_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(custom_interfaces REQUIRED)
+
+foreach(Dependency IN ITEMS ${HW_IF_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+add_library(
+  arm_controller
+  SHARED
+  hardware/arm_hardware.cpp
+)
+
+target_compile_features(arm_controller PUBLIC cxx_std_17)
+target_include_directories(arm_controller PUBLIC
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+$<INSTALL_INTERFACE:include/arm_controller>
+)
+
+ament_target_dependencies(
+  arm_controller PUBLIC
+  ${HW_IF_INCLUDE_DEPENDS}
+)
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
@@ -32,6 +60,13 @@ target_include_directories(rad_converter PUBLIC
 target_compile_features(rad_converter PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 
+pluginlib_export_plugin_description_file(hardware_interface arm_controller.xml)
+
+install(
+  DIRECTORY hardware/include/
+  DESTINATION include/arm_controller
+)
+
 install(TARGETS keyboard_controller
   rad_converter
   DESTINATION lib/${PROJECT_NAME})
@@ -39,6 +74,13 @@ install(TARGETS keyboard_controller
 # Install launch files.
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(TARGETS arm_controller
+  EXPORT arm_controller
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
