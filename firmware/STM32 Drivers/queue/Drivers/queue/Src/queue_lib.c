@@ -43,9 +43,11 @@ void queue_enqueue(Queue_TypeDef *queue, void *new_data)
 {
     if (queue->size >= MAX_QUEUE_SIZE)
     {
-        return;
+    	return;
     }
     
+    queue->size++;
+
     if (queue->tail == NULL)
     {
         // handle empty queue
@@ -71,7 +73,6 @@ void queue_enqueue(Queue_TypeDef *queue, void *new_data)
     queue->tail->next->next = NULL;
     queue->tail = queue->tail->next;
 
-    queue->size++;
 }
 
 void queue_dequeue(Queue_TypeDef *queue)
