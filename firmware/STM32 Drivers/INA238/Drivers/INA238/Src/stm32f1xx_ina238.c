@@ -44,17 +44,37 @@ INA_238_StatusTypeDef INA_238_ReadCurrent(INA_238_HandleTypeDef *ina_238)
     uint16_t current_reading;
     if (__i2c_read_register(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    double current_LSB = ina_238->Init.max_expected_current / 32768.0;
-    ina_238->current = current_LSB * current_reading;
+    ina_238->current = current_reading * (ina_238->Init.max_expected_current / 32768.0);
     return INA_238_OK;
 }
 
 INA_238_StatusTypeDef INA_238_ReadVoltage(INA_238_HandleTypeDef *ina_238)
 {
+    if (__i2c_set_register_pointer(ina_238, INA238_VBUS_ADDRESS) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    uint16_t voltage_reading;
+    if (__i2c_read_register(ina_238, (uint8_t *)&voltage_reading) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    ina_238->voltage = voltage_reading * 0.003125;
+    return INA_238_OK;
 }
 
 INA_238_StatusTypeDef INA_238_ReadPower(INA_238_HandleTypeDef *ina_238)
 {
+    if (__i2c_set_register_pointer(ina_238, INA238_CURRENT_ADDRESS) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    uint16_t current_reading;
+    if (__i2c_read_register(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+
+    if (__i2c_set_register_pointer(ina_238, INA238_POWER_ADDRESS) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+    uint16_t power_reading;
+    if (__i2c_read_register(ina_238, (uint8_t *)&power_reading) != HAL_I2C_ERROR_NONE)
+        return INA_238_ERROR;
+
+    ina_238->power = 0.2 * power_reading * current_reading * (ina_238->Init.max_expected_current / 32768.0);
+    return INA_238_OK;
 }
 
 INA_238_StatusTypeDef INA_238_ReadDiagnostic(INA_238_HandleTypeDef *ina_238)
