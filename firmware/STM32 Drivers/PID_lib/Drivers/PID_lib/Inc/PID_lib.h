@@ -47,7 +47,6 @@ void PID_Update_BangBang(PID_HandleTypeDef *PID);
 void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point);
 
 void PID_SetZeroPoint(PID_HandleTypeDef *PID);
-void PID_SetCustomOffset(PID_HandleTypeDef *PID, double offset);
 void PID_SetMaxPoint(PID_HandleTypeDef *PID, uint8_t max_rollovers);
 
 void PID_ClearIError(PID_HandleTypeDef *PID);
