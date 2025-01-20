@@ -21,7 +21,7 @@ class DpadServoController(Node):
         dpad_horizontal = msg.axes[6]  # Left: 1.0, Right: -1.0
         dpad_vertical = msg.axes[7]    # Up: 1.0, Down: -1.0
 
-        # D-pad control logic
+    
         if dpad_vertical == 1.0:  # D-pad up
             servo_msg1.data = 1.0
         elif dpad_vertical == -1.0:  # D-pad down

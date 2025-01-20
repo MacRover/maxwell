@@ -182,12 +182,8 @@ void obc_setup_uros()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
     );
-    rclc_subscription_init_default(
-    &servo_sub,
-    &teensy_node,  
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
-    "/obc/servo1_angle"  
-);
+
+
 
 #endif
     digitalWrite(LED_PIN, HIGH);
@@ -268,8 +264,8 @@ void setup()
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
-    servo_setup_subscription(&teensy_node, &support, &allocator, 
-                           "/obc/servo1_angle", 36);
+    servo_setup_subscription(&teensy_node, &support, &allocator);
+
 
 }
 
