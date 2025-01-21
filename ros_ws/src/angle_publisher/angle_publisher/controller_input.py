@@ -66,39 +66,8 @@ class DpadServoController(Node):
         self.publisher_servo1.publish(servo_msg1)
         self.publisher_servo2.publish(servo_msg2)
         self.publisher_servo3.publish(servo_msg3)
-
-        self.get_logger().info(f"Servo1: {servo_msg1.data}, Servo2: {servo_msg2.data}, Servo3: {servo_msg3.data}")
-        # D-pad control logic
-        enabled = True
-        while enabled:
-            if dpad_vertical == 1.0 and dpad_horizontal == 1.0:
-                servo_msg3.data +=5.0
-                self.servo3_active = True
-            elif dpad_vertical == 1.0 and dpad_horizontal == -1.0:
-                servo_msg3.data -=5.0
-                self.servo3_active = True
-            else:
-                self.servo3_active = False
-
-            if not self.servo3_active:
-                if dpad_vertical == 1.0:  # D-pad up
-                    servo_msg1.data +=5.0
-                elif dpad_vertical == -1.0:  # D-pad down
-                    servo_msg1.data -=5.0
             
-
-                if dpad_horizontal == 1.0:  # D-pad left
-                    servo_msg2.data +=5.0
-                elif dpad_horizontal == -1.0:  # D-pad right
-                    servo_msg2.data -=5.0
-                
-
-    
-            self.publisher_servo1.publish(servo_msg1)
-            self.publisher_servo2.publish(servo_msg2)
-            self.publisher_servo3.publish(servo_msg3)
-
-            self.get_logger().info(f"servo_1: {servo_msg1.data}, servo_2: {servo_msg2.data}, servo_3: {servo_msg3.data}")
+        self.get_logger().info(f"servo_1: {servo_msg1.data}, servo_2: {servo_msg2.data}, servo_3: {servo_msg3.data}")
 
 
 def main():
