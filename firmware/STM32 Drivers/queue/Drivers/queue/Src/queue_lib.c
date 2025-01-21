@@ -17,6 +17,7 @@ Queue_TypeDef* create_queue()
     }
     new_queue->head = NULL;
     new_queue->tail = NULL;
+    new_queue->size = 0;
     return new_queue;
 }
 
@@ -40,6 +41,13 @@ uint8_t queue_empty(Queue_TypeDef *queue)
 
 void queue_enqueue(Queue_TypeDef *queue, void *new_data)
 {
+    if (queue->size >= MAX_QUEUE_SIZE)
+    {
+    	return;
+    }
+    
+    queue->size++;
+
     if (queue->tail == NULL)
     {
         // handle empty queue
@@ -64,6 +72,7 @@ void queue_enqueue(Queue_TypeDef *queue, void *new_data)
     queue->tail->next->data = new_data;
     queue->tail->next->next = NULL;
     queue->tail = queue->tail->next;
+
 }
 
 void queue_dequeue(Queue_TypeDef *queue)
@@ -79,6 +88,8 @@ void queue_dequeue(Queue_TypeDef *queue)
         }
         free(temp->data);
         free(temp);
+
+        queue->size--;
     }
 }
 

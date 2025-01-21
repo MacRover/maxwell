@@ -24,7 +24,6 @@
 #include "queue.h"
 #include <string.h>
 #include "enc_dec_utils.h"
-#include "at24c04c.h"
 
 RAD_CAN_TypeDef rad_can;
 /* USER CODE END 0 */
@@ -68,11 +67,7 @@ void MX_CAN_Init(void)
 
     rad_can.hcan = hcan;
 
-    // todo read id from eeprom
-//    uint8_t eeprom_buff[1];
-//    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff, sizeof(uint8_t));
-//    rad_can.id = eeprom_buff[0];
-    rad_can.id = 0x14;
+    rad_can.id = 0xff;
 
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;
@@ -237,7 +232,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         return;
     }
     
-    //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
     new_message->data = memcpy(data_ptr, rad_can.RxData,
             sizeof(uint8_t) * new_message->dlc);
 
@@ -315,7 +309,7 @@ void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t valu
 
 void MX_CAN_Broadcast_Uint16_Data(RAD_CAN_TypeDef *rad_can_handle, uint16_t value, uint16_t message_id)
 {
-    encode_uint32_big_endian(value, &(rad_can_handle->TxData[0]));
+    encode_uint16_big_endian(value, &(rad_can_handle->TxData[0]));
     rad_can_handle->TxHeader.DLC = sizeof(uint16_t); //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
 
@@ -332,41 +326,6 @@ void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value,
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 }
-// todo status return value?
-// void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
-//         RAD_STATUS_TypeDef status)
-// {
-//     // status message 1
-//     rad_can_handle->TxData[0] = ((status.fsr_2 & 0x03) << 1)
-//             | ((status.fsr_1 & 0x01) << 2) | ((status.ls_2 & 0x01) << 1)
-//             | (status.ls_1 & 0x01);
-//     encode_float_big_endian(status.current_angle, &(rad_can_handle->TxData[1]));
-//     rad_can_handle->TxHeader.DLC = 5;
-//     // status message 1 is ID 9 according to VESC
-//     // https://github.com/vedderb/bldc/blob/master/documentation/comm_can.md
-//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, 9);
-//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
-
-//     // status message 2
-//     encode_float_big_endian(status.kp, &(rad_can_handle->TxData[0]));
-//     encode_float_big_endian(status.ki, &(rad_can_handle->TxData[4]));
-//     rad_can_handle->TxHeader.DLC = 8;
-//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-//             14);
-//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
-
-//     // status message 3
-//     encode_float_big_endian(status.kd, &(rad_can_handle->TxData[0]));
-// //    todo include rad motor speed
-// //    encode_float_big_endian(status.speed, &(rad_can_handle->TxData[4]));
-//     rad_can_handle->TxHeader.DLC = 4;
-//     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id,
-//             15);
-//     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
-//             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
-// }
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
 {
