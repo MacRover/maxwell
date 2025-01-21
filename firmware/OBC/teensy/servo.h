@@ -10,28 +10,35 @@
 #include <std_msgs/msg/float32.h>
 
 #define LED_PIN 13
-#define SERVO1_PIN 36
-#define SERVO2_PIN 22
+#define SERVO1_PIN 4
+#define SERVO2_PIN 5
+#define SERVO3_PIN 37
 
 
 Servo servo1;
 Servo servo2;
+Servo servo3;
 
 rcl_subscription_t servo1_sub;
 rcl_subscription_t servo2_sub;
+rcl_subscription_t servo3_sub;
+
 
 std_msgs__msg__Float32 servo1_msg;
 std_msgs__msg__Float32 servo2_msg;
+std_msgs__msg__Float32 servo3_msg;
 
 rclc_executor_t servo_executor;
 
-int servo1_angle_send = 90;
+int servo1_angle_send = 0;
 int servo2_angle_send = 90;
+int servo3_angle_send = 90;
+
 
 void servo1_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
-    servo1_angle_send = constrain(servo1_angle_send - angle_deg*2, 0, 180);
+    servo1_angle_send = constrain(angle_deg, 0, 180);
     servo1.write(servo1_angle_send);
     
 }
@@ -40,8 +47,15 @@ void servo1_callback(const void *msgin) {
 void servo2_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
-   servo2_angle_send = constrain(servo2_angle_send - angle_deg*2, 0, 180);
+   servo2_angle_send = constrain(angle_deg, 0, 180);
     servo2.write(servo2_angle_send);
+}
+
+void servo3_callback(const void *msgin) {
+    const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
+    int angle_deg = (int)msg->data;
+   servo3_angle_send = constrain(angle_deg, 0, 180);
+    servo3.write(servo3_angle_send);
 }
 
 
@@ -52,6 +66,7 @@ void servo_setup_subscription(
 ) {
     servo1.attach(SERVO1_PIN);
     servo2.attach(SERVO2_PIN);
+    servo3.attach(SERVO3_PIN);
      
 
     rclc_subscription_init_default(
@@ -68,8 +83,15 @@ void servo_setup_subscription(
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
         "/obc/servo2_angle"
     );
+    rclc_subscription_init_default(
+        &servo3_sub,
+        node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+        "/obc/servo3_angle"
+    );
 
-    rclc_executor_init(&servo_executor, &support->context, 2, allocator);
+
+    rclc_executor_init(&servo_executor, &support->context, 3, allocator);
 
  
     rclc_executor_add_subscription(
@@ -88,10 +110,18 @@ void servo_setup_subscription(
         servo2_callback,
         ON_NEW_DATA
     );
+
+    rclc_executor_add_subscription(
+        &servo_executor,
+        &servo3_sub,
+        &servo3_msg,
+        servo3_callback,
+        ON_NEW_DATA
+    );
 }
 
 void servo_spin_executor() {
-    rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(10));
+    rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(1));
 }
 
 #endif 

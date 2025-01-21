@@ -7,7 +7,7 @@ def generate_launch_description():
         executable="joy_node",
         name="joy_node",
         parameters=[
-            {"autorepeat_rate": 8.0},  
+            {"autorepeat_rate": 20.0},  # can be changed if buffer starts, however servo will be jittery
         ],
     )
 
