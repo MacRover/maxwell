@@ -25,12 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
-#include "at24c04c.h"
-#include "queue.h"
-#include "enc_dec_utils.h"
-
-// todo: add more if needed
+#include "tmp.h"
 
 /* USER CODE END Includes */
 
@@ -41,8 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define VIPER_PARAMS_EEPROM_PAGE 0
-
 
 /* USER CODE END PD */
 
@@ -54,12 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
-VIPER_STATUS_TypeDef viper_status;
-VIPER_PARAMS_TypeDef viper_params;
-
-uint8_t ESTOP = 0;
-uint8_t DISABLED = 0;
 
 /* USER CODE END PV */
 
@@ -83,16 +70,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-	// ##############
-
-	// todo: SET DEFAULT VIPER PARAMS HERE
-
-    viper_params.HEALTH_INTERVAL = 1000; //every second
-    viper_params.CARD_INTERVAL = 20; // may need to tune this
-
-
-	// ###############
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,6 +78,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  HAL_StatusTypeDef i2c_status;
+  TMP_1075_StatusTypeDef status;
 
   /* USER CODE END Init */
 
@@ -118,205 +97,28 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8
-                          |GPIO_PIN_9, GPIO_PIN_SET);
-
-
-  	// #############
-
-  	// SET INITIAL EEPROM READ HERE (?)
-
-
-	// ##############
-
-	// SET DRIVER INITIALIZATIONS HERE
-
-	// ###############
-
-  	// 	BROADCAST HEALTH MESSAGE HERE
-
-	// ###############
-
+  MX_TMP_1075_Init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  // ###########
-
-  // INITIALIZE VIPER STATES
-
-  static enum
-  {
-	  VIPER_STATE_INIT,
-	  VIPER_STATE_ACTIVE
-  } viper_state = VIPER_STATE_INIT;
-
-  // ###########
+  uint8_t register_write_buffer = 0b00000100 | 0;
+  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+  TMP_1075_SetHighLimit(&h_tmp_1075);
+  TMP_1075_SetLowLimit(&h_tmp_1075);
+  TMP_1075_SetConfRegisters(&h_tmp_1075);
 
   while (1)
   {
-	  if (!queue_empty(&can_message_queue_global))
-	  {
-		  VIPER_CAN_Message_TypeDef *new_message =
-				  (VIPER_CAN_Message_TypeDef*) queue_front(
-						  &can_message_queue_global);
-
-		  switch ((int)(new_message->command_id))
-		  {
-			  case ESTOP_MESSAGE:
-			  {
-				  ESTOP = 1;
-				  break;
-			  }
-			  case DISABLE_MESSAGE:
-			  {
-				  DISABLED = 1;
-				  break;
-			  }
-			  case ENABLE_MESSAGE:
-			  {
-				  viper_state = VIPER_STATE_ACTIVE;
-				  DISABLED = 0;
-				  break;
-			  }
-			  case HEALTH_STATUS_PING:
-			  {
-				  MX_CAN_Broadcast_Health_Message(&viper_can, viper_status);
-				  break;
-			  }
-			  default:
-			  {
-				  break;
-			  }
-		  }
-
-		  free(new_message->data);
-		  queue_dequeue(&can_message_queue_global);
-	  }
-
-	  //Only check viper queue after. This allows global messages to be addressed immediately
-	  else if (!queue_empty(&can_message_queue_viper))
-	  {
-		  VIPER_CAN_Message_TypeDef *new_message =
-				  (VIPER_CAN_Message_TypeDef*) queue_front(
-						  &can_message_queue_viper);
-
-		  switch ((int)(new_message->command_id))
-		  {
-		  	  case GET_CARD_1_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_CARD_2_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_CARD_3_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_CARD_4_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case SYNC_EEPROM:
-		  	  {
-		  		break;
-		  	  }
-		  	  case CLEAR_EEPROM:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_EEPROM_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_HEALTH_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_MUX_STATUS:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_HEALTH_INTERVAL:
-		  	  {
-		  		break;
-		  	  }
-		  	  case SET_HEALTH_INTERVAL:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_CARD_INTERVAL:
-		  	  {
-		  		break;
-		  	  }
-		  	  case SET_CARD_INTERVAL:
-		  	  {
-		  		break;
-		  	  }
-		  	  case GET_VIPER_ID:
-		  	  {
-		  		break;
-		  	  }
-		  	  case SET_VIPER_ID:
-		  	  {
-		  		break;
-		  	  }
-		  	  default:
-		  		  break;
-		  }
-		  free(new_message->data);
-		  queue_dequeue(&can_message_queue_viper);
-	  }
-	  //CHECK FOR ESTOP
-	  // todo
-//	  if (ESTOP)
-//	  {
-//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-//		  break;
-//	  }
-//	  if (DISABLED)
-//	  {
-//		steps_to_move = 0;
-//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-//		  continue;
-//	  }
-//	  else
-//	  {
-//		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-//	  }
-
-	switch (viper_state) {
-		case VIPER_STATE_INIT: {
-			break;
-		}
-		case VIPER_STATE_ACTIVE: {
-			break;
-		}
-		default:
-			break;
-	}
-
-	if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0))
-	{
-		//todo replace with card status function
-		//MX_CAN_Broadcast_Odometry_Message(&viper_can, viper_status);
-	}
-
-	if ((viper_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0))
-	{
-		viper_status.VIPER_STATE = viper_state;
-		MX_CAN_Broadcast_Health_Message(&viper_can, viper_status);
-	}
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-	  // LED STATUS BLINK ----------------------------------------------------
+      register_write_buffer = 0b00000100 | 0;
+      i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+
+	  status = TMP_1075_ReadTemp(&h_tmp_1075);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
@@ -325,11 +127,6 @@ int main(void)
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 	  HAL_Delay(1000);
-
-	  // LED STATUS BLINK ----------------------------------------------------
-
-
-
 
 
   }
