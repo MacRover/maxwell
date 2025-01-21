@@ -278,6 +278,10 @@ void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle)
 //            viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 //}
 
+void MX_CAN_Broadcast_Card_Data()
+{
+
+}
 
 void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATUS_TypeDef status)
 {

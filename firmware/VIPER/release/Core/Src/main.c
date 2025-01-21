@@ -141,18 +141,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  // ###########
-
-  // INITIALIZE VIPER STATES
-
-  static enum
-  {
-	  VIPER_STATE_INIT,
-	  VIPER_STATE_ACTIVE
-  } viper_state = VIPER_STATE_INIT;
-
-  // ###########
-
   while (1)
   {
 	  if (!queue_empty(&can_message_queue_global))

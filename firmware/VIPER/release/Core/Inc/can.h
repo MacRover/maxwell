@@ -118,19 +118,13 @@ void MX_CAN_Init(void);
 
 void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle);
 
-void MX_CAN_Broadcast_Odometry_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATUS_TypeDef status);
-
+void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_PARAMS_TypeDef* viper_params, VIPER_CARD_ID_TypeDef cardx);
 void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATUS_TypeDef status);
 
 void MX_CAN_Broadcast_Double_Data(VIPER_CAN_TypeDef *viper_can_handle, double value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint32_Data(VIPER_CAN_TypeDef *viper_can_handle, uint32_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint16_Data(VIPER_CAN_TypeDef *viper_can_handle, uint16_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint8_Data(VIPER_CAN_TypeDef *viper_can_handle, uint8_t value, uint16_t message_id);
-
-
-
-void MX_CAN_Broadcast_VIPER_Status(VIPER_CAN_TypeDef *viper_can_handle,
-        VIPER_STATUS_TypeDef status);
 
 uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id);
 

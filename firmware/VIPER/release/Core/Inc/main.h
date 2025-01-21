@@ -37,30 +37,78 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
-typedef struct __attribute__((packed)){
+typedef enum
+{
+	VIPER_STATE_INIT,
+	VIPER_STATE_ACTIVE
+} VIPER_STATE_TypeDef;
 
-	uint8_t VIPER_ID;
- 	uint16_t HEALTH_INTERVAL;
- 	uint16_t CARD_INTERVAL;
+typedef enum
+{
+	VIPER_CARD_OK,
+	VIPER_CARD_FAULT,
+	VIPER_CARD_DISCONNECTED
+} VIPER_CARD_STATUS_TypeDef;
 
-} VIPER_PARAMS_TypeDef;
+typedef enum
+{
+	VIPER_CARD0,
+	VIPER_CARD1,
+	VIPER_CARD2,
+	VIPER_CARD3
+} VIPER_CARD_ID_TypeDef;
+
+typedef enum
+{
+	VIPER_LP,
+	VIPER_HP
+} VIPER_CARD_TYPE_TypeDef;
 
 typedef struct
 {
     //UPDATE THIS TO INCLUDE ERRORS
     //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS
 
-    uint8_t EEPROM_STATUS;
-    uint8_t MUX_STATUS;
-    uint8_t VIPER_STATE;
-    uint8_t CARD1_STATUS;
-    uint8_t CARD2_STATUS;
-    uint8_t CARD3_STATUS;
-    uint8_t CARD4_STATUS;
+	// NEED TO FIGURE OUT HOW TO SEND THE DRIVER STATUS MESSAGES INSTEADD ; SEE RAD
+//    uint8_t EEPROM_STATUS;
+//    uint8_t MUX_STATUS;
+    VIPER_CARD_STATUS_TypeDef CARD0_STATUS;
+    VIPER_CARD_STATUS_TypeDef CARD1_STATUS;
+    VIPER_CARD_STATUS_TypeDef CARD2_STATUS;
+    VIPER_CARD_STATUS_TypeDef CARD3_STATUS;
 
 } VIPER_STATUS_TypeDef;
 
+typedef struct
+{
+	VIPER_CARD_ID_TypeDef VIPER_CARD_ID;
+	VIPER_CARD_TYPE_TypeDef VIPER_CARD_TYPE;
+	uint8_t VIPER_CARD_ENABLE;
+	double VIPER_CARD_MAX_VOLTAGE;
+	double VIPER_CARD_MAX_CURRENT;
+	double VIPER_CARD_RESISTANCE;
+} VIPER_CARD_TypeDef;
+
+typedef struct __attribute__((packed))
+{
+ 	uint16_t HEALTH_INTERVAL;
+ 	uint16_t CARD_INTERVAL;
+ 	VIPER_CARD_TypeDef VIPER_CARD0;
+ 	VIPER_CARD_TypeDef VIPER_CARD1;
+ 	VIPER_CARD_TypeDef VIPER_CARD2;
+ 	VIPER_CARD_TypeDef VIPER_CARD3;
+} VIPER_PARAMS_TypeDef;
+
 extern VIPER_PARAMS_TypeDef viper_params;
+extern VIPER_STATE_TypeDef viper_state;
+extern VIPER_CARD_ID_TypeDef viper_current_card;
+
+typedef enum
+{
+	VIPER_OK,
+	VIPER_ERROR,
+	VIPER_TIMEOUT
+} VIPER_ERROR_TypeDef;
 
 /* USER CODE END ET */
 
@@ -78,6 +126,9 @@ extern VIPER_PARAMS_TypeDef viper_params;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+
+VIPER_ERROR_TypeDef VIPER_Card_Toggle(VIPER_PARAMS_TypeDef* viper_params, VIPER_CARD_ID_TypeDef cardx, uint8_t enable);
+VIPER_ERROR_TypeDef VIPER_Card_Check(VIPER_PARAMS_TypeDef* viper_params);
 
 /* USER CODE END EFP */
 
