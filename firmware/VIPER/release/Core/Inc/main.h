@@ -39,9 +39,17 @@ extern "C" {
 
 typedef enum
 {
-	VIPER_STATE_INIT,
+	VIPER_STATE_INACTIVE,
 	VIPER_STATE_ACTIVE
-} VIPER_STATE_TypeDef;
+} VIPER_STATE_MACHINE_TypeDef;
+
+typedef enum
+{
+	VIPER_CARD_0,
+	VIPER_CARD_1,
+	VIPER_CARD_2,
+	VIPER_CARD_3
+} VIPER_CARD_ID_TypeDef;
 
 typedef enum
 {
@@ -50,65 +58,82 @@ typedef enum
 	VIPER_CARD_DISCONNECTED
 } VIPER_CARD_STATUS_TypeDef;
 
-typedef enum
+typedef struct __attribute__((packed))
 {
-	VIPER_CARD0,
-	VIPER_CARD1,
-	VIPER_CARD2,
-	VIPER_CARD3
-} VIPER_CARD_ID_TypeDef;
+	uint8_t ENABLE;
+	double MAX_INPUT_CURRENT;
+	double MAX_OUTPUT_CURRENT;
+	double MAX_OUTPUT_VOLTAGE;
+	double RESISTANCE;
+} VIPER_CARD_PARAMS_HP_TypeDef;
 
-typedef enum
+typedef struct __attribute__((packed))
 {
-	VIPER_LP,
-	VIPER_HP
-} VIPER_CARD_TYPE_TypeDef;
+	uint8_t ENABLE;
+	double MAX_INPUT_CURRENT;
+	double MAX_OUTPUT_CURRENT_A;
+	double MAX_OUTPUT_CURRENT_B;
+	double MAX_OUTPUT_VOLTAGE_A;
+	double MAX_OUTPUT_VOLTAGE_B;
+	double RESISTANCE;
+} VIPER_CARD_PARAMS_LP_TypeDef;
 
 typedef struct
 {
-    //UPDATE THIS TO INCLUDE ERRORS
-    //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS
-
-	// NEED TO FIGURE OUT HOW TO SEND THE DRIVER STATUS MESSAGES INSTEADD ; SEE RAD
-//    uint8_t EEPROM_STATUS;
-//    uint8_t MUX_STATUS;
-    VIPER_CARD_STATUS_TypeDef CARD0_STATUS;
-    VIPER_CARD_STATUS_TypeDef CARD1_STATUS;
-    VIPER_CARD_STATUS_TypeDef CARD2_STATUS;
-    VIPER_CARD_STATUS_TypeDef CARD3_STATUS;
-
-} VIPER_STATUS_TypeDef;
+	uint8_t ENABLE;
+	uint8_t CONNECTED;
+	uint8_t INPUT_FAULT;
+	uint8_t OUTPUT_FAULT;
+	VIPER_CARD_STATUS_TypeDef STATUS;
+	double INPUT_CURRENT;
+	double OUTPUT_CURRENT;
+	double OUTPUT_VOLTAGE;
+	double TEMPERATURE;
+} VIPER_CARD_STATE_HP_TypeDef;
 
 typedef struct
 {
-	VIPER_CARD_ID_TypeDef VIPER_CARD_ID;
-	VIPER_CARD_TYPE_TypeDef VIPER_CARD_TYPE;
-	uint8_t VIPER_CARD_ENABLE;
-	double VIPER_CARD_MAX_VOLTAGE;
-	double VIPER_CARD_MAX_CURRENT;
-	double VIPER_CARD_RESISTANCE;
-} VIPER_CARD_TypeDef;
+	uint8_t ENABLE;
+	uint8_t CONNECTED;
+	uint8_t INPUT_FAULT;
+	uint8_t OUTPUT_FAULT_A;
+	uint8_t OUTPUT_FAULT_B;
+	VIPER_CARD_STATUS_TypeDef STATUS;
+	double INPUT_CURRENT;
+	double OUTPUT_CURRENT_A;
+	double OUTPUT_CURRENT_B;
+	double OUTPUT_VOLTAGE_A;
+	double OUTPUT_VOLTAGE_B;
+	double TEMPERATURE;
+} VIPER_CARD_STATE_LP_TypeDef;
 
 typedef struct __attribute__((packed))
 {
  	uint16_t HEALTH_INTERVAL;
  	uint16_t CARD_INTERVAL;
- 	VIPER_CARD_TypeDef VIPER_CARD0;
- 	VIPER_CARD_TypeDef VIPER_CARD1;
- 	VIPER_CARD_TypeDef VIPER_CARD2;
- 	VIPER_CARD_TypeDef VIPER_CARD3;
+ 	VIPER_CARD_PARAMS_LP_TypeDef CARD_0;
+ 	VIPER_CARD_PARAMS_HP_TypeDef CARD_1;
+ 	VIPER_CARD_PARAMS_HP_TypeDef CARD_2;
+ 	VIPER_CARD_PARAMS_LP_TypeDef CARD_3;
 } VIPER_PARAMS_TypeDef;
 
-extern VIPER_PARAMS_TypeDef viper_params;
-extern VIPER_STATE_TypeDef viper_state;
-extern VIPER_CARD_ID_TypeDef viper_current_card;
-
-typedef enum
+typedef struct
 {
-	VIPER_OK,
-	VIPER_ERROR,
-	VIPER_TIMEOUT
-} VIPER_ERROR_TypeDef;
+	VIPER_STATE_MACHINE_TypeDef STATE;
+	VIPER_CARD_ID_TypeDef CURRENT_CARD;
+	VIPER_CARD_STATE_LP_TypeDef CARD_0;
+	VIPER_CARD_STATE_HP_TypeDef CARD_1;
+	VIPER_CARD_STATE_HP_TypeDef CARD_2;
+	VIPER_CARD_STATE_LP_TypeDef CARD_3;
+
+	// UPDATE THIS TO INCLUDE ERRORS FROM DRIVERS
+	// ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS
+	uint8_t EEPROM_STATUS;
+	uint8_t MUX_STATUS;
+} VIPER_STATE_TypeDef;
+
+extern VIPER_PARAMS_TypeDef viper_params; // static state values
+extern VIPER_STATE_TypeDef viper_state; // dynamic state values
 
 /* USER CODE END ET */
 
@@ -127,8 +152,11 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
-VIPER_ERROR_TypeDef VIPER_Card_Toggle(VIPER_PARAMS_TypeDef* viper_params, VIPER_CARD_ID_TypeDef cardx, uint8_t enable);
-VIPER_ERROR_TypeDef VIPER_Card_Check(VIPER_PARAMS_TypeDef* viper_params);
+void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params);
+void VIPER_Card_Check(VIPER_STATE_TypeDef* viper_state);
+void VIPER_Card_Update_Params(VIPER_STATE_TypeDef* viper_state, VIPER_PARAMS_TypeDef *viper_params);
+void VIPER_Card_Update_State(VIPER_STATE_TypeDef* viper_state);
+void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx);
 
 /* USER CODE END EFP */
 
