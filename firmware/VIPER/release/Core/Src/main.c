@@ -26,7 +26,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "sensor_polling_task.h"
+#include "voltage_management_task.h"
+#include "can_communication_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
