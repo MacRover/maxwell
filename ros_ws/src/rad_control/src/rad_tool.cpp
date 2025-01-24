@@ -72,6 +72,8 @@ void response_callback(const CANraw& msg)
   }
 }
 
+#define INPUT_CHECK(c) try {c} catch(...){RCLCPP_ERROR(can_config->get_logger(), "INVALID INPUT"); continue;}
+
 int main(int argc, char ** argv)
 {
   (void) argc;
@@ -97,8 +99,9 @@ int main(int argc, char ** argv)
     std::getline (std::cin,in);
     if (in == "q" || std::cin.fail())
       break;
-        
+    
     int base = 10;
+    INPUT_CHECK(
     if (in[0] == 'h')
     {
       base = 16;
@@ -106,6 +109,7 @@ int main(int argc, char ** argv)
     }
     rad_id = std::stoi(in, 0, base);
     rad.set_can_id(rad_id);
+    )
 
     do {
       std::cout << "Enter Command ('?' to list options) => ";
@@ -122,20 +126,31 @@ int main(int argc, char ** argv)
     }
     while (in == "?");
 
+    INPUT_CHECK(
     command_id = (get_cmd.count(in) == 1) ? get_cmd.at(in) : 
                  (set_cmd.count(in) == 1 ? set_cmd.at(in) : other_cmd.at(in));
+    )
 
     // SET TYPE COMMAND
     if (set_cmd.count(in) == 1)
     {
       std::string val_in;
-      std::cout << "Enter value => ";
+      std::cout << "Enter value (prefix h for hex #) => ";
       std::getline (std::cin,val_in);
+
+      base = 10;
+      INPUT_CHECK(
+      if (val_in[0] == 'h')
+      {
+        base = 16;
+        val_in = val_in.substr(1);
+      }
+      )
 
       switch(command_id)
       {
         case CAN_ASSIGN_DEVICE_ID:
-          rad.set_can_id((uint8_t)std::stoi(val_in));
+          rad.set_can_id((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_TARGET_ANGLE:
           rad.set_target_angle(std::stod(val_in));
@@ -150,28 +165,28 @@ int main(int argc, char ** argv)
           rad.set_d_value(std::stod(val_in));
           break;
         case CAN_SET_HEALTH_INTERVAL:
-          rad.set_health_interval((uint32_t)std::stoi(val_in));
+          rad.set_health_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_ODOM_INTERVAL:
-          rad.set_odom_interval((uint32_t)std::stoi(val_in));
+          rad.set_odom_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_RAD_TYPE:
-          rad.set_rad_type((uint8_t)std::stoi(val_in));
+          rad.set_rad_type((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_DRVCTRL_MRES:
-          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in));
+          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_SGCSCONF_CS:
-          rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in));
+          rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_STEPPER_SPEED:
-          rad.set_stepper_speed((uint32_t)std::stoi(val_in));
+          rad.set_stepper_speed((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_ERROR_THRESHOLD:
-          rad.set_error_thres((uint8_t)std::stoi(val_in));
+          rad.set_error_thres((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_MAX_OUTPUT:
-          rad.set_max_output((uint16_t)std::stoi(val_in));
+          rad.set_max_output((uint16_t)std::stoi(val_in, 0, base));
           break;
         case CAN_PULSE_STEPPER:
           rad.pulse_stepper(std::stof(val_in));
@@ -225,8 +240,8 @@ int main(int argc, char ** argv)
     }
 
     RCLCPP_INFO(can_config->get_logger(), "RAD_ID: %d, COMMAND_ID: %d", rad_id, command_id);
-    RCLCPP_INFO(can_config->get_logger(), "SENT CAN FRAME 0x%x", can_out_msg.address);
     can_pub->publish(can_out_msg);
+    RCLCPP_INFO(can_config->get_logger(), "SENT CAN FRAME 0x%x", can_out_msg.address);
 
     // Wait for msg receive
     if (get_cmd.count(in) == 1) 
