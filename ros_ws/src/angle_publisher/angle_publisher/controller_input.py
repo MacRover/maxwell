@@ -13,16 +13,12 @@ class DpadServoController(Node):
 
         self.create_subscription(Joy, "/joy", self.joy_callback, 10)
         self.get_logger().info("Dpad Servo Controller Node Started")
-        self.servo3_active = False 
 
         self.servo1_angle = 90.0  
         self.servo2_angle = 90.0  
         self.servo3_angle = 90.0  
-        self.servo3_active = False
-    def joy_callback(self, msg):
-        servo_msg1 = Float32()
-        servo_msg2 = Float32()
-        servo_msg3 = Float32()
+        self.declare_parameter("servo3_active", False)
+        self.servo3_active = self.get_parameter("servo3_active").get_parameter_value().bool_value
 
     def joy_callback(self, msg):
         # Read D-pad axes

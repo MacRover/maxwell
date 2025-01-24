@@ -15,22 +15,15 @@
 #define SERVO3_PIN 37
 
 
-Servo servo1;
-Servo servo2;
-Servo servo3;
+Servo servo1, servo2, servo3;
 
-rcl_subscription_t servo1_sub;
-rcl_subscription_t servo2_sub;
-rcl_subscription_t servo3_sub;
+rcl_subscription_t servo1_sub, servo2_sub, servo3_sub;
 
-
-std_msgs__msg__Float32 servo1_msg;
-std_msgs__msg__Float32 servo2_msg;
-std_msgs__msg__Float32 servo3_msg;
+std_msgs__msg__Float32 servo1_msg, servo2_msg, servo3_msg;
 
 rclc_executor_t servo_executor;
 
-int servo1_angle_send = 0;
+int servo1_angle_send = 90;
 int servo2_angle_send = 90;
 int servo3_angle_send = 90;
 
@@ -39,8 +32,6 @@ void servo1_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
     servo1_angle_send = constrain(angle_deg, 0, 180);
-    servo1.write(servo1_angle_send);
-    
 }
 
 
@@ -48,16 +39,13 @@ void servo2_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
    servo2_angle_send = constrain(angle_deg, 0, 180);
-    servo2.write(servo2_angle_send);
 }
 
 void servo3_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
    servo3_angle_send = constrain(angle_deg, 0, 180);
-    servo3.write(servo3_angle_send);
 }
-
 
 void servo_setup_subscription(
     rcl_node_t *node,
@@ -122,6 +110,10 @@ void servo_setup_subscription(
 
 void servo_spin_executor() {
     rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(1));
+    servo1.write(servo1_angle_send);
+    servo2.write(servo2_angle_send);
+    servo3.write(servo3_angle_send);
+
 }
 
 #endif 

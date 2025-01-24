@@ -264,7 +264,10 @@ void setup()
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
+    #ifdef USING_SERVO
     servo_setup_subscription(&teensy_node, &support, &allocator);
+    #endif
+    
 
 
 }
@@ -272,8 +275,9 @@ void setup()
 
 void loop()
 {
-
-  servo_spin_executor();
+#ifdef USING_SERVO
+    servo_spin_executor();
+#endif
  
 
 #ifdef USING_IMU_ONBOARD
