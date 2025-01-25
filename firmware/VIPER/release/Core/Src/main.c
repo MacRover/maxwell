@@ -116,11 +116,11 @@ int main(void) {
 	// ##############
 	// SET DRIVER INITIALIZATIONS HERE
 	// todo: add all of the drivers here
-	MX_AT24C04C_1_Init();
+	//MX_AT24C04C_1_Init();
 	// ###############
 	// MAIN INIT and BROADCAST HEALTH MESSAGE
-	VIPER_Card_Init(&viper_state, &viper_params);
-	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+	// VIPER_Card_Init(&viper_state, &viper_params);
+	// MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
 	// ###############
 	/* USER CODE END 2 */
 
@@ -128,165 +128,12 @@ int main(void) {
 	/* USER CODE BEGIN WHILE */
 
 	while (1) {
-		if (!queue_empty(&can_message_queue_global)) {
-			VIPER_CAN_Message_TypeDef *new_message =
-					(VIPER_CAN_Message_TypeDef*) queue_front(
-							&can_message_queue_global);
+		
+		double value;
+		
+		//fetch value from driver here
 
-			switch ((int) (new_message->command_id)) {
-			case ESTOP_MESSAGE: {
-				ESTOP = 1;
-				break;
-			}
-			case DISABLE_MESSAGE: {
-				viper_state.STATE = VIPER_STATE_INACTIVE;
-				break;
-			}
-			case ENABLE_MESSAGE: {
-				viper_state.STATE = VIPER_STATE_ACTIVE;
-				break;
-			}
-			case HEALTH_STATUS_PING: {
-				MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
-				break;
-			}
-			default: {
-				break;
-			}
-			}
-
-			free(new_message->data);
-			queue_dequeue(&can_message_queue_global);
-		}
-
-		//Only check viper queue after. This allows global messages to be addressed immediately
-		else if (!queue_empty(&can_message_queue_viper)) {
-			VIPER_CAN_Message_TypeDef *new_message =
-					(VIPER_CAN_Message_TypeDef*) queue_front(
-							&can_message_queue_viper);
-
-			switch ((int) (new_message->command_id)) {
-			case DISABLE_CARD_0: {
-				viper_state->CARD_0.ENABLE = 0;
-				break;
-			}
-			case DISABLE_CARD_1: {
-				viper_state->CARD_1.ENABLE = 0;
-				break;
-			}
-			case DISABLE_CARD_2: {
-				viper_state->CARD_2.ENABLE = 0;
-				break;
-			}
-			case DISABLE_CARD_3: {
-				viper_state->CARD_3.ENABLE = 0;
-				break;
-			}
-			case ENABLE_CARD_0: {
-				viper_state->CARD_0.ENABLE = 1;
-				break;
-			}
-			case ENABLE_CARD_1: {
-				viper_state->CARD_1.ENABLE = 1;
-				break;
-			}
-			case ENABLE_CARD_2: {
-				viper_state->CARD_2.ENABLE = 1;
-				break;
-			}
-			case ENABLE_CARD_3: {
-				viper_state->CARD_3.ENABLE = 1;
-				break;
-			}
-			case SET_MUX_VALUE: {
-				// todo
-				break;
-			}
-			case GET_CARD_0_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_0);
-				break;
-			}
-			case GET_CARD_1_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_1);
-				break;
-			}
-			case GET_CARD_2_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_2);
-				break;
-			}
-			case GET_CARD_3_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_3);
-				break;
-			}
-			case SAVE_TO_EEPROM: {
-				// todo
-				break;
-			}
-			case CLEAR_EEPROM: {
-				// todo
-				break;
-			}
-			// GETTERS / SETTERS
-			case GET_HEALTH_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->HEALTH_INTERVAL, SEND_HEALTH_INTERVAL);
-				break;
-			}
-			case SET_HEALTH_INTERVAL: {
-				viper_params->HEALTH_INTERVAL = decode_uint16_big_endian(new_message->data);
-				break;
-			}
-			case GET_CARD_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->CARD_INTERVAL, SEND_CARD_INTERVAL);
-				break;
-			}
-			case SET_CARD_INTERVAL: {
-				viper_params->CARD_INTERVAL = decode_uint16_big_endian(new_message->data);
-				break;
-			}
-			default:
-				break;
-			}
-			free(new_message->data);
-			queue_dequeue(&can_message_queue_viper);
-		}
-
-		VIPER_Card_Update_State(&viper_state);
-		VIPER_Card_Update_Params(&viper_state, &viper_params);
-
-		if (ESTOP) {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-			break;
-		}
-
-		switch (viper_state.STATE) {
-		case VIPER_STATE_INACTIVE: {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-			break;
-		}
-		case VIPER_STATE_ACTIVE: {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-
-			VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
-
-			if ((viper_params.CARD_INTERVAL != 0)
-					&& (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
-			}
-
-			if ((viper_params.HEALTH_INTERVAL != 0)
-					&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
-				MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
-			}
-
-			viper_state.CURRENT_CARD++;
-			if (viper_state.CURRENT_CARD == 4)
-				viper_state.CURRENT_CARD = VIPER_CARD_0;
-
-			break;
-		}
-		default:
-			break;
-		}
+		MX_CAN_Broadcast_Double_Data(&viper_can, value, 0x1);
 
 		/* USER CODE END WHILE */
 
