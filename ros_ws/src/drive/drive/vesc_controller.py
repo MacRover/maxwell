@@ -53,6 +53,10 @@ class VescController(Node):
         self.vfr = VESC(VESC_ID.FRONT_RIGHT)
         self.vbl = VESC(VESC_ID.BACK_LEFT)
         self.vbr = VESC(VESC_ID.BACK_RIGHT)
+        self.vbl.set_gear_reduction(4.67)
+        self.vbr.set_gear_reduction(4.67)
+        self.vfl.set_gear_reduction(4.67)
+        self.vfr.set_gear_reduction(4.67)
     
     def _callback(self, msg):
         if any([abs(self.fr_theta - msg.front_right.angle) < THRES,
