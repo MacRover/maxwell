@@ -105,9 +105,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   uint8_t register_write_buffer = 0b00000100 | 0;
   i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
-  TMP_1075_SetHighLimit(&h_tmp_1075);
-  TMP_1075_SetLowLimit(&h_tmp_1075);
-  TMP_1075_SetConfRegisters(&h_tmp_1075);
 
   while (1)
   {
