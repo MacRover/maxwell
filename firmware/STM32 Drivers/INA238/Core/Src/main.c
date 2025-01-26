@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ina238.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,24 +95,38 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  MX_INA_238_Init();
 
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8
+                          |GPIO_PIN_9, GPIO_PIN_SET); //ENABLE CARDS
+
+	//set card
+
+	uint8_t register_write_buffer = 0b00000100 | 0;
+  HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    double value;
+		
+		//fetch value from driver here
+
+		MX_CAN_Broadcast_Double_Data(&viper_can, value, 0x1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
-	  HAL_Delay(1000);
+	  HAL_Delay(500);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
-	  HAL_Delay(1000);
+	  HAL_Delay(500);
 
 
   }
