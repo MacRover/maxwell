@@ -104,6 +104,10 @@ int main(void)
 
 	uint8_t register_write_buffer = 0b00000100 | 0;
   HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+
+  INA_238_WriteConfig(&ina238_card0_a);
+  INA_238_WriteConfig(&ina238_card0_b);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,6 +116,10 @@ int main(void)
   {
 
     double value;
+
+    INA_238_ReadVoltage(&ina238_card0_a);
+
+    value = ina238_card0_a.voltage;
 		
 		//fetch value from driver here
 
