@@ -1,7 +1,0 @@
-../Drivers/queue/Src/queue.c:11:16:create_queue	16	static
-../Drivers/queue/Src/queue.c:23:6:destroy_queue	16	static
-../Drivers/queue/Src/queue.c:32:9:queue_empty	16	static
-../Drivers/queue/Src/queue.c:41:6:queue_enqueue	24	static
-../Drivers/queue/Src/queue.c:69:6:queue_dequeue	24	static
-../Drivers/queue/Src/queue.c:85:7:queue_front	16	static
-../Drivers/queue/Src/queue.c:95:7:queue_tail	16	static
