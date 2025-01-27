@@ -20,7 +20,7 @@ std::map<std::string, uint8_t> get_cmd = {
   {"GET_P_VALUE", CAN_GET_P_VALUE},
   {"GET_I_VALUE", CAN_GET_I_VALUE},
   {"GET_D_VALUE", CAN_GET_D_VALUE},
-  {"GET_PID_ERROR_THRESHOLD", CAN_GET_PID_ERROR_THRESHOLD},
+  {"GET_PID_MIN_OUTPUT", CAN_GET_PID_MIN_OUTPUT},
   {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT},
   {"GET_HOME_OFFSET", CAN_GET_HOME_OFFSET}
 
@@ -37,7 +37,7 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_DRVCTRL_MRES", CAN_SET_DRVCTRL_MRES},
   {"SET_SGCSCONF_CS", CAN_SET_SGCSCONF_CS},
   {"SET_STEPPER_SPEED", CAN_SET_STEPPER_SPEED},
-  {"SET_PID_ERROR_THRESHOLD", CAN_SET_PID_ERROR_THRESHOLD},
+  {"SET_PID_MIN_OUTPUT", CAN_SET_PID_MIN_OUTPUT},
   {"SET_PID_MAX_OUTPUT", CAN_SET_PID_MAX_OUTPUT},
   {"PULSE_STEPPER", CAN_PULSE_STEPPER}
 };
@@ -60,7 +60,7 @@ void response_callback(const CANraw& msg)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %f", __buffer_get_float64((uint8_t*)&(msg.data[0]),&i));
     }
-    else if (command_id == CAN_GET_PID_ERROR_THRESHOLD || command_id == CAN_GET_PID_MAX_OUTPUT)
+    else if (command_id == CAN_GET_PID_MIN_OUTPUT || command_id == CAN_GET_PID_MAX_OUTPUT)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %d", ((uint16_t)(msg.data[0]) << 8) | msg.data[1]);
     }
@@ -182,7 +182,7 @@ int main(int argc, char ** argv)
         case CAN_SET_STEPPER_SPEED:
           rad.set_stepper_speed((uint32_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_PID_ERROR_THRESHOLD:
+        case CAN_SET_PID_MIN_OUTPUT:
           rad.set_error_thres((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_MAX_OUTPUT:
@@ -209,7 +209,7 @@ int main(int argc, char ** argv)
         case CAN_GET_D_VALUE:
           rad.get_d_value();
           break;
-        case CAN_GET_PID_ERROR_THRESHOLD:
+        case CAN_GET_PID_MIN_OUTPUT:
           rad.get_error_thres();
           break;
         case CAN_GET_PID_MAX_OUTPUT:

@@ -313,7 +313,7 @@ void RAD::set_error_thres(uint16_t thres)
     buf[0] = ((thres & 0xff00) >> 8);
     buf[1] = (thres & 0xff);
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_ERROR_THRESHOLD) << 8);
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_MIN_OUTPUT) << 8);
     _update_can_data(buf, 2);
 }
 
@@ -322,7 +322,7 @@ void RAD::get_error_thres()
     uint8_t buf[1];
     buf[0] = 0;
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_ERROR_THRESHOLD) << 8);
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_MIN_OUTPUT) << 8);
     _update_can_data(buf, 1);
 }
 
