@@ -87,6 +87,9 @@ typedef struct __attribute__((packed)){
 	uint8_t DRVCTRL_INTPOL;// : 1;
 	uint8_t DRVCTRL_DEDGE;// : 1;
 	uint8_t DRVCTRL_MRES;// : 4;
+	uint16_t PID_MIN_OUTPUT;
+	uint16_t PID_MAX_OUTPUT;
+	double HOME_OFFSET;
 } RAD_PARAMS_TypeDef;
 
 typedef struct
@@ -167,6 +170,7 @@ void Error_Handler(void);
 
 #define RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS 20
 #define RAD_TYPE_DRIVETRAIN_GEARING 30
+#define RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION 200
 
 #define ANGLE_ERROR_THRESHOLD 0.4
 
