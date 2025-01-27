@@ -148,7 +148,7 @@ int main(void)
     rad_params.SMARTEN_SEMIN = 0b0000;
     rad_params.SMARTEN_SEUP = 0b00;
 
-    rad_params.PID_ERROR_THRESHOLD = 20;
+    rad_params.PID_MIN_OUTPUT = 20;
     rad_params.PID_MAX_OUTPUT = 50;
 
     rad_params.HOME_OFFSET = 0;
@@ -164,7 +164,7 @@ int main(void)
     rad_params.P = 0.06;
     rad_params.I = 0.000001;
     rad_params.D = 0;
-    rad_params.PID_ERROR_THRESHOLD = 20;
+    rad_params.PID_MIN_OUTPUT = 20;
 
     /* USER CODE END 1 */
 
@@ -225,7 +225,7 @@ int main(void)
 //		rad_params.P = 0.06;
 //		rad_params.I = 0.000001;
 //		rad_params.D = 0;
-//		rad_params.PID_ERROR_THRESHOLD = 20;
+//		rad_params.PID_MIN_OUTPUT = 20;
 
     }
     //free(temp);
@@ -349,8 +349,6 @@ int main(void)
                     {
                         new_setpoint = max_angle;
                     }
-
-                    new_setpoint = new_setpoint;
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
@@ -859,16 +857,16 @@ int main(void)
 
                     break;
                 }
-                case SET_PID_ERROR_THRESHOLD:
+                case SET_PID_MIN_OUTPUT:
                 {
                     pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
-                    rad_params.PID_ERROR_THRESHOLD = pid_1.Init.min_output_abs;
+                    rad_params.PID_MIN_OUTPUT = pid_1.Init.min_output_abs;
 
                     break;
                 }
-                case GET_PID_ERROR_THRESHOLD:
+                case GET_PID_MIN_OUTPUT:
                 {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_ERROR_THRESHOLD);
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_MIN_OUTPUT);
                     break;
                 }
                 case SET_PID_MAX_OUTPUT:
