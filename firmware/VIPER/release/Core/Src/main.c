@@ -166,69 +166,97 @@ int main(void) {
 							&can_message_queue_viper);
 
 			switch ((int) (new_message->command_id)) {
-			case DISABLE_CARD_0: {
-				viper_state->CARD_0.ENABLE = 0;
+			case DISABLE_CARD: {
+				switch (new_message->card_id){
+				case VIPER_CARD_0: {
+					viper_state.CARD_0.ENABLE = 0;
+					break;
+				}
+				case VIPER_CARD_1: {
+					viper_state.CARD_1.ENABLE = 0;
+					break;
+				}
+				case VIPER_CARD_2: {
+					viper_state.CARD_2.ENABLE = 0;
+					break;
+				}
+				case VIPER_CARD_3: {
+					viper_state.CARD_3.ENABLE = 0;
+					break;
+				}
+				default:
+					break;
+				}
+				break;
 				break;
 			}
-			case DISABLE_CARD_1: {
-				viper_state->CARD_1.ENABLE = 0;
+			case DISABLE_ALL_CARDS: {
+				viper_state.CARD_0.ENABLE = 0;
+				viper_state.CARD_1.ENABLE = 0;
+				viper_state.CARD_2.ENABLE = 0;
+				viper_state.CARD_3.ENABLE = 0;
 				break;
 			}
-			case DISABLE_CARD_2: {
-				viper_state->CARD_2.ENABLE = 0;
+			case ENABLE_CARD: {
+				switch (new_message->card_id){
+				case VIPER_CARD_0: {
+					viper_state.CARD_0.ENABLE = 1;
+					break;
+				}
+				case VIPER_CARD_1: {
+					viper_state.CARD_1.ENABLE = 1;
+					break;
+				}
+				case VIPER_CARD_2: {
+					viper_state.CARD_2.ENABLE = 1;
+					break;
+				}
+				case VIPER_CARD_3: {
+					viper_state.CARD_3.ENABLE = 1;
+					break;
+				}
+				default:
+					break;
+				}
 				break;
 			}
-			case DISABLE_CARD_3: {
-				viper_state->CARD_3.ENABLE = 0;
+			case ENABLE_ALL_CARDS: {
+				viper_state.CARD_0.ENABLE = 1;
+				viper_state.CARD_1.ENABLE = 1;
+				viper_state.CARD_2.ENABLE = 1;
+				viper_state.CARD_3.ENABLE = 1;
 				break;
 			}
-			case ENABLE_CARD_0: {
-				viper_state->CARD_0.ENABLE = 1;
+			case GET_CARD_DATA: {
+				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, new_message->card_id);
 				break;
 			}
-			case ENABLE_CARD_1: {
-				viper_state->CARD_1.ENABLE = 1;
-				break;
-			}
-			case ENABLE_CARD_2: {
-				viper_state->CARD_2.ENABLE = 1;
-				break;
-			}
-			case ENABLE_CARD_3: {
-				viper_state->CARD_3.ENABLE = 1;
+			case GET_ALL_CARD_DATA: {
+				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_0);
+				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_1);
+				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_2);
+				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_3);
 				break;
 			}
 			case SET_MUX_VALUE: {
 				// todo
 				break;
 			}
-			case GET_CARD_0_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_0);
-				break;
-			}
-			case GET_CARD_1_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_1);
-				break;
-			}
-			case GET_CARD_2_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_2);
-				break;
-			}
-			case GET_CARD_3_DATA: {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_3);
-				break;
-			}
 			case SAVE_TO_EEPROM: {
 				// todo
 				break;
 			}
-			case CLEAR_EEPROM: {
-				// todo
+			case SET_FREEZE: {
+				//todo
+				break;
+			}
+			case STOP_FREEZE: {
+				//todo
 				break;
 			}
 			// GETTERS / SETTERS
 			case GET_HEALTH_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->HEALTH_INTERVAL, SEND_HEALTH_INTERVAL);
+				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->HEALTH_INTERVAL, SEND_HEALTH_INTERVAL, 0);
 				break;
 			}
 			case SET_HEALTH_INTERVAL: {
@@ -236,7 +264,7 @@ int main(void) {
 				break;
 			}
 			case GET_CARD_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->CARD_INTERVAL, SEND_CARD_INTERVAL);
+				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->CARD_INTERVAL, SEND_CARD_INTERVAL, 0);
 				break;
 			}
 			case SET_CARD_INTERVAL: {
@@ -258,6 +286,7 @@ int main(void) {
 			break;
 		}
 
+		// MAIN STATE MACHINE START
 		switch (viper_state.STATE) {
 		case VIPER_STATE_INACTIVE: {
 			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
@@ -268,16 +297,29 @@ int main(void) {
 
 			VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
 
-			if ((viper_params.CARD_INTERVAL != 0)
-					&& (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
-				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
-			}
+			break;
+		}
+		default:
+			break;
+		}
 
-			if ((viper_params.HEALTH_INTERVAL != 0)
-					&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
-				MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
-			}
+		// SCHEDULED TASKS
+		if ((viper_params.CARD_INTERVAL != 0)
+				&& (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+			MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
+		}
 
+		if ((viper_params.HEALTH_INTERVAL != 0)
+				&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
+			MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+		}
+
+		// MAIN STATE MACHINE END
+		switch (viper_state.STATE) {
+		case VIPER_STATE_INACTIVE: {
+			break;
+		}
+		case VIPER_STATE_ACTIVE: {
 			viper_state.CURRENT_CARD++;
 			if (viper_state.CURRENT_CARD == 4)
 				viper_state.CURRENT_CARD = VIPER_CARD_0;
@@ -291,17 +333,6 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-
-		// LED STATUS BLINK ----------------------------------------------------
-		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-
-		HAL_Delay(1000);
-
-		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-
-		HAL_Delay(1000);
-
-		// LED STATUS BLINK ----------------------------------------------------
 
 	}
 	/* USER CODE END 3 */
@@ -347,13 +378,16 @@ void SystemClock_Config(void) {
 
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
 	// Step 1: initialize viper_params (from EEPROM)
+	AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 
 	// Step 2: set any relevant fields in viper_state from viper_params
+	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;
+	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
+	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
+	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
 
 	// Step 3: Setup VIPER
-	for (VIPER_CARD_ID_TypeDef cardx = 0; cardx < 4; cardx++) {
-		VIPER_Card_Enable(viper_state, cardx);
-	}
+	VIPER_Card_Update_State(viper_state);
 }
 
 void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
@@ -403,8 +437,8 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 
 	viper_state->CARD_0.OUTPUT_FAULT_A = outfault[0];
 	viper_state->CARD_0.OUTPUT_FAULT_B = outfault[1];
-	viper_state->CARD_1.OUTPUT_FAULT = outfault[2];
-	viper_state->CARD_2.OUTPUT_FAULT = outfault[3];
+	viper_state->CARD_1.OUTPUT_FAULT_A = outfault[2];
+	viper_state->CARD_2.OUTPUT_FAULT_A = outfault[3];
 	viper_state->CARD_3.OUTPUT_FAULT_A = outfault[4];
 	viper_state->CARD_3.OUTPUT_FAULT_B = outfault[5];
 
@@ -418,7 +452,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 
 	if (!viper_state->CARD_1.CONNECTED) {
 		viper_state->CARD_1.STATUS = VIPER_CARD_DISCONNECTED;
-	} else if (viper_state->CARD_1.INPUT_FAULT || viper_state->CARD_1.OUTPUT_FAULT) {
+	} else if (viper_state->CARD_1.INPUT_FAULT || viper_state->CARD_1.OUTPUT_FAULT_A) {
 		viper_state->CARD_1.STATUS = VIPER_CARD_FAULT;
 	} else {
 		viper_state->CARD_1.STATUS = VIPER_CARD_OK;
@@ -426,7 +460,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 
 	if (!viper_state->CARD_2.CONNECTED) {
 		viper_state->CARD_2.STATUS = VIPER_CARD_DISCONNECTED;
-	} else if (viper_state->CARD_2.INPUT_FAULT || viper_state->CARD_2.OUTPUT_FAULT) {
+	} else if (viper_state->CARD_2.INPUT_FAULT || viper_state->CARD_2.OUTPUT_FAULT_A) {
 		viper_state->CARD_2.STATUS = VIPER_CARD_FAULT;
 	} else {
 		viper_state->CARD_2.STATUS = VIPER_CARD_OK;
@@ -450,7 +484,7 @@ void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_Typ
 	viper_params->CARD_3.ENABLE = viper_state->CARD_3.ENABLE;
 
 	// STEP 2: Update EEPROM from viper_params
-	// todo
+	AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 }
 
 void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {
