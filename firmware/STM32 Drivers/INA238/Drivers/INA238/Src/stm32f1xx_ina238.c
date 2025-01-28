@@ -126,10 +126,10 @@ uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef *ina_238, uint8_t regi
 
 uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
 {
-
+    uint8_t spi_read[2];
     uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
 
-    while (HAL_I2C_Master_Receive(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), buffer, 2, 10000) != HAL_OK)
+    while (HAL_I2C_Master_Receive(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), spi_read, 2, 10000) != HAL_OK)
     {
 
         uint16_t I2C_Error = HAL_I2C_GetError(ina_238->Init.I2C_HandlerInstance);
@@ -139,6 +139,9 @@ uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
             return I2C_Error;
         }
     }
+
+    buffer[0] = spi_read[1];
+    buffer[1] = spi_read[0];
 
     return HAL_I2C_ERROR_NONE;
 }
