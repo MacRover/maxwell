@@ -84,23 +84,23 @@ INA_238_StatusTypeDef INA_238_ReadDiagnostic(INA_238_HandleTypeDef *ina_238)
 
 INA_238_StatusTypeDef INA_238_WriteConfig(INA_238_HandleTypeDef *ina_238)
 {
-    if (__i2c_write_register(ina_238, INA238_CONFIG_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.CONFIG)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_CONFIG_ADDRESS, ina_238->ConfigurationRegisters.CONFIG) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_ADC_CONFIG_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.ADC_CONFIG)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_ADC_CONFIG_ADDRESS, ina_238->ConfigurationRegisters.ADC_CONFIG) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_SHUNT_CAL_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.SHUNT_CAL)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_SHUNT_CAL_ADDRESS, ina_238->ConfigurationRegisters.SHUNT_CAL) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_DIAG_ALRT_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.DIAG_ALERT)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_DIAG_ALRT_ADDRESS, ina_238->ConfigurationRegisters.DIAG_ALERT) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_SOVL_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.SOVL)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_SOVL_ADDRESS, ina_238->ConfigurationRegisters.SOVL) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_SUVL_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.SUVL)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_SUVL_ADDRESS, ina_238->ConfigurationRegisters.SUVL) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_BOVL_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.BOVL)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_BOVL_ADDRESS, ina_238->ConfigurationRegisters.BOVL) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_BUVL_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.BUVL)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_BUVL_ADDRESS, ina_238->ConfigurationRegisters.BUVL) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    if (__i2c_write_register(ina_238, INA238_PWR_LIMIT_ADDRESS, (uint8_t*) &(ina_238->ConfigurationRegisters.PWR_LIMIT)) != HAL_I2C_ERROR_NONE)
+    if (__i2c_write_register(ina_238, INA238_PWR_LIMIT_ADDRESS, ina_238->ConfigurationRegisters.PWR_LIMIT) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
     return INA_238_OK;
 }
@@ -143,12 +143,12 @@ uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
     return HAL_I2C_ERROR_NONE;
 }
 
-uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint8_t *data)
+uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint16_t data)
 {
-
+    uint8_t buffer[] = {(uint8_t)((data & 0xFF00) >> 8), (uint8_t)(data & 0x00FF)};
     uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
 
-    while (HAL_I2C_Mem_Write(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), (uint16_t)(register_address & 0xFF), I2C_MEMADD_SIZE_8BIT, data, 2, 10000) != HAL_OK)
+    while (HAL_I2C_Mem_Write(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), (uint16_t)(register_address & 0xFF), I2C_MEMADD_SIZE_8BIT, buffer, 2, 10000) != HAL_OK)
     {
         uint16_t I2C_Error = HAL_I2C_GetError(ina_238->Init.I2C_HandlerInstance);
 

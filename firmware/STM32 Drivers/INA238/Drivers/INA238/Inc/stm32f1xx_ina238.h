@@ -107,6 +107,6 @@ uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef *ina_238, uint8_t regi
 
 uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer);
 
-uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint8_t *data);
+uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint16_t data);
 
 #endif /* INA238_INC_INA238_H_ */
