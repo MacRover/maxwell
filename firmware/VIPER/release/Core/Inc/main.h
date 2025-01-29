@@ -83,6 +83,8 @@ typedef struct
 	double OUTPUT_VOLTAGE_A;
 	double OUTPUT_VOLTAGE_B;
 	double TEMPERATURE;
+	double OUTPUT_POWER_A; // todo: incorporate into CAN call
+	double OUTPUT_POWER_B; // todo: incorporate into CAN call
 } VIPER_CARD_STATE_TypeDef;
 
 typedef struct __attribute__((packed))
