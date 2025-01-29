@@ -58,7 +58,7 @@ TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 199);
+IPAddress agent_ip(192, 168, 1, 111);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
