@@ -531,13 +531,11 @@ void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {
 void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx) {
 	// todo: read all relevant diagnostic values using drivers
 
-	//todo: Figure out ADC incorporation
+	//todo: Figure out ADC incorporation (MCP driver)
 
 	// todo: Fix addresses
 
-	// todo: Make sure the write values are being written
-
-	// Todo: Figure out how to use the extra values in the struct / what those are used for
+	// todo: Make sure the correct values are being written
 
 	// 1. Select the relevant card with the mux
 
