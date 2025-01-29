@@ -14,23 +14,35 @@
 #define MCP3221_DATA_BYTES 2
 #define MCP3221_FIXED_ID   0x09 // Fixed 4 bits from datasheet
 
+typedef enum
+{
+    MCP_3221_OK = 0x00U,
+    MCP_3221_ERROR = 0x01U,
+    MCP_3221_BUSY = 0x02U,
+    MCP_3221_TIMEOUT = 0x03U
+} MCP_3221_StatusTypeDef;
+
 typedef struct {
     I2C_HandleTypeDef *hi2c;
     uint8_t address_pins; // 3-bit configurable address
     float vref_mv;        // Reference voltage in millivolts
-} MCP3221_Init_Struct;
+} MCP_3221_InitTypeDef;
 
-typedef struct {
-    I2C_HandleTypeDef *hi2c;
-    uint8_t i2c_address;  // Full 7-bit address
-    float vref_mv;
-} MCP3221;
+typedef struct
+{
+    MCP_3221_InitTypeDef Init;  // Nested init struct
+    uint8_t i2c_address;  // Full 7-bit I2C address (stored separately)
+    double voltage;  // Last measured voltage
+    double current;  // Last measured current
+} MCP3221_HandleTypeDef;
 
-HAL_StatusTypeDef MCP3221_Init(MCP3221 *dev, MCP3221_Init_Struct *init_struct);
+/* Public API */
+MCP3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221);
+MCP3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221);
+MCP3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221);
 
-uint16_t MCP3221_readADC(MCP3221 *dev);
-
-float MCP3221_getADCVoltage(MCP3221 *dev, uint16_t adc_value);
+/* Private function */
+uint16_t __i2c_read_register(INA_238_HandleTypeDef *mcp3221);
 
 #endif
 
