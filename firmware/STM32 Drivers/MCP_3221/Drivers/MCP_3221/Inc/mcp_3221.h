@@ -22,6 +22,8 @@ typedef enum
     MCP_3221_TIMEOUT = 0x03U
 } MCP_3221_StatusTypeDef;
 
+// --------------------------------------------------------------------------
+
 typedef struct {
     I2C_HandleTypeDef *hi2c;
     uint8_t address_pins; // 3-bit configurable address
@@ -32,9 +34,13 @@ typedef struct
 {
     MCP_3221_InitTypeDef Init;  // Nested init struct
     uint8_t i2c_address;  // Full 7-bit I2C address (stored separately)
+    uint16_t adc_value;
     double voltage;  // Last measured voltage
     double current;  // Last measured current
+
 } MCP3221_HandleTypeDef;
+
+// --------------------------------------------------------------------------
 
 /* Public API */
 MCP3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221);
@@ -42,7 +48,7 @@ MCP3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221);
 MCP3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221);
 
 /* Private function */
-uint16_t __i2c_read_register(INA_238_HandleTypeDef *mcp3221);
+static MCP3221_StatusTypeDef __i2c_read_register(MCP3221_HandleTypeDef *mcp3221);
 
 #endif
 
