@@ -17,7 +17,7 @@ void MX_INA_238_Init()
     ina238_card0_a.Init.shunt_resistor = 1.3E-3;
     ina238_card0_a.Init.max_expected_current = 30;
 
-    ina238_card0_a.ConfigurationRegisters.CONFIG = 0x0008;
+    ina238_card0_a.ConfigurationRegisters.CONFIG = 0x0010;
     ina238_card0_a.ConfigurationRegisters.ADC_CONFIG = 0xBB6D;
     ina238_card0_a.ConfigurationRegisters.SHUNT_CAL = 0x0F3C;
     ina238_card0_a.ConfigurationRegisters.DIAG_ALERT = 0x0001;

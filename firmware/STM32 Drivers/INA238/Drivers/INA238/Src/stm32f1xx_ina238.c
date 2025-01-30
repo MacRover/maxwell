@@ -41,8 +41,8 @@ INA_238_StatusTypeDef INA_238_ReadCurrent(INA_238_HandleTypeDef *ina_238)
 {
     if (__i2c_set_register_pointer(ina_238, INA238_CURRENT_ADDRESS) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    uint16_t current_reading;
-    if (__i2c_read_register(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
+    int16_t current_reading;
+    if (__i2c_read_register_2Bytes(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
     ina_238->current = current_reading * (ina_238->Init.max_expected_current / 32768.0);
     return INA_238_OK;
@@ -52,8 +52,8 @@ INA_238_StatusTypeDef INA_238_ReadVoltage(INA_238_HandleTypeDef *ina_238)
 {
     if (__i2c_set_register_pointer(ina_238, INA238_VBUS_ADDRESS) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    uint16_t voltage_reading;
-    if (__i2c_read_register(ina_238, (uint8_t *)&voltage_reading) != HAL_I2C_ERROR_NONE)
+    int16_t voltage_reading;
+    if (__i2c_read_register_2Bytes(ina_238, (uint8_t *)&voltage_reading) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
     ina_238->voltage = voltage_reading * 0.003125;
     return INA_238_OK;
@@ -61,19 +61,13 @@ INA_238_StatusTypeDef INA_238_ReadVoltage(INA_238_HandleTypeDef *ina_238)
 
 INA_238_StatusTypeDef INA_238_ReadPower(INA_238_HandleTypeDef *ina_238)
 {
-    if (__i2c_set_register_pointer(ina_238, INA238_CURRENT_ADDRESS) != HAL_I2C_ERROR_NONE)
-        return INA_238_ERROR;
-    uint16_t current_reading;
-    if (__i2c_read_register(ina_238, (uint8_t *)&current_reading) != HAL_I2C_ERROR_NONE)
-        return INA_238_ERROR;
-
     if (__i2c_set_register_pointer(ina_238, INA238_POWER_ADDRESS) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
-    uint16_t power_reading;
-    if (__i2c_read_register(ina_238, (uint8_t *)&power_reading) != HAL_I2C_ERROR_NONE)
+    int32_t power_reading;
+    if (__i2c_read_register_3Bytes(ina_238, (uint8_t *)&power_reading) != HAL_I2C_ERROR_NONE)
         return INA_238_ERROR;
 
-    ina_238->power = 0.2 * power_reading * current_reading * (ina_238->Init.max_expected_current / 32768.0);
+    ina_238->power = 0.2 * power_reading * (ina_238->Init.max_expected_current / 32768.0);
     return INA_238_OK;
 }
 
@@ -124,7 +118,7 @@ uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef *ina_238, uint8_t regi
     return HAL_I2C_ERROR_NONE;
 }
 
-uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
+uint16_t __i2c_read_register_2Bytes(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
 {
     uint8_t spi_read[2];
     uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
@@ -142,6 +136,29 @@ uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
 
     buffer[0] = spi_read[1];
     buffer[1] = spi_read[0];
+
+    return HAL_I2C_ERROR_NONE;
+}
+
+uint16_t __i2c_read_register_3Bytes(INA_238_HandleTypeDef *ina_238, uint8_t *buffer)
+{
+    uint8_t spi_read[3];
+    uint8_t i2c_address = ina_238->Init.device_identifier | (ina_238->Init.a1_pin << 3) | (ina_238->Init.a0_pin << 1) | 0;
+
+    while (HAL_I2C_Master_Receive(ina_238->Init.I2C_HandlerInstance, (uint16_t)(i2c_address & 0xFE), spi_read, 3, 10000) != HAL_OK)
+    {
+
+        uint16_t I2C_Error = HAL_I2C_GetError(ina_238->Init.I2C_HandlerInstance);
+
+        if (I2C_Error != HAL_I2C_ERROR_AF)
+        {
+            return I2C_Error;
+        }
+    }
+
+    buffer[0] = spi_read[2];
+    buffer[1] = spi_read[1];
+    buffer[2] = spi_read[0];
 
     return HAL_I2C_ERROR_NONE;
 }

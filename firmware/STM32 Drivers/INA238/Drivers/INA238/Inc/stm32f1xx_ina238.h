@@ -105,7 +105,9 @@ INA_238_StatusTypeDef INA_238_WriteConfig(INA_238_HandleTypeDef *ina_238);
 
 uint16_t __i2c_set_register_pointer(INA_238_HandleTypeDef *ina_238, uint8_t register_address);
 
-uint16_t __i2c_read_register(INA_238_HandleTypeDef *ina_238, uint8_t *buffer);
+uint16_t __i2c_read_register_2Bytes(INA_238_HandleTypeDef *ina_238, uint8_t *buffer);
+uint16_t __i2c_read_register_3Bytes(INA_238_HandleTypeDef *ina_238, uint8_t *buffer);
+
 
 uint16_t __i2c_write_register(INA_238_HandleTypeDef *ina_238, uint8_t register_address, uint16_t data);
 
