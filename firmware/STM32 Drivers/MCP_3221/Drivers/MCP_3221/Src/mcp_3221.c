@@ -44,7 +44,7 @@ MCP3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221){
     // may not need a temp, but i added it in anyways just in case.
     double temp_voltage;
     temp_voltage = ((float)mcp3221->adc_value / MCP3221_RESOLUTION) * mcp3221->Init.vref_mv;
-    mcp3221->current = (temp_voltage/VIPER_SCALING_FACTOR) / VIPER_SENSE_RES;
+    mcp3221->current = (temp_voltage/mcp3221->Init.sense_resistor_ohms) / mcp3221->Init.sense_resistor_ohms;
     return MCP3221_OK;
 }
 

@@ -28,6 +28,8 @@ typedef struct {
     I2C_HandleTypeDef *hi2c;
     uint8_t address_pins; // 3-bit configurable address
     float vref_mv;        // Reference voltage in millivolts
+    double sense_resistor_ohms;
+    double scaling_factor;
 } MCP_3221_InitTypeDef;
 
 typedef struct
