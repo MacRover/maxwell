@@ -125,9 +125,6 @@ uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus *state, VIPERCardStatu
         case CAN_SEND_CARD_INPUT_CURRENT:
             status->input_current = __buffer_get_float64(buf, &i);
             break;
-        case CAN_SEND_CARD_OUTPUT_DIAGNOSTIC_A: // need to change
-            status->card_output_diagnostic_a = __buffer_get_uint16(buf, &i);
-            break;
         case CAN_SEND_CARD_OUTPUT_POWER_A:
             status->output_power_a = __buffer_get_float64(buf, &i);
             break;
@@ -136,9 +133,6 @@ uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus *state, VIPERCardStatu
             break;
         case CAN_SEND_CARD_OUTPUT_VOLTAGE_A:
             status->output_voltage_a = __buffer_get_float64(buf, &i);
-            break;
-        case CAN_SEND_CARD_OUTPUT_DIAGNOSTIC_B:
-            status->card_output_diagnostic_b = __buffer_get_uint16(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_POWER_B:
             status->output_power_b = __buffer_get_float64(buf, &i);
