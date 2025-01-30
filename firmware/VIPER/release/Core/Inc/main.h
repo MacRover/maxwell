@@ -62,34 +62,12 @@ typedef struct __attribute__((packed))
 {
 	uint8_t ENABLE;
 	double MAX_INPUT_CURRENT;
-	double MAX_OUTPUT_CURRENT;
-	double MAX_OUTPUT_VOLTAGE;
-	double RESISTANCE;
-} VIPER_CARD_PARAMS_HP_TypeDef;
-
-typedef struct __attribute__((packed))
-{
-	uint8_t ENABLE;
-	double MAX_INPUT_CURRENT;
 	double MAX_OUTPUT_CURRENT_A;
 	double MAX_OUTPUT_CURRENT_B;
 	double MAX_OUTPUT_VOLTAGE_A;
 	double MAX_OUTPUT_VOLTAGE_B;
 	double RESISTANCE;
-} VIPER_CARD_PARAMS_LP_TypeDef;
-
-typedef struct
-{
-	uint8_t ENABLE;
-	uint8_t CONNECTED;
-	uint8_t INPUT_FAULT;
-	uint8_t OUTPUT_FAULT;
-	VIPER_CARD_STATUS_TypeDef STATUS;
-	double INPUT_CURRENT;
-	double OUTPUT_CURRENT;
-	double OUTPUT_VOLTAGE;
-	double TEMPERATURE;
-} VIPER_CARD_STATE_HP_TypeDef;
+} VIPER_CARD_PARAMS_TypeDef;
 
 typedef struct
 {
@@ -105,26 +83,28 @@ typedef struct
 	double OUTPUT_VOLTAGE_A;
 	double OUTPUT_VOLTAGE_B;
 	double TEMPERATURE;
-} VIPER_CARD_STATE_LP_TypeDef;
+	double OUTPUT_POWER_A; // todo: incorporate into CAN call
+	double OUTPUT_POWER_B; // todo: incorporate into CAN call
+} VIPER_CARD_STATE_TypeDef;
 
 typedef struct __attribute__((packed))
 {
  	uint16_t HEALTH_INTERVAL;
  	uint16_t CARD_INTERVAL;
- 	VIPER_CARD_PARAMS_LP_TypeDef CARD_0;
- 	VIPER_CARD_PARAMS_HP_TypeDef CARD_1;
- 	VIPER_CARD_PARAMS_HP_TypeDef CARD_2;
- 	VIPER_CARD_PARAMS_LP_TypeDef CARD_3;
+ 	VIPER_CARD_PARAMS_TypeDef CARD_0;
+ 	VIPER_CARD_PARAMS_TypeDef CARD_1;
+ 	VIPER_CARD_PARAMS_TypeDef CARD_2;
+ 	VIPER_CARD_PARAMS_TypeDef CARD_3;
 } VIPER_PARAMS_TypeDef;
 
 typedef struct
 {
 	VIPER_STATE_MACHINE_TypeDef STATE;
 	VIPER_CARD_ID_TypeDef CURRENT_CARD;
-	VIPER_CARD_STATE_LP_TypeDef CARD_0;
-	VIPER_CARD_STATE_HP_TypeDef CARD_1;
-	VIPER_CARD_STATE_HP_TypeDef CARD_2;
-	VIPER_CARD_STATE_LP_TypeDef CARD_3;
+	VIPER_CARD_STATE_TypeDef CARD_0;
+	VIPER_CARD_STATE_TypeDef CARD_1;
+	VIPER_CARD_STATE_TypeDef CARD_2;
+	VIPER_CARD_STATE_TypeDef CARD_3;
 
 	// UPDATE THIS TO INCLUDE ERRORS FROM DRIVERS
 	// ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS

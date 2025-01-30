@@ -34,6 +34,11 @@
 			<name>Drivers/INA238</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/INA238/Drivers/INA238</locationURI>
+	  <link>
+    </link>
+			<name>Drivers/TMP_1075</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_1075/Drivers/TMP_1075</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

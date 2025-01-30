@@ -45,15 +45,15 @@ void MX_CAN_Init(void)
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 16;
+  hcan.Init.Prescaler = 4;
   hcan.Init.Mode = CAN_MODE_NORMAL;
-  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan.Init.SyncJumpWidth = CAN_SJW_2TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_15TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
   hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.AutoRetransmission = ENABLE;
   hcan.Init.ReceiveFifoLocked = DISABLE;
   hcan.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan) != HAL_OK)
@@ -169,6 +169,9 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* CAN1 interrupt Init */
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
   /* USER CODE END CAN1_MspInit 1 */
@@ -192,6 +195,8 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
 
+    /* CAN1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
   /* USER CODE END CAN1_MspDeInit 1 */
@@ -266,62 +271,14 @@ void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle)
 
 }
 
-// todo: adapt this for specific status messages for each card
-
-//void MX_CAN_Broadcast_Odometry_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATUS_TypeDef status)
-//{
-//    encode_double_big_endian(status.current_angle, &(viper_can_handle->TxData[0]));
-//    viper_can_handle->TxHeader.DLC = sizeof(double); //double
-//    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, SEND_ODOM_ANGLE);
-//
-//    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
-//            viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
-//}
-
 void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef* state, VIPER_CARD_ID_TypeDef cardx)
 {
-	VIEPR_CAN_CommandId c_id;
-
-	switch (cardx) {
-	case VIPER_CARD_0:
-	{
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_0_TEMPERATURE);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_0_INPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_A, SEND_CARD_0_OUTPUT_CURRENT_A);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_0_OUTPUT_CURRENT_B);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_0_OUTPUT_VOLTAGE_A);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_B, SEND_CARD_0_OUTPUT_VOLTAGE_B);
-		break;
-	}
-	case VIPER_CARD_1:
-	{
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.TEMPERATURE, SEND_CARD_1_TEMPERATURE);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.INPUT_CURRENT, SEND_CARD_1_INPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_CURRENT, SEND_CARD_1_OUTPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_VOLTAGE, SEND_CARD_1_OUTPUT_VOLTAGE);
-		break;
-	}
-	case VIPER_CARD_2:
-	{
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.TEMPERATURE, SEND_CARD_2_TEMPERATURE);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.INPUT_CURRENT, SEND_CARD_2_INPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_CURRENT, SEND_CARD_2_OUTPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_VOLTAGE, SEND_CARD_2_OUTPUT_VOLTAGE);
-		break;
-	}
-	case VIPER_CARD_3:
-	{
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.TEMPERATURE, SEND_CARD_3_TEMPERATURE);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.INPUT_CURRENT, SEND_CARD_3_INPUT_CURRENT);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_A, SEND_CARD_3_OUTPUT_CURRENT_A);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_B, SEND_CARD_3_OUTPUT_CURRENT_B);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_A, SEND_CARD_3_OUTPUT_VOLTAGE_A);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_B, SEND_CARD_3_OUTPUT_VOLTAGE_B);
-		break;
-	}
-	default:
-		break;
-	}
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
+	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
 }
 
 void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef *state)
@@ -335,59 +292,59 @@ void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_
     viper_can_handle->TxData[6] = state->CARD_3.STATUS;
 
     viper_can_handle->TxHeader.DLC = 7; //float
-    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, SEND_HEALTH_STATUS);
+    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, SEND_HEALTH_STATUS, 0);
 
     HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
-void MX_CAN_Broadcast_Double_Data(VIPER_CAN_TypeDef *viper_can_handle, double value, uint16_t message_id)
+void MX_CAN_Broadcast_Double_Data(VIPER_CAN_TypeDef *viper_can_handle, double value, uint16_t message_id, VIPER_CARD_ID_TypeDef card_id)
 {
     encode_double_big_endian(value, &(viper_can_handle->TxData[0]));
     viper_can_handle->TxHeader.DLC = sizeof(double); //float
-    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id);
+    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
     HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
-void MX_CAN_Broadcast_Uint32_Data(VIPER_CAN_TypeDef *viper_can_handle, uint32_t value, uint16_t message_id)
+void MX_CAN_Broadcast_Uint32_Data(VIPER_CAN_TypeDef *viper_can_handle, uint32_t value, uint16_t message_id, VIPER_CARD_ID_TypeDef card_id)
 {
     encode_uint32_big_endian(value, &(viper_can_handle->TxData[0]));
     viper_can_handle->TxHeader.DLC = sizeof(uint32_t); //float
-    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id);
+    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
     HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
-void MX_CAN_Broadcast_Uint16_Data(VIPER_CAN_TypeDef *viper_can_handle, uint16_t value, uint16_t message_id)
+void MX_CAN_Broadcast_Uint16_Data(VIPER_CAN_TypeDef *viper_can_handle, uint16_t value, uint16_t message_id, VIPER_CARD_ID_TypeDef card_id)
 {
     encode_uint32_big_endian(value, &(viper_can_handle->TxData[0]));
     viper_can_handle->TxHeader.DLC = sizeof(uint16_t); //float
-    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id);
+    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
     HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
-void MX_CAN_Broadcast_Uint8_Data(VIPER_CAN_TypeDef *viper_can_handle, uint8_t value, uint16_t message_id)
+void MX_CAN_Broadcast_Uint8_Data(VIPER_CAN_TypeDef *viper_can_handle, uint8_t value, uint16_t message_id, VIPER_CARD_ID_TypeDef card_id)
 {
     viper_can_handle->TxData[0] = value;
     viper_can_handle->TxHeader.DLC = sizeof(uint8_t); //float
-    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id);
+    viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
     HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
-uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
+uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id, VIPER_CARD_ID_TypeDef card_id)
 {
     // return a value that combines both the device ID and the
     // message ID so that the message can be identified
     return (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
             (CAN_MESSAGE_RESPONSE_VIPER << CAN_MESSAGE_RESPONSE_OFFSET) |
-            (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET);
+            (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET) | (card_id << CAN_MESSAGE_CARD_ID_OFFSET);
 }
 
 /* USER CODE END 1 */
