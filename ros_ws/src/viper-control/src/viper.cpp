@@ -103,7 +103,7 @@ void __buffer_append_uint64(uint8_t* buf, uint64_t n, uint8_t* ind)
     buf[(*ind)++] = (n & 0xff);
 }
 
-uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus* status)
+uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus *state, VIPERCardStatus* status)
 {
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
     uint8_t i = 0;
@@ -111,51 +111,51 @@ uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus* status)
     switch(((can_msg->address) >> 8) & 0xff)
     {
         case CAN_SEND_CARD_INPUT_FAULT:
-            status->card_input_fault = (bool)buf[0];
+            status->input_fault = (bool)buf[0];
             break;
         case CAN_SEND_CARD_OUTPUT_A_FAULT:
-            status->card_output_a_fault = (bool)buf[0];
+            status->output_a_fault = (bool)buf[0];
             break;
         case CAN_SEND_CARD_OUTPUT_B_FAULT:
-            status->card_output_b_fault = (bool)buf[0];
+            status->output_b_fault = (bool)buf[0];
             break;
         case CAN_SEND_CARD_TEMPERATURE:
-            status->card_temperature = __buffer_get_float64(buf, &i);
+            status->temperature = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_INPUT_CURRENT:
-            status->card_input_current = __buffer_get_float64(buf, &i);
+            status->input_current = __buffer_get_float64(buf, &i);
             break;
-        case CAN_SEND_CARD_OUTPUT_DIAGNOSTIC_A:
+        case CAN_SEND_CARD_OUTPUT_DIAGNOSTIC_A: // need to change
             status->card_output_diagnostic_a = __buffer_get_uint16(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_POWER_A:
-            status->card_output_power_a = __buffer_get_float64(buf, &i);
+            status->output_power_a = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_CURRENT_A:
-            status->card_output_current_a = __buffer_get_float64(buf, &i);
+            status->output_current_a = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_VOLTAGE_A:
-            status->card_output_voltage_a = __buffer_get_float64(buf, &i);
+            status->output_voltage_a = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_DIAGNOSTIC_B:
             status->card_output_diagnostic_b = __buffer_get_uint16(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_POWER_B:
-            status->card_output_power_b = __buffer_get_float64(buf, &i);
+            status->output_power_b = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_CURRENT_B:
-            status->card_output_current_b = __buffer_get_float64(buf, &i);
+            status->output_current_b = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_OUTPUT_VOLTAGE_B:
-            status->card_output_voltage_b = __buffer_get_float64(buf, &i);
+            status->output_voltage_b = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_HEALTH_STATUS:
-            status->eeprom_status = buf[0];
-            status->mux_status = buf[1];
-            status->card_status[0] = buf[2]; // assuming card_status is an array, change if necessary
-            status->card_status[1] = buf[3];
-            status->card_status[2] = buf[4];
-            status->card_status[3] = buf[5];
+            state->eeprom_status = buf[0];
+            state->mux_status = buf[1];
+            state->card_0_status = buf[2]; 
+            state->card_1_status = buf[3];
+            state->card_2_status = buf[4];
+            state->card_3_status = buf[5];
             break;
         default:
             return 0; // Unknown message type
@@ -165,55 +165,68 @@ uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus* status)
 
 void VIPER::set_can_id(uint8_t can_id)
 {
-    uint8_t buf[1];
-    buf[0] = can_id;
+    uint8_t buf[1] = { can_id };
+
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id); // No equivalent to CAN_ASSIGN_DEVICE_ID in VIPER
+                         ((can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET); 
+
     _update_can_data(buf, 1);
-    // Set VIPER ID after sending command
     this->l_can_id = can_id;
 }
 
 void VIPER::save_to_eeprom()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
+    uint8_t buf[1] = { 0 };
+
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SAVE_TO_EEPROM) << 8);
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((uint32_t)(CAN_SAVE_TO_EEPROM) << 8); 
+
     _update_can_data(buf, 1);
 }
 
 // setter functions
 
+
 void VIPER::set_health_interval(uint32_t health_interval)
 {
     uint8_t ind = 0;
-    uint8_t buf[4]; // Corrected buffer size
-    __buffer_append_uint32(buf, health_interval, &ind); // Fixed variable name
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HEALTH_INTERVAL) << 8);
-    _update_can_data(buf, 4); // Buffer size updated to 4 bytes
+    uint8_t buf[4];
+    __buffer_append_uint32(buf, health_interval, &ind);
+
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) | 
+                         ((CAN_SET_HEALTH_INTERVAL) << 8);
+
+    _update_can_data(buf, 4);
 }
 
 void VIPER::set_card_interval(uint32_t card_interval)
 {
     uint8_t ind = 0;
-    uint8_t buf[4]; // Corrected buffer size
-    __buffer_append_uint32(buf, card_interval, &ind); // Fixed variable name
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CARD_INTERVAL) << 8); // Fixed incorrect command ID
-    _update_can_data(buf, 4); // Buffer size updated to 4 bytes
+    uint8_t buf[4];
+    __buffer_append_uint32(buf, card_interval, &ind);
+
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) | 
+                         ((CAN_SET_CARD_INTERVAL) << 8);
+
+    _update_can_data(buf, 4);
 }
 
 void VIPER::set_mux_value(uint8_t mux_value)
 {
     uint8_t buf[1];
-    buf[0] = mux_value; // Store the MUX value in the buffer
+    buf[0] = mux_value;
 
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_MUX_VALUE) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) | 
+                         ((CAN_SET_MUX_VALUE) << 8);
 
-    _update_can_data(buf, 1); // Send the single-byte data
+    _update_can_data(buf, 1);
 }
 
 // getter functions
@@ -221,10 +234,11 @@ void VIPER::set_mux_value(uint8_t mux_value)
 void VIPER::get_card_interval()
 {
     uint8_t buf[1];
-    buf[0] = 0; // No extra data needed
+    buf[0] = 0; 
 
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_CARD_INTERVAL) << 8);
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) | 
+                         ((uint32_t)(CAN_GET_CARD_INTERVAL) << 8); 
 
     _update_can_data(buf, 1);
 }
@@ -232,10 +246,11 @@ void VIPER::get_card_interval()
 void VIPER::get_all_card_data()
 {
     uint8_t buf[1];
-    buf[0] = 0; // No extra data needed
+    buf[0] = 0; 
 
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_ALL_CARD_DATA) << 8);
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) | 
+                         ((uint32_t)(CAN_GET_ALL_CARD_DATA) << 8); 
 
     _update_can_data(buf, 1);
 }
@@ -243,10 +258,12 @@ void VIPER::get_all_card_data()
 void VIPER::get_card_data(uint8_t target)
 {
     uint8_t buf[1];
-    buf[0] = target; // Specify the target card
+    buf[0] = target;
 
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_CARD_DATA) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((target & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) |
+                         ((CAN_GET_CARD_DATA) << 8);
 
     _update_can_data(buf, 1);
 }
@@ -256,32 +273,12 @@ void VIPER::get_card_data(uint8_t target)
 void VIPER::disable_card(uint8_t card)
 {
     uint8_t buf[1];
-    buf[0] = card; // Specify the card to disable
+    buf[0] = card;
 
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_DISABLE_CARD) << 8);
-
-    _update_can_data(buf, 1);
-}
-
-void VIPER::disable_all_cards()
-{
-    uint8_t buf[1];
-    buf[0] = 0; // No extra data needed
-
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_DISABLE_ALL_CARDS) << 8);
-
-    _update_can_data(buf, 1);
-}
-
-void VIPER::enable_card(uint8_t card_id)
-{
-    uint8_t buf[1];
-    buf[0] = card_id; // Specify the card to enable
-
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_ENABLE_CARD) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((card & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) |
+                         ((CAN_DISABLE_CARD) << 8);
 
     _update_can_data(buf, 1);
 }
@@ -289,17 +286,36 @@ void VIPER::enable_card(uint8_t card_id)
 void VIPER::enable_all_cards()
 {
     uint8_t buf[1];
-    buf[0] = 0; // No extra data needed
+    buf[0] = 0; 
 
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_ENABLE_ALL_CARDS) << 8);
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) | 
+                         ((uint32_t)(CAN_DISABLE_ALL_CARDS) << 8);
 
     _update_can_data(buf, 1);
 }
 
+void VIPER::enable_card(uint8_t card_id)
+{
+    uint8_t buf[1];
+    buf[0] = card_id;
 
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((card_id & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) |
+                         ((CAN_ENABLE_CARD) << 8);
 
+    _update_can_data(buf, 1);
+}
 
+void VIPER::enable_all_cards()
+{
+    uint8_t buf[1];
+    buf[0] = 0; 
 
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) | 
+                         ((uint32_t)(CAN_ENABLE_ALL_CARDS) << 8);
 
-
+    _update_can_data(buf, 1);
+}
