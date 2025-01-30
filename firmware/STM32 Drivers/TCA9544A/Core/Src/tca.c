@@ -10,7 +10,7 @@
 TCA9544A_HandleTypeDef tca;
 
 void TCA_Init() {
-	tca.__hi2c = &hi2c1;
+	tca.__hi2c = &hi2c2;
 
 	tca.A2 = 0;
 	tca.A1 = 0;
