@@ -22,7 +22,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-
+#include "ina238.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -117,14 +117,16 @@ int main(void)
 	// ##############
 	// SET DRIVER INITIALIZATIONS HERE
 	// todo: add all of the drivers here
+
 	MX_AT24C04C_1_Init();
 	MX_TMP_1075_Init();
 	MX_MCP_3221_Init();
 	MX_INA_238_Init();
+
 	// ###############
 	// MAIN INIT and BROADCAST HEALTH MESSAGE
-	VIPER_Card_Init(&viper_state, &viper_params);
-	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+	// VIPER_Card_Init(&viper_state, &viper_params);
+	// MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
 	// ###############
   /* USER CODE END 2 */
 
@@ -132,6 +134,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 	while (1) {
+
 		if (!queue_empty(&can_message_queue_global)) {
 			VIPER_CAN_Message_TypeDef *new_message =
 					(VIPER_CAN_Message_TypeDef*) queue_front(
