@@ -2,7 +2,7 @@
 
 VIPER_Status::VIPER_Status() : Node("viper_status_node")
 {
-  this->declare_parameter("can_topic", "/can/viper_can_in");
+  this->declare_parameter("can_topic", "/can/status/viper_can_in");
   this->declare_parameter("status_rate", 10);
 
   rate = this->get_parameter("status_rate").as_int();
@@ -12,7 +12,7 @@ VIPER_Status::VIPER_Status() : Node("viper_status_node")
   status_pub_card_1 = this->create_publisher<ViperCardStatus>("/viper_status/card_1", 10);
   status_pub_card_2 = this->create_publisher<ViperCardStatus>("/viper_status/card_2", 10);
   status_pub_card_3 = this->create_publisher<ViperCardStatus>("/viper_status/card_3", 10);
-  status_pub = this->create_publisher<ViperStatus>("/viper_status", 10);
+  status_pub = this->create_publisher<ViperStatus>("/viper_status/health", 10);
   
   can_sub_ = this->create_subscription<CANraw>(
     topic, 10, std::bind(&VIPER_Status::_status_callback, this, _1)

@@ -16,37 +16,36 @@ uint8_t card_id, command_id;
 bool ack,ready;
 
 std::map<std::string, uint8_t> get_cmd = {
-  {"GET_TARGET_ANGLE", CAN_GET_TARGET_ANGLE},
-  {"GET_P_VALUE", CAN_GET_P_VALUE},
-  {"GET_I_VALUE", CAN_GET_I_VALUE},
-  {"GET_D_VALUE", CAN_GET_D_VALUE},
-  {"GET_PID_MIN_OUTPUT", CAN_GET_PID_MIN_OUTPUT},
-  {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT},
-  {"GET_HOME_OFFSET", CAN_GET_HOME_OFFSET}
+  {"GET_CARD_INTERVAL", CAN_GET_CARD_INTERVAL},
+  {"GET_HEALTH_INTERVAL", CAN_GET_HEALTH_INTERVAL}
 
 };
 std::map<std::string, uint8_t> set_cmd = {
   {"SET_HEALTH_INTERVAL", CAN_SET_HEALTH_INTERVAL},
-  
+  {"SET_CARD_INTERVAL", CAN_SET_CARD_INTERVAL},
+  {"DISABLE_CARD", CAN_DISABLE_CARD},
+  {"ENABLE_CARD", CAN_ENABLE_CARD},
+  {"SET_MUX_VALUE", CAN_SET_MUX_VALUE},
 };
 std::map<std::string, uint8_t> other_cmd = {
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
   {"DISABLE_ALL_CARDS", CAN_DISABLE_ALL_CARDS}
+  {"ENABLE_ALL_CARDS", CAN_ENABLE_ALL_CARDS}
 };
 
 
 void response_callback(const CANraw& msg)
 {
-  if (ready && ((msg.address & 0xff) == rad_id) && (((msg.address >> 8) & 0xff) == command_id))
+  if (ready && ((msg.address & 0xff) == card_id) && (((msg.address >> 8) & 0xff) == command_id))
   {
     uint8_t i = 0;
     RCLCPP_INFO(can_config->get_logger(), "Message received!");
-    if (command_id == CAN_GET_TARGET_ANGLE || command_id == CAN_GET_P_VALUE || 
-        command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE || command_id == CAN_GET_HOME_OFFSET)
-    {
-      RCLCPP_INFO(can_config->get_logger(), "Value: %f", __buffer_get_float64((uint8_t*)&(msg.data[0]),&i));
-    }
-    else if (command_id == CAN_GET_PID_MIN_OUTPUT || command_id == CAN_GET_PID_MAX_OUTPUT)
+    // if (command_id == CAN_GET_TARGET_ANGLE || command_id == CAN_GET_P_VALUE || 
+    //     command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE || command_id == CAN_GET_HOME_OFFSET)
+    // {
+    //   RCLCPP_INFO(can_config->get_logger(), "Value: %f", __buffer_get_float64((uint8_t*)&(msg.data[0]),&i));
+    // }
+    if (command_id == CAN_GET_HEALTH_INTERVAL || command_id == CAN_GET_CARD_INTERVAL)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %d", ((uint16_t)(msg.data[0]) << 8) | msg.data[1]);
     }
@@ -67,11 +66,11 @@ int main(int argc, char ** argv)
 
   rclcpp::init(argc, argv);
   
-  can_config = std::make_shared<rclcpp::Node>("rad_tool_node");
+  can_config = std::make_shared<rclcpp::Node>("viper_tool_node");
   can_pub = can_config->create_publisher<CANraw>("/can/can_out", 10);
-  can_sub = can_config->create_subscription<CANraw>("/can/config/rad_can_in", 10, response_callback);
+  can_sub = can_config->create_subscription<CANraw>("/can/config/viper_can_in", 10, response_callback);
   CANraw can_out_msg;
-  RAD rad{&can_out_msg};
+  VIPER viper{&can_out_msg};
   rclcpp::WallRate loop_rate(500ms);
 
   std::thread spin_thread([](){rclcpp::spin(can_config);});
@@ -81,8 +80,8 @@ int main(int argc, char ** argv)
   while(true)
   {
     ack = false;
-    std::cout << "Enter RAD ID (q to exit) (prefix h for hex #) => ";
-    std::getline (std::cin,in);
+    std::cout << "Enter Card ID (q to exit) (prefix h for hex #) => ";
+    std::getline (std::cin,in)
     if (in == "q" || std::cin.fail())
       break;
     
@@ -93,8 +92,8 @@ int main(int argc, char ** argv)
       base = 16;
       in = in.substr(1);
     }
-    rad_id = std::stoi(in, 0, base);
-    rad.set_can_id(rad_id);
+    viper_card_id = std::stoi(in, 0, base);
+    viper_card_id.set_can_id(viper_card_id);
     )
 
     do {
@@ -135,47 +134,20 @@ int main(int argc, char ** argv)
 
       switch(command_id)
       {
-        case CAN_ASSIGN_DEVICE_ID:
-          rad.set_can_id((uint8_t)std::stoi(val_in, 0, base));
-          break;
-        case CAN_SET_TARGET_ANGLE:
-          rad.set_target_angle(std::stod(val_in));
-          break;
-        case CAN_SET_P_VALUE:
-          rad.set_p_value(std::stod(val_in));
-          break;
-        case CAN_SET_I_VALUE:
-          rad.set_i_value(std::stod(val_in));
-          break;
-        case CAN_SET_D_VALUE:
-          rad.set_d_value(std::stod(val_in));
-          break;
         case CAN_SET_HEALTH_INTERVAL:
-          rad.set_health_interval((uint32_t)std::stoi(val_in, 0, base));
+          viper.set_health_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_ODOM_INTERVAL:
-          rad.set_odom_interval((uint32_t)std::stoi(val_in, 0, base));
+        case CAN_SET_CARD_INTERVAL:
+          viper.set_card_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_RAD_TYPE:
-          rad.set_rad_type((uint8_t)std::stoi(val_in, 0, base));
+        case CAN_DISABLE_CARD:
+          viper.disable_card((uint8_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_DRVCTRL_MRES:
-          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in, 0, base));
+        case CAN_ENABLE_CARD:
+          viper.enable_card((uint8_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_SGCSCONF_CS:
-          rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in, 0, base));
-          break;
-        case CAN_SET_STEPPER_SPEED:
-          rad.set_stepper_speed((uint32_t)std::stoi(val_in, 0, base));
-          break;
-        case CAN_SET_PID_MIN_OUTPUT:
-          rad.set_error_thres((uint8_t)std::stoi(val_in, 0, base));
-          break;
-        case CAN_SET_PID_MAX_OUTPUT:
-          rad.set_max_output((uint16_t)std::stoi(val_in, 0, base));
-          break;
-        case CAN_PULSE_STEPPER:
-          rad.pulse_stepper(std::stof(val_in));
+        case CAN_SET_MUX_VALUE:
+          viper.set_mux_value((uint8_t)std::stoi(val_in, 0, base));
           break;
       }
     }
@@ -183,27 +155,13 @@ int main(int argc, char ** argv)
     {
       switch(command_id)
       {
-        case CAN_GET_TARGET_ANGLE:
-          rad.get_target_angle();
+        case CAN_GET_CARD_INTERVAL:
+          viper.get_card_interval();
           break;
-        case CAN_GET_P_VALUE:
-          rad.get_p_value();
+        case CAN_GET_HEALTH_INTERVAL:
+          viper.get_card_interval();
           break;
-        case CAN_GET_I_VALUE:
-          rad.get_i_value();
-          break;
-        case CAN_GET_D_VALUE:
-          rad.get_d_value();
-          break;
-        case CAN_GET_PID_MIN_OUTPUT:
-          rad.get_error_thres();
-          break;
-        case CAN_GET_PID_MAX_OUTPUT:
-          rad.get_max_output();
-          break;
-        case CAN_GET_HOME_OFFSET:
-          rad.get_home_offset();
-          break;
+        
       }
     }
     else
@@ -211,21 +169,19 @@ int main(int argc, char ** argv)
       switch (command_id)
       {
         case CAN_SAVE_TO_EEPROM:
-          rad.save_to_eeprom();
+          viper.save_to_eeprom();
           break;
-        case CAN_CALIBRATE_POS:
-          rad.calibrate_zero_pos();
+        case CAN_DISABLE_ALL_CARDS:
+          viper.disable_all_cards();
           break;
-        case CAN_CANCEL_CALIBRATE_POS:
-          rad.cancel_calibration();
+        case CAN_ENABLE_ALL_CARDS:
+          viper.enable_all_cards();
           break;
-        case CAN_SET_HOME_OFFSET:
-          rad.set_home_offset();
-          break;
+
       }
     }
 
-    RCLCPP_INFO(can_config->get_logger(), "RAD_ID: %d, COMMAND_ID: %d", rad_id, command_id);
+    RCLCPP_INFO(can_config->get_logger(), "VIPER_CARD_ID: %d, COMMAND_ID: %d", viper_card_id, command_id);
     can_pub->publish(can_out_msg);
     RCLCPP_INFO(can_config->get_logger(), "SENT CAN FRAME 0x%x", can_out_msg.address);
 
@@ -238,7 +194,7 @@ int main(int argc, char ** argv)
         can_pub->publish(can_out_msg);
         loop_rate.sleep();
       }
-      // No reply from RAD
+      // No reply from VIPER
       if (!ack) RCLCPP_ERROR(can_config->get_logger(), "FAILED TO RECEIVE MESSAGE");
       ready = false;
     }
