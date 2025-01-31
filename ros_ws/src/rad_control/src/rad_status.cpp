@@ -2,7 +2,7 @@
 
 RAD_Status::RAD_Status() : Node("rad_status_node")
 {
-  this->declare_parameter("can_topic", "/can/rad_can_in");
+  this->declare_parameter("can_topic", "/can/status/rad_can_in");
   this->declare_parameter("status_rate", 10);
 
   rate = this->get_parameter("status_rate").as_int();
