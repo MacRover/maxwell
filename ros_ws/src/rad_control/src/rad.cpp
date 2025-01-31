@@ -307,17 +307,17 @@ void RAD::set_sgcsconf_cs(uint8_t cs)
     _update_can_data(buf, 1);
 }
 
-void RAD::set_error_thres(uint16_t thres)
+void RAD::set_min_output(uint16_t min_output)
 {
     uint8_t buf[2];
-    buf[0] = ((thres & 0xff00) >> 8);
-    buf[1] = (thres & 0xff);
+    buf[0] = ((min_output & 0xff00) >> 8);
+    buf[1] = (min_output & 0xff);
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_MIN_OUTPUT) << 8);
     _update_can_data(buf, 2);
 }
 
-void RAD::get_error_thres()
+void RAD::get_min_output()
 {
     uint8_t buf[1];
     buf[0] = 0;
