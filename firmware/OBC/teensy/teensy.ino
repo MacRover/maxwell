@@ -4,6 +4,7 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
+#include <Servo.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -14,13 +15,16 @@
 
 #include "fans.h"
 #include "TSB.h"
+#include "servo.h" 
 
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
 // #define USING_TSB
-#define USING_FANS
+//#define USING_FANS
+#define USING_SERVO
+
 
 #define DOMAIN_ID 5
 #define LED_PIN 13
@@ -178,6 +182,9 @@ void obc_setup_uros()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
     );
+
+
+
 #endif
     digitalWrite(LED_PIN, HIGH);
 }
@@ -239,6 +246,8 @@ void obc_setup_fans()
 #endif
 }
 
+
+
 void setup()
 {
     Wire1.begin();
@@ -249,16 +258,28 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
+
     obc_setup_imu();
     obc_setup_gps();
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
+    #ifdef USING_SERVO
+    servo_setup_subscription(&teensy_node, &support, &allocator);
+    #endif
+    
+
+
 }
 
 
 void loop()
 {
+#ifdef USING_SERVO
+    servo_spin_executor();
+#endif
+ 
+
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
@@ -292,5 +313,6 @@ void loop()
 //   setFanRPM(&fan3, MIN_RPM);
 #endif
 
-    delay(1);
+
+delay(1);
 }
