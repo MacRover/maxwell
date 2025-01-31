@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SwerveModulesList.msg"
   "msg/RadStatus.msg"
   "msg/SwerveModulePulse.msg"
+  "msg/ViperStatus.msg"
+  "msg/ViperCardStatus.msg"
   DEPENDENCIES std_msgs
 )
 

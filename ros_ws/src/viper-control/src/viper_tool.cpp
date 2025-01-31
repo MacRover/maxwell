@@ -12,7 +12,7 @@ using std::placeholders::_1;
 std::shared_ptr<rclcpp::Node> can_config;
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;
 std::shared_ptr<rclcpp::Subscription<CANraw>> can_sub;
-uint8_t card_id, command_id;
+uint8_t viper_card_id, command_id;
 bool ack,ready;
 
 std::map<std::string, uint8_t> get_cmd = {
@@ -70,7 +70,7 @@ int main(int argc, char ** argv)
   can_pub = can_config->create_publisher<CANraw>("/can/can_out", 10);
   can_sub = can_config->create_subscription<CANraw>("/can/config/viper_can_in", 10, response_callback);
   CANraw can_out_msg;
-  VIPER viper{&can_out_msg};
+  VIPER viper{&can_out_msg, 1};
   rclcpp::WallRate loop_rate(500ms);
 
   std::thread spin_thread([](){rclcpp::spin(can_config);});
@@ -80,25 +80,28 @@ int main(int argc, char ** argv)
   while(true)
   {
     ack = false;
-    std::cout << "Enter Card ID (q to exit) (prefix h for hex #) => ";
-    std::getline (std::cin,in)
-    if (in == "q" || std::cin.fail())
-      break;
+
+    //THIS IS UNECESSARY!
+    // std::cout << "Enter Card ID (q to exit) (prefix h for hex #) => ";
+    // std::getline (std::cin,in)
+    // if (in == "q" || std::cin.fail())
+    //   break;
     
-    int base = 10;
-    INPUT_CHECK(
-    if (in[0] == 'h')
-    {
-      base = 16;
-      in = in.substr(1);
-    }
-    viper_card_id = std::stoi(in, 0, base);
-    viper_card_id.set_can_id(viper_card_id);
-    )
+    // int base = 10;
+    // INPUT_CHECK(
+    // if (in[0] == 'h')
+    // {
+    //   base = 16;
+    //   in = in.substr(1);
+    // }
+    viper_card_id = 0xFF;
+    // //viper_card_id.set_can_id(viper_card_id);
+    // )
 
     do {
-      std::cout << "Enter Command ('?' to list options) => ";
+      std::cout << "Enter Command ('?' to list options) (q to exit) => ";
       std::getline (std::cin,in);
+      
       if (in == "?")
       {
         for (const auto&[command_name, _] : get_cmd)
@@ -111,6 +114,9 @@ int main(int argc, char ** argv)
     }
     while (in == "?");
 
+    if (in == "q" || std::cin.fail())
+      break;
+
     INPUT_CHECK(
     command_id = (get_cmd.count(in) == 1) ? get_cmd.at(in) : 
                  (set_cmd.count(in) == 1 ? set_cmd.at(in) : other_cmd.at(in));
@@ -120,7 +126,7 @@ int main(int argc, char ** argv)
     if (set_cmd.count(in) == 1)
     {
       std::string val_in;
-      std::cout << "Enter value (prefix h for hex #) => ";
+      std::cout << "Enter value or Card ID (prefix h for hex #) => ";
       std::getline (std::cin,val_in);
 
       base = 10;
@@ -141,10 +147,12 @@ int main(int argc, char ** argv)
           viper.set_card_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_DISABLE_CARD:
-          viper.disable_card((uint8_t)std::stoi(val_in, 0, base));
+          viper_card_id = (uint8_t)std::stoi(val_in, 0, base);
+          viper.disable_card(viper_card_id);
           break;
         case CAN_ENABLE_CARD:
-          viper.enable_card((uint8_t)std::stoi(val_in, 0, base));
+          viper_card_id = (uint8_t)std::stoi(val_in, 0, base);
+          viper.enable_card(viper_card_id);
           break;
         case CAN_SET_MUX_VALUE:
           viper.set_mux_value((uint8_t)std::stoi(val_in, 0, base));
