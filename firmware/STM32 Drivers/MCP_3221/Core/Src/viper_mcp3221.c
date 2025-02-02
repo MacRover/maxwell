@@ -29,19 +29,19 @@ void MX_MCP_3221_Init() {
 
     // High power card
     mcp3221_card2.Init = mcp3221_card0_a.Init;
-    mccp3221_card2.Init->sense_resistor_ohms = VIPER_HIGH_SENSE_RES;
+    mcp3221_card2.Init.sense_resistor_ohms = VIPER_HIGH_SENSE_RES;
 
-    if (MCP3221_Init(&mcp3221_card0_a) != MCP3221_OK)
+    if (MCP3221_Init(&mcp3221_card0_a) != MCP_3221_OK)
     {
         Error_Handler();
     }
 
-    if (MCP3221_Init(&mcp3221_card0_b) != MCP3221_OK)
+    if (MCP3221_Init(&mcp3221_card0_b) != MCP_3221_OK)
     {
         Error_Handler();
     }
 
-    if (MCP3221_Init(&mcp3221_card2) != MCP3221_OK)
+    if (MCP3221_Init(&mcp3221_card2) != MCP_3221_OK)
     {
         Error_Handler();
     }

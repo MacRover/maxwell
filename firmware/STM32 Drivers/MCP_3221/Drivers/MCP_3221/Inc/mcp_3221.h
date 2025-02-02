@@ -45,12 +45,12 @@ typedef struct
 // --------------------------------------------------------------------------
 
 /* Public API */
-MCP3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221);
-MCP3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221);
-MCP3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221);
 
 /* Private function */
-static MCP3221_StatusTypeDef __i2c_read_register(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef __i2c_read_register(MCP3221_HandleTypeDef *mcp3221);
 
 #endif
 

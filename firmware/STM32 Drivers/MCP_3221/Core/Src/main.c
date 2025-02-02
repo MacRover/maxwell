@@ -96,26 +96,27 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uint8_t register_write_buffer = 0b00000100 | 0;
-  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+  //i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
   //////////////// TESTING DRIVER /////////////////////////
   uint32_t input_voltage = 0.0;
   uint32_t input_current = 0.0;
 
-  if (VIPER_MCP3221_Init(&hi2c2) != HAL_OK) {
-      Error_Handler(); // Handle init error
-  }
+  MX_MCP_3221_Init();
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET); // indicate successful init
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
     /* USER CODE END WHILE */
+	  // i2c bus test
 	  uint8_t register_write_buffer = 0b00000100 | 0;
 	  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
     /* USER CODE BEGIN 3 */
-/*
+
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
 	  HAL_Delay(1000);
@@ -123,33 +124,6 @@ int main(void)
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 	  HAL_Delay(1000);
-*/
-      // Read input voltage
-      input_voltage = VIPER_GetInputVoltage();
-      if (input_voltage >= 0) {
-          // Indicate successful voltage read by toggling LED
-          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-      } else {
-          // Error in reading voltage - blink error LED quickly
-          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-          HAL_Delay(100); // Faster blink to indicate an error
-      }
-
-      HAL_Delay(1000); // Delay for stability between reads
-
-      // read input current
-      input_current = VIPER_GetInputCurrent();
-      if (input_current >= 0) {
-          // Indicate successful voltage read by toggling LED
-          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-      } else {
-          // Error in reading voltage - blink error LED quickly
-          HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-          HAL_Delay(100); // Faster blink to indicate an error
-      }
-
-      HAL_Delay(1000); // Delay for stability between reads
-
   }
   /* USER CODE END 3 */
 }
