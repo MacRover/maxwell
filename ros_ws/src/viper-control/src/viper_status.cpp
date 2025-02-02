@@ -24,7 +24,7 @@ VIPER_Status::VIPER_Status() : Node("viper_status_node")
 
 void VIPER_Status::_status_callback(const CANraw& msg)
 {
-  uint8_t card_id = (uint8_t)(msg.address & 0xff);
+  uint8_t id = (uint8_t)(msg.address & 0xff);
   if (id == VIPER__CARD__0)
   {
     decode_can_msg(&msg, &card_0_status, &status);
