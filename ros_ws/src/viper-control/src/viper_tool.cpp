@@ -36,9 +36,9 @@ std::map<std::string, uint8_t> other_cmd = {
 
 void response_callback(const CANraw& msg)
 {
-  if (ready && ((msg.address & 0xff) == card_id) && (((msg.address >> 8) & 0xff) == command_id))
+  if (ready && ((msg.address & 0xff) == viper_card_id) && (((msg.address >> 8) & 0xff) == command_id))
   {
-    uint8_t i = 0;
+    //uint8_t i = 0;
     RCLCPP_INFO(can_config->get_logger(), "Message received!");
     // if (command_id == CAN_GET_TARGET_ANGLE || command_id == CAN_GET_P_VALUE || 
     //     command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE || command_id == CAN_GET_HOME_OFFSET)
@@ -129,7 +129,7 @@ int main(int argc, char ** argv)
       std::cout << "Enter value or Card ID (prefix h for hex #) => ";
       std::getline (std::cin,val_in);
 
-      base = 10;
+      int base = 10;
       INPUT_CHECK(
       if (val_in[0] == 'h')
       {
