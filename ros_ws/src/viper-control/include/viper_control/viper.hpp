@@ -179,4 +179,4 @@ void __buffer_append_uint64(uint8_t* buf, uint64_t n, uint8_t* ind);
  * @param can_msg CAN status frame to decode
  * @param status VIPER status msg after processing CAN frame
  */
-uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStatus* state)
+uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStatus* state);
