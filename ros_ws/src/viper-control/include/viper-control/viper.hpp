@@ -3,8 +3,8 @@
 #include <byteswap.h>
 #include "rclcpp/rclcpp.hpp"
 #include "custom_interfaces/msg/ca_nraw.hpp"
-#include "custom_interfaces/msg/ViperStatus.hpp"
-#include "custom_interfaces/msg/ViperCardStatus.hpp"
+#include "custom_interfaces/msg/viper_status.hpp"
+#include "custom_interfaces/msg/viper_card_status.hpp"
 
 #define BIG_ENDIANNESS
 #define CAN_MESSAGE_IDENTIFIER_VIPER 0x05
