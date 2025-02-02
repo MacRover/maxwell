@@ -1,6 +1,5 @@
 #include "viper_control/viper.hpp"
 
-
 VIPER::VIPER(CANraw* can_msg) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0) { }
 
 VIPER::VIPER(CANraw* can_msg, uint8_t can_id) : l_can_msg(can_msg), l_offset(0.0), l_factor(1.0)
@@ -103,7 +102,7 @@ void __buffer_append_uint64(uint8_t* buf, uint64_t n, uint8_t* ind)
     buf[(*ind)++] = (n & 0xff);
 }
 
-uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus *state, VIPERCardStatus* status)
+uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStatus* state)
 {
     uint8_t* buf = (uint8_t*) &(can_msg->data[0]);
     uint8_t i = 0;
@@ -302,14 +301,3 @@ void VIPER::enable_card(uint8_t card_id)
     _update_can_data(buf, 1);
 }
 
-void VIPER::enable_all_cards()
-{
-    uint8_t buf[1];
-    buf[0] = 0; 
-
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) | 
-                         ((uint32_t)(CAN_ENABLE_ALL_CARDS) << 8);
-
-    _update_can_data(buf, 1);
-}

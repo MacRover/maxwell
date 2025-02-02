@@ -42,6 +42,7 @@ typedef enum VIPER_CAN_MSG : uint8_t
     //State Commands
     CAN_SET_FREEZE                = 5,  
     CAN_STOP_FREEZE               = 6,   
+    CAN_SAVE_TO_EEPROM                = 9,
 
     //SEND Commands
     CAN_SEND_CARD_INPUT_FAULT        = 242,
@@ -178,4 +179,4 @@ void __buffer_append_uint64(uint8_t* buf, uint64_t n, uint8_t* ind);
  * @param can_msg CAN status frame to decode
  * @param status VIPER status msg after processing CAN frame
  */
-uint8_t decode_can_msg(const CANraw* can_msg, VIPERStatus *state, VIPERCardStatus* status); // done
+uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStatus* state)

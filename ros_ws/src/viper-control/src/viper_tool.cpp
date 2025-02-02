@@ -25,11 +25,11 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_CARD_INTERVAL", CAN_SET_CARD_INTERVAL},
   {"DISABLE_CARD", CAN_DISABLE_CARD},
   {"ENABLE_CARD", CAN_ENABLE_CARD},
-  {"SET_MUX_VALUE", CAN_SET_MUX_VALUE},
+  {"SET_MUX_VALUE", CAN_SET_MUX_VALUE}
 };
 std::map<std::string, uint8_t> other_cmd = {
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
-  {"DISABLE_ALL_CARDS", CAN_DISABLE_ALL_CARDS}
+  {"DISABLE_ALL_CARDS", CAN_DISABLE_ALL_CARDS},
   {"ENABLE_ALL_CARDS", CAN_ENABLE_ALL_CARDS}
 };
 
@@ -71,7 +71,7 @@ int main(int argc, char ** argv)
   can_sub = can_config->create_subscription<CANraw>("/can/config/viper_can_in", 10, response_callback);
   CANraw can_out_msg;
   VIPER viper{&can_out_msg, 1};
-  rclcpp::WallRate loop_rate(500ms);
+  rclcpp::WallRate loop_rate(500);
 
   std::thread spin_thread([](){rclcpp::spin(can_config);});
 
