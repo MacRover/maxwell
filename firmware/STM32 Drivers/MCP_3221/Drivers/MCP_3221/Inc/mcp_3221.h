@@ -40,17 +40,17 @@ typedef struct
     double voltage;  // Last measured voltage
     double current;  // Last measured current
 
-} MCP3221_HandleTypeDef;
+} MCP_3221_HandleTypeDef;
 
 // --------------------------------------------------------------------------
 
 /* Public API */
-MCP_3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221);
-MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221);
-MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_Init(MCP_3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP_3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP_3221_HandleTypeDef *mcp3221);
 
 /* Private function */
-MCP_3221_StatusTypeDef __i2c_read_register(MCP3221_HandleTypeDef *mcp3221);
+MCP_3221_StatusTypeDef __i2c_read_register(MCP_3221_HandleTypeDef *mcp3221);
 
 #endif
 

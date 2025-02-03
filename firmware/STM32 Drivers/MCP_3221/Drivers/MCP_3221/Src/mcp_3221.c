@@ -8,7 +8,7 @@
 #include "mcp_3221.h"
 
 // DONE, need to revise. 
-MCP_3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221) {
+MCP_3221_StatusTypeDef MCP3221_Init(MCP_3221_HandleTypeDef *mcp3221) {
 
     if (mcp3221 == NULL)
         return MCP_3221_ERROR;
@@ -27,7 +27,7 @@ MCP_3221_StatusTypeDef MCP3221_Init(MCP3221_HandleTypeDef *mcp3221) {
     return MCP_3221_OK;
 }
 
-MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221) {
+MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP_3221_HandleTypeDef *mcp3221) {
     if (__i2c_read_register(mcp3221) != MCP_3221_OK)
         return MCP_3221_ERROR;
 
@@ -37,7 +37,7 @@ MCP_3221_StatusTypeDef MCP3221_ReadVoltage(MCP3221_HandleTypeDef *mcp3221) {
 }
 
 // DONE, need to revise. 
-MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221){
+MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP_3221_HandleTypeDef *mcp3221){
 
     if (__i2c_read_register(mcp3221) != MCP_3221_OK)
         return MCP_3221_ERROR;
@@ -49,7 +49,7 @@ MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP3221_HandleTypeDef *mcp3221){
 }
 
 // DONE, need to revise. 
-MCP_3221_StatusTypeDef __i2c_read_register(MCP3221_HandleTypeDef *mcp3221){
+MCP_3221_StatusTypeDef __i2c_read_register(MCP_3221_HandleTypeDef *mcp3221){
     uint8_t data[MCP3221_DATA_BYTES];  // data [0] is the upper byte which will have its first 4 bits masked
     if (HAL_I2C_Master_Receive(mcp3221->Init.hi2c, (mcp3221->i2c_address << 1) | 1, data, MCP3221_DATA_BYTES, HAL_MAX_DELAY) != HAL_OK) {
         uint16_t error = HAL_I2C_GetError(mcp3221->Init.hi2c);

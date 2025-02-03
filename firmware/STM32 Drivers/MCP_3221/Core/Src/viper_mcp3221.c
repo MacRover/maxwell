@@ -44,17 +44,21 @@ void MX_MCP_3221_Init() {
     input_voltage_high_card.Init.sense_resistor_ohms = VIPER_LOW_SENSE_RES;
     input_voltage_high_card.Init.scaling_factor = VIPER_VOLTAGE_SCALING_FACTOR; 
 
-    if (MCP3221_Init(&mcp3221_card0_a) != MCP_3221_OK)
+    if (MCP3221_Init(&input_current_low_card) != MCP_3221_OK)
     {
         Error_Handler();
     }
 
-    if (MCP3221_Init(&mcp3221_card0_b) != MCP_3221_OK)
+    if (MCP3221_Init(&input_current_high_card) != MCP_3221_OK)
     {
         Error_Handler();
     }
 
-    if (MCP3221_Init(&mcp3221_card2) != MCP_3221_OK)
+    if (MCP3221_Init(&input_voltage_low_card) != MCP_3221_OK)
+    {
+        Error_Handler();
+    }
+    if (MCP3221_Init(&input_voltage_high_card) != MCP_3221_OK)
     {
         Error_Handler();
     }
