@@ -131,6 +131,8 @@ typedef struct
 
     GPIO_TypeDef *SG_TST_GPIO_Port; // SG_TST gpio port
     uint16_t SG_TST_Pin; // SG_TST gpio pin
+
+    uint8_t inverted; //Inverts direction
 } TMC_2590_InitTypeDef;
 
 /**

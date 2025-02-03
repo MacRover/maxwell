@@ -234,7 +234,7 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int1
     htmc2590->State = TMC_2590_STATE_BUSY;
 
     // set dir
-    if (steps < 0)
+    if (((steps < 0) && (!htmc2590->Init.inverted)) || ((steps > 0) && (htmc2590->Init.inverted)))
     {
         HAL_GPIO_WritePin(htmc2590->Init.DIR_GPIO_Port, htmc2590->Init.DIR_Pin,
                 GPIO_PIN_RESET);

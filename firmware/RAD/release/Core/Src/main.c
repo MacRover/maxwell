@@ -245,6 +245,49 @@ int main(void)
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
+            
+            break;
+        }
+        case RAD_TYPE_ARM_BASE:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_SHOULDER:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_ELBOW:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_WRIST_LEFT:
+        case RAD_TYPE_ARM_WRIST_RIGHT:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_GRIPPER:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_UNDEFINED:
@@ -253,6 +296,8 @@ int main(void)
             MAX_ROTATIONS = 5; //60 degrees
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+
             break;
         }
     }
