@@ -31,14 +31,34 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Drivers/AT24C04C</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AT24C04C/Drivers/AT24C04C</locationURI>
+		</link>
+		<link>
 			<name>Drivers/INA238</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/INA238/Drivers/INA238</locationURI>
-	  <link>
-    </link>
+		</link>
+		<link>
+			<name>Drivers/MCP_3221</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/MCP_3221/Drivers/MCP_3221</locationURI>
+		</link>
+		<link>
+			<name>Drivers/TCA9544A</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TCA9544A/Drivers/TCA9544A</locationURI>
+		</link>
+		<link>
 			<name>Drivers/TMP_1075</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_1075/Drivers/TMP_1075</locationURI>
+		</link>
+		<link>
+			<name>Drivers/queue</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/queue/Drivers/queue</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

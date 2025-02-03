@@ -22,13 +22,16 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-#include "ina238.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "at24c04c.h"
 #include "queue.h"
 #include "enc_dec_utils.h"
+#include "ina238.h"
+#include "tca.h"
+#include "tmp.h"
+#include "viper_mcp3221.h"
 
 /* USER CODE END Includes */
 
