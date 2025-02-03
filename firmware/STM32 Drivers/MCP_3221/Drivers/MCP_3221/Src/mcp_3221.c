@@ -44,7 +44,7 @@ MCP_3221_StatusTypeDef MCP3221_ReadCurrent(MCP_3221_HandleTypeDef *mcp3221){
 
     double temp_voltage;
     temp_voltage = ((float)mcp3221->adc_value / MCP3221_RESOLUTION) * mcp3221->Init.vref_mv;
-    mcp3221->current = (temp_voltage/mcp3221->Init.scaling_factor) / mcp3221->Init.sense_resistor_ohms;
+    mcp3221->current = (temp_voltage*mcp3221->Init.scaling_factor) / mcp3221->Init.sense_resistor_ohms;
     return MCP_3221_OK;
 }
 
