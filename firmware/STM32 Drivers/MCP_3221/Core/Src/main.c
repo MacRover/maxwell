@@ -96,10 +96,9 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uint8_t register_write_buffer = 0b00000100 | 0;
-  //i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8 |GPIO_PIN_9, GPIO_PIN_SET);
   //////////////// TESTING DRIVER /////////////////////////
-  uint32_t input_voltage = 0.0;
-  uint32_t input_current = 0.0;
 
   MX_MCP_3221_Init();
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET); // indicate successful init
