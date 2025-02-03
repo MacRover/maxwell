@@ -1,6 +1,9 @@
 std_msgs/Header header
 
-# Input Current (amps)
+# Input Voltage (volts)
+float64 input_voltage
+
+# Input Current (milliamps)
 float64 input_current
 
 # Temperature

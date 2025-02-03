@@ -45,6 +45,7 @@ typedef enum VIPER_CAN_MSG : uint8_t
     CAN_SAVE_TO_EEPROM                = 9,
 
     //SEND Commands
+    CAN_SEND_CARD_INPUT_VOLTAGE      = 241,
     CAN_SEND_CARD_INPUT_FAULT        = 242,
     CAN_SEND_CARD_OUTPUT_A_FAULT     = 243,
     CAN_SEND_CARD_OUTPUT_B_FAULT     = 244,
