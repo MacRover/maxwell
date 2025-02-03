@@ -95,7 +95,7 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t register_write_buffer = 0b00000100 | 0;
+  uint8_t register_write_buffer = 0b00000100 | 0b0;
   i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8 |GPIO_PIN_9, GPIO_PIN_SET);
   //////////////// TESTING DRIVER /////////////////////////
@@ -112,17 +112,24 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  // i2c bus test
-	  uint8_t register_write_buffer = 0b00000100 | 0;
+	  uint8_t register_write_buffer = 0b00000100 | 0b0;
 	  i2c_status = HAL_I2C_Master_Transmit(&hi2c2, (0b11100000), &register_write_buffer, 1, 1000);
     /* USER CODE BEGIN 3 */
 
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+//    MCP3221_ReadVoltage(&input_voltage);
+//
+//    MX_CAN_Broadcast_Double_Data(&viper_can, input_voltage.voltage, 0x01);
 
-	  HAL_Delay(1000);
+     MCP3221_ReadCurrent(&input_current_low_card);
 
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+    MX_CAN_Broadcast_Double_Data(&viper_can, input_current_low_card.current, 0x02);
+	  // HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
-	  HAL_Delay(1000);
+	  HAL_Delay(100);
+
+	  // HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+
+	  //HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }

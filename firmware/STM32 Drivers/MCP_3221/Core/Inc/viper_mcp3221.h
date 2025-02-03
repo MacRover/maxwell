@@ -12,6 +12,13 @@
 
 #include "mcp_3221.h"
 
+extern MCP_3221_HandleTypeDef input_current_low_card;
+extern MCP_3221_HandleTypeDef input_current_high_card;
+
+extern MCP_3221_HandleTypeDef input_voltage;
+
+
+
 // Define VIPER-specific constants
 #define VIPER_VOLTAGE_SCALING_FACTOR        (17.6)      // Voltage divider scaling factor
 #define VIPER_CURRENT_SCALING_FACTOR        (0.025)      // Voltage divider scaling factor
