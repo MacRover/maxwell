@@ -87,7 +87,7 @@ int main(void)
 	// todo: SET DEFAULT VIPER PARAMS HERE
 	viper_params.VIPER_ID = 0x01;
 	viper_params.HEALTH_INTERVAL = 1000; //every second
-	viper_params.CARD_INTERVAL = 50; // may need to tune this
+	viper_params.CARD_INTERVAL = 1000; // may need to tune this
 
 	viper_state.STATE = VIPER_STATE_ACTIVE;
 
@@ -316,7 +316,7 @@ int main(void)
 			if (!FREEZE) {
 				if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
 
-					if (viper_state.CURRENT_CARD == 4) {
+					if (viper_state.CURRENT_CARD == VIPER_CARD_3) {
 						viper_state.CURRENT_CARD = VIPER_CARD_0;
 					} else {
 						viper_state.CURRENT_CARD++;
@@ -394,13 +394,18 @@ void SystemClock_Config(void)
 
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
 	// Step 1: initialize viper_params (from EEPROM)
-	AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	// AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 
 	// Step 2: set any relevant fields in viper_state from viper_params
-	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;
-	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
-	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
-	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
+//	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;
+//	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
+//	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
+//	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
+
+	viper_state->CARD_0.ENABLE = 1;
+	viper_state->CARD_1.ENABLE = 1;
+	viper_state->CARD_2.ENABLE = 1;
+	viper_state->CARD_3.ENABLE = 1;
 
 	// Step 3: Setup VIPER
 	VIPER_Card_Update_State(viper_state);
@@ -533,8 +538,8 @@ void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_Typ
 	uint8_t changed_flag = VIPER_Card_Params_Flag(viper_state, viper_params);
 
 	// STEP 2: Update EEPROM from viper_params
-	if (changed_flag)
-		AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+//	if (changed_flag)
+		// AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 }
 
 void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {

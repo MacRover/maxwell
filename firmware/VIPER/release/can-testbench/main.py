@@ -168,34 +168,34 @@ def print_raw_message(msg):
 
 def decode_message(msg):
 
-    command_id = (msg.arbitration_id & (0x3F << 2)) >> 2
+    command_id = (msg.arbitration_id & (0xFF << 8)) >> 8
     card_id = msg.arbitration_id & 0b11
 
     command = ""
 
-    if (command == 0xF1):
+    if (command_id == 0xF1):
         command = "Input Voltage"
-    elif (command == 0xF5):
+    elif (command_id == 0xF5):
         command = "Temperature"
-    elif (command == 0xF6):
+    elif (command_id == 0xF6):
         command = "Input Current"
-    elif (command == 0xF8):
+    elif (command_id == 0xF8):
         command = "Power A"
-    elif (command == 0xF9):
+    elif (command_id == 0xF9):
         command = "Current A"
-    elif (command == 0xFA):
+    elif (command_id == 0xFA):
         command = "Voltage A"
-    elif (command == 0xFC):
+    elif (command_id == 0xFC):
         command = "Power B"
-    elif (command == 0xFD):
+    elif (command_id == 0xFD):
         command = "Current B"
-    elif (command == 0xFE):
+    elif (command_id == 0xFE):
         command = "Voltage B"
-    elif (command == 0xFF):
+    elif (command_id == 0xFF):
         command = "Health"
     
 
-    if len(command == 0):
+    if len(command) == 0:
         print_raw_message(msg)
         return
     
