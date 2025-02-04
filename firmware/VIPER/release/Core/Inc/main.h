@@ -66,6 +66,8 @@ typedef struct __attribute__((packed))
 	double MAX_OUTPUT_CURRENT_B;
 	double MAX_OUTPUT_VOLTAGE_A;
 	double MAX_OUTPUT_VOLTAGE_B;
+	double MAX_OUTPUT_POWER_A;
+	double MAX_OUTPUT_POWER_B;
 	double RESISTANCE;
 } VIPER_CARD_PARAMS_TypeDef;
 
@@ -82,13 +84,16 @@ typedef struct
 	double OUTPUT_CURRENT_B;
 	double OUTPUT_VOLTAGE_A;
 	double OUTPUT_VOLTAGE_B;
-	double TEMPERATURE;
 	double OUTPUT_POWER_A; // todo: incorporate into CAN call
 	double OUTPUT_POWER_B; // todo: incorporate into CAN call
+	double TEMPERATURE;
+	double OUTPUT_DIAGNOSTIC_A;
+	double OUTPUT_DIAGNOSTIC_B;
 } VIPER_CARD_STATE_TypeDef;
 
 typedef struct __attribute__((packed))
 {
+	uint8_t VIPER_ID;
  	uint16_t HEALTH_INTERVAL;
  	uint16_t CARD_INTERVAL;
  	VIPER_CARD_PARAMS_TypeDef CARD_0;
@@ -137,6 +142,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef* viper_state);
 void VIPER_Card_Update_Params(VIPER_STATE_TypeDef* viper_state, VIPER_PARAMS_TypeDef *viper_params);
 void VIPER_Card_Update_State(VIPER_STATE_TypeDef* viper_state);
 void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx);
+uint8_t VIPER_Card_Params_Flag(VIPER_STATE_TypeDef* viper_state, VIPER_PARAMS_TypeDef *viper_params);
 
 /* USER CODE END EFP */
 

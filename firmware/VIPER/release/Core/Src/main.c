@@ -59,6 +59,7 @@ VIPER_STATE_TypeDef viper_state;
 VIPER_PARAMS_TypeDef viper_params;
 
 uint8_t ESTOP = 0;
+uint8_t FREEZE = 0;
 
 /* USER CODE END PV */
 
@@ -84,8 +85,9 @@ int main(void)
 
 	// ##############
 	// todo: SET DEFAULT VIPER PARAMS HERE
+	viper_params.VIPER_ID = 0x01;
 	viper_params.HEALTH_INTERVAL = 1000; //every second
-	viper_params.CARD_INTERVAL = 20; // may need to tune this
+	viper_params.CARD_INTERVAL = 50; // may need to tune this
 
 	viper_state.STATE = VIPER_STATE_ACTIVE;
 
@@ -119,24 +121,29 @@ int main(void)
 
 	// ##############
 	// SET DRIVER INITIALIZATIONS HERE
-	// todo: add all of the drivers here
 
 	MX_AT24C04C_1_Init();
 	MX_TMP_1075_Init();
 	MX_MCP_3221_Init();
 	MX_INA_238_Init();
+	MX_TCA_Init();
 
 	// ###############
 	// MAIN INIT and BROADCAST HEALTH MESSAGE
-	// VIPER_Card_Init(&viper_state, &viper_params);
-	// MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+	VIPER_Card_Init(&viper_state, &viper_params);
+	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
 	// ###############
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+	// ESTOP --> DISABLE --> FREEZE -> ACTIVE
+
 	while (1) {
+
+		VIPER_Card_Check(&viper_state);
 
 		if (!queue_empty(&can_message_queue_global)) {
 			VIPER_CAN_Message_TypeDef *new_message =
@@ -198,7 +205,6 @@ int main(void)
 					break;
 				}
 				break;
-				break;
 			}
 			case DISABLE_ALL_CARDS: {
 				viper_state.CARD_0.ENABLE = 0;
@@ -249,47 +255,36 @@ int main(void)
 				break;
 			}
 			case SET_MUX_VALUE: {
-				// todo
-
-				TCA9544A_SelectChannel(&TCA9544A_DevAddr, channel);
-
-				// TCA9544A takes in a pointer to device (TCA9544A HandeTypeDef( and a TCA9544A_ChannelSelect
-				// Channels match the cardIDs
-
-				// todo: need to implement a way to get the input of the channel from can
-				// todo: figure out why we have a function to set the mux value when it autocycles anyways
-
+				TCA9544A_SelectChannel(&tca, new_message->card_id);
 				break;
 			}
 			case SAVE_TO_EEPROM: {
-				// todo: Verify correctness
-
-				ATC24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+				AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 				break;
 			}
 			case SET_FREEZE: {
-				//todo
+				FREEZE = 1;
 				break;
 			}
 			case STOP_FREEZE: {
-				//todo
+				FREEZE = 0;
 				break;
 			}
 			// GETTERS / SETTERS
 			case GET_HEALTH_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->HEALTH_INTERVAL, SEND_HEALTH_INTERVAL, 0);
+				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params.HEALTH_INTERVAL, SEND_HEALTH_INTERVAL, 0);
 				break;
 			}
 			case SET_HEALTH_INTERVAL: {
-				viper_params->HEALTH_INTERVAL = decode_uint16_big_endian(new_message->data);
+				viper_params.HEALTH_INTERVAL = decode_uint16_big_endian(new_message->data);
 				break;
 			}
 			case GET_CARD_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params->CARD_INTERVAL, SEND_CARD_INTERVAL, 0);
+				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params.CARD_INTERVAL, SEND_CARD_INTERVAL, 0);
 				break;
 			}
 			case SET_CARD_INTERVAL: {
-				viper_params->CARD_INTERVAL = decode_uint16_big_endian(new_message->data);
+				viper_params.CARD_INTERVAL = decode_uint16_big_endian(new_message->data);
 				break;
 			}
 			default:
@@ -303,21 +298,31 @@ int main(void)
 		VIPER_Card_Update_Params(&viper_state, &viper_params);
 
 		if (ESTOP) {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 			break;
 		}
 
 		// MAIN STATE MACHINE START
 		switch (viper_state.STATE) {
 		case VIPER_STATE_INACTIVE: {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 			break;
 		}
 		case VIPER_STATE_ACTIVE: {
-			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 			VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
 
+			if (!FREEZE) {
+				if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+					viper_state.CURRENT_CARD++;
+
+					if (viper_state.CURRENT_CARD == 4) {
+						viper_state.CURRENT_CARD = VIPER_CARD_0;
+					}
+
+				}
+			}
 			break;
 		}
 		default:
@@ -336,20 +341,6 @@ int main(void)
 		}
 
 		// MAIN STATE MACHINE END
-		switch (viper_state.STATE) {
-		case VIPER_STATE_INACTIVE: {
-			break;
-		}
-		case VIPER_STATE_ACTIVE: {
-			viper_state.CURRENT_CARD++;
-			if (viper_state.CURRENT_CARD == 4)
-				viper_state.CURRENT_CARD = VIPER_CARD_0;
-
-			break;
-		}
-		default:
-			break;
-		}
 
     /* USER CODE END WHILE */
 
@@ -415,56 +406,68 @@ void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *vip
 }
 
 void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
-	uint8_t pgood[4];
-	uint8_t pgood[0] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_0_GPIO_Port,
-			PGOOD_CARD_0_Pin); // CARD 0
-	uint8_t pgood[1] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_1_GPIO_Port,
-			PGOOD_CARD_1_Pin); // CARD 1
-	uint8_t pgood[2] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_2_GPIO_Port,
-			PGOOD_CARD_2_Pin); // CARD 2
-	uint8_t pgood[3] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_3_GPIO_Port,
-			PGOOD_CARD_3_Pin); // CARD 3
+	uint8_t c0 = viper_state->CARD_0.ENABLE;
+	uint8_t c1 = viper_state->CARD_1.ENABLE;
+	uint8_t c2 = viper_state->CARD_2.ENABLE;
+	uint8_t c3 = viper_state->CARD_3.ENABLE;
 
-	uint8_t infault[4];
-	uint8_t infault[0] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_0_GPIO_Port,
-			IN_FAULT_0_Pin); // CARD 0
-	uint8_t infault[1] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_1_GPIO_Port,
-			IN_FAULT_1_Pin); // CARD 1
-	uint8_t infault[2] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_2_GPIO_Port,
-			IN_FAULT_2_Pin); // CARD 2
-	uint8_t infault[3] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_3_GPIO_Port,
-			IN_FAULT_3_Pin); // CARD 3
+	uint8_t pgood[4] = {0};
+	uint8_t infault[4] = {0};
+	uint8_t outfault[6] = {0};
 
-	uint8_t outfault[6];
-	uint8_t outfault[0] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_0_GPIO_Port,
-			OUT_FAULT_0_Pin); // CARD 0 : LP
-	uint8_t outfault[1] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_1_GPIO_Port,
-				OUT_FAULT_1_Pin); // CARD 0 : LP
-	uint8_t outfault[2] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_2_GPIO_Port,
-			OUT_FAULT_2_Pin); // CARD 1 : HP
-	uint8_t outfault[3] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_3_GPIO_Port,
-			OUT_FAULT_3_Pin); // CARD 2 : HP
-	uint8_t outfault[4] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_4_GPIO_Port,
-			OUT_FAULT_4_Pin); // CARD 3 : LP
-	uint8_t outfault[5] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_5_GPIO_Port,
-				OUT_FAULT_5_Pin); // CARD 3 : LP
+	if (c0) {
+		pgood[0] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_0_GPIO_Port,
+					PGOOD_CARD_0_Pin); // CARD 0
+		infault[0] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_0_GPIO_Port,
+					IN_FAULT_CARD_0_Pin); // CARD 0
+		outfault[0] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_0_GPIO_Port,
+					OUT_FAULT_0_Pin); // CARD 0 : LP
+		outfault[1] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_1_GPIO_Port,
+					OUT_FAULT_1_Pin); // CARD 0 : LP
+		viper_state->CARD_0.CONNECTED = pgood[0];
+		viper_state->CARD_0.INPUT_FAULT = !infault[0];
+		viper_state->CARD_0.OUTPUT_FAULT_A = outfault[0];
+		viper_state->CARD_0.OUTPUT_FAULT_B = outfault[1];
+	}
 
-	viper_state->CARD_0.CONNECTED = pgood[0];
-	viper_state->CARD_1.CONNECTED = pgood[1];
-	viper_state->CARD_2.CONNECTED = pgood[2];
-	viper_state->CARD_3.CONNECTED = pgood[3];
+	if (c1) {
+		pgood[1] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_1_GPIO_Port,
+					PGOOD_CARD_1_Pin); // CARD 1
+		infault[1] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_1_GPIO_Port,
+					IN_FAULT_CARD_1_Pin); // CARD 1
+		outfault[2] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_2_GPIO_Port,
+					OUT_FAULT_2_Pin); // CARD 1 : HP
+		viper_state->CARD_1.CONNECTED = pgood[1];
+		viper_state->CARD_1.INPUT_FAULT = !infault[1];
+		viper_state->CARD_1.OUTPUT_FAULT_A = outfault[2];
+	}
 
-	viper_state->CARD_0.INPUT_FAULT = !infault[0];
-	viper_state->CARD_1.INPUT_FAULT = !infault[1];
-	viper_state->CARD_2.INPUT_FAULT = !infault[2];
-	viper_state->CARD_3.INPUT_FAULT = !infault[3];
+	if (c2) {
+		pgood[2] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_2_GPIO_Port,
+					PGOOD_CARD_2_Pin); // CARD 2
+		infault[2] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_2_GPIO_Port,
+					IN_FAULT_CARD_2_Pin); // CARD 2
+		outfault[3] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_3_GPIO_Port,
+					OUT_FAULT_3_Pin); // CARD 2 : HP
+		viper_state->CARD_2.CONNECTED = pgood[2];
+		viper_state->CARD_2.INPUT_FAULT = !infault[2];
+		viper_state->CARD_2.OUTPUT_FAULT_A = outfault[3];
+	}
 
-	viper_state->CARD_0.OUTPUT_FAULT_A = outfault[0];
-	viper_state->CARD_0.OUTPUT_FAULT_B = outfault[1];
-	viper_state->CARD_1.OUTPUT_FAULT_A = outfault[2];
-	viper_state->CARD_2.OUTPUT_FAULT_A = outfault[3];
-	viper_state->CARD_3.OUTPUT_FAULT_A = outfault[4];
-	viper_state->CARD_3.OUTPUT_FAULT_B = outfault[5];
+	if (c3) {
+		pgood[3] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_3_GPIO_Port,
+					PGOOD_CARD_3_Pin); // CARD 3
+		infault[3] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_3_GPIO_Port,
+					IN_FAULT_CARD_3_Pin); // CARD 3
+		outfault[4] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_4_GPIO_Port,
+					OUT_FAULT_4_Pin); // CARD 3 : LP
+		outfault[5] = (uint8_t) HAL_GPIO_ReadPin(OUT_FAULT_5_GPIO_Port,
+						OUT_FAULT_5_Pin); // CARD 3 : LP
+		viper_state->CARD_3.CONNECTED = pgood[3];
+		viper_state->CARD_3.INPUT_FAULT = !infault[3];
+		viper_state->CARD_3.OUTPUT_FAULT_A = outfault[4];
+		viper_state->CARD_3.OUTPUT_FAULT_B = outfault[5];
+	}
 
 	if (!viper_state->CARD_0.CONNECTED) {
 		viper_state->CARD_0.STATUS = VIPER_CARD_DISCONNECTED;
@@ -497,18 +500,40 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 	} else {
 		viper_state->CARD_3.STATUS = VIPER_CARD_OK;
 	}
+
+	if (c0) {
+		if (viper_state->CARD_0.STATUS != VIPER_CARD_OK) {
+			viper_state->CARD_0.ENABLE = 0;
+		}
+	}
+
+	if (c1) {
+		if (viper_state->CARD_1.STATUS != VIPER_CARD_OK) {
+			viper_state->CARD_1.ENABLE = 0;
+		}
+	}
+
+	if (c2) {
+		if (viper_state->CARD_2.STATUS != VIPER_CARD_OK) {
+			viper_state->CARD_2.ENABLE = 0;
+		}
+	}
+
+	if (c3) {
+		if (viper_state->CARD_3.STATUS != VIPER_CARD_OK) {
+			viper_state->CARD_3.ENABLE = 0;
+		}
+	}
 }
 
 void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
 	// STEP 1: Update relevant fields in viper_params (stored in EEPROM) from viper_state
 	// i.e. data which is both DYNAMIC and PERSISTENT
-	viper_params->CARD_0.ENABLE = viper_state->CARD_0.ENABLE;
-	viper_params->CARD_1.ENABLE = viper_state->CARD_1.ENABLE;
-	viper_params->CARD_2.ENABLE = viper_state->CARD_2.ENABLE;
-	viper_params->CARD_3.ENABLE = viper_state->CARD_3.ENABLE;
+	uint8_t changed_flag = VIPER_Card_Params_Flag(viper_state, viper_params);
 
 	// STEP 2: Update EEPROM from viper_params
-	AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	if (changed_flag)
+		AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 }
 
 void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {
@@ -535,182 +560,117 @@ void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {
 }
 
 void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx) {
-	// todo: read all relevant diagnostic values using drivers
-
-	//todo: Figure out ADC incorporation (MCP driver)
-
-	// todo: Fix addresses
-
-	// todo: Make sure the correct values are being written
-
 	// 1. Select the relevant card with the mux
 
-	TCA9544A_SelectChannel(&TCA9544A_DevAddr, cardx); // Todo: confirm this address, seen as it's probably incorrect
+	TCA9544A_SelectChannel(&tca, cardx);
 
 	// 2. Read the temperature
 
-	TMP_1075_ReadTemp(&tmp_1075);
-	TCA9544A_ReadChannel(&TCA9544A_DevAddr);
-	switch (cardx) {
-		case VIPER_CARD_0: {
+	TMP_1075_ReadTemp(&h_tmp_1075);
 
-			viper_state->CARD_0.TEMPERATURE = tmp_1075->temp;
-			break;
-		}
-		case VIPER_CARD_1: {
+	// 2. Read the rest
 
-			viper_state->CARD_1.TEMPERATURE = tmp_1075->temp;
-			break;
-
-		}
-		case VIPER_CARD_2: {
-
-			viper_state->CARD_2.TEMPERATURE = tmp_1075->temp;
-			break;
-		}
-
-		case VIPER_CARD_3:  {
-			viper_state->CARD_3.TEMPERATURE = tmp_1075->temp;
-			break;
-		}
-		default: {
-			break;
-		}
-
-
-	}
-
-	// 2. Read the Current
-
-
-	INA_238_ReadCurrent(&ina238_carda);
 	if (cardx == VIPER_CARD_0 || cardx == VIPER_CARD_3) {
-		INA_238_ReadCurrent(&ina238_cardb);
+		INA_238_ReadCurrent(&ina238_low_power_a);
+		INA_238_ReadCurrent(&ina238_low_power_b);
+
+		INA_238_ReadVoltage(&ina238_low_power_a);
+		INA_238_ReadVoltage(&ina238_low_power_b);
+
+		INA_238_ReadPower(&ina238_low_power_a);
+		INA_238_ReadPower(&ina238_low_power_b);
+
+		INA_238_ReadDiagnostic(&ina238_low_power_a);
+		INA_238_ReadDiagnostic(&ina238_low_power_b);
+	} else {
+		INA_238_ReadCurrent(&ina238_high_power);
+		INA_238_ReadVoltage(&ina238_high_power);
+		INA_238_ReadPower(&ina238_high_power);
+		INA_238_ReadDiagnostic(&ina238_high_power);
 	}
-	TCA9544A_ReadChannel(&TCA9544A_DevAddr);
+
+	// Step 3: Writing everything
+
 	switch (cardx) {
 		case VIPER_CARD_0: {
 
-			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_carda->current;
-			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_cardb->current;
+			viper_state->CARD_0.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_low_power_a.current;
+			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_low_power_b.current;
+			viper_state->CARD_0.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
+			viper_state->CARD_0.OUTPUT_VOLTAGE_B = ina238_low_power_b.voltage;
+			viper_state->CARD_0.OUTPUT_POWER_A = ina238_low_power_a.power;
+			viper_state->CARD_0.OUTPUT_POWER_B = ina238_low_power_b.power;
+			viper_state->CARD_0.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
+			viper_state->CARD_0.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
 			break;
 		}
 		case VIPER_CARD_1: {
 
-			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_carda->current;
+			viper_state->CARD_1.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_high_power.current;
+			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
+			viper_state->CARD_1.OUTPUT_POWER_A = ina238_high_power.power;
+			viper_state->CARD_1.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
 			break;
 
 		}
 		case VIPER_CARD_2: {
 
-			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_carda->current;
+			viper_state->CARD_2.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_high_power.current;
+			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
+			viper_state->CARD_2.OUTPUT_POWER_A = ina238_high_power.power;
+			viper_state->CARD_2.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
 			break;
 		}
 
 		case VIPER_CARD_3:  {
-			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_carda->current;
-			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_cardb->current;
+
+			viper_state->CARD_3.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_low_power_a.current;
+			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_low_power_b.current;
+			viper_state->CARD_3.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
+			viper_state->CARD_3.OUTPUT_VOLTAGE_B = ina238_low_power_b.voltage;
+			viper_state->CARD_3.OUTPUT_POWER_A = ina238_low_power_a.power;
+			viper_state->CARD_3.OUTPUT_POWER_B = ina238_low_power_b.power;
+			viper_state->CARD_3.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
+			viper_state->CARD_3.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
 			break;
 		}
 		default: {
 			break;
 		}
-
-
-
-
 	}
-
-	// 3. Read the Voltage
-
-	// This is the same idea as current, where two of them need to be checked
-
-	INA_238_ReadVoltage(&ina238_carda);
-	if (cardx == VIPER_CARD_0 || cardx == VIPER_CARD_3) {
-		INA_238_ReadVoltage(&ina238_cardb);
-	}
-	TCA9544A_ReadChannel(&TCA9544A_DevAddr);
-	switch (cardx) {
-		case VIPER_CARD_0: {
-
-			viper_state->CARD_0.OUTPUT_VOLTAGE_A = ina238_carda->voltage;
-			viper_state->CARD_0.OUTPUT_VOLTAGE_B = ina238_cardb->voltage;
-			break;
-		}
-		case VIPER_CARD_1: {
-
-			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_carda->voltage;
-			break;
-
-		}
-		case VIPER_CARD_2: {
-
-			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_carda->voltage;
-			break;
-		}
-
-		case VIPER_CARD_3:  {
-			viper_state->CARD_3.OUTPUT_VOLTAGE_A = ina238_carda->voltage;
-			viper_state->CARD_3.OUTPUT_VOLTAGE_B = ina238_cardb->voltage;
-			break;
-		}
-		default: {
-			break;
-		}
-
-
-
-
-	}
-
-	// 4. Read the Power
-
-	INA_238_ReadPower(&ina238_carda);
-	if (cardx == VIPER_CARD_0 || cardx == VIPER_CARD_3) {
-		INA_238_ReadPower(&ina238_cardb);
-	}
-	TCA9544A_ReadChannel(&TCA9544A_DevAddr);
-	switch (cardx) {
-		case VIPER_CARD_0: {
-
-			viper_state->CARD_0.OUTPUT_POWER_A = ina238_carda->power;
-			viper_state->CARD_0.OUTPUT_POWER_B = ina238_cardb->power;
-			break;
-		}
-		case VIPER_CARD_1: {
-
-			viper_state->CARD_1.OUTPUT_POWER_A = ina238_carda->power;
-			break;
-
-		}
-		case VIPER_CARD_2: {
-
-			viper_state->CARD_2.OUTPUT_POWER_A = ina238_carda->power;
-			break;
-		}
-
-		case VIPER_CARD_3:  {
-			viper_state->CARD_3.OUTPUT_POWER_A = ina238_carda->power;
-			viper_state->CARD_3.OUTPUT_POWER_B = ina238_cardb->power;
-			break;
-		}
-		default: {
-			break;
-		}
-
-
-
-
-	}
-
-
 	// This is the exact same idea, where the low power cards will have two powers
+}
 
+uint8_t VIPER_Card_Params_Flag(VIPER_STATE_TypeDef* viper_state, VIPER_PARAMS_TypeDef *viper_params) {
+	// Step 1: check which fields have changed
 
+	uint8_t changed_flag = 0;
 
+	if (viper_params->CARD_0.ENABLE != viper_state->CARD_0.ENABLE) {
+		viper_params->CARD_0.ENABLE = viper_state->CARD_0.ENABLE;
+		changed_flag = 1;
+	}
 
+	if (viper_params->CARD_1.ENABLE != viper_state->CARD_1.ENABLE) {
+		viper_params->CARD_1.ENABLE = viper_state->CARD_1.ENABLE;
+		changed_flag = 1;
+	}
 
+	if (viper_params->CARD_2.ENABLE != viper_state->CARD_2.ENABLE) {
+		viper_params->CARD_2.ENABLE = viper_state->CARD_2.ENABLE;
+		changed_flag = 1;
+	}
 
+	if (viper_params->CARD_3.ENABLE != viper_state->CARD_3.ENABLE) {
+		viper_params->CARD_3.ENABLE = viper_state->CARD_3.ENABLE;
+		changed_flag = 1;
+	}
+
+	return changed_flag;
 }
 
 /* USER CODE END 4 */

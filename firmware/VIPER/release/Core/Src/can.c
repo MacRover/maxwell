@@ -77,7 +77,7 @@ void MX_CAN_Init(void)
   //    uint8_t eeprom_buff[1];
   //    AT24C04C_ReadData(&at24c04c_1, EEPROM_ADDR_CAN_ID, eeprom_buff, sizeof(uint8_t));
   //    viper_can.id = eeprom_buff[0];
-      viper_can.id = 0x14;
+      viper_can.id = 0x01; // todo: make sure this doesn't change anything critical
 
       viper_can.TxHeader.RTR = CAN_RTR_DATA;
       viper_can.TxHeader.IDE = CAN_ID_EXT;
@@ -92,11 +92,11 @@ void MX_CAN_Init(void)
       //0x31FF
       //0x00FF
       viper_can.canfilter_global1.FilterBank = 0;
-      viper_can.canfilter_global1.FilterIdLow = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) | 0b100) & 0xffff;
-      viper_can.canfilter_global1.FilterIdHigh = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+      viper_can.canfilter_global1.FilterIdLow = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_CARD_ID_OFFSET)) << 3) | 0b100) & 0xffff;
+      viper_can.canfilter_global1.FilterIdHigh = ((((ESTOP_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_CARD_ID_OFFSET)) << 3) & 0xffff0000)
               >> 16;
-      viper_can.canfilter_global1.FilterMaskIdLow = (((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3)) | 0b100) & 0xffff;
-      viper_can.canfilter_global1.FilterMaskIdHigh = ((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_DEVICE_ID_OFFSET)) << 3) & 0xffff0000)
+      viper_can.canfilter_global1.FilterMaskIdLow = (((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_CARD_ID_OFFSET)) << 3)) | 0b100) & 0xffff;
+      viper_can.canfilter_global1.FilterMaskIdHigh = ((((DISABLE_MESSAGE << CAN_MESSAGE_COMMAND_OFFSET) | (0xFF << CAN_MESSAGE_CARD_ID_OFFSET)) << 3) & 0xffff0000)
               >> 16;
       viper_can.canfilter_global1.FilterMode = CAN_FILTERMODE_IDLIST;
       viper_can.canfilter_global1.FilterScale = CAN_FILTERSCALE_32BIT;
@@ -234,6 +234,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 //    memcpy(new_message->data, viper_can.RxData, 8);
     new_message->dlc = viper_can.RxHeader.DLC;
 
+    new_message->card_id = (viper_can.RxHeader.ExtId >> CAN_MESSAGE_CARD_ID_OFFSET) & (CAN_MESSAGE_CARD_ID_MASK);
+
     uint8_t *data_ptr = malloc(sizeof(uint8_t) * new_message->dlc);
 
     if (data_ptr == NULL)
@@ -273,12 +275,64 @@ void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle)
 
 void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef* state, VIPER_CARD_ID_TypeDef cardx)
 {
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
-	MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
+
+	switch (cardx) {
+	case VIPER_CARD_0: {
+
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
+		break;
+	}
+
+	case VIPER_CARD_1: {
+
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		break;
+	}
+
+	case VIPER_CARD_2: {
+
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);\
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		break;
+	}
+
+	case VIPER_CARD_3: {
+
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
+		break;
+	}
+
+	default: {
+		break;
+	}
+	}
 }
 
 void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef *state)

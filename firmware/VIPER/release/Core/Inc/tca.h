@@ -16,6 +16,6 @@ extern I2C_HandleTypeDef hi2c2;
 
 extern TCA9544A_HandleTypeDef tca;
 
-void TCA_Init();
+void MX_TCA_Init();
 
 #endif
