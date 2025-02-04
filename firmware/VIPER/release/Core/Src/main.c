@@ -315,10 +315,11 @@ int main(void)
 
 			if (!FREEZE) {
 				if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
-					viper_state.CURRENT_CARD++;
 
 					if (viper_state.CURRENT_CARD == 4) {
 						viper_state.CURRENT_CARD = VIPER_CARD_0;
+					} else {
+						viper_state.CURRENT_CARD++;
 					}
 
 				}
