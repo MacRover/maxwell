@@ -65,6 +65,10 @@ def main():
                     send_card_config_msg(bus=bus, can_id=0x04, device_id=viper_id, card = int(j))
                 elif(i == "get all card data"):
                     send_uint32_value(bus=bus, can_id=0x05, device_id=viper_id, value = 0)
+                elif(i == "freeze"):
+                    send_uint32_value(bus=bus, can_id=0x08, device_id=viper_id, value = 0)
+                elif(i == "unfreeze"):
+                    send_uint32_value(bus=bus, can_id=0x09, device_id=viper_id, value = 0)
                 
                 
                

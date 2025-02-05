@@ -273,19 +273,19 @@ int main(void)
 			}
 			// GETTERS / SETTERS
 			case GET_HEALTH_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params.HEALTH_INTERVAL, SEND_HEALTH_INTERVAL, 0);
+				MX_CAN_Broadcast_Uint32_Data(&viper_can, viper_params.HEALTH_INTERVAL, GET_HEALTH_INTERVAL, 0);
 				break;
 			}
 			case SET_HEALTH_INTERVAL: {
-				viper_params.HEALTH_INTERVAL = decode_uint16_big_endian(new_message->data);
+				viper_params.HEALTH_INTERVAL = decode_uint32_big_endian(new_message->data);
 				break;
 			}
 			case GET_CARD_INTERVAL: {
-				MX_CAN_Broadcast_Uint16_Data(&viper_can, viper_params.CARD_INTERVAL, SEND_CARD_INTERVAL, 0);
+				MX_CAN_Broadcast_Uint32_Data(&viper_can, viper_params.CARD_INTERVAL, GET_CARD_INTERVAL, 0);
 				break;
 			}
 			case SET_CARD_INTERVAL: {
-				viper_params.CARD_INTERVAL = decode_uint16_big_endian(new_message->data);
+				viper_params.CARD_INTERVAL = decode_uint32_big_endian(new_message->data);
 				break;
 			}
 			default:

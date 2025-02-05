@@ -94,8 +94,8 @@ typedef struct
 typedef struct __attribute__((packed))
 {
 	uint8_t VIPER_ID;
- 	uint16_t HEALTH_INTERVAL;
- 	uint16_t CARD_INTERVAL;
+ 	uint32_t HEALTH_INTERVAL;
+ 	uint32_t CARD_INTERVAL;
  	VIPER_CARD_PARAMS_TypeDef CARD_0;
  	VIPER_CARD_PARAMS_TypeDef CARD_1;
  	VIPER_CARD_PARAMS_TypeDef CARD_2;
