@@ -260,6 +260,111 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
 }
 
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef * hcan)
+{
+
+  if (!queue_empty(&can_message_queue_tx))
+  {
+
+    VIPER_CAN_Message_TypeDef *new_message = (VIPER_CAN_Message_TypeDef*) queue_front(&can_message_queue_tx);
+
+    viper_can.TxHeader.DLC = new_message->dlc;
+    viper_can.TxHeader.ExtId = new_message->ext_id;
+
+    HAL_CAN_AddTxMessage(hcan, &(viper_can.TxHeader), new_message->data, &(viper_can.TxMailbox));
+
+
+    free(new_message->data);
+    queue_dequeue(&can_message_queue_tx);
+
+  }
+
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef * hcan)
+{
+
+  if (!queue_empty(&can_message_queue_tx))
+  {
+
+    VIPER_CAN_Message_TypeDef *new_message = (VIPER_CAN_Message_TypeDef*) queue_front(&can_message_queue_tx);
+
+    viper_can.TxHeader.DLC = new_message->dlc;
+    viper_can.TxHeader.ExtId = new_message->ext_id;
+
+    HAL_CAN_AddTxMessage(hcan, &(viper_can.TxHeader), new_message->data, &(viper_can.TxMailbox));
+
+
+    free(new_message->data);
+    queue_dequeue(&can_message_queue_tx);
+
+  }
+
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef * hcan)
+{
+
+  if (!queue_empty(&can_message_queue_tx))
+  {
+
+    VIPER_CAN_Message_TypeDef *new_message = (VIPER_CAN_Message_TypeDef*) queue_front(&can_message_queue_tx);
+
+    viper_can.TxHeader.DLC = new_message->dlc;
+    viper_can.TxHeader.ExtId = new_message->ext_id;
+
+    HAL_CAN_AddTxMessage(hcan, &(viper_can.TxHeader), new_message->data, &(viper_can.TxMailbox));
+
+
+    free(new_message->data);
+    queue_dequeue(&can_message_queue_tx);
+
+  }
+
+}
+
+//Same arguments as HAL_CAN_AddTxMessage
+//Adds to Queue if issue
+void MX_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, CAN_TxHeaderTypeDef *pHeader, uint8_t *aData, uint32_t *pTxMailbox)
+{
+
+  if (HAL_CAN_GetTxMailboxesFreeLevel(hcan))
+  {
+    //Free Mailbox - Add the message!
+
+    HAL_CAN_AddTxMessage(hcan, pHeader, aData, pTxMailbox);
+  }
+  else
+  {
+    //Add to Queue
+
+    VIPER_CAN_Message_TypeDef *tx_message = malloc(sizeof(VIPER_CAN_Message_TypeDef));
+
+    if (tx_message == NULL)
+    {
+        // todo handle error
+        return;
+    }
+
+    tx_message->ext_id = pHeader->ExtId;
+    tx_message->dlc = pHeader->DLC;
+
+    uint8_t *data_ptr = malloc(sizeof(uint8_t) * tx_message->dlc);
+
+    if (data_ptr == NULL)
+    {
+        // todo handle error
+        return;
+    }
+
+    //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
+    tx_message->data = memcpy(data_ptr, aData, sizeof(uint8_t) * tx_message->dlc);
+
+    queue_enqueue(&can_message_queue_tx, &tx_message);
+  }
+
+}
+
 void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle)
 {
 	viper_can_handle->id = viper_params.VIPER_ID;
@@ -348,7 +453,7 @@ void MX_CAN_Broadcast_Health_Message(VIPER_CAN_TypeDef *viper_can_handle, VIPER_
     viper_can_handle->TxHeader.DLC = 7; //float
     viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, SEND_HEALTH_STATUS, 0);
 
-    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
+    MX_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
@@ -358,7 +463,7 @@ void MX_CAN_Broadcast_Double_Data(VIPER_CAN_TypeDef *viper_can_handle, double va
     viper_can_handle->TxHeader.DLC = sizeof(double); //float
     viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
-    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
+    MX_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
@@ -368,7 +473,7 @@ void MX_CAN_Broadcast_Uint32_Data(VIPER_CAN_TypeDef *viper_can_handle, uint32_t 
     viper_can_handle->TxHeader.DLC = sizeof(uint32_t); //float
     viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
-    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
+    MX_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
@@ -378,7 +483,7 @@ void MX_CAN_Broadcast_Uint16_Data(VIPER_CAN_TypeDef *viper_can_handle, uint16_t 
     viper_can_handle->TxHeader.DLC = sizeof(uint16_t); //float
     viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
-    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
+    MX_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 
@@ -388,7 +493,7 @@ void MX_CAN_Broadcast_Uint8_Data(VIPER_CAN_TypeDef *viper_can_handle, uint8_t va
     viper_can_handle->TxHeader.DLC = sizeof(uint8_t); //float
     viper_can_handle->TxHeader.ExtId = __encode_ext_can_id(viper_can_handle->id, message_id, card_id);
 
-    HAL_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
+    MX_CAN_AddTxMessage(&(viper_can_handle->hcan), &(viper_can_handle->TxHeader),
             viper_can_handle->TxData, &(viper_can_handle->TxMailbox));
 }
 

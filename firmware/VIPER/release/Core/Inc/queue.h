@@ -12,6 +12,7 @@
 
 extern Queue_TypeDef can_message_queue_viper;
 extern Queue_TypeDef can_message_queue_global;
+extern Queue_TypeDef can_message_queue_tx;
 
 void MX_Queue_1_Init(void);
 
