@@ -9,6 +9,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, LaunchConfigurationEquals
 
+rad_topic_to_id = {
+    "/front_right/rad_status": 0x11,
+    "/front_left/rad_status": 0x12,
+    "/rear_left/rad_status": 0x13,
+    "/rear_right/rad_status": 0x14
+}
+
 def generate_launch_description():
     drive_mode_arg = DeclareLaunchArgument(
         "drive_mode",
@@ -101,6 +108,10 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_calibration_init",
         name="rad_calibration_init",
+        parameters=[{
+            "rad_ids":    list(rad_topic_to_id.values()),
+            "rad_status": list(rad_topic_to_id.keys())
+        }],
         condition=LaunchConfigurationEquals(
                 "drive_mode",
                 "SWERVE_DRIVE"
@@ -153,10 +164,10 @@ def generate_launch_description():
     )
     ld.add_action(rad_init_node)
 
-    ld.add_action(can_writer_node)
+    # ld.add_action(can_writer_node)
 
-    ld.add_action(rad_status_main)
-    ld.add_action(vesc_status_main)
+    # ld.add_action(rad_status_main)
+    # ld.add_action(vesc_status_main)
 
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
