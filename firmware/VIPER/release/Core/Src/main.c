@@ -256,6 +256,7 @@ int main(void)
 			}
 			case SET_MUX_VALUE: {
 				TCA9544A_SelectChannel(&tca, new_message->card_id);
+				viper_state.CURRENT_CARD = new_message->card_id;
 				break;
 			}
 			case SAVE_TO_EEPROM: {
@@ -311,7 +312,6 @@ int main(void)
 		case VIPER_STATE_ACTIVE: {
 			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
-			VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
 
 			if (!FREEZE) {
 				if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
@@ -321,9 +321,17 @@ int main(void)
 					} else {
 						viper_state.CURRENT_CARD++;
 					}
-
 				}
 			}
+
+			if((viper_state.CURRENT_CARD == VIPER_CARD_0 && viper_state.CARD_0.ENABLE)
+			|| (viper_state.CURRENT_CARD == VIPER_CARD_1 && viper_state.CARD_1.ENABLE)
+			|| (viper_state.CURRENT_CARD == VIPER_CARD_2 && viper_state.CARD_2.ENABLE)
+			|| (viper_state.CURRENT_CARD == VIPER_CARD_3 && viper_state.CARD_3.ENABLE))
+			{
+				VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
+			}
+			
 			break;
 		}
 		default:
@@ -538,8 +546,10 @@ void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_Typ
 	uint8_t changed_flag = VIPER_Card_Params_Flag(viper_state, viper_params);
 
 	// STEP 2: Update EEPROM from viper_params
-//	if (changed_flag)
+	if (changed_flag)
+	{
 		// AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	}
 }
 
 void VIPER_Card_Update_State(VIPER_STATE_TypeDef *viper_state) {
