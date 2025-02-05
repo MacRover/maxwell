@@ -429,7 +429,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 	uint8_t infault[4] = {0};
 	uint8_t outfault[6] = {0};
 
-	if (c0) {
+	if (1) {
 		pgood[0] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_0_GPIO_Port,
 					PGOOD_CARD_0_Pin); // CARD 0
 		infault[0] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_0_GPIO_Port,
@@ -444,7 +444,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_0.OUTPUT_FAULT_B = outfault[1];
 	}
 
-	if (c1) {
+	if (1) {
 		pgood[1] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_1_GPIO_Port,
 					PGOOD_CARD_1_Pin); // CARD 1
 		infault[1] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_1_GPIO_Port,
@@ -456,7 +456,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_1.OUTPUT_FAULT_A = outfault[2];
 	}
 
-	if (c2) {
+	if (1) {
 		pgood[2] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_2_GPIO_Port,
 					PGOOD_CARD_2_Pin); // CARD 2
 		infault[2] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_2_GPIO_Port,
@@ -468,7 +468,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_2.OUTPUT_FAULT_A = outfault[3];
 	}
 
-	if (c3) {
+	if (1) {
 		pgood[3] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_3_GPIO_Port,
 					PGOOD_CARD_3_Pin); // CARD 3
 		infault[3] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_3_GPIO_Port,
@@ -515,29 +515,29 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_3.STATUS = VIPER_CARD_OK;
 	}
 
-	if (c0) {
-		if (viper_state->CARD_0.STATUS != VIPER_CARD_OK) {
-			viper_state->CARD_0.ENABLE = 0;
-		}
-	}
-
-	if (c1) {
-		if (viper_state->CARD_1.STATUS != VIPER_CARD_OK) {
-			viper_state->CARD_1.ENABLE = 0;
-		}
-	}
-
-	if (c2) {
-		if (viper_state->CARD_2.STATUS != VIPER_CARD_OK) {
-			viper_state->CARD_2.ENABLE = 0;
-		}
-	}
-
-	if (c3) {
-		if (viper_state->CARD_3.STATUS != VIPER_CARD_OK) {
-			viper_state->CARD_3.ENABLE = 0;
-		}
-	}
+//	if (c0) {
+//		if (viper_state->CARD_0.STATUS != VIPER_CARD_OK) {
+//			viper_state->CARD_0.ENABLE = 0;
+//		}
+//	}
+//
+//	if (c1) {
+//		if (viper_state->CARD_1.STATUS != VIPER_CARD_OK) {
+//			viper_state->CARD_1.ENABLE = 0;
+//		}
+//	}
+//
+//	if (c2) {
+//		if (viper_state->CARD_2.STATUS != VIPER_CARD_OK) {
+//			viper_state->CARD_2.ENABLE = 0;
+//		}
+//	}
+//
+//	if (c3) {
+//		if (viper_state->CARD_3.STATUS != VIPER_CARD_OK) {
+//			viper_state->CARD_3.ENABLE = 0;
+//		}
+//	}
 }
 
 void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {

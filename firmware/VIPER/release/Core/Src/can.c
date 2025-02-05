@@ -136,8 +136,7 @@ void MX_CAN_Init(void)
       viper_can.canfilterconfig.SlaveStartFilterBank = 14;
 
       HAL_CAN_ConfigFilter(&(viper_can.hcan), &(viper_can.canfilterconfig));
-      HAL_CAN_ActivateNotification(&(viper_can.hcan), CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
-
+      HAL_CAN_ActivateNotification(&(viper_can.hcan), CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY); //enable interrupts
   /* USER CODE END CAN_Init 2 */
 
 }
@@ -173,7 +172,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
-
+    HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
   /* USER CODE END CAN1_MspInit 1 */
   }
 }
@@ -198,7 +198,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     /* CAN1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
-
+    HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
   /* USER CODE END CAN1_MspDeInit 1 */
   }
 }
@@ -360,7 +360,7 @@ void MX_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, CAN_TxHeaderTypeDef *pHeader, 
     //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
     tx_message->data = memcpy(data_ptr, aData, sizeof(uint8_t) * tx_message->dlc);
 
-    queue_enqueue(&can_message_queue_tx, &tx_message);
+    queue_enqueue(&can_message_queue_tx, tx_message);
   }
 
 }

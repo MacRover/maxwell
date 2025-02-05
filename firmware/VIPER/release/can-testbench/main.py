@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-viper_id = 0x1 << 2
+viper_id = 0x1
 
 
 
@@ -59,7 +59,7 @@ def main():
                     send_card_config_msg(bus=bus, can_id=0x02, device_id=viper_id, card = int(j))
                 elif(i == "set mux value"):
                     j = input("card number? ")
-                    send_uint32_value(bus=bus, can_id=0x06, device_id=viper_id, value = int(j))
+                    send_card_config_msg(bus=bus, can_id=0x06, device_id=viper_id, card = int(j))
                 elif(i == "get card data"):
                     j = input("card number? ")
                     send_card_config_msg(bus=bus, can_id=0x04, device_id=viper_id, card = int(j))
@@ -173,7 +173,7 @@ def print_raw_message(msg):
 def decode_message(msg):
 
     command_id = (msg.arbitration_id & (0xFF << 8)) >> 8
-    card_id = msg.arbitration_id & 0b11
+    card_id = str(msg.arbitration_id & 0b11)
 
     command = ""
 
@@ -197,10 +197,11 @@ def decode_message(msg):
         command = "Voltage B"
     elif (command_id == 0xFF):
         command = "Health"
+        card_id = "x"
     
 
     if len(command) == 0:
-        print_raw_message(msg)
+        #print_raw_message(msg)
         return
     
     value = msg.data
