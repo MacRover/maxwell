@@ -17,12 +17,12 @@ MCP_3221_StatusTypeDef MCP3221_Init(MCP_3221_HandleTypeDef *mcp3221) {
 
     mcp3221->i2c_address = (MCP3221_FIXED_ID << 3) | (mcp3221->Init.address_pins & 0x07);
 
-    // Perform a dummy read to check communication, (can also use private "__i2c_read_register" function)
-    uint8_t dummy_data[MCP3221_DATA_BYTES] = {0};
-    if (HAL_I2C_Master_Receive(mcp3221->Init.hi2c, (mcp3221->i2c_address << 1), dummy_data, MCP3221_DATA_BYTES, HAL_MAX_DELAY) != HAL_OK) {
-        uint16_t error = HAL_I2C_GetError(mcp3221->Init.hi2c);
-        return (error == HAL_I2C_ERROR_AF) ? MCP_3221_BUSY : MCP_3221_ERROR;
-    }
+    // // Perform a dummy read to check communication, (can also use private "__i2c_read_register" function)
+    // uint8_t dummy_data[MCP3221_DATA_BYTES] = {0};
+    // if (HAL_I2C_Master_Receive(mcp3221->Init.hi2c, (mcp3221->i2c_address << 1), dummy_data, MCP3221_DATA_BYTES, HAL_MAX_DELAY) != HAL_OK) {
+    //     uint16_t error = HAL_I2C_GetError(mcp3221->Init.hi2c);
+    //     return (error == HAL_I2C_ERROR_AF) ? MCP_3221_BUSY : MCP_3221_ERROR;
+    // }
 
     return MCP_3221_OK;
 }

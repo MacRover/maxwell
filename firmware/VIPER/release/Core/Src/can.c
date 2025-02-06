@@ -390,10 +390,10 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
 		break;
 	}
 
@@ -403,8 +403,8 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
 		break;
 	}
 
@@ -414,8 +414,8 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);\
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);\
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
 		break;
 	}
 
@@ -427,10 +427,10 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_B, SEND_CARD_OUTPUT_VOLTAGE_B, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_POWER_B, SEND_CARD_OUTPUT_POWER_B, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_DIAGNOSTIC_B, SEND_CARD_OUTPUT_DIAGNOSTIC_B, cardx);
 		break;
 	}
 

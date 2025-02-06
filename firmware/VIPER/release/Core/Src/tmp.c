@@ -29,7 +29,5 @@ void MX_TMP_1075_Init()
         Error_Handler();
     }
 
-    TMP_1075_SetHighLimit(&h_tmp_1075);
-    TMP_1075_SetLowLimit(&h_tmp_1075);
-    TMP_1075_SetConfRegisters(&h_tmp_1075);
+    
 }

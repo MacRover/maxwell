@@ -134,6 +134,47 @@ int main(void)
 	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
 	// ###############
 
+
+	TCA9544A_SelectChannel(&tca, VIPER_CARD_0);
+
+	INA_238_WriteConfig(&ina238_low_power_a);
+    INA_238_WriteConfig(&ina238_low_power_b);
+
+	TMP_1075_SetHighLimit(&h_tmp_1075);
+    TMP_1075_SetLowLimit(&h_tmp_1075);
+    TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	TCA9544A_SelectChannel(&tca, VIPER_CARD_1);
+
+	INA_238_WriteConfig(&ina238_high_power);
+
+
+	TMP_1075_SetHighLimit(&h_tmp_1075);
+    TMP_1075_SetLowLimit(&h_tmp_1075);
+    TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	TCA9544A_SelectChannel(&tca, VIPER_CARD_2);
+
+	INA_238_WriteConfig(&ina238_high_power);
+
+
+	TMP_1075_SetHighLimit(&h_tmp_1075);
+    TMP_1075_SetLowLimit(&h_tmp_1075);
+    TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	TCA9544A_SelectChannel(&tca, VIPER_CARD_3);
+
+	INA_238_WriteConfig(&ina238_low_power_a);
+    INA_238_WriteConfig(&ina238_low_power_b);
+
+	TMP_1075_SetHighLimit(&h_tmp_1075);
+    TMP_1075_SetLowLimit(&h_tmp_1075);
+    TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	TCA9544A_SelectChannel(&tca, VIPER_CARD_0);
+
+    
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -593,16 +634,20 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		INA_238_ReadVoltage(&ina238_low_power_a);
 		INA_238_ReadVoltage(&ina238_low_power_b);
 
-		INA_238_ReadPower(&ina238_low_power_a);
-		INA_238_ReadPower(&ina238_low_power_b);
+		// INA_238_ReadPower(&ina238_low_power_a);
+		// INA_238_ReadPower(&ina238_low_power_b);
 
-		INA_238_ReadDiagnostic(&ina238_low_power_a);
-		INA_238_ReadDiagnostic(&ina238_low_power_b);
+		// INA_238_ReadDiagnostic(&ina238_low_power_a);
+		// INA_238_ReadDiagnostic(&ina238_low_power_b);
+
+		MCP3221_ReadCurrent(&input_current_low_card);
 	} else {
 		INA_238_ReadCurrent(&ina238_high_power);
 		INA_238_ReadVoltage(&ina238_high_power);
-		INA_238_ReadPower(&ina238_high_power);
-		INA_238_ReadDiagnostic(&ina238_high_power);
+		//INA_238_ReadPower(&ina238_high_power);
+		// INA_238_ReadDiagnostic(&ina238_high_power);
+
+		MCP3221_ReadCurrent(&input_current_high_card);
 	}
 
 	// Step 3: Writing everything
@@ -611,6 +656,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_0: {
 
 			viper_state->CARD_0.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_0.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_low_power_b.current;
 			viper_state->CARD_0.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
@@ -624,6 +670,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_1: {
 
 			viper_state->CARD_1.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_1.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
 			viper_state->CARD_1.OUTPUT_POWER_A = ina238_high_power.power;
@@ -634,6 +681,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_2: {
 
 			viper_state->CARD_2.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_2.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
 			viper_state->CARD_2.OUTPUT_POWER_A = ina238_high_power.power;
@@ -644,6 +692,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_3:  {
 
 			viper_state->CARD_3.TEMPERATURE = h_tmp_1075.temp;
+			viper_state->CARD_3.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_low_power_b.current;
 			viper_state->CARD_3.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
