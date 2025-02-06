@@ -9,7 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, LaunchConfigurationEquals
 
-rad_topic_to_id = {
+rad_status_to_id = {
     "/front_right/rad_status": 0x11,
     "/front_left/rad_status": 0x12,
     "/rear_left/rad_status": 0x13,
@@ -107,10 +107,10 @@ def generate_launch_description():
     rad_init_node = Node(
         package="rad_control",
         executable="rad_calibration_init",
-        name="rad_calibration_init",
+        name="rad_drive_calibration_init",
         parameters=[{
-            "rad_ids":    list(rad_topic_to_id.values()),
-            "rad_status": list(rad_topic_to_id.keys())
+            "rad_ids":    list(rad_status_to_id.values()),
+            "rad_status": list(rad_status_to_id.keys())
         }],
         condition=LaunchConfigurationEquals(
                 "drive_mode",
@@ -164,10 +164,10 @@ def generate_launch_description():
     )
     ld.add_action(rad_init_node)
 
-    # ld.add_action(can_writer_node)
+    ld.add_action(can_writer_node)
 
-    # ld.add_action(rad_status_main)
-    # ld.add_action(vesc_status_main)
+    ld.add_action(rad_status_main)
+    ld.add_action(vesc_status_main)
 
     ld.add_action(drive_controller_node)
     ld.add_action(vesc_controller_node)
