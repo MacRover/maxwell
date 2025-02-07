@@ -1,6 +1,6 @@
 /**:
     ros__parameters:
-      video_device: "/dev/video2"
+      video_device: "/dev/video0"
       framerate: 30.0
       io_method: "mmap"
       frame_id: "camera"
@@ -15,7 +15,8 @@
       saturation: -1
       sharpness: -1
       gain: -1
-      auto_white_balance: true
+      auto_white_balance: truews://mmrt@bigbrain.marsatmac.ca:8765 f
+      oxglove_bridge
       white_balance: 4000
       autoexposure: true
       exposure: 100
