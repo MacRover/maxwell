@@ -184,7 +184,7 @@ int main(void)
 
 	while (1) {
 
-		VIPER_Card_Check(&viper_state);
+		//VIPER_Card_Check(&viper_state);
 
 		if (!queue_empty(&can_message_queue_global)) {
 			VIPER_CAN_Message_TypeDef *new_message =
@@ -336,8 +336,8 @@ int main(void)
 			queue_dequeue(&can_message_queue_viper);
 		}
 
-		VIPER_Card_Update_State(&viper_state);
-		VIPER_Card_Update_Params(&viper_state, &viper_params);
+		// VIPER_Card_Update_State(&viper_state);
+		// VIPER_Card_Update_Params(&viper_state, &viper_params);
 
 		if (ESTOP) {
 			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
@@ -380,15 +380,14 @@ int main(void)
 		}
 
 		// SCHEDULED TASKS
-		if ((viper_params.CARD_INTERVAL != 0)
-				&& (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+		if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
 			MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
 		}
 
-		if ((viper_params.HEALTH_INTERVAL != 0)
-				&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
-			MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
-		}
+		// if ((viper_params.HEALTH_INTERVAL != 0)
+		// 		&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
+		// 	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+		// }
 
 		// MAIN STATE MACHINE END
 
@@ -623,7 +622,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 
 	// 2. Read the temperature
 
-	TMP_1075_ReadTemp(&h_tmp_1075);
+	//TMP_1075_ReadTemp(&h_tmp_1075);
 
 	// 2. Read the rest
 
@@ -640,7 +639,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		// INA_238_ReadDiagnostic(&ina238_low_power_a);
 		// INA_238_ReadDiagnostic(&ina238_low_power_b);
 
-		MCP3221_ReadCurrent(&input_current_low_card);
+		//MCP3221_ReadCurrent(&input_current_low_card);
 	} else {
 		INA_238_ReadCurrent(&ina238_high_power);
 		INA_238_ReadVoltage(&ina238_high_power);
@@ -655,52 +654,52 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 	switch (cardx) {
 		case VIPER_CARD_0: {
 
-			viper_state->CARD_0.TEMPERATURE = h_tmp_1075.temp;
-			viper_state->CARD_0.INPUT_CURRENT = input_current_low_card.current/1000;
+			//viper_state->CARD_0.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_0.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_low_power_b.current;
 			viper_state->CARD_0.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
 			viper_state->CARD_0.OUTPUT_VOLTAGE_B = ina238_low_power_b.voltage;
-			viper_state->CARD_0.OUTPUT_POWER_A = ina238_low_power_a.power;
-			viper_state->CARD_0.OUTPUT_POWER_B = ina238_low_power_b.power;
-			viper_state->CARD_0.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
-			viper_state->CARD_0.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
+			// viper_state->CARD_0.OUTPUT_POWER_A = ina238_low_power_a.power;
+			// viper_state->CARD_0.OUTPUT_POWER_B = ina238_low_power_b.power;
+			// viper_state->CARD_0.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
+			// viper_state->CARD_0.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
 			break;
 		}
 		case VIPER_CARD_1: {
 
-			viper_state->CARD_1.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_1.TEMPERATURE = h_tmp_1075.temp;
 			viper_state->CARD_1.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
-			viper_state->CARD_1.OUTPUT_POWER_A = ina238_high_power.power;
-			viper_state->CARD_1.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
+			// viper_state->CARD_1.OUTPUT_POWER_A = ina238_high_power.power;
+			// viper_state->CARD_1.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
 			break;
 
 		}
 		case VIPER_CARD_2: {
 
-			viper_state->CARD_2.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_2.TEMPERATURE = h_tmp_1075.temp;
 			viper_state->CARD_2.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
-			viper_state->CARD_2.OUTPUT_POWER_A = ina238_high_power.power;
-			viper_state->CARD_2.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
+			// viper_state->CARD_2.OUTPUT_POWER_A = ina238_high_power.power;
+			// viper_state->CARD_2.OUTPUT_DIAGNOSTIC_A = ina238_high_power.diagnostic;
 			break;
 		}
 
 		case VIPER_CARD_3:  {
 
-			viper_state->CARD_3.TEMPERATURE = h_tmp_1075.temp;
-			viper_state->CARD_3.INPUT_CURRENT = input_current_low_card.current/1000;
+			// viper_state->CARD_3.TEMPERATURE = h_tmp_1075.temp;
+			// viper_state->CARD_3.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_low_power_b.current;
 			viper_state->CARD_3.OUTPUT_VOLTAGE_A = ina238_low_power_a.voltage;
 			viper_state->CARD_3.OUTPUT_VOLTAGE_B = ina238_low_power_b.voltage;
-			viper_state->CARD_3.OUTPUT_POWER_A = ina238_low_power_a.power;
-			viper_state->CARD_3.OUTPUT_POWER_B = ina238_low_power_b.power;
-			viper_state->CARD_3.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
-			viper_state->CARD_3.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
+			// viper_state->CARD_3.OUTPUT_POWER_A = ina238_low_power_a.power;
+			// viper_state->CARD_3.OUTPUT_POWER_B = ina238_low_power_b.power;
+			// viper_state->CARD_3.OUTPUT_DIAGNOSTIC_A = ina238_low_power_a.diagnostic;
+			// viper_state->CARD_3.OUTPUT_DIAGNOSTIC_B = ina238_low_power_b.diagnostic;
 			break;
 		}
 		default: {

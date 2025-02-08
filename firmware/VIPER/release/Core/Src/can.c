@@ -384,8 +384,8 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 	switch (cardx) {
 	case VIPER_CARD_0: {
 
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_0.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
@@ -399,7 +399,7 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 
 	case VIPER_CARD_1: {
 
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_1.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
@@ -410,19 +410,19 @@ void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE
 
 	case VIPER_CARD_2: {
 
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
-		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);\
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_POWER_A, SEND_CARD_OUTPUT_POWER_A, cardx);
 		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_2.OUTPUT_DIAGNOSTIC_A, SEND_CARD_OUTPUT_DIAGNOSTIC_A, cardx);
 		break;
 	}
 
 	case VIPER_CARD_3: {
 
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
-		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.TEMPERATURE, SEND_CARD_TEMPERATURE, cardx);
+		// MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.INPUT_CURRENT, SEND_CARD_INPUT_CURRENT, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_A, SEND_CARD_OUTPUT_CURRENT_A, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_CURRENT_B, SEND_CARD_OUTPUT_CURRENT_B, cardx);
 		MX_CAN_Broadcast_Double_Data(&viper_can, state->CARD_3.OUTPUT_VOLTAGE_A, SEND_CARD_OUTPUT_VOLTAGE_A, cardx);
