@@ -130,7 +130,8 @@ void RAD::set_can_id(uint8_t can_id)
 {
     uint8_t buf[1];
     buf[0] = can_id;
-    l_can_msg->address = ((uint32_t)l_can_id) | ((uint32_t)(CAN_ASSIGN_DEVICE_ID) << 8);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_ASSIGN_DEVICE_ID) << 8);
     _update_can_data(buf, 1);
     // Set RAD ID after sending command
     this->l_can_id = can_id;
@@ -306,22 +307,22 @@ void RAD::set_sgcsconf_cs(uint8_t cs)
     _update_can_data(buf, 1);
 }
 
-void RAD::set_error_thres(uint16_t thres)
+void RAD::set_min_output(uint16_t min_output)
 {
     uint8_t buf[2];
-    buf[0] = ((thres & 0xff00) >> 8);
-    buf[1] = (thres & 0xff);
+    buf[0] = ((min_output & 0xff00) >> 8);
+    buf[1] = (min_output & 0xff);
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_ERROR_THRESHOLD) << 8);
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_PID_MIN_OUTPUT) << 8);
     _update_can_data(buf, 2);
 }
 
-void RAD::get_error_thres()
+void RAD::get_min_output()
 {
     uint8_t buf[1];
     buf[0] = 0;
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_ERROR_THRESHOLD) << 8);
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_MIN_OUTPUT) << 8);
     _update_can_data(buf, 1);
 }
 
@@ -355,6 +356,23 @@ void RAD::pulse_stepper(float steps)
     _update_can_data(buf, 4);
 }
 
+void RAD::set_home_offset()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HOME_OFFSET) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_home_offset()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_HOME_OFFSET) << 8);
+    _update_can_data(buf, 1);
+}
 
 void RAD::_update_can_data(uint8_t* buf, size_t size)
 {

@@ -21,7 +21,7 @@
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
-#define USING_TSB
+// #define USING_TSB
 //#define USING_FANS
 #define USING_SERVO
 
