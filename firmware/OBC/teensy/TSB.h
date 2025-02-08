@@ -12,8 +12,8 @@
 #define MCP9601_ADDR (uint8_t)0x60
 #define MIC184_ADDR (uint8_t)0x48
 
-rcl_publisher_t tsb_pub;  
-std_msgs__msg__Float32MultiArray tsb_msg;  
+std_msgs__msg__Float32MultiArray tsb_msg; 
+static float tsb_data[2];   
 
 // TSB Struct
 typedef struct TSB 
@@ -28,6 +28,14 @@ typedef struct TSB
 } TSB;
 
 TSB tsb1;
+
+void tsb_init()
+{
+    std_msgs__msg__Float32MultiArray__init(&tsb_msg); 
+    tsb_msg.data.capacity = 2;
+    tsb_msg.data.size = 2;
+    tsb_msg.data.data = tsb_data;  
+}
 
 void setChannel(TSB* tsb, uint8_t channel_)
 {
@@ -80,13 +88,6 @@ void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
     tsb->mic_temp = _mic184_read_temp();
 }
 
-void tsb_init()
-{
-    std_msgs__msg__Float32MultiArray__init(&tsb_msg); 
-    tsb_msg.data.capacity = 2;
-    tsb_msg.data.size = 2;
-    tsb_msg.data.data = tsb_data;  
-}
 
 
 void tsb_update(Adafruit_MCP9601* mcp) 

@@ -21,7 +21,7 @@
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
-// #define USING_TSB
+#define USING_TSB
 //#define USING_FANS
 #define USING_SERVO
 
@@ -45,7 +45,6 @@ rcl_publisher_t imu_pub;
 rcl_publisher_t gps_pub;
 rcl_publisher_t tsb_pub;
    
-std_msgs__msg__Float32MultiArray tsb_msg;  
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
