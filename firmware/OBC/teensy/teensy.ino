@@ -286,7 +286,9 @@ void setup()
 
 void loop()
 {
+#ifdef USING_TSB   
 tsb_update(&MCP);  
+#endif 
 
 #ifdef USING_SERVO
     servo_spin_executor();
