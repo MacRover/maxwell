@@ -31,7 +31,7 @@ int servo3_angle_send = 90;
 void servo1_callback(const void *msgin) {
     const std_msgs__msg__Float32 *msg = (const std_msgs__msg__Float32 *)msgin;
     int angle_deg = (int)msg->data;
-    servo1_angle_send = constrain(angle_deg, 0, 180);
+    servo1_angle_send = constrain(angle_deg, 0, 120);
 }
 
 

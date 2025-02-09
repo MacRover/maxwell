@@ -43,9 +43,11 @@ rcl_node_t teensy_node;
 
 rcl_publisher_t imu_pub;
 rcl_publisher_t gps_pub;
-
+rcl_publisher_t tsb_pub;
+   
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
+
 
 
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
@@ -54,11 +56,10 @@ SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 
 Fan fan1, fan2, fan3;
-TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 111);
+IPAddress agent_ip(192, 168, 1, 199);
 
 unsigned long prev_time1 = 0, prev_time2 = 0;
 
@@ -146,6 +147,7 @@ void obc_destory_uros_entities()
 
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
+    rcl_publisher_fini(&tsb_pub, &teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
@@ -182,6 +184,14 @@ void obc_setup_uros()
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
     );
+    rclc_publisher_init_default(
+        &tsb_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray), 
+        "tsb"
+    );
+    
+
 
 
 
@@ -264,6 +274,7 @@ void setup()
     obc_setup_tsb();
     obc_setup_fans();
     obc_setup_uros();
+    tsb_init();
     #ifdef USING_SERVO
     servo_setup_subscription(&teensy_node, &support, &allocator);
     #endif
@@ -275,6 +286,10 @@ void setup()
 
 void loop()
 {
+#ifdef USING_TSB   
+tsb_update(&MCP);  
+#endif 
+
 #ifdef USING_SERVO
     servo_spin_executor();
 #endif
@@ -304,6 +319,7 @@ void loop()
 
         RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
         RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
+        RCL_RECONNECT(rcl_publish(&tsb_pub, &tsb_msg, NULL)); 
     }
 #endif
 
