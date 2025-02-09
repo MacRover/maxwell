@@ -11,6 +11,13 @@ set(HW_IF_INCLUDE_DEPENDS
   rcpputils
   hardware_interface
 )
+set(CONTROLLER_INCLUDE_DEPENDS
+  pluginlib
+  rcpputils
+  controller_interface
+  realtime_tools
+  trajectory_msgs
+)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -26,22 +33,28 @@ find_package(custom_interfaces REQUIRED)
 foreach(Dependency IN ITEMS ${HW_IF_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+foreach(Dependency IN ITEMS ${CONTROLLER_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(
   arm_controller
   SHARED
   hardware/arm_hardware.cpp
+  controller/arm_controller.cpp
 )
 
 target_compile_features(arm_controller PUBLIC cxx_std_17)
 target_include_directories(arm_controller PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/controller/include>
 $<INSTALL_INTERFACE:include/arm_controller>
 )
 
 ament_target_dependencies(
   arm_controller PUBLIC
   ${HW_IF_INCLUDE_DEPENDS}
+  ${CONTROLLER_INCLUDE_DEPENDS}
 )
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)

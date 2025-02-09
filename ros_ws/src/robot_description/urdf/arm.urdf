@@ -319,7 +319,6 @@
   <joint
     name="gripper_joint"
     type="revolute">
-    type="revolute">
     <origin
       xyz="0.014206 -0.078774 -0.024953"
       rpy="0 0 0" />

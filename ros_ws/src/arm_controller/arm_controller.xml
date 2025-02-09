@@ -6,4 +6,11 @@
       Arm Hardware Interface
     </description>
   </class>
+  <class name="arm_controller/RobotController"
+         type="arm_controller::RobotController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Arm Controller
+    </description>
+  </class>
 </library>

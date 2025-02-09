@@ -6,11 +6,10 @@
         <ros2_control name="${name}" type="system">
             <hardware>
                 <!-- By default, set up controllers for simulation. This won't work on real hardware -->
-                <plugin>arm_controller/RobotSystem</plugin>
+                <plugin>mock_components/GenericSystem</plugin>
             </hardware>
             <joint name="arm_base_joint">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['arm_base_joint']}</param>
                 </state_interface>
@@ -18,7 +17,6 @@
             </joint>
             <joint name="arm_shoulder_joint">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['arm_shoulder_joint']}</param>
                 </state_interface>
@@ -26,7 +24,6 @@
             </joint>
             <joint name="arm_elbow_joint">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['arm_elbow_joint']}</param>
                 </state_interface>
@@ -34,7 +31,6 @@
             </joint>
             <joint name="arm_wrist_joint">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['arm_wrist_joint']}</param>
                 </state_interface>
@@ -42,7 +38,6 @@
             </joint>
             <joint name="gripper_joint">
                 <command_interface name="position"/>
-                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['gripper_joint']}</param>
                 </state_interface>
