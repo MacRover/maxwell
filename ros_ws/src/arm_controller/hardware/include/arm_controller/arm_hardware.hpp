@@ -5,6 +5,8 @@
 #include "string"
 #include "unordered_map"
 #include "vector"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -40,7 +42,11 @@ protected:
 
   std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = {
     {"position", {}}, {"velocity", {}}};
-};
+  };
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
+  sensor_msgs::msg::JointState joint_state_msg_;
 
 }  // namespace arm_controller
 

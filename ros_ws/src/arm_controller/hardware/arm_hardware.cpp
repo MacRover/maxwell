@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include "arm_controller/arm_hardware.hpp"
-#include <string>
-#include <vector>
 
 #include <iostream>
 
@@ -41,6 +39,9 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
       joint_interfaces[interface.name].push_back(joint.name);
     }
   }
+
+  node_ = std::make_shared<rclcpp::Node>("arm_hardware_interface");
+  joint_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("/arm/hardware/joint_states", 10);
 
   return CallbackReturn::SUCCESS;
 }
@@ -103,6 +104,12 @@ return_type RobotSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Durat
 
 return_type RobotSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
+  joint_state_msg_.header.stamp = node_->now();
+  joint_state_msg_.name = joint_interfaces["position"];
+  joint_state_msg_.position = joint_position_;
+
+  joint_pub_->publish(joint_state_msg_);
+
   return return_type::OK;
 }
 
