@@ -7,6 +7,7 @@ def generate_launch_description():
         package="spidercan",
         executable="reader.py",
         name="rad1_reader",
+        namespace="drive",
         parameters=[{
             "topic": "/can/status/rad_can_in",
             "channel": "can0",
@@ -20,6 +21,7 @@ def generate_launch_description():
         package="spidercan",
         executable="reader.py",
         name="rad2_reader",
+        namespace="drive",
         parameters=[{
             "topic": "/can/config/rad_can_in",
             "channel": "can0",
@@ -32,6 +34,7 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_status",
         name="rad_status_node",
+        namespace="drive",
         parameters=[{
             "can_topic": "/can/status/rad_can_in",
             "status_rate": 15

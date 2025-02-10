@@ -65,6 +65,7 @@ def generate_launch_description():
         package="drive",
         executable="drive_controller.py",
         name="drive_controller",
+        namespace="drive",
         parameters=[{
             "drive_mode": drive_mode
         }]
@@ -73,13 +74,15 @@ def generate_launch_description():
     odom_controller_node = Node(
         package="drive",
         executable="drive_modules_odom.py",
-        name="drive_modules_odom"
+        name="drive_modules_odom",
+        namespace="drive",
     )
 
     vesc_controller_node = Node(
         package="drive",
         executable="vesc_controller.py",
         name="vesc_controller",
+        namespace="drive",
         parameters=[{
             "can_rate": can_rate,
             "wait_until_positioned": wait_until_positioned 
@@ -92,6 +95,7 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_drive_controller",
         name="rad_drive_controller",
+        namespace="drive",
         parameters=[{
             "can_rate": can_rate
         }]
@@ -101,6 +105,7 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_calibration_init",
         name="rad_calibration_init",
+        namespace="drive",
         condition=LaunchConfigurationEquals(
                 "drive_mode",
                 "SWERVE_DRIVE"
@@ -111,6 +116,7 @@ def generate_launch_description():
         package="spidercan",
         executable="writer.py",
         name="writer",
+        namespace="drive",
         parameters=[{
             "channel": can_channel
         }]
@@ -120,6 +126,7 @@ def generate_launch_description():
         package="rad_control",
         executable="rover_steer_pos",
         name="steer_node",
+        namespace="drive",
         condition=LaunchConfigurationEquals(
             "drive_mode",
             "TANK_STEER_HYBRID"
