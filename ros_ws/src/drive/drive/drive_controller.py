@@ -29,15 +29,17 @@ class Drive:
         pass
 
 class SwerveDrive(Drive):
+    WIDTH = 1.0
+    LENGTH = 0.625
     def __init__(self, pub_odom: Publisher, pub_modules: Publisher) -> None:
         self.pub_odom = pub_odom
         self.pub_modules = pub_modules
         ## 0.54, 0.85, half: 0.27, 0.42
         modules = [
-            DriveModule("front_left", (-0.27, 0.42), 1.0, pi),
-            DriveModule("front_right", (0.27, 0.42), 1.0, pi),
-            DriveModule("rear_left", (-0.27, -0.42), 1.0, pi),
-            DriveModule("rear_right", (0.27, -0.42), 1.0, pi)
+            DriveModule("front_left", (-self.WIDTH / 2.0, self.LENGTH / 2.0), 1.0, pi),
+            DriveModule("front_right", (self.WIDTH / 2.0, self.LENGTH / 2.0), 1.0, pi),
+            DriveModule("rear_left", (-self.WIDTH / 2.0, -self.LENGTH / 2.0), 1.0, pi),
+            DriveModule("rear_right", (self.WIDTH / 2.0, -self.LENGTH / 2.0), 1.0, pi)
         ]
         self.model = SteeringModel(modules)
     
