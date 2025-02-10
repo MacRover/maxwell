@@ -6,6 +6,7 @@ def generate_launch_description():
         package="spidercan",
         executable="reader.py",
         name="vesc_reader",
+        namespace="drive",
         parameters=[{
             "topic": "/can/vesc_can_in",
             "channel": "can0",
@@ -18,6 +19,7 @@ def generate_launch_description():
         package="drive",
         executable="vesc_status.py",
         name="vesc1_status_node",
+        namespace="drive",
         parameters=[{
             "status": "STATUS_1",
             "motor": "BACK_RIGHT",
@@ -31,6 +33,7 @@ def generate_launch_description():
         package="drive",
         executable="vesc_status.py",
         name="vesc2_status_node",
+        namespace="drive",
         parameters=[{
             "status": "STATUS_1",
             "motor": "FRONT_RIGHT",
@@ -44,6 +47,7 @@ def generate_launch_description():
         package="drive",
         executable="vesc_status.py",
         name="vesc4_status_node",
+        namespace="drive",
         parameters=[{
             "status": "STATUS_1",
             "motor": "FRONT_LEFT",
@@ -57,6 +61,7 @@ def generate_launch_description():
         package="drive",
         executable="vesc_status.py",
         name="vesc3_status_node",
+        namespace="drive",
         parameters=[{
             "status": "STATUS_1",
             "motor": "BACK_LEFT",
