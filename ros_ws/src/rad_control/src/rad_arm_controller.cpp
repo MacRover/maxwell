@@ -3,7 +3,11 @@
 #include "rad_control/RAD_Arm_Controller.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 
-
+/* 
+Still needed: 
+- Max values for pitch and roll
+- CAN Node compatibility
+*/
 using std::placeholders::_1;
 
 RAD_Arm_Controller::RAD_Arm_Controller() : 
@@ -39,34 +43,7 @@ void RAD_Arm_Controller::_callback(const JointState& msg)
 
   double pitch_angle = (ls + rs)/2;
   double wrist_angle = (ls - rs)/2; 
-    /*
-        WRIST LOGIC!!!
-        //Assuming that the left encoder is msg.position[3];
-    if(pitch_limit_swtich == 1)
-    {
-        if (current_pitch == MAX_PITCH)
-        {
-            Publish this to a topic, set topic so that if current_pitch == MAX_PITCH, that pitch inputted must be = or < current_pitch, else ignored 
-        }
-        else
-        {
-            Publish this to a topic, set topic so that if current_pitch == MIN_PITCH, that pitch inputted must be = or > current_pitch, else ignored
-        }
-    }
-
-    if(roll_limit_switch == 1)
-    {
-        if(current_roll == MAX_ROLL)
-        {
-            Publish this to a topic, set topic so that if current_roll == MAX_ROLL, that roll inputted must be = or < current_roll, else ignored
-        }
-        else
-        {
-            Publish this to a topic, set topic so that if current_pitch == MIN_ROLL, that roll inputted must be = or > current_roll, else ignored
-        }
-    }
-
-    */
+  
   rad_base_arm.set_target_angle(base_angle);
   rad_shoulder_arm.set_target_angle(shoulder_angle);
   rad_elbow_arm.set_target_angle(elbow_angle);
