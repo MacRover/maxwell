@@ -8,7 +8,7 @@ def generate_launch_description():
 
     joy_rate_launch_arg = DeclareLaunchArgument(
         "joy_rate",
-        default_value="20.0",
+        default_value="10.0",
     )
 
     # Define the Joy node
