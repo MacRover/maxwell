@@ -1,6 +1,13 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+rad_status_to_id = {
+    "/front_right/rad_status": 0x11,
+    "/front_left/rad_status": 0x12,
+    "/rear_left/rad_status": 0x13,
+    "/rear_right/rad_status": 0x14
+}
+
 def generate_launch_description():
     # STATUS READER NODE
     reader1_node = Node(
@@ -34,7 +41,9 @@ def generate_launch_description():
         name="rad_status_node",
         parameters=[{
             "can_topic": "/can/status/rad_can_in",
-            "status_rate": 15
+            "status_rate": 15,
+            "rad_status": list(rad_status_to_id),
+            "rad_ids": list(rad_status_to_id.values())
         }]
     )
 
