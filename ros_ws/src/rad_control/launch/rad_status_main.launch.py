@@ -2,10 +2,10 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 rad_status_to_id = {
-    "/front_right/rad_status": 0x11,
-    "/front_left/rad_status": 0x12,
-    "/rear_left/rad_status": 0x13,
-    "/rear_right/rad_status": 0x14
+    "/drive/front_right/rad_status": 0x11,
+    "/drive/front_left/rad_status": 0x12,
+    "/drive/rear_left/rad_status": 0x13,
+    "/drive/rear_right/rad_status": 0x14
 }
 
 def generate_launch_description():

@@ -100,12 +100,12 @@ class XboxDriveController(Node):
             self.get_parameter("drive_mode").get_parameter_value().string_value
         ]
         
-        self.pub_cmd_vel = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.pub_cmd_vel = self.create_publisher(Twist, "/drive/cmd_vel", 10)
 
         if (self.mode == DriveMode.SWERVE_DRIVE):
             self.xbox_drive = XboxSwerveDrive(self.pub_cmd_vel)
         elif (self.mode == DriveMode.TANK_STEER_HYBRID):
-            self.pub = self.create_publisher(SwerveModulePulse, "/rad_pulses", 10)
+            self.pub = self.create_publisher(SwerveModulePulse, "/drive/rad_pulses", 10)
             self.xbox_drive = XboxTankSteerDrive(self.pub_cmd_vel, self.pub)
 
         self.sub = self.create_subscription(

@@ -16,7 +16,7 @@ RAD_Drive_Controller::RAD_Drive_Controller() :
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
 
   sub_ = this->create_subscription<SwerveModulesList>(
-    "/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)
+    "/drive/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)
   );
 
   rad_fl_drive.set_pid_angle_offset(120.0);

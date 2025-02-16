@@ -5,7 +5,7 @@ RAD_Status::RAD_Status() : Node("rad_status_node")
   this->declare_parameter("can_topic", "/can/status/rad_can_in");
   this->declare_parameter("status_rate", 10);
   this->declare_parameter<std::vector<int64_t>>("rad_ids", {RAD__DRIVE__FRONT_LEFT, RAD__DRIVE__FRONT_RIGHT});
-  this->declare_parameter<std::vector<std::string>>("rad_status", {"/front_left/rad_status", "/front_right/rad_status"});
+  this->declare_parameter<std::vector<std::string>>("rad_status", {"/drive/front_left/rad_status", "/drive/front_right/rad_status"});
 
   rate = this->get_parameter("status_rate").as_int();
   topic = this->get_parameter("can_topic").as_string();

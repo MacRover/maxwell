@@ -115,19 +115,19 @@ class DriveController(Node):
             self.get_parameter("drive_mode").get_parameter_value().string_value
         ]
 
-        self.publisher_odom = self.create_publisher(Odometry, "/odom", 10)
-        self.publisher_modules_command = self.create_publisher(SwerveModulesList, "/modules_command", 10)
+        self.publisher_odom = self.create_publisher(Odometry, "/drive/odom", 10)
+        self.publisher_modules_command = self.create_publisher(SwerveModulesList, "/drive/modules_command", 10)
         self.drive = self.getDrive()
 
         self.subscription = self.create_subscription(
             SwerveModulesList,
-            "/drive_modules",
+            "/drive/drive_modules",
             self.callback,
             10,
         )
         self.subscription_cmd_vel = self.create_subscription(
             Twist,
-            "/cmd_vel_repeat",
+            "/drive/cmd_vel_repeat",
             self.drive.publishModulesCommand,
             10,
         )
