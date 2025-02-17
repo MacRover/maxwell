@@ -1,12 +1,27 @@
 import { Immutable, MessageEvent, PanelExtensionContext, Topic } from "@foxglove/extension";
 import { ReactElement, useEffect, useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { SwerveModulesList } from "./types";
 
-function ExamplePanel({ context }: { context: PanelExtensionContext }): ReactElement {
+function Overhead2DPanel({ context }: { context: PanelExtensionContext }): ReactElement {
   const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
   const [messages, setMessages] = useState<undefined | Immutable<MessageEvent[]>>();
 
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
+
+  useEffect(() => {
+    if (messages) {
+      const modulesCommandMsg = messages.find((msg) => msg.topic === "/modules_command")?.message as SwerveModulesList;
+      if (modulesCommandMsg) {
+        
+      }
+
+      const modulesOdomMsg = messages.find((msg) => msg.topic === "/drive_modules")?.message as SwerveModulesList;
+      if (modulesOdomMsg) {
+
+      }
+    }
+  }, [messages]);
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {
@@ -45,7 +60,7 @@ function ExamplePanel({ context }: { context: PanelExtensionContext }): ReactEle
 
     // subscribe to some topics, you could do this within other effects, based on input fields, etc
     // Once you subscribe to topics, currentFrame will contain message events from those topics (assuming there are messages).
-    context.subscribe([{ topic: "/some/topic" }]);
+    context.subscribe([{ topic: "/modules_command" }, { topic: "/drive_modules" }]);
   }, [context]);
 
   // invoke the done callback once the render is complete
@@ -71,14 +86,13 @@ function ExamplePanel({ context }: { context: PanelExtensionContext }): ReactEle
           </>
         ))}
       </div>
-      <div>{messages?.length}</div>
     </div>
   );
 }
 
-export function initExamplePanel(context: PanelExtensionContext): () => void {
+export function initOverhead2DPanel(context: PanelExtensionContext): () => void {
   const root = createRoot(context.panelElement);
-  root.render(<ExamplePanel context={context} />);
+  root.render(<Overhead2DPanel context={context} />);
 
   // Return a function to run when the panel is removed
   return () => {

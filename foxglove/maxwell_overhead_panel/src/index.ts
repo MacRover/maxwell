@@ -1,7 +1,7 @@
 import { ExtensionContext } from "@foxglove/extension";
 
-import { initExamplePanel } from "./ExamplePanel";
+import { initOverhead2DPanel } from "./Overhead2D";
 
 export function activate(extensionContext: ExtensionContext): void {
-  extensionContext.registerPanel({ name: "Maxwell Overhead", initPanel: initExamplePanel });
+  extensionContext.registerPanel({ name: "Maxwell Overhead", initPanel: initOverhead2DPanel });
 }
