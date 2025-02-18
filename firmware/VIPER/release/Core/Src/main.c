@@ -423,6 +423,14 @@ int main(void)
 			MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
 		}
 
+		//Poll and Publish CAN
+
+
+
+		MX_CAN_PollToEmptyQueue();
+
+
+
 		// if ((viper_params.HEALTH_INTERVAL != 0)
 		// 		&& (HAL_GetTick() % viper_params.HEALTH_INTERVAL == 0)) {
 		// 	MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);

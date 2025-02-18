@@ -146,6 +146,7 @@ void MX_CAN_Init(void);
 
 void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle);
 
+void MX_CAN_PollToEmptyQueue();
 void MX_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, CAN_TxHeaderTypeDef *pHeader, uint8_t *aData, uint32_t *pTxMailbox); //Keep this private
 
 void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx);
