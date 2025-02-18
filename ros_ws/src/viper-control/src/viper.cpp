@@ -121,8 +121,14 @@ uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStat
         case CAN_SEND_CARD_OUTPUT_B_FAULT:
             status->output_b_fault = (bool)buf[0];
             break;
-        case CAN_SEND_CARD_TEMPERATURE:
-            status->temperature = __buffer_get_float64(buf, &i);
+        case CAN_SEND_CARD_TEMPERATURE_BACKPLANE:
+            status->temperature_backplane = __buffer_get_float64(buf, &i);
+            break;
+        case CAN_SEND_CARD_TEMPERATURE_CARD_A:
+            status->temperature_card_a = __buffer_get_float64(buf, &i);
+            break;
+        case CAN_SEND_CARD_TEMPERATURE_CARD_B:
+            status->temperature_card_b = __buffer_get_float64(buf, &i);
             break;
         case CAN_SEND_CARD_INPUT_CURRENT:
             status->input_current = __buffer_get_float64(buf, &i);

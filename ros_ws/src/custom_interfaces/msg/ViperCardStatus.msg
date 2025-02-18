@@ -7,7 +7,9 @@ float64 input_voltage
 float64 input_current
 
 # Temperature
-float64 temperature
+float64 temperature_backplane
+float64 temperature_card_a
+float64 temperature_card_b
 
 # Output For A
 float64 output_voltage_a
