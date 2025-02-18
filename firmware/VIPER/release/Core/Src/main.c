@@ -124,6 +124,7 @@ int main(void)
 
 	MX_AT24C04C_1_Init();
 	MX_TMP_1075_Init();
+	MX_TMP_100_Init();
 	MX_MCP_3221_Init();
 	MX_INA_238_Init();
 	MX_TCA_Init();
@@ -144,32 +145,70 @@ int main(void)
     TMP_1075_SetLowLimit(&h_tmp_1075);
     TMP_1075_SetConfRegisters(&h_tmp_1075);
 
+	TMP_100_SetHighLimit(&h_tmp_100_a);
+    TMP_100_SetLowLimit(&h_tmp_100_a);
+    TMP_100_SetConfRegisters(&h_tmp_100_a);
+
+    TMP_100_SetHighLimit(&h_tmp_100_b);
+    TMP_100_SetLowLimit(&h_tmp_100_b);
+    TMP_100_SetConfRegisters(&h_tmp_100_b);
+
+	
+
 	TCA9544A_SelectChannel(&tca, VIPER_CARD_1);
 
 	INA_238_WriteConfig(&ina238_high_power);
 
-
 	TMP_1075_SetHighLimit(&h_tmp_1075);
     TMP_1075_SetLowLimit(&h_tmp_1075);
     TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	TMP_100_SetHighLimit(&h_tmp_100_a);
+    TMP_100_SetLowLimit(&h_tmp_100_a);
+    TMP_100_SetConfRegisters(&h_tmp_100_a);
+
+    TMP_100_SetHighLimit(&h_tmp_100_b);
+    TMP_100_SetLowLimit(&h_tmp_100_b);
+    TMP_100_SetConfRegisters(&h_tmp_100_b);
+
+
 
 	TCA9544A_SelectChannel(&tca, VIPER_CARD_2);
 
 	INA_238_WriteConfig(&ina238_high_power);
 
-
 	TMP_1075_SetHighLimit(&h_tmp_1075);
     TMP_1075_SetLowLimit(&h_tmp_1075);
     TMP_1075_SetConfRegisters(&h_tmp_1075);
 
-	TCA9544A_SelectChannel(&tca, VIPER_CARD_3);
+	TMP_100_SetHighLimit(&h_tmp_100_a);
+    TMP_100_SetLowLimit(&h_tmp_100_a);
+    TMP_100_SetConfRegisters(&h_tmp_100_a);
 
-	INA_238_WriteConfig(&ina238_low_power_a);
-    INA_238_WriteConfig(&ina238_low_power_b);
+    TMP_100_SetHighLimit(&h_tmp_100_b);
+    TMP_100_SetLowLimit(&h_tmp_100_b);
+    TMP_100_SetConfRegisters(&h_tmp_100_b);
 
-	TMP_1075_SetHighLimit(&h_tmp_1075);
-    TMP_1075_SetLowLimit(&h_tmp_1075);
-    TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	//NO CARD 3 at the moment!
+	// TCA9544A_SelectChannel(&tca, VIPER_CARD_3);
+
+	// INA_238_WriteConfig(&ina238_low_power_a);
+    // INA_238_WriteConfig(&ina238_low_power_b);
+
+	// TMP_1075_SetHighLimit(&h_tmp_1075);
+    // TMP_1075_SetLowLimit(&h_tmp_1075);
+    // TMP_1075_SetConfRegisters(&h_tmp_1075);
+
+	// TMP_100_SetHighLimit(&h_tmp_100_a);
+    // TMP_100_SetLowLimit(&h_tmp_100_a);
+    // TMP_100_SetConfRegisters(&h_tmp_100_a);
+
+    // TMP_100_SetHighLimit(&h_tmp_100_b);
+    // TMP_100_SetLowLimit(&h_tmp_100_b);
+    // TMP_100_SetConfRegisters(&h_tmp_100_b);
+
+
 
 	TCA9544A_SelectChannel(&tca, VIPER_CARD_0);
 
@@ -453,7 +492,7 @@ void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *vip
 	viper_state->CARD_0.ENABLE = 1;
 	viper_state->CARD_1.ENABLE = 1;
 	viper_state->CARD_2.ENABLE = 1;
-	viper_state->CARD_3.ENABLE = 1;
+	viper_state->CARD_3.ENABLE = 0;
 
 	// Step 3: Setup VIPER
 	VIPER_Card_Update_State(viper_state);
@@ -623,6 +662,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 	// 2. Read the temperature
 
 	//TMP_1075_ReadTemp(&h_tmp_1075);
+	TMP_100_ReadTemp(&h_tmp_100_a);
+	TMP_100_ReadTemp(&h_tmp_100_b);
 
 	// 2. Read the rest
 
@@ -655,7 +696,9 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 	switch (cardx) {
 		case VIPER_CARD_0: {
 
-			//viper_state->CARD_0.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_0.TEMPERATURE_BACKPLANE_BACKPLANE = h_tmp_1075.temp;
+			viper_state->CARD_0.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+			viper_state->CARD_0.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			//viper_state->CARD_0.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_low_power_b.current;
@@ -669,7 +712,9 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		}
 		case VIPER_CARD_1: {
 
-			//viper_state->CARD_1.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_1.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
+			viper_state->CARD_1.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+			viper_state->CARD_1.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			viper_state->CARD_1.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
@@ -680,7 +725,9 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		}
 		case VIPER_CARD_2: {
 
-			//viper_state->CARD_2.TEMPERATURE = h_tmp_1075.temp;
+			//viper_state->CARD_2.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
+			viper_state->CARD_2.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+			viper_state->CARD_2.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			viper_state->CARD_2.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
@@ -691,7 +738,9 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 
 		case VIPER_CARD_3:  {
 
-			// viper_state->CARD_3.TEMPERATURE = h_tmp_1075.temp;
+			// viper_state->CARD_3.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
+			viper_state->CARD_3.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+			viper_state->CARD_3.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			// viper_state->CARD_3.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_low_power_b.current;
