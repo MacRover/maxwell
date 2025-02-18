@@ -336,7 +336,7 @@ int main(void)
 			queue_dequeue(&can_message_queue_viper);
 		}
 
-		// VIPER_Card_Update_State(&viper_state);
+		 VIPER_Card_Update_State(&viper_state);
 		// VIPER_Card_Update_Params(&viper_state, &viper_params);
 
 		if (ESTOP) {
@@ -641,6 +641,7 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 
 		//MCP3221_ReadCurrent(&input_current_low_card);
 	} else {
+
 		INA_238_ReadCurrent(&ina238_high_power);
 		INA_238_ReadVoltage(&ina238_high_power);
 		//INA_238_ReadPower(&ina238_high_power);
