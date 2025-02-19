@@ -1,25 +1,40 @@
-import { Immutable, MessageEvent, PanelExtensionContext, Topic } from "@foxglove/extension";
-import { ReactElement, useEffect, useLayoutEffect, useState } from "react";
+import { Immutable, MessageEvent, PanelExtensionContext } from "@foxglove/extension";
+import { ReactElement, useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { SwerveModulesList } from "./types";
+import { drawOnCanvas } from "./canvas";
+
+let currentModulesCommand: SwerveModulesList = {
+  front_left: { speed: 0, angle: 0 },
+  front_right: { speed: 0, angle: 0 },
+  rear_left: { speed: 0, angle: 0 },
+  rear_right: { speed: 0, angle: 0 },
+};
+let currentModulesOdom: SwerveModulesList = {
+  front_left: { speed: 0, angle: 0 },
+  front_right: { speed: 0, angle: 0 },
+  rear_left: { speed: 0, angle: 0 },
+  rear_right: { speed: 0, angle: 0 },
+};
 
 function Overhead2DPanel({ context }: { context: PanelExtensionContext }): ReactElement {
-  const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
   const [messages, setMessages] = useState<undefined | Immutable<MessageEvent[]>>();
 
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
     if (messages) {
       const modulesCommandMsg = messages.find((msg) => msg.topic === "/modules_command")?.message as SwerveModulesList;
-      if (modulesCommandMsg) {
-        
-      }
-
       const modulesOdomMsg = messages.find((msg) => msg.topic === "/drive_modules")?.message as SwerveModulesList;
-      if (modulesOdomMsg) {
-
+      if (modulesCommandMsg && !modulesOdomMsg) {
+        currentModulesCommand = modulesCommandMsg;
       }
+      if (modulesOdomMsg && !modulesCommandMsg) {
+        currentModulesOdom = modulesOdomMsg;
+      }
+      drawOnCanvas(canvasRef.current!, currentModulesCommand, currentModulesOdom).catch((err) => console.log(err));
     }
   }, [messages]);
 
@@ -39,10 +54,6 @@ function Overhead2DPanel({ context }: { context: PanelExtensionContext }): React
       //
       // Set the done callback into a state variable to trigger a re-render.
       setRenderDone(() => done);
-
-      // We may have new topics - since we are also watching for messages in the current frame, topics may not have changed
-      // It is up to you to determine the correct action when state has not changed.
-      setTopics(renderState.topics);
 
       // currentFrame has messages on subscribed topics since the last render call
       setMessages(renderState.currentFrame);
@@ -69,24 +80,7 @@ function Overhead2DPanel({ context }: { context: PanelExtensionContext }): React
   }, [renderDone]);
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>Welcome to your new extension panel!</h2>
-      <p>
-        Check the{" "}
-        <a href="https://foxglove.dev/docs/studio/extensions/getting-started">documentation</a> for
-        more details on building extension panels for Foxglove Studio.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "0.2rem" }}>
-        <b style={{ borderBottom: "1px solid" }}>Topic</b>
-        <b style={{ borderBottom: "1px solid" }}>Schema name</b>
-        {(topics ?? []).map((topic) => (
-          <>
-            <div key={topic.name}>{topic.name}</div>
-            <div key={topic.schemaName}>{topic.schemaName}</div>
-          </>
-        ))}
-      </div>
-    </div>
+    <canvas width={400} height={500} ref={canvasRef} />
   );
 }
 
