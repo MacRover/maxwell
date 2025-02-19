@@ -10,9 +10,9 @@ def generate_launch_description():
         parameters=[{
             "topic": "/can/status/viper_can_in",
             "channel": "can0",
-            # IDs F0 - FF (240-255)
-            "can_ids": [0xA04F000],
-            "can_masks": [0xFFFF000]
+            # IDs EF - FF (239-255)
+            "can_ids": [0xA04E000],
+            "can_masks": [0xFFFE000]
         }]
     )
 
