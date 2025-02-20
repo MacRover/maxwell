@@ -18,8 +18,8 @@ function drawWheel(ctx: CanvasRenderingContext2D, wheel: DriveWheelCanvas, isLef
 export async function drawOnCanvas(canvas: HTMLCanvasElement, modulesCommandMsg: SwerveModulesList, modulesOdomMsg: SwerveModulesList) {
   const ctx = canvas.getContext("2d");
 
-  const wHeight = canvas.height / 7;
-  const wWidth = canvas.width / 14;
+  const wHeight = canvas.height / 5;
+  const wWidth = canvas.width / 10;
 
   function draw() {
     if (!ctx) {
@@ -31,16 +31,16 @@ export async function drawOnCanvas(canvas: HTMLCanvasElement, modulesCommandMsg:
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 5;
     ctx.moveTo(canvas.width / 4, canvas.height / 4);
-    ctx.lineTo(canvas.width / 2, canvas.height / 4);
-    ctx.moveTo(canvas.width / 4, canvas.height / 2);
-    ctx.lineTo(canvas.width / 2, canvas.height / 2);
-    ctx.moveTo(3 * canvas.width / 8, canvas.height / 4);
-    ctx.lineTo(3 * canvas.width / 8, canvas.height / 2);
+    ctx.lineTo(3 * canvas.width / 4, canvas.height / 4);
+    ctx.moveTo(canvas.width / 4, 3 * canvas.height / 4);
+    ctx.lineTo(3 * canvas.width / 4, 3 * canvas.height / 4);
+    ctx.moveTo(canvas.width / 2, canvas.height / 4);
+    ctx.lineTo(canvas.width / 2, 3 * canvas.height / 4);
     ctx.stroke();
 
     for (let i = 0; i < 4; i++) {
-      const x = canvas.width / 4 * ((i & 1) + 1);
-      const y = canvas.height / 4 * (((i & 2) >> 1) + 1);
+      const x = canvas.width / 2 * (i & 1) + canvas.width / 4;
+      const y = canvas.height / 2 * ((i & 2) >> 1) + canvas.height / 4;
       let angleCmd = 0;
       let angleOdom = 0;
       if (i == 0) {

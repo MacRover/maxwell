@@ -28,6 +28,10 @@ function Overhead2DPanel({ context }: { context: PanelExtensionContext }): React
     if (messages) {
       const modulesCommandMsg = messages.find((msg) => msg.topic === "/modules_command")?.message as SwerveModulesList;
       const modulesOdomMsg = messages.find((msg) => msg.topic === "/drive_modules")?.message as SwerveModulesList;
+      if (modulesCommandMsg && modulesOdomMsg) {
+        currentModulesCommand = modulesCommandMsg;
+        currentModulesOdom = modulesOdomMsg;
+      }
       if (modulesCommandMsg && !modulesOdomMsg) {
         currentModulesCommand = modulesCommandMsg;
       }
