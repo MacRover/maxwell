@@ -138,7 +138,7 @@ int main(void)
     rad_params.DRVCTRL_INTPOL = 0b1;
     rad_params.DRVCTRL_MRES = 0b1000;
 
-    rad_params.SGCSCONF_CS = 5;
+    rad_params.SGCSCONF_CS = 10;
     rad_params.SGCSCONF_SFILT = 0b0;
     rad_params.SGCSCONF_SGT = 0b0000010;
 
@@ -153,18 +153,7 @@ int main(void)
 
     rad_params.HOME_OFFSET = 0;
 
-
-    //DRIVEDAY HARDCODE
-
-    rad_params.RAD_ID = 0x13;
-    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
-    rad_params.STEPPER_SPEED = 1000;
-    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
-    rad_params.HEALTH_INTERVAL = 1000; //every second
-    rad_params.P = 0.06;
-    rad_params.I = 0.000001;
-    rad_params.D = 0;
-    rad_params.PID_MIN_OUTPUT = 20;
+    
 
     /* USER CODE END 1 */
 
@@ -199,7 +188,6 @@ int main(void)
 
     MX_AT24C04C_1_Init(); 
     
-    //uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
 
     //temporary so we don't cook stepper settings from reading garbage data from eeprom
     RAD_PARAMS_TypeDef eeprom_params;
@@ -209,26 +197,15 @@ int main(void)
     if (rad_status.EEPROM_STATUS == AT24C04C_OK)
     {
         //NORMAL OPERATION
-        rad_params = eeprom_params;
+       rad_params = eeprom_params;
 
-        //IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
-        //rad_params.RAD_ID = 0x11;
-//        rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
-//        rad_params.ODOM_INTERVAL = 1000;
-//        rad_params.HEALTH_INTERVAL = 5000;
-        //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
-//        rad_params.RAD_ID = 0x13;
-//		rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
-//		rad_params.STEPPER_SPEED = 1000;
-//		rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
-//		rad_params.HEALTH_INTERVAL = 1000; //every second
-//		rad_params.P = 0.06;
-//		rad_params.I = 0.000001;
-//		rad_params.D = 0;
-//		rad_params.PID_MIN_OUTPUT = 20;
+    //     IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
+//     rad_params.RAD_ID = 0x15;
+//     rad_params.RAD_TYPE = RAD_TYPE_ARM_BASE;
+//     rad_params.ODOM_INTERVAL = 100;
+//     rad_params.HEALTH_INTERVAL = 1000;
 
     }
-    //free(temp);
 
 
 
@@ -251,25 +228,25 @@ int main(void)
         }
         case RAD_TYPE_ARM_BASE:
         {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            MAX_ROTATIONS = RAD_TYPE_ARM_BASE_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_BASE_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_BASE_STEPS_PER_REVOLUTION;
             tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_ARM_SHOULDER:
         {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            MAX_ROTATIONS = RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_SHOULDER_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_SHOULDER_STEPS_PER_REVOLUTION;
             tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_ARM_ELBOW:
         {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            MAX_ROTATIONS = RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_ELBOW_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_ELBOW_STEPS_PER_REVOLUTION;
             tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
             break;
         }
