@@ -61,6 +61,9 @@ VIPER_PARAMS_TypeDef viper_params;
 uint8_t ESTOP = 0;
 uint8_t FREEZE = 0;
 
+uint8_t read_complete = 0;
+uint8_t send_complete = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -393,25 +396,32 @@ int main(void)
 			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
 
-			if (!FREEZE) {
-				if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+			
+			if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
 
+				if (!FREEZE) {
 					if (viper_state.CURRENT_CARD == VIPER_CARD_3) {
 						viper_state.CURRENT_CARD = VIPER_CARD_0;
 					} else {
 						viper_state.CURRENT_CARD++;
 					}
 				}
-			}
 
-			if((viper_state.CURRENT_CARD == VIPER_CARD_0 && viper_state.CARD_0.ENABLE)
-			|| (viper_state.CURRENT_CARD == VIPER_CARD_1 && viper_state.CARD_1.ENABLE)
-			|| (viper_state.CURRENT_CARD == VIPER_CARD_2 && viper_state.CARD_2.ENABLE)
-			|| (viper_state.CURRENT_CARD == VIPER_CARD_3 && viper_state.CARD_3.ENABLE))
-			{
-				VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
+				read_complete = 0;
+				send_complete = 0;
 			}
-			
+		
+			if (!read_complete)
+			{
+				if((viper_state.CURRENT_CARD == VIPER_CARD_0 && viper_state.CARD_0.ENABLE)
+				|| (viper_state.CURRENT_CARD == VIPER_CARD_1 && viper_state.CARD_1.ENABLE)
+				|| (viper_state.CURRENT_CARD == VIPER_CARD_2 && viper_state.CARD_2.ENABLE)
+				|| (viper_state.CURRENT_CARD == VIPER_CARD_3 && viper_state.CARD_3.ENABLE))
+				{
+					VIPER_Card_Read(&viper_state, viper_state.CURRENT_CARD);
+				}
+				read_complete = 1;
+			}
 			break;
 		}
 		default:
@@ -419,8 +429,14 @@ int main(void)
 		}
 
 		// SCHEDULED TASKS
-		if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+		// if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
+		// 	MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
+		// }
+
+		if (read_complete && !send_complete)
+		{
 			MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
+			send_complete = 1;
 		}
 
 		//Poll and Publish CAN
@@ -670,8 +686,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 	// 2. Read the temperature
 
 	//TMP_1075_ReadTemp(&h_tmp_1075);
-	TMP_100_ReadTemp(&h_tmp_100_a);
-	TMP_100_ReadTemp(&h_tmp_100_b);
+//	TMP_100_ReadTemp(&h_tmp_100_a);
+//	TMP_100_ReadTemp(&h_tmp_100_b);
 
 	// 2. Read the rest
 
@@ -705,8 +721,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_0: {
 
 			//viper_state->CARD_0.TEMPERATURE_BACKPLANE_BACKPLANE = h_tmp_1075.temp;
-			viper_state->CARD_0.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
-			viper_state->CARD_0.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
+//			viper_state->CARD_0.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+//			viper_state->CARD_0.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			//viper_state->CARD_0.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_0.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_0.OUTPUT_CURRENT_B = ina238_low_power_b.current;
@@ -721,8 +737,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_1: {
 
 			//viper_state->CARD_1.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
-			viper_state->CARD_1.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
-			viper_state->CARD_1.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
+//			viper_state->CARD_1.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+//			viper_state->CARD_1.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			viper_state->CARD_1.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_1.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_1.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
@@ -734,8 +750,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_2: {
 
 			//viper_state->CARD_2.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
-			viper_state->CARD_2.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
-			viper_state->CARD_2.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
+//			viper_state->CARD_2.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+//			viper_state->CARD_2.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			viper_state->CARD_2.INPUT_CURRENT = input_current_high_card.current/1000;
 			viper_state->CARD_2.OUTPUT_CURRENT_A = ina238_high_power.current;
 			viper_state->CARD_2.OUTPUT_VOLTAGE_A = ina238_high_power.voltage;
@@ -747,8 +763,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 		case VIPER_CARD_3:  {
 
 			// viper_state->CARD_3.TEMPERATURE_BACKPLANE = h_tmp_1075.temp;
-			viper_state->CARD_3.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
-			viper_state->CARD_3.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
+//			viper_state->CARD_3.TEMPERATURE_CARD_A = h_tmp_100_a.temp;
+//			viper_state->CARD_3.TEMPERATURE_CARD_B = h_tmp_100_b.temp;
 			// viper_state->CARD_3.INPUT_CURRENT = input_current_low_card.current/1000;
 			viper_state->CARD_3.OUTPUT_CURRENT_A = ina238_low_power_a.current;
 			viper_state->CARD_3.OUTPUT_CURRENT_B = ina238_low_power_b.current;
