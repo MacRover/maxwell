@@ -31,38 +31,38 @@ class DriveModulesOdom(Node):
 
         self.sub_fr_status = self.create_subscription(
             RadStatus, 
-            "/front_right/rad_status",
+            "/drive/front_right/rad_status",
             self._fr_rad_callback, 10)
         self.sub_fl_status = self.create_subscription(
             RadStatus, 
-            "/front_left/rad_status",
+            "/drive/front_left/rad_status",
             self._fl_rad_callback, 10)
         self.sub_br_status = self.create_subscription(
             RadStatus, 
-            "/rear_right/rad_status",
+            "/drive/rear_right/rad_status",
             self._br_rad_callback, 10)
         self.sub_bl_status = self.create_subscription(
             RadStatus, 
-            "/rear_left/rad_status",
+            "/drive/rear_left/rad_status",
             self._bl_rad_callback, 10)
         
         self.sub_fr_vstatus = self.create_subscription(
             Int32, 
-            "/front_right/vesc_rpm",
+            "/drive/front_right/vesc_rpm",
             self._fr_vesc_callback, 10)
         self.sub_fl_vstatus = self.create_subscription(
             Int32, 
-            "/front_left/vesc_rpm",
+            "/drive/front_left/vesc_rpm",
             self._fl_vesc_callback, 10)
         self.sub_br_vstatus = self.create_subscription(
             Int32, 
-            "/rear_right/vesc_rpm",
+            "/drive/rear_right/vesc_rpm",
             self._br_vesc_callback, 10)
         self.sub_bl_vstatus = self.create_subscription(
             Int32, 
-            "/rear_left/vesc_rpm",
+            "/drive/rear_left/vesc_rpm",
             self._bl_vesc_callback, 10)
-        self.odom_pub = self.create_publisher(SwerveModulesList, "/drive_modules", 10)
+        self.odom_pub = self.create_publisher(SwerveModulesList, "/drive/drive_modules", 10)
         self.timer = self.create_timer(
             1.0 / (self.get_parameter("odom_rate").get_parameter_value().integer_value),
             self._timer_callback

@@ -34,9 +34,9 @@ class HeartBeatNode(Node):
         self.vel_msg = Twist()
         self.pulse_msg = SwerveModulePulse()
 
-        self.pub_vel = self.create_publisher(Twist, "/cmd_vel_repeat", 10)
+        self.pub_vel = self.create_publisher(Twist, "/drive/cmd_vel_repeat", 10)
         self.sub_vel = self.create_subscription(
-            Twist, "/cmd_vel", 
+            Twist, "/drive/cmd_vel", 
             self._vel_callback,
             10
         )
@@ -47,11 +47,11 @@ class HeartBeatNode(Node):
 
         if (self.mode == DriveMode.TANK_STEER_HYBRID):
             self.sub_pulses = self.create_subscription(
-                SwerveModulePulse, "/rad_pulses",
+                SwerveModulePulse, "/drive/rad_pulses",
                 self._pulse_callback,
                 10
             )
-            self.pub_pulse = self.create_publisher(SwerveModulePulse, "/rad_pulses_repeat", 10)
+            self.pub_pulse = self.create_publisher(SwerveModulePulse, "/drive/rad_pulses_repeat", 10)
             self.timer_pulse = self.create_timer(
                 1 / self.hz,
                 (lambda: self.pub_pulse.publish(self.pulse_msg))

@@ -2,10 +2,10 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 rad_status_to_id = {
-    "/front_right/rad_status": 0x11,
-    "/front_left/rad_status": 0x12,
-    "/rear_left/rad_status": 0x13,
-    "/rear_right/rad_status": 0x14
+    "/drive/front_right/rad_status": 0x11,
+    "/drive/front_left/rad_status": 0x12,
+    "/drive/rear_left/rad_status": 0x13,
+    "/drive/rear_right/rad_status": 0x14
 }
 
 def generate_launch_description():
@@ -14,6 +14,7 @@ def generate_launch_description():
         package="spidercan",
         executable="reader.py",
         name="rad1_reader",
+        namespace="drive",
         parameters=[{
             "topic": "/can/status/rad_can_in",
             "channel": "can0",
@@ -27,6 +28,7 @@ def generate_launch_description():
         package="spidercan",
         executable="reader.py",
         name="rad2_reader",
+        namespace="drive",
         parameters=[{
             "topic": "/can/config/rad_can_in",
             "channel": "can0",
@@ -39,6 +41,7 @@ def generate_launch_description():
         package="rad_control",
         executable="rad_status",
         name="rad_status_node",
+        namespace="drive",
         parameters=[{
             "can_topic": "/can/status/rad_can_in",
             "status_rate": 15,
