@@ -14,16 +14,16 @@ ArmSteerPos::ArmSteerPos() : Node("rad_arm_controller"),
     timer_ = this->create_wall_timer(
       100ms, std::bind(&ArmSteerPos::_timer_callback, this));
     
-    rad_base.set_stepper_speed(0.0);
-    rad_shoulder.set_stepper_speed(0.0);
-    rad_elbow.set_stepper_speed(0.0);
+    rad_base.pulse_stepper(0.0);
+    rad_shoulder.pulse_stepper(0.0);
+    rad_elbow.pulse_stepper(0.0);
 }
 
 void ArmSteerPos::_callback(const JointTrajectory& msg)
 {
-    rad_base.set_stepper_speed(msg.points[0].velocities[0]);
-    rad_shoulder.set_stepper_speed(msg.points[0].velocities[1]);
-    rad_elbow.set_stepper_speed(msg.points[0].velocities[2]);
+    rad_base.pulse_stepper(msg.points[0].velocities[0]);
+    rad_shoulder.pulse_stepper(msg.points[0].velocities[1]);
+    rad_elbow.pulse_stepper(msg.points[0].velocities[2]);
 }
 
 void ArmSteerPos::_timer_callback(void)
