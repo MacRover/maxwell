@@ -18,6 +18,9 @@
 
 namespace arm_controller
 {
+
+
+  
 CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & info)
 {
   if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
@@ -43,8 +46,18 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
   node_ = std::make_shared<rclcpp::Node>("arm_hardware_interface");
   joint_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("/arm/hardware/joint_states", 10);
 
+  joint_sub_ = node_->create_subscription<sensor_msgs::msg::JointState>(
+    "/arm/rad/joint_states", 10,
+    [&](const sensor_msgs::msg::JointState::SharedPtr msg) {
+      for (auto i = 0ul; i < msg->position.size(); i++)
+      {
+        joint_position_[i] += msg->position[i];
+      }
+    });
+
   return CallbackReturn::SUCCESS;
 }
+
 
 std::vector<hardware_interface::StateInterface> RobotSystem::export_state_interfaces()
 {

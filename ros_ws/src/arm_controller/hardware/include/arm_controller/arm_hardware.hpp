@@ -15,6 +15,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::return_type;
+using sensor_msgs::msg::JointState;
 
 namespace arm_controller
 {
@@ -45,8 +46,9 @@ protected:
   };
 
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
-  sensor_msgs::msg::JointState joint_state_msg_;
+  rclcpp::Publisher<JointState>::SharedPtr joint_pub_;
+  rclcpp::Subscription<JointState>::SharedPtr joint_sub_;
+  JointState joint_state_msg_;
 
 }  // namespace arm_controller
 
