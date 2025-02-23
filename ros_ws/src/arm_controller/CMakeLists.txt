@@ -12,10 +12,17 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(moveit_msgs REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)
+add_executable(joy_controller src/joy_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
+ament_target_dependencies(joy_controller rclcpp std_msgs sensor_msgs control_msgs std_srvs moveit_msgs rclcpp_components)
 target_include_directories(keyboard_controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -23,6 +30,10 @@ target_compile_features(keyboard_controller PUBLIC c_std_99 cxx_std_17)  # Requi
 
 install(TARGETS keyboard_controller
   DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS joy_controller
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install launch files.
 install(DIRECTORY launch
