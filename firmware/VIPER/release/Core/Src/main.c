@@ -686,8 +686,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 	// 2. Read the temperature
 
 	//TMP_1075_ReadTemp(&h_tmp_1075);
-//	TMP_100_ReadTemp(&h_tmp_100_a);
-//	TMP_100_ReadTemp(&h_tmp_100_b);
+	TMP_100_ReadTemp(&h_tmp_100_a);
+	TMP_100_ReadTemp(&h_tmp_100_b);
 
 	// 2. Read the rest
 
@@ -714,6 +714,8 @@ void VIPER_Card_Read(VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef car
 
 		MCP3221_ReadCurrent(&input_current_high_card);
 	}
+
+	MCP3221_ReadVoltage(&input_voltage);
 
 	// Step 3: Writing everything
 

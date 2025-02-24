@@ -36,8 +36,8 @@ void MX_TMP_1075_Init()
 void MX_TMP_100_Init()
 {
     h_tmp_100_a.__hi2c = &hi2c2;
-    h_tmp_100_a.a0_pin = 0;
-    h_tmp_100_a.a1_pin = 0;
+    h_tmp_100_a.a0_pin = 1;
+    h_tmp_100_a.a1_pin = 1;
 
     h_tmp_100_a.temp = 0.0;
     h_tmp_100_a.low_limit = 0.0;
@@ -49,7 +49,7 @@ void MX_TMP_100_Init()
     h_tmp_100_a.conf.sd = 0;
 
     h_tmp_100_b = h_tmp_100_a;
-    h_tmp_100_b.a0_pin = 1;
+    h_tmp_100_b.a0_pin = 0;
 
     if (TMP_100_Init(&h_tmp_100_a) != TMP_100_OK)
     {
