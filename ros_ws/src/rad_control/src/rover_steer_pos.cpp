@@ -18,7 +18,7 @@ SteerPos::SteerPos(std::string name) : Node(name),
 
     can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
     sub_ = this->create_subscription<SwerveModulePulse>(
-        "/rad_pulses_repeat", 10, std::bind(&SteerPos::_pulse_callback, this, _1)
+        "/drive/rad_pulses_repeat", 10, std::bind(&SteerPos::_pulse_callback, this, _1)
     );
 }
 

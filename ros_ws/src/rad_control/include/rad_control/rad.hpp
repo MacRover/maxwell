@@ -294,17 +294,17 @@ public:
     void save_to_eeprom();
 
     /**
-     * @brief Set PID Error Threshold
+     * @brief Set PID Min Output
      * 
-     * @param thres pid threshold
+     * @param min_output pid min output
      */
-    void set_error_thres(uint16_t thres);
+    void set_min_output(uint16_t min_output);
 
     /**
-     * @brief Get PID Error Threshold
+     * @brief Get PID Min Output
      * 
      */
-    void get_error_thres();
+    void get_min_output();
 
     /**
      * @brief Set PID Max Output

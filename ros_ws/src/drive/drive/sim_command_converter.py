@@ -23,7 +23,7 @@ class SimCommandConverter(Node):
         )
         self.subscription = self.create_subscription(
             SwerveModulesList,
-            "/modules_command",
+            "/drive/modules_command",
             self.callback,
             10,
         )

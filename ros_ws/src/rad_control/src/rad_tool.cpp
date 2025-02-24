@@ -183,7 +183,7 @@ int main(int argc, char ** argv)
           rad.set_stepper_speed((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_MIN_OUTPUT:
-          rad.set_error_thres((uint8_t)std::stoi(val_in, 0, base));
+          rad.set_min_output((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_MAX_OUTPUT:
           rad.set_max_output((uint16_t)std::stoi(val_in, 0, base));
@@ -210,7 +210,7 @@ int main(int argc, char ** argv)
           rad.get_d_value();
           break;
         case CAN_GET_PID_MIN_OUTPUT:
-          rad.get_error_thres();
+          rad.get_min_output();
           break;
         case CAN_GET_PID_MAX_OUTPUT:
           rad.get_max_output();

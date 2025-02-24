@@ -7,7 +7,6 @@
 
 #include "pid.h"
 #include "as5048a.h"
-#include "at24c04c.h"
 #include "enc_dec_utils.h"
 
 #include "main.h"
@@ -23,10 +22,9 @@ void MX_PID_1_Init(void)
     pid_1.Init.ki = rad_params.I;
     pid_1.Init.kd = rad_params.D;
 
-    pid_1.Init.max_output_abs = 50.0;
-    pid_1.Init.min_output_abs = 7; //7*2 = 14 steps * (6 deg/200 steps) ~ 0.45 deg
+    pid_1.Init.max_output_abs = (double)rad_params.PID_MAX_OUTPUT;
     pid_1.Init.rollover_max = 360.0;
-    pid_1.Init.error_threshold = 20; //20 steps * (6 deg/200 steps) = 0.6 deg
+    pid_1.Init.min_output_abs = (double)rad_params.PID_MIN_OUTPUT; //20 steps * (6 deg/200 steps) = 0.6 deg
     PID_Init(&pid_1);
 
 //    if (PID_Init(&pid_1) != PID_OK)
@@ -34,12 +32,12 @@ void MX_PID_1_Init(void)
 //        Error_Handler();
 //    }
 
-    PID_Update(&pid_1);
-    PID_Update(&pid_1);
-    PID_Update(&pid_1);
+    PID_Update_BangBang(&pid_1);
+    PID_Update_BangBang(&pid_1);
+    PID_Update_BangBang(&pid_1);
     // set startup as zero point
     PID_SetZeroPoint(&pid_1);
     PID_ChangeSetPoint(&pid_1, 0.0);
-    PID_Update(&pid_1);
+    PID_Update_BangBang(&pid_1);
 }
 

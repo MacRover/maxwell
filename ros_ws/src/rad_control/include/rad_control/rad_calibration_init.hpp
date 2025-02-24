@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include "rclcpp/rclcpp.hpp"
 #include "custom_interfaces/msg/ca_nraw.hpp"
 #include "custom_interfaces/msg/rad_status.hpp"
@@ -13,15 +14,15 @@ public:
     RAD_Init();
     bool finished();
 
+    std::vector<int64_t> rad_ids;
+    size_t num_of_rads;
+
 private:
-    void _callback_fr(const RadStatus& msg);
-    void _callback_fl(const RadStatus& msg);
-    void _callback_br(const RadStatus& msg);
-    void _callback_bl(const RadStatus& msg);
+    std::vector<std::string> rad_status;
 
-    std::shared_ptr<rclcpp::Subscription<RadStatus> > sub_fr, 
-        sub_fl, sub_br, sub_bl;
+    void _callback(const RadStatus& msg, int id);
 
-    bool fr_ls, fl_ls, br_ls, bl_ls;
+    std::vector<std::shared_ptr<rclcpp::Subscription<RadStatus>>> sub;
+    std::vector<bool> ls;
 
 };
