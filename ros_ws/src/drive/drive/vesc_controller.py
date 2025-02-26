@@ -14,11 +14,11 @@ class VescController(Node):
         super().__init__("vesc_controller")
         self.sub = self.create_subscription(
             SwerveModulesList, 
-            "/modules_command",
+            "/drive/modules_command",
             self._callback, 10)
         self.sub_odom = self.create_subscription(
             SwerveModulesList, 
-            "/drive_modules",
+            "/drive/drive_modules",
             self._odom_callback, 10)
 
         self.declare_parameter(
