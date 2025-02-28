@@ -58,7 +58,7 @@ ament_target_dependencies(
 )
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)
-ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
+ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs sensor_msgs)
 target_include_directories(keyboard_controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -72,8 +72,16 @@ target_include_directories(rad_converter PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(rad_converter PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
+add_executable(arm_rad_dummy src/arm_rad_dummy.cpp)
+ament_target_dependencies(arm_rad_dummy rclcpp sensor_msgs)
+target_include_directories(arm_rad_dummy PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(arm_rad_dummy PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
 
 pluginlib_export_plugin_description_file(hardware_interface arm_controller.xml)
+pluginlib_export_plugin_description_file(controller_interface arm_controller.xml)
 
 install(
   DIRECTORY hardware/include/
@@ -82,6 +90,7 @@ install(
 
 install(TARGETS keyboard_controller
   rad_converter
+  arm_rad_dummy
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files.

@@ -48,11 +48,8 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
 
   joint_sub_ = node_->create_subscription<sensor_msgs::msg::JointState>(
     "/arm/rad/joint_states", 10,
-    [&](const sensor_msgs::msg::JointState::SharedPtr msg) {
-      for (auto i = 0ul; i < msg->position.size(); i++)
-      {
-        joint_position_[i] += msg->position[i];
-      }
+    [&](sensor_msgs::msg::JointState::SharedPtr msg) {
+      last_joint_state_ = *msg;
     });
 
   return CallbackReturn::SUCCESS;
@@ -99,17 +96,19 @@ std::vector<hardware_interface::CommandInterface> RobotSystem::export_command_in
 
 return_type RobotSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  // TODO(pac48) set sensor_states_ values from subscriber
 
-  for (auto i = 0ul; i < joint_velocities_command_.size(); i++)
-  {
-    joint_velocities_[i] = joint_velocities_command_[i];
-    joint_position_[i] += joint_velocities_command_[i] * period.seconds();
-  }
+  rclcpp::spin_some(node_);
+  // TODO velocity
 
-  for (auto i = 0ul; i < joint_position_command_.size(); i++)
+  // for (auto i = 0ul; i < joint_velocities_command_.size(); i++)
+  // {
+  //   joint_velocities_[i] = joint_velocities_command_[i];
+  //   joint_position_[i] += joint_velocities_command_[i] * period.seconds();
+  // }
+
+  for (auto i = 0ul; i < last_joint_state_.position.size(); i++)
   {
-    joint_position_[i] = joint_position_command_[i];
+    joint_position_[i] = last_joint_state_.position[i];
   }
 
   return return_type::OK;
@@ -119,7 +118,7 @@ return_type RobotSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
   joint_state_msg_.header.stamp = node_->now();
   joint_state_msg_.name = joint_interfaces["position"];
-  joint_state_msg_.position = joint_position_;
+  joint_state_msg_.position = joint_position_command_;
 
   joint_pub_->publish(joint_state_msg_);
 

@@ -40,6 +40,7 @@ protected:
   std::vector<double> joint_velocities_command_;
   std::vector<double> joint_position_;
   std::vector<double> joint_velocities_;
+  sensor_msgs::msg::JointState last_joint_state_;
 
   std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = {
     {"position", {}}, {"velocity", {}}};
@@ -49,6 +50,7 @@ protected:
   rclcpp::Publisher<JointState>::SharedPtr joint_pub_;
   rclcpp::Subscription<JointState>::SharedPtr joint_sub_;
   JointState joint_state_msg_;
+
 
 }  // namespace arm_controller
 
