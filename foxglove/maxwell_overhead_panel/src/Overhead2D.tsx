@@ -26,8 +26,8 @@ function Overhead2DPanel({ context }: { context: PanelExtensionContext }): React
 
   useEffect(() => {
     if (messages) {
-      const modulesCommandMsg = messages.find((msg) => msg.topic === "/modules_command")?.message as SwerveModulesList;
-      const modulesOdomMsg = messages.find((msg) => msg.topic === "/drive_modules")?.message as SwerveModulesList;
+      const modulesCommandMsg = messages.find((msg) => msg.topic === "/drive/modules_command")?.message as SwerveModulesList;
+      const modulesOdomMsg = messages.find((msg) => msg.topic === "/drive/drive_modules")?.message as SwerveModulesList;
       if (modulesCommandMsg) {
         currentModulesCommand = modulesCommandMsg;
       }
@@ -71,7 +71,7 @@ function Overhead2DPanel({ context }: { context: PanelExtensionContext }): React
 
     // subscribe to some topics, you could do this within other effects, based on input fields, etc
     // Once you subscribe to topics, currentFrame will contain message events from those topics (assuming there are messages).
-    context.subscribe([{ topic: "/modules_command" }, { topic: "/drive_modules" }]);
+    context.subscribe([{ topic: "/drive/modules_command" }, { topic: "/drive/drive_modules" }]);
   }, [context]);
 
   // invoke the done callback once the render is complete
