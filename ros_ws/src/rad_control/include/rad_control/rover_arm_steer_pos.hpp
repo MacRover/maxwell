@@ -6,15 +6,17 @@
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 #include "custom_interfaces/msg/ca_nraw.hpp"
 
+#include "rad.hpp"
+
 using namespace custom_interfaces::msg;
 using namespace trajectory_msgs::msg;
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 
-class ArmTestRADController : public rclcpp::Node
+class ArmSteerPos : public rclcpp::Node
 {
 public:
-    ArmTestRADController();
+    ArmSteerPos();
 private:
     void _callback(const JointTrajectory& msg);
     void _timer_callback(void);
@@ -24,6 +26,7 @@ private:
 
     rclcpp::Rate rate;
 
-    CANraw can_msg_base, can_msg_pitch, can_msg_shoulder,
-           can_msg_elbow, can_msg_wrist, can_msg_gripper;
+    RAD rad_base, rad_shoulder, rad_elbow;
+
+    CANraw can_msg_base, can_msg_elbow, can_msg_shoulder;
 };
