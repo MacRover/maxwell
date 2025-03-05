@@ -34,6 +34,15 @@
 #define DEG_TO_RAD 0.01745329
 
 #define RCL_RECONNECT(fn){rcl_ret_t rc = (fn); if(rc != RCL_RET_OK){obc_destory_uros_entities();obc_setup_uros();}}
+#define ROS_EXECUTE_INTERVAL(time,fn) do {\
+  static int64_t init = -1;\
+  if (init == -1){init = uxr_millis(); }\
+  if (uxr_millis() - init > time) { \
+    fn;\
+    init = uxr_millis();\
+  }\
+}\
+while(0)
 
 
 rcl_allocator_t allocator;
@@ -61,7 +70,7 @@ uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
 IPAddress agent_ip(192, 168, 1, 199);
 
-unsigned long prev_time1 = 0, prev_time2 = 0;
+unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0;
 
 
 struct timespec tp;
@@ -148,11 +157,12 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
     rcl_publisher_fini(&tsb_pub, &teensy_node);
+    rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
 
-void obc_setup_uros()
+bool obc_setup_uros()
 {
 #ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
@@ -161,14 +171,6 @@ void obc_setup_uros()
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     rcl_init_options_init(&init_options, allocator);
     rcl_init_options_set_domain_id(&init_options, DOMAIN_ID);
-    
-    while (rclc_support_init_with_options(
-            &support, 0, NULL, 
-            &init_options, 
-            &allocator) != RCL_RET_OK)
-    {
-        digitalWrite(LED_PIN, LOW);
-    }
 
     rclc_node_init_default(&teensy_node, "obc_node", "obc", &support);
 
@@ -197,6 +199,7 @@ void obc_setup_uros()
 
 #endif
     digitalWrite(LED_PIN, HIGH);
+    return true;
 }
 
 void obc_setup_imu()
@@ -233,17 +236,19 @@ void obc_setup_gps()
 #endif
 }
 
-void obc_setup_tsb() 
+bool obc_setup_tsb() 
 {
 #ifdef USING_TSB
-    while (!MCP.begin(MCP9601_ADDR, &Wire1)) { delay(100); }
+    if (!MCP.begin(MCP9601_ADDR, &Wire1)) { return false; }
     MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
     MCP.setThermocoupleType(MCP9600_TYPE_K);
     // setChannel(&tsb1, 0);
+    tsb_init();
+    return true
 #endif
 }
 
-void obc_setup_fans()
+bool obc_setup_fans()
 {
 #ifdef USING_FANS
     initializeFan(&fan1, 5);
@@ -254,6 +259,7 @@ void obc_setup_fans()
     enableFanControl(&fan2);
     // enableFanControl(&fan3);
 #endif
+return true;
 }
 
 
@@ -272,9 +278,6 @@ void setup()
     obc_setup_imu();
     obc_setup_gps();
     obc_setup_tsb();
-    obc_setup_fans();
-    obc_setup_uros();
-    tsb_init();
     #ifdef USING_SERVO
     servo_setup_subscription(&teensy_node, &support, &allocator);
     #endif
@@ -282,6 +285,85 @@ void setup()
 
 
 }
+
+void Uros_SM(){
+   switch (state_UROS) {
+    case UROS_INIT:
+      ROS_EXECUTE_INTERVAL(500, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_FOUND : UROS_INIT;);
+      digitalWrite(LED_PIN, LOW);
+      break;
+    case UROS_FOUND:
+      state_UROS = (true == obc_setup_uros()) ? UROS_OK : UROS_INIT;
+      if (state_UROS == UROS_INIT) {
+        obc_destory_uros_entities();
+      };
+      break;
+    case UROS_OK:
+      ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_OK : UROS_ERROR;);
+      if (state_UROS == UROS_OK) {
+            if ( (millis() - prev_time2) > 40) 
+            {
+                prev_time2 = millis();
+
+                RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
+                RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
+                RCL_RECONNECT(rcl_publish(&tsb_pub, &tsb_msg, NULL)); 
+            }
+      }
+      break;
+    case UROS_ERROR:
+      obc_destory_uros_entities();
+      digitalWrite(LED_PIN, LOW);
+      state_UROS = UROS_INIT;
+      break;
+    default:
+      break;
+}
+}
+void FANS_SM() {
+  switch (state_fans) {
+    case FANS_INIT:
+      state_fans = obc_setup_fans() ? FANS_OK : FANS_ERROR;
+      break;
+
+    case FANS_OK:
+        setFanRPM(&fan1, MIN_RPM);
+        setFanRPM(&fan2, MIN_RPM);
+        // setFanRPM(&fan3, MIN_RPM);
+      break;
+
+    case FANS_ERROR:
+      // Try to connect to fans every 5 seconds 
+      (millis() - prev_time_fan > 5000) ? (prev_time_fan = millis(), state_fans = obc_setup_fans() ? FANS_OK : FANS_ERROR) : 0;
+      break;
+
+    default:
+      state_fans = FANS_INIT;
+      break;
+  }
+}
+
+void TSB_SM(){
+  switch(state_TSB){
+    case TSB_INIT:
+      state_TSB = obc_setup_tsb() ? TSB_OK : TSB_ERROR;
+      break;
+
+    case TSB_OK:
+      tsb_update(&MCP); 
+      break; 
+
+    case TSB_ERROR:
+    // Try to connect to TSB every 5 seconds 
+      (millis() - prev_time_tsb > 5000) ? (prev_time_fan = millis(), state_TSB = obc_setup_tsb() ? TSB_OK : TSB_ERROR) : 0;
+      break;
+
+    default:
+      state_TSB = TSB_INIT;
+      break;
+  }
+}
+
 
 
 void loop()
@@ -313,21 +395,16 @@ tsb_update(&MCP);
 #endif
 
 #ifdef USING_ROS
-    if ( (millis() - prev_time2) > 40) 
-    {
-        prev_time2 = millis();
-
-        RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
-        RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
-        RCL_RECONNECT(rcl_publish(&tsb_pub, &tsb_msg, NULL)); 
-    }
-#endif
+Uros_SM();
+#endif 
 
 #ifdef USING_FANS
-  setFanRPM(&fan1, MIN_RPM);
-  setFanRPM(&fan2, MIN_RPM);
-//   setFanRPM(&fan3, MIN_RPM);
+FANS_SM();
 #endif
+
+#ifdef USING_TSB
+TSB_SM();
+#endif 
 
 
 delay(1);
