@@ -104,7 +104,8 @@ int main(void)
     /* USER CODE BEGIN 1 */
 
     //SET DEFAULT VALUES
-    rad_params.RAD_ID = 0xF0;
+
+	rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
     rad_params.STEPPER_SPEED = 1000;
@@ -200,8 +201,8 @@ int main(void)
        rad_params = eeprom_params;
 
     //     IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
-//     rad_params.RAD_ID = 0x13;
-//     rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
+//     rad_params.RAD_ID = 0x19;
+//     rad_params.RAD_TYPE = RAD_TYPE_ARM_WRIST_RIGHT;
 //     rad_params.ODOM_INTERVAL = 100;
 //     rad_params.HEALTH_INTERVAL = 1000;
 
@@ -231,7 +232,7 @@ int main(void)
             MAX_ROTATIONS = RAD_TYPE_ARM_BASE_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_ARM_BASE_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_ARM_BASE_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_ARM_SHOULDER:
