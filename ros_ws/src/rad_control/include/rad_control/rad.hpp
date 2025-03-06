@@ -127,13 +127,12 @@ typedef enum __rad_can_id : uint8_t
     RAD__DRIVE__BACK_LEFT = 0x13,
     RAD__DRIVE__FRONT_LEFT = 0x12,
 
-    //Values needed
-    RAD__ARM__BASE = 0xFF,   
-    RAD__ARM__PITCH = 0xFF,
-    RAD__ARM__GRIPPER = 0xFF,
-    RAD__ARM__SHOULDER = 0xFF,
-    RAD__ARM__ELBOW = 0xFF,
-    RAD__ARM__WRIST = 0xFF,
+    RAD__ARM__BASE     = 0x15,
+    RAD__ARM__SHOULDER = 0x16,
+    RAD__ARM__ELBOW    = 0x17,
+    RAD__ARM__PITCH    = 0xFF,
+    RAD__ARM__GRIPPER  = 0xFF, 
+    RAD__ARM__WRIST    = 0xFF
 
 } RAD_ID;
 

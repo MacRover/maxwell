@@ -27,11 +27,7 @@ set(Targets
 
 foreach(target ${Targets})
   add_executable(talker src/publisher_member_function.cpp)
-  ament_target_dependencies(talker rclcpp std_msgs)
-  add_executable(${target} src/${target}.cpp src/rad.cpp)
-  add_executable(listener src/subscriber_member_function.cpp)
-  ament_target_dependencies(listener rclcpp std_msgs)
-  ament_target_dependencies(${target} rclcpp custom_interfaces std_msgs trajectory_msgs)
+  ament_target_dependencies(${target} rclcpp custom_interfaces std_msgs trajectory_msgs sensor_msgs)
   
   target_include_directories(${target} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

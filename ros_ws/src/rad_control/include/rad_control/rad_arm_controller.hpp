@@ -5,9 +5,6 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "rad.hpp"
 
-
-
-
 class RAD_Arm_Controller : public rclcpp::Node
 {
 public:
