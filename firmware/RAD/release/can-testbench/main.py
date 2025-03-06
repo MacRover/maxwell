@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-rad_id = 0x13
+rad_id = 0x15
 
 
 def main():
@@ -16,11 +16,12 @@ def main():
         while True:
             try: 
                 for msg in bus:
-                    if len(msg.data) == 8:
-                        float_convert = struct.unpack(">d",msg.data)[0]
-                        print(msg, round(float_convert, 5))
-                    else:
-                        print(msg)
+                    if ((msg.arbitration_id & 0xFF) == rad_id):
+                        if len(msg.data) == 8:
+                            float_convert = struct.unpack(">d",msg.data)[0]
+                            print(msg, round(float_convert, 5))
+                        else:
+                            print(msg)
             except KeyboardInterrupt:
                 i = input('command? ')
                 
@@ -94,6 +95,11 @@ def main():
                     send_uint8_value(bus=bus, can_id=0x4D, device_id=rad_id, value=0) #DEDGE
                     time.sleep(0.1)
                     send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =10) #CS
+                elif(i == "set cs"):
+                    j = input("cs? ")
+                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =int(j))
+                elif(i == "get cs"):
+                    send_uint32_value(bus=bus, can_id=0x32, device_id=rad_id, value = 0)
                 elif( i == "estop"):
                     send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
                 elif( i == "disable"):
