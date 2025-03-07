@@ -225,7 +225,7 @@ void VIPER::set_mux_value(uint8_t mux_value)
 
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
                          ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
-                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) | 
+                         ((mux_value & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) | 
                          ((CAN_SET_MUX_VALUE) << 8);
 
     _update_can_data(buf, 1);
