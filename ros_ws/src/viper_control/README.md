@@ -43,3 +43,5 @@ After completing the following steps, run the following in `viper_tool`
 1. `FREEZE`
 2. `SET_MUX_VALUE`, followed by the desired card #
 3. `SET_CARD_INTERVAL`. I've been able to get this to 100ms with no issues on a high power card (fewer messages sent)
+
+These parameters are not stored in EEPROM, so will need to be set after each power cycle.
