@@ -20,8 +20,10 @@ std::map<std::string, uint8_t> get_cmd = {
   {"GET_P_VALUE", CAN_GET_P_VALUE},
   {"GET_I_VALUE", CAN_GET_I_VALUE},
   {"GET_D_VALUE", CAN_GET_D_VALUE},
-  {"GET_PID_ERROR_THRESHOLD", CAN_GET_PID_ERROR_THRESHOLD},
-  {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT}
+  {"GET_PID_MIN_OUTPUT", CAN_GET_PID_MIN_OUTPUT},
+  {"GET_PID_MAX_OUTPUT", CAN_GET_PID_MAX_OUTPUT},
+  {"GET_HOME_OFFSET", CAN_GET_HOME_OFFSET}
+
 };
 std::map<std::string, uint8_t> set_cmd = {
   {"SET_TARGET_ANGLE", CAN_SET_TARGET_ANGLE},
@@ -35,14 +37,15 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_DRVCTRL_MRES", CAN_SET_DRVCTRL_MRES},
   {"SET_SGCSCONF_CS", CAN_SET_SGCSCONF_CS},
   {"SET_STEPPER_SPEED", CAN_SET_STEPPER_SPEED},
-  {"SET_PID_ERROR_THRESHOLD", CAN_SET_PID_ERROR_THRESHOLD},
+  {"SET_PID_MIN_OUTPUT", CAN_SET_PID_MIN_OUTPUT},
   {"SET_PID_MAX_OUTPUT", CAN_SET_PID_MAX_OUTPUT},
   {"PULSE_STEPPER", CAN_PULSE_STEPPER}
 };
 std::map<std::string, uint8_t> other_cmd = {
   {"CALIBRATE", CAN_CALIBRATE_POS},
   {"CANCEL_CALIBRATE", CAN_CANCEL_CALIBRATE_POS},
-  {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM}
+  {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
+  {"SET_HOME_OFFSET", CAN_SET_HOME_OFFSET}
 };
 
 
@@ -53,11 +56,11 @@ void response_callback(const CANraw& msg)
     uint8_t i = 0;
     RCLCPP_INFO(can_config->get_logger(), "Message received!");
     if (command_id == CAN_GET_TARGET_ANGLE || command_id == CAN_GET_P_VALUE || 
-        command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE)
+        command_id == CAN_GET_I_VALUE || command_id == CAN_GET_D_VALUE || command_id == CAN_GET_HOME_OFFSET)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %f", __buffer_get_float64((uint8_t*)&(msg.data[0]),&i));
     }
-    else if (command_id == CAN_GET_PID_ERROR_THRESHOLD || command_id == CAN_GET_PID_MAX_OUTPUT)
+    else if (command_id == CAN_GET_PID_MIN_OUTPUT || command_id == CAN_GET_PID_MAX_OUTPUT)
     {
       RCLCPP_INFO(can_config->get_logger(), "Value: %d", ((uint16_t)(msg.data[0]) << 8) | msg.data[1]);
     }
@@ -68,6 +71,8 @@ void response_callback(const CANraw& msg)
     ack = true;
   }
 }
+
+#define INPUT_CHECK(c) try {c} catch(...){RCLCPP_ERROR(can_config->get_logger(), "INVALID INPUT"); continue;}
 
 int main(int argc, char ** argv)
 {
@@ -94,8 +99,9 @@ int main(int argc, char ** argv)
     std::getline (std::cin,in);
     if (in == "q" || std::cin.fail())
       break;
-        
+    
     int base = 10;
+    INPUT_CHECK(
     if (in[0] == 'h')
     {
       base = 16;
@@ -103,6 +109,7 @@ int main(int argc, char ** argv)
     }
     rad_id = std::stoi(in, 0, base);
     rad.set_can_id(rad_id);
+    )
 
     do {
       std::cout << "Enter Command ('?' to list options) => ";
@@ -119,20 +126,31 @@ int main(int argc, char ** argv)
     }
     while (in == "?");
 
+    INPUT_CHECK(
     command_id = (get_cmd.count(in) == 1) ? get_cmd.at(in) : 
                  (set_cmd.count(in) == 1 ? set_cmd.at(in) : other_cmd.at(in));
+    )
 
     // SET TYPE COMMAND
     if (set_cmd.count(in) == 1)
     {
       std::string val_in;
-      std::cout << "Enter value => ";
+      std::cout << "Enter value (prefix h for hex #) => ";
       std::getline (std::cin,val_in);
+
+      base = 10;
+      INPUT_CHECK(
+      if (val_in[0] == 'h')
+      {
+        base = 16;
+        val_in = val_in.substr(1);
+      }
+      )
 
       switch(command_id)
       {
         case CAN_ASSIGN_DEVICE_ID:
-          rad.set_can_id((uint8_t)std::stoi(val_in));
+          rad.set_can_id((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_TARGET_ANGLE:
           rad.set_target_angle(std::stod(val_in));
@@ -147,28 +165,28 @@ int main(int argc, char ** argv)
           rad.set_d_value(std::stod(val_in));
           break;
         case CAN_SET_HEALTH_INTERVAL:
-          rad.set_health_interval((uint32_t)std::stoi(val_in));
+          rad.set_health_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_ODOM_INTERVAL:
-          rad.set_odom_interval((uint32_t)std::stoi(val_in));
+          rad.set_odom_interval((uint32_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_RAD_TYPE:
-          rad.set_rad_type((uint8_t)std::stoi(val_in));
+          rad.set_rad_type((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_DRVCTRL_MRES:
-          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in));
+          rad.set_drvctrl_mres((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_SGCSCONF_CS:
-          rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in));
+          rad.set_sgcsconf_cs((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_STEPPER_SPEED:
-          rad.set_stepper_speed((uint32_t)std::stoi(val_in));
+          rad.set_stepper_speed((uint32_t)std::stoi(val_in, 0, base));
           break;
-        case CAN_SET_PID_ERROR_THRESHOLD:
-          rad.set_error_thres((uint8_t)std::stoi(val_in));
+        case CAN_SET_PID_MIN_OUTPUT:
+          rad.set_min_output((uint8_t)std::stoi(val_in, 0, base));
           break;
         case CAN_SET_PID_MAX_OUTPUT:
-          rad.set_max_output((uint16_t)std::stoi(val_in));
+          rad.set_max_output((uint16_t)std::stoi(val_in, 0, base));
           break;
         case CAN_PULSE_STEPPER:
           rad.pulse_stepper(std::stof(val_in));
@@ -191,11 +209,14 @@ int main(int argc, char ** argv)
         case CAN_GET_D_VALUE:
           rad.get_d_value();
           break;
-        case CAN_GET_PID_ERROR_THRESHOLD:
-          rad.get_error_thres();
+        case CAN_GET_PID_MIN_OUTPUT:
+          rad.get_min_output();
           break;
         case CAN_GET_PID_MAX_OUTPUT:
           rad.get_max_output();
+          break;
+        case CAN_GET_HOME_OFFSET:
+          rad.get_home_offset();
           break;
       }
     }
@@ -211,12 +232,16 @@ int main(int argc, char ** argv)
           break;
         case CAN_CANCEL_CALIBRATE_POS:
           rad.cancel_calibration();
+          break;
+        case CAN_SET_HOME_OFFSET:
+          rad.set_home_offset();
+          break;
       }
     }
 
     RCLCPP_INFO(can_config->get_logger(), "RAD_ID: %d, COMMAND_ID: %d", rad_id, command_id);
-    RCLCPP_INFO(can_config->get_logger(), "SENT CAN FRAME 0x%x", can_out_msg.address);
     can_pub->publish(can_out_msg);
+    RCLCPP_INFO(can_config->get_logger(), "SENT CAN FRAME 0x%x", can_out_msg.address);
 
     // Wait for msg receive
     if (get_cmd.count(in) == 1) 

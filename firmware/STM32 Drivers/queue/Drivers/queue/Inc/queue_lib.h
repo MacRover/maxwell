@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define MAX_QUEUE_SIZE 50
+
 typedef struct node
 {
     void *data;
@@ -21,6 +23,7 @@ typedef struct queue
 {
     Node_TypeDef *head;
     Node_TypeDef *tail;
+    uint16_t size;
 } Queue_TypeDef;
 
 Queue_TypeDef* create_queue();

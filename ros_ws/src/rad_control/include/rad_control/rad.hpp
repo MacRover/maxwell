@@ -100,10 +100,12 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_DRVCTRL_DEDGE     = 78,
     CAN_GET_DRVCTRL_MRES      = 80,
     CAN_ASSIGN_DEVICE_ID      = 85,
-    CAN_SET_PID_ERROR_THRESHOLD = 87,
-    CAN_GET_PID_ERROR_THRESHOLD = 88,
+    CAN_SET_PID_MIN_OUTPUT = 87,
+    CAN_GET_PID_MIN_OUTPUT = 88,
     CAN_SET_PID_MAX_OUTPUT      = 89,
     CAN_GET_PID_MAX_OUTPUT      = 90,
+    CAN_SET_HOME_OFFSET         = 91,
+    CAN_GET_HOME_OFFSET         = 92,
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
@@ -299,17 +301,17 @@ public:
     void save_to_eeprom();
 
     /**
-     * @brief Set PID Error Threshold
+     * @brief Set PID Min Output
      * 
-     * @param thres pid threshold
+     * @param min_output pid min output
      */
-    void set_error_thres(uint16_t thres);
+    void set_min_output(uint16_t min_output);
 
     /**
-     * @brief Get PID Error Threshold
+     * @brief Get PID Min Output
      * 
      */
-    void get_error_thres();
+    void get_min_output();
 
     /**
      * @brief Set PID Max Output
@@ -329,6 +331,18 @@ public:
      * @param steps number of steps to move
      */
     void pulse_stepper(float steps);
+
+    /**
+     * @brief Set encoder offset for RAD motor
+     * 
+     */
+    void set_home_offset();
+
+    /**
+     * @brief Get encoder offset for RAD motor
+     * 
+     */
+    void get_home_offset();
 
 
 private:

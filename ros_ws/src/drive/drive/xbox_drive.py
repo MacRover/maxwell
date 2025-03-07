@@ -40,14 +40,11 @@ class XboxSwerveDrive(XboxDrive):
 
         x = msg.axes[1]
         y = msg.axes[0]
-            
+        z = msg.axes[3]
+        
         self.vel_msg.linear.x = self._scale_with_deadzone(x,speed)
         self.vel_msg.linear.y = self._scale_with_deadzone(y,speed)
-        self.vel_msg.angular.z = 0.0
-        if (msg.buttons[5]):
-            self.vel_msg.linear.x = 0.0
-            self.vel_msg.linear.y = 0.0
-            self.vel_msg.angular.z = 0.001+self._scale_with_deadzone(msg.axes[3],speed)
+        self.vel_msg.angular.z = self._scale_with_deadzone(z,speed)
         self.pub_cmd_vel.publish(self.vel_msg)
 
 
@@ -100,12 +97,12 @@ class XboxDriveController(Node):
             self.get_parameter("drive_mode").get_parameter_value().string_value
         ]
         
-        self.pub_cmd_vel = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.pub_cmd_vel = self.create_publisher(Twist, "/drive/cmd_vel", 10)
 
         if (self.mode == DriveMode.SWERVE_DRIVE):
             self.xbox_drive = XboxSwerveDrive(self.pub_cmd_vel)
         elif (self.mode == DriveMode.TANK_STEER_HYBRID):
-            self.pub = self.create_publisher(SwerveModulePulse, "/rad_pulses", 10)
+            self.pub = self.create_publisher(SwerveModulePulse, "/drive/rad_pulses", 10)
             self.xbox_drive = XboxTankSteerDrive(self.pub_cmd_vel, self.pub)
 
         self.sub = self.create_subscription(
