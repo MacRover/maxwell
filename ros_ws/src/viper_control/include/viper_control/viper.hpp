@@ -22,27 +22,27 @@ typedef enum VIPER_CAN_MSG : uint8_t
 {
     // **Setter Commands**
     CAN_SET_HEALTH_INTERVAL       = 11,
-    CAN_SET_CARD_INTERVAL         = 13,
-    CAN_SET_MUX_VALUE             = 4,  
+    CAN_SET_CARD_INTERVAL         = 14,
+    CAN_SET_MUX_VALUE             = 6,  
 
     // **Getter Commands**
     CAN_GET_HEALTH_INTERVAL       = 10,
-    CAN_GET_CARD_INTERVAL         = 12,
+    CAN_GET_CARD_INTERVAL         = 13,
 
-    CAN_GET_ALL_CARD_DATA         = 7,  
-    CAN_GET_CARD_DATA             = 8,   
+    CAN_GET_ALL_CARD_DATA         = 5,  
+    CAN_GET_CARD_DATA             = 4,   
 
     // **Enable/Disable Commands**
-    CAN_DISABLE_CARD              = 1,
-    CAN_DISABLE_ALL_CARDS         = 0,
+    CAN_DISABLE_CARD              = 0,
+    CAN_DISABLE_ALL_CARDS         = 1,
 
-    CAN_ENABLE_CARD               = 3,
-    CAN_ENABLE_ALL_CARDS          = 2,
+    CAN_ENABLE_CARD               = 2,
+    CAN_ENABLE_ALL_CARDS          = 3,
 
     //State Commands
-    CAN_SET_FREEZE                = 5,  
-    CAN_STOP_FREEZE               = 6,   
-    CAN_SAVE_TO_EEPROM                = 9,
+    CAN_SET_FREEZE                = 8,  
+    CAN_STOP_FREEZE               = 9,   
+    CAN_SAVE_TO_EEPROM                = 7,
 
     //SEND Commands
     CAN_SEND_CARD_INPUT_VOLTAGE      = 239,
@@ -153,6 +153,10 @@ public:
     void enable_all_cards();
 
     void save_to_eeprom(); 
+
+    void freeze();
+    void unfreeze();
+
 
     // --------------------- SEND CMDS ----------------------
 

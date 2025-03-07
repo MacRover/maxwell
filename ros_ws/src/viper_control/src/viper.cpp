@@ -322,6 +322,32 @@ void VIPER::enable_card(uint8_t card_id)
     _update_can_data(buf, 1);
 }
 
+void VIPER::freeze()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) |
+                         ((CAN_SET_FREEZE) << 8);
+
+    _update_can_data(buf, 1);
+}
+
+void VIPER::unfreeze()
+{
+    uint8_t buf[1];
+    buf[0] = 0;
+
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_VIPER << CAN_MESSAGE_IDENTIFIER_OFFSET) |
+                         ((l_can_id & CAN_MESSAGE_DEVICE_ID_MASK) << CAN_MESSAGE_DEVICE_ID_OFFSET) |
+                         ((0 & CAN_MESSAGE_CARD_ID_MASK) << CAN_MESSAGE_CARD_ID_OFFSET) |
+                         ((CAN_STOP_FREEZE) << 8);
+
+    _update_can_data(buf, 1);
+}
+
 void VIPER::_update_can_data(uint8_t* buf, size_t size)
 {
     (l_can_msg->data).assign(buf, buf + size);

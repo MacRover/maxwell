@@ -30,7 +30,9 @@ std::map<std::string, uint8_t> set_cmd = {
 std::map<std::string, uint8_t> other_cmd = {
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
   {"DISABLE_ALL_CARDS", CAN_DISABLE_ALL_CARDS},
-  {"ENABLE_ALL_CARDS", CAN_ENABLE_ALL_CARDS}
+  {"ENABLE_ALL_CARDS", CAN_ENABLE_ALL_CARDS},
+  {"FREEZE", CAN_SET_FREEZE},
+  {"UNFREEZE", CAN_STOP_FREEZE}
 };
 
 
@@ -184,6 +186,12 @@ int main(int argc, char ** argv)
           break;
         case CAN_ENABLE_ALL_CARDS:
           viper.enable_all_cards();
+          break;
+        case CAN_SET_FREEZE:
+          viper.freeze();
+          break;
+        case CAN_STOP_FREEZE:
+          viper.unfreeze();
           break;
 
       }
