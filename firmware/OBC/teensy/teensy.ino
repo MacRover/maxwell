@@ -33,14 +33,14 @@
 #define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
-#define ROS_EXECUTE_INTERVAL(time,fn) do {\
+#define ROS_EXECUTE_INTERVAL(time,fn)  {\
   static int64_t init = -1;\
   if (init == -1){init = uxr_millis(); }\
   if (uxr_millis() - init > time) { \
     fn;\
     init = uxr_millis();\
   }\
-} while(0);\
+} 
 
 
 rcl_allocator_t allocator;
@@ -181,7 +181,7 @@ bool obc_setup_uros()
     RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
     #ifdef USING_SERVO
-    servo_setup_subscription(&teensy_node, &support, &allocator);
+    if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
 
      RCCHECK(rclc_publisher_init_default(
@@ -284,6 +284,9 @@ void setup()
     obc_setup_gps();
     obc_setup_tsb();
     obc_setup_uros();
+    state_UROS = UROS_INIT;
+    state_TSB = TSB_INIT;
+    state_fans = FANS_INIT;
 }
 
 void Uros_SM(){
@@ -310,6 +313,9 @@ void Uros_SM(){
             rcl_publish(&gps_pub, &gps_msg, NULL);
             rcl_publish(&tsb_pub, &tsb_msg, NULL);
         }
+        #ifdef USING_SERVO
+          servo_spin_executor();
+        #endif
     }
     break;
 
@@ -401,15 +407,7 @@ void TSB_SM(){
 
 void loop()
 {
-#ifdef USING_TSB   
-tsb_update(&MCP);  
-#endif 
-
-#ifdef USING_SERVO
-    servo_spin_executor();
-#endif
  
-
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
