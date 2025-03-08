@@ -110,7 +110,7 @@ uint8_t decode_can_msg(const CANraw* can_msg, ViperCardStatus* status, ViperStat
     switch(((can_msg->address) >> 8) & 0xff)
     {
         case CAN_SEND_CARD_INPUT_VOLTAGE:
-            status->input_voltage = __buffer_get_float64(buf, &i);
+            state->input_voltage = __buffer_get_float64(buf, &i); //changed from status to state
             break;
         case CAN_SEND_CARD_INPUT_FAULT:
             status->input_fault = (bool)buf[0];
