@@ -38,7 +38,7 @@ Notable Parameters include
 
 
 ### Elec - VIPER Load Testing
-After completing the following steps, run the following in `viper_tool`
+After completing the previous steps, run the following in `viper_tool`
 
 1. `FREEZE`
 2. `SET_MUX_VALUE`, followed by the desired card #
