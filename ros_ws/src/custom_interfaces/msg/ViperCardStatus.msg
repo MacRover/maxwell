@@ -1,8 +1,5 @@
 std_msgs/Header header
 
-# Input Voltage (volts)
-float64 input_voltage
-
 # Input Current (milliamps)
 float64 input_current
 

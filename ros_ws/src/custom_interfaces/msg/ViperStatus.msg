@@ -18,4 +18,6 @@ uint8 card_2_status
 # Card 3 Status
 uint8 card_3_status
 
+# Input Voltage (volts)
+float64 input_voltage
 
