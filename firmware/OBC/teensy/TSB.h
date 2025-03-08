@@ -4,11 +4,18 @@
 #include <Adafruit_MCP9601.h>
 #include "enums.h"
 #include "i2c.h"
+#include <std_msgs/msg/float32_multi_array.h>
+#include <rcl/rcl.h>
+#include <rclc/rclc.h>
 
 #define U16_ADDR (uint8_t)0x70
 #define MCP9601_ADDR (uint8_t)0x60
 #define MIC184_ADDR (uint8_t)0x48
 
+std_msgs__msg__Float32MultiArray tsb_msg; 
+static float tsb_data[2];   
+
+// TSB Struct
 typedef struct TSB 
 {
     uint8_t channel;
@@ -20,6 +27,15 @@ typedef struct TSB
 
 } TSB;
 
+TSB tsb1;
+
+void tsb_init()
+{
+    std_msgs__msg__Float32MultiArray__init(&tsb_msg); 
+    tsb_msg.data.capacity = 2;
+    tsb_msg.data.size = 2;
+    tsb_msg.data.data = tsb_data;  
+}
 
 void setChannel(TSB* tsb, uint8_t channel_)
 {
@@ -71,5 +87,15 @@ void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
 
     tsb->mic_temp = _mic184_read_temp();
 }
+
+
+
+void tsb_update(Adafruit_MCP9601* mcp) 
+{
+    readTemp(&tsb1, mcp);
+    tsb_msg.data.data[0] = tsb1.ambient_temp;
+    tsb_msg.data.data[1] = tsb1.mic_temp;
+}
+
 
 #endif

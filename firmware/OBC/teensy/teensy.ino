@@ -16,7 +16,7 @@
 #include "fans.h"
 #include "TSB.h"
 #include "servo.h" 
-
+#define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
@@ -32,8 +32,15 @@
 #define IMU_INT1 23
 #define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
-
-#define RCL_RECONNECT(fn){rcl_ret_t rc = (fn); if(rc != RCL_RET_OK){obc_destory_uros_entities();obc_setup_uros();}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
+#define ROS_EXECUTE_INTERVAL(time,fn)  {\
+  static int64_t init = -1;\
+  if (init == -1){init = uxr_millis(); }\
+  if (uxr_millis() - init > time) { \
+    fn;\
+    init = uxr_millis();\
+  }\
+} 
 
 
 rcl_allocator_t allocator;
@@ -43,9 +50,13 @@ rcl_node_t teensy_node;
 
 rcl_publisher_t imu_pub;
 rcl_publisher_t gps_pub;
-
+rcl_publisher_t tsb_pub;
+rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
+   
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
+
 
 
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
@@ -54,13 +65,16 @@ SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 
 Fan fan1, fan2, fan3;
-TSB tsb1;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
-IPAddress agent_ip(192, 168, 1, 111);
+#ifdef ON_ROVER
+    IPAddress agent_ip(192, 168, 1, 111);
+#else
+    IPAddress agent_ip(192, 168, 1, 199);
+#endif
 
-unsigned long prev_time1 = 0, prev_time2 = 0;
+unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0;
 
 
 struct timespec tp;
@@ -146,47 +160,51 @@ void obc_destory_uros_entities()
 
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
+    rcl_publisher_fini(&tsb_pub, &teensy_node);
+    rcl_subscription_fini(&servo1_sub, &teensy_node);
+    rcl_subscription_fini(&servo2_sub, &teensy_node);
+    rcl_subscription_fini(&servo3_sub, &teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
 
-void obc_setup_uros()
+bool obc_setup_uros()
 {
 #ifdef USING_ROS
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
 
-    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-    rcl_init_options_init(&init_options, allocator);
-    rcl_init_options_set_domain_id(&init_options, DOMAIN_ID);
     
-    while (rclc_support_init_with_options(
-            &support, 0, NULL, 
-            &init_options, 
-            &allocator) != RCL_RET_OK)
-    {
-        digitalWrite(LED_PIN, LOW);
-    }
+    RCCHECK(rcl_init_options_init(&init_options, allocator));
+    RCCHECK(rcl_init_options_set_domain_id(&init_options, DOMAIN_ID));
 
-    rclc_node_init_default(&teensy_node, "obc_node", "obc", &support);
+    RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
+    RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
+    #ifdef USING_SERVO
+    if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
 
-    rclc_publisher_init_default(
+     RCCHECK(rclc_publisher_init_default(
         &imu_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), 
         "imu"
-    );
-    rclc_publisher_init_default(
+    ));
+     RCCHECK(rclc_publisher_init_default(
         &gps_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), 
         "gps"
-    );
-
-
-
+    ));
+     RCCHECK(rclc_publisher_init_default(
+        &tsb_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray), 
+        "tsb"
+    ));
 #endif
     digitalWrite(LED_PIN, HIGH);
+    return true;
 }
 
 void obc_setup_imu()
@@ -223,17 +241,19 @@ void obc_setup_gps()
 #endif
 }
 
-void obc_setup_tsb() 
+bool obc_setup_tsb() 
 {
 #ifdef USING_TSB
-    while (!MCP.begin(MCP9601_ADDR, &Wire1)) { delay(100); }
+    if (!MCP.begin(MCP9601_ADDR, &Wire1)) { return false; }
     MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
     MCP.setThermocoupleType(MCP9600_TYPE_K);
     // setChannel(&tsb1, 0);
+    tsb_init();  
 #endif
+return true;
 }
 
-void obc_setup_fans()
+bool obc_setup_fans()
 {
 #ifdef USING_FANS
     initializeFan(&fan1, 5);
@@ -244,6 +264,7 @@ void obc_setup_fans()
     enableFanControl(&fan2);
     // enableFanControl(&fan3);
 #endif
+return true;
 }
 
 
@@ -262,24 +283,131 @@ void setup()
     obc_setup_imu();
     obc_setup_gps();
     obc_setup_tsb();
-    obc_setup_fans();
     obc_setup_uros();
-    #ifdef USING_SERVO
-    servo_setup_subscription(&teensy_node, &support, &allocator);
-    #endif
-    
-
-
+    state_UROS = UROS_INIT;
+    state_TSB = TSB_INIT;
+    state_fans = FANS_INIT;
 }
+
+void Uros_SM(){
+   switch (state_UROS) {
+    case UROS_INIT:
+      ROS_EXECUTE_INTERVAL(500, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent_options(100, 1, rmw_options)) ? UROS_OK : UROS_ERROR;);
+      digitalWrite(LED_PIN, LOW);
+      break;
+    case UROS_FOUND:
+     if (obc_setup_uros()){
+      state_UROS = UROS_OK;
+     }
+     else {
+      state_UROS = UROS_ERROR;
+     }
+      break;
+    case UROS_OK:
+      ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent_options(100, 1, rmw_options)) ? UROS_OK : UROS_ERROR;);
+      if (state_UROS == UROS_OK) {
+        if ((millis() - prev_time2) > 40) {
+            prev_time2 = millis();
+
+            rcl_publish(&imu_pub, &imu_msg, NULL);
+            rcl_publish(&gps_pub, &gps_msg, NULL);
+            rcl_publish(&tsb_pub, &tsb_msg, NULL);
+        }
+        #ifdef USING_SERVO
+          servo_spin_executor();
+        #endif
+    }
+    break;
+
+    case UROS_ERROR:
+      obc_destory_uros_entities();
+      digitalWrite(LED_PIN, LOW);
+      state_UROS = UROS_INIT;
+      break;
+      
+    default:
+      state_UROS = UROS_INIT;
+      break;
+}
+}
+void FANS_SM() {
+  switch (state_fans) {
+    case FANS_INIT:
+    if (obc_setup_fans()) {
+        state_fans = FANS_OK;
+    } 
+    else {
+        state_fans = FANS_ERROR;
+    }
+    break;
+
+
+    case FANS_OK:
+        setFanRPM(&fan1, MIN_RPM);
+        setFanRPM(&fan2, MIN_RPM);
+        // setFanRPM(&fan3, MIN_RPM);
+      break;
+
+    case FANS_ERROR:
+      // Try to connect to fans every 5 seconds 
+      if (millis() - prev_time_fan > 5000){
+        prev_time_fan = millis();
+
+        if (obc_setup_fans()){
+          state_fans = FANS_OK;
+        }
+        else{
+          state_fans = FANS_ERROR;
+        }
+      }
+      break;
+      
+
+    default:
+      state_fans = FANS_INIT;
+      break;
+  }
+}
+
+void TSB_SM(){
+  switch(state_TSB){
+    case TSB_INIT:
+      if (obc_setup_tsb()){
+        state_TSB = TSB_OK;
+      } 
+      else {
+        state_TSB = TSB_ERROR;
+      }
+      break;
+
+    case TSB_OK:
+      tsb_update(&MCP); 
+      break; 
+
+    case TSB_ERROR:
+    // Try to connect to TSB every 5 seconds 
+      if (millis() - prev_time_tsb > 5000) {
+        prev_time_tsb = millis();
+        if (obc_setup_tsb()){
+          state_TSB = TSB_OK;
+        }
+        else {
+          state_TSB = TSB_ERROR;
+        }
+      }
+      break;
+
+    default:
+      state_TSB = TSB_INIT;
+      break;
+  }
+}
+
 
 
 void loop()
 {
-#ifdef USING_SERVO
-    servo_spin_executor();
-#endif
  
-
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
@@ -298,20 +426,16 @@ void loop()
 #endif
 
 #ifdef USING_ROS
-    if ( (millis() - prev_time2) > 40) 
-    {
-        prev_time2 = millis();
-
-        RCL_RECONNECT(rcl_publish(&imu_pub, &imu_msg, NULL));
-        RCL_RECONNECT(rcl_publish(&gps_pub, &gps_msg, NULL));
-    }
-#endif
+Uros_SM();
+#endif 
 
 #ifdef USING_FANS
-  setFanRPM(&fan1, MIN_RPM);
-  setFanRPM(&fan2, MIN_RPM);
-//   setFanRPM(&fan3, MIN_RPM);
+FANS_SM();
 #endif
+
+#ifdef USING_TSB
+TSB_SM();
+#endif 
 
 
 delay(1);
