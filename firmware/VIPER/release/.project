@@ -51,6 +51,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TCA9544A/Drivers/TCA9544A</locationURI>
 		</link>
 		<link>
+			<name>Drivers/TMP_100</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_100/Drivers/TMP_100</locationURI>
+		</link>
+		<link>
 			<name>Drivers/TMP_1075</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_1075/Drivers/TMP_1075</locationURI>

@@ -47,9 +47,9 @@ void MX_MCP_3221_Init() {
         Error_Handler();
     }
 
-//    if (MCP3221_Init(&input_voltage) != MCP_3221_OK)
-//    {
-//        Error_Handler();
-//    }
+    if (MCP3221_Init(&input_voltage) != MCP_3221_OK)
+    {
+        Error_Handler();
+    }
 
 }

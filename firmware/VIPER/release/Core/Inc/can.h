@@ -107,11 +107,13 @@ typedef enum
 	SET_CARD_INTERVAL = 0x0E,
 
 	// FROM VIPER
-    SEND_CARD_INPUT_VOLTAGE = 0xF1,
-	SEND_CARD_INPUT_FAULT = 0xF2,
-	SEND_CARD_OUTPUT_A_FAULT = 0xF3,
-	SEND_CARD_OUTPUT_B_FAULT = 0xF4,
-	SEND_CARD_TEMPERATURE = 0xF5,
+    SEND_CARD_INPUT_VOLTAGE = 0xEF,
+	SEND_CARD_INPUT_FAULT = 0xF0,
+	SEND_CARD_OUTPUT_A_FAULT = 0xF1,
+	SEND_CARD_OUTPUT_B_FAULT = 0xF2,
+	SEND_CARD_TEMPERATURE_BACKPLANE = 0xF3,
+    SEND_CARD_TEMPERATURE_CARD_A = 0xF4,
+    SEND_CARD_TEMPERATURE_CARD_B = 0xF5,
 	SEND_CARD_INPUT_CURRENT = 0xF6,
 	SEND_CARD_OUTPUT_DIAGNOSTIC_A = 0xF7,
     SEND_CARD_OUTPUT_POWER_A = 0xF8,
@@ -144,6 +146,7 @@ void MX_CAN_Init(void);
 
 void MX_CAN_UpdateIdAndFilters(VIPER_CAN_TypeDef *viper_can_handle);
 
+void MX_CAN_PollToEmptyQueue();
 void MX_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, CAN_TxHeaderTypeDef *pHeader, uint8_t *aData, uint32_t *pTxMailbox); //Keep this private
 
 void MX_CAN_Broadcast_Card_Data(VIPER_CAN_TypeDef *viper_can_handle, VIPER_STATE_TypeDef* viper_state, VIPER_CARD_ID_TypeDef cardx);
