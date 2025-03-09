@@ -3,6 +3,25 @@
 
 #include <cstdint>
 
+enum UROS_states {
+  UROS_INIT,
+  UROS_FOUND,
+  UROS_OK,
+  UROS_ERROR 
+} state_UROS;
+
+enum fan_states{
+  FANS_INIT,
+  FANS_OK,
+  FANS_ERROR
+} state_fans;
+
+enum TSB_STATES{
+  TSB_INIT,
+  TSB_OK,
+  TSB_ERROR
+} state_TSB;
+
 enum EMC2305_Reg : uint8_t
 {
     FAN_1_TACH_TARGET_HIGH_BYTE = 0x3D,
