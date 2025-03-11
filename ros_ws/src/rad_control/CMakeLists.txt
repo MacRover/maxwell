@@ -14,12 +14,10 @@ find_package(std_msgs REQUIRED)
 find_package(custom_interfaces REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 set(Targets
     rad_arm_controller
     rad_drive_controller
-    rad_arm_controller
     rad_status
     rad_tool
     rad_calibration_init
@@ -39,10 +37,8 @@ foreach(target ${Targets})
 
 endforeach()
 
-install(TARGETS ${Targets} talker listener
+install(TARGETS ${Targets} 
   DESTINATION lib/${PROJECT_NAME})
-
-install (TARGETS
 
 
 # Install launch files.

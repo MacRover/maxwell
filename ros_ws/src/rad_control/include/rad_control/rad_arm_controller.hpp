@@ -14,15 +14,15 @@ public:
 private:
   void _callback(const sensor_msgs::msg::JointState& msg);
   void _publish_to_can();
-
   std::shared_ptr<rclcpp::Publisher<CANraw> > can_pub_;
   std::shared_ptr<rclcpp::Subscription<sensor_msgs::msg::JointState> > sub_;
 
-  CANraw can_base, can_shoulder, can_gripper, can_elbow, can_wrist, can_pitch;
+  CANraw can_base, can_shoulder, can_gripper, can_elbow, can_rs, can_ls;
 
 
-  RAD rad_base_arm, rad_pitch_arm, rad_gripper_arm, rad_shoulder_arm, rad_elbow_arm, rad_wrist_arm; 
+  RAD rad_base_arm, rad_ls_arm, rad_gripper_arm, rad_shoulder_arm, rad_elbow_arm, rad_rs_arm; 
 
   uint16_t sleep_msec;
 
+  double lmin_shoulder, lmin_elbow, a_shoulder, b_shoulder, a_elbow, b_elbow, base_gear_reduction;
 };

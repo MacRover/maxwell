@@ -1,25 +1,32 @@
 #include <cstdio>
 #include <chrono>
+#include <cmath> 
 #include "rad_control/rad_arm_controller.hpp"
 using std::placeholders::_1;
 
 RAD_Arm_Controller::RAD_Arm_Controller() : 
   Node("rad_arm_controller"),
   rad_base_arm(&can_base, RAD__ARM__BASE), 
-  rad_pitch_arm(&can_pitch, RAD__ARM__PITCH),
+  rad_ls_arm(&can_ls, RAD__LS),
   rad_gripper_arm(&can_gripper, RAD__ARM__GRIPPER),
   rad_shoulder_arm(&can_shoulder, RAD__ARM__SHOULDER),
   rad_elbow_arm(&can_elbow, RAD__ARM__ELBOW),
-  rad_wrist_arm(&can_wrist, RAD__ARM__WRIST)
+  rad_rs_arm(&can_rs, RAD__RS)
+ 
 {
+  this->declare_parameter("lmin_shoulder", 0.33);
+  this->declare_parameter("lmin_elbow", 0.33);
+  this->declare_parameter("a_shoulder", 0.24);
+  this->declare_parameter("b_shoulder", 0.23);
+  this->declare_parameter("a_elbow", 0.216);
+  this->declare_parameter("b_elbow", 0.175);
+  this->declare_parameter("base_gear_reduction", 0);
   this->declare_parameter("can_rate", 10);
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
-  std::cout<<"H";
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1)
   );
-
  /* pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
     "/arm/can/can_out", 10
   ); */
@@ -34,7 +41,7 @@ void RAD_Arm_Controller::_publish_to_can()
 
     can_pub_->publish(can_base);
     rate.sleep();
-    can_pub_->publish(can_pitch);
+    can_pub_->publish(can_ls);
     rate.sleep();
     can_pub_->publish(can_gripper);
     rate.sleep();
@@ -42,33 +49,60 @@ void RAD_Arm_Controller::_publish_to_can()
     rate.sleep();
     can_pub_->publish(can_elbow);
     rate.sleep();
-    can_pub_->publish(can_wrist);
+    can_pub_->publish(can_rs);
 }
 void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
 {
   float base_angle = msg.position[0]; 
-  float  shoulder_angle = msg.position[1];
+  float shoulder_angle = msg.position[1];
   float elbow_angle = msg.position[2];
-  float ls = msg.position[3];
-  float rs = msg.position[4];
+  float pitch_angle = msg.position[3];
+  float wrist_angle = msg.position[4];
   float gripper_angle = msg.position[5]; 
 
-  //float theta_c = ((L_max - L_min)*360)/2.55; //Modifier for the output angles
-
-  float pitch_angle = (ls + rs)/2;
-  float wrist_angle = (ls - rs)/2; 
+  float ls = pitch_angle + wrist_angle; 
+  float rs = pitch_angle - wrist_angle; 
+  flaot pi = 3.141592653;
   
-  // Pretty sure isolating for Theta_M gives: 
-  // (-360/2.54)*(-L_min-a^2-b^2+sqrt(cos_inv*2*a*b*(theta_s+theta_1-theta_2))) 
-  // theta_m, max = ((L_max - L_min)*360)/2.54 
+lmin_shoulder = this->get_parameter("lmin_shoulder").as_double(); 
+lmin_elbow = this->get_parameter("lmin_elbow").as_double();
+a_shoulder = this->get_parameter("a_shoulder").as_double();
+a_elbow = this->get_parameter("a_elbow").as_double();
+b_shoulder = this->get_parameter("b_shoulder").as_double();
+b_elbow = this->get_parameter("b_elbow").as_double();
 
+
+  // Pretty sure isolating for Theta_M gives: 
+  // Possibly needed in degrees depending on movei
+  float theta_m_shoulder = (2*pi/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle)+pow(a_shoulder,2)+pow(b_shoulder,2)));
+  float theta_m_elbow = (2*pi/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle)+pow(a_elbow,2)+pow(b_elbow,2)));
+  
+/*
+  SHOULDER
+  lmin = 0.33m 
+  lmax = 0.425m
+  side a = 0.24m
+  side b = 0.23m 
+
+  ELBOW
+  lmin = 0.33m
+  lmax 0.395m 
+  side a = 0.216m 
+  side b = 0.175m 
+
+  theta_s = acos((a^2 + b^2-L^2)/2*a*b)
+
+
+*/
   rad_base_arm.set_target_angle(base_angle);
-  rad_shoulder_arm.set_target_angle(shoulder_angle);
-  rad_elbow_arm.set_target_angle(elbow_angle);
-  rad_pitch_arm.set_target_angle(pitch_angle);
-  rad_wrist_arm.set_target_angle(wrist_angle);
+  rad_shoulder_arm.set_target_angle(theta_m_shoulder);
+  rad_elbow_arm.set_target_angle(theta_m_elbow);
+  rad_ls_arm.set_target_angle(ls);
+  rad_rs_arm.set_target_angle(rs);
   rad_gripper_arm.set_target_angle(gripper_angle);
 
+  std::cout<< theta_m_shoulder << std::endl; 
+  std::cout<< theta_m_elbow << std::endl;
   this->_publish_to_can(); 
 }
 
