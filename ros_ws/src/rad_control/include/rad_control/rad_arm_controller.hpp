@@ -24,5 +24,5 @@ private:
 
   uint16_t sleep_msec;
 
-  double lmin_shoulder, lmin_elbow, a_shoulder, b_shoulder, a_elbow, b_elbow, base_gear_reduction, shoulder_offset, elbow_offset;
+  double lmin_shoulder, lmin_elbow, a_shoulder, b_shoulder, a_elbow, b_elbow, base_gear_reduction, shoulder_offset, elbow_offset, screw_max;
 };
