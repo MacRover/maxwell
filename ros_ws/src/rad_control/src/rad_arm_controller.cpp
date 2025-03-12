@@ -20,6 +20,8 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   this->declare_parameter("b_shoulder", 0.23);
   this->declare_parameter("a_elbow", 0.216);
   this->declare_parameter("b_elbow", 0.175);
+  this->declare_parameter("shoulder_offset", 89.17);
+  this->declare_parameter("elbow_offset", 114.724); 
   this->declare_parameter("base_gear_reduction", 0);
   this->declare_parameter("can_rate", 10);
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
@@ -53,28 +55,32 @@ void RAD_Arm_Controller::_publish_to_can()
 }
 void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
 {
+  shoulder_offset = this->get_parameter("shoulder_offset").as_double();
+  elbow_offset = this->get_parameter("elbow_offset").as_double(); 
+  lmin_shoulder = this->get_parameter("lmin_shoulder").as_double(); 
+  lmin_elbow = this->get_parameter("lmin_elbow").as_double();
+  a_shoulder = this->get_parameter("a_shoulder").as_double();
+  a_elbow = this->get_parameter("a_elbow").as_double();
+  b_shoulder = this->get_parameter("b_shoulder").as_double();
+  b_elbow = this->get_parameter("b_elbow").as_double();
+  
+
   float base_angle = msg.position[0]; 
-  float shoulder_angle = msg.position[1];
-  float elbow_angle = msg.position[2];
+  float shoulder_angle = msg.position[1] + shoulder_offset;
+  float elbow_angle = msg.position[2] + elbow_offset;
   float pitch_angle = msg.position[3];
   float wrist_angle = msg.position[4];
   float gripper_angle = msg.position[5]; 
 
   float ls = pitch_angle + wrist_angle; 
   float rs = pitch_angle - wrist_angle; 
-  flaot pi = 3.141592653;
+  float pi = 3.141592653;
   
-lmin_shoulder = this->get_parameter("lmin_shoulder").as_double(); 
-lmin_elbow = this->get_parameter("lmin_elbow").as_double();
-a_shoulder = this->get_parameter("a_shoulder").as_double();
-a_elbow = this->get_parameter("a_elbow").as_double();
-b_shoulder = this->get_parameter("b_shoulder").as_double();
-b_elbow = this->get_parameter("b_elbow").as_double();
 
 
   // Pretty sure isolating for Theta_M gives: 
   // Possibly needed in degrees depending on movei
-  float theta_m_shoulder = (2*pi/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle)+pow(a_shoulder,2)+pow(b_shoulder,2)));
+  float theta_m_shoulder =  (2*pi/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle)+pow(a_shoulder,2)+pow(b_shoulder,2)));
   float theta_m_elbow = (2*pi/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle)+pow(a_elbow,2)+pow(b_elbow,2)));
   
 /*
