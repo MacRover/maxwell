@@ -1090,12 +1090,17 @@ int main(void)
                             break;
 
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetMaxPoint(&pid_1, 37);
-                            PID_ChangeSetPoint(&pid_1, 37*360);
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0);
                             break;
 
                         case RAD_TYPE_ARM_BASE:
                             PID_SetZeroPoint(&pid_1);
+                            break;
+
+                        case RAD_TYPE_ARM_ELBOW:
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0);
                             break;
                     
                         default:
@@ -1118,13 +1123,13 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
                             break;
  
                         case RAD_TYPE_ARM_ELBOW:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS*360);
                             break;
                         default:
                             break;
@@ -1159,7 +1164,7 @@ int main(void)
                         }
                         case RAD_TYPE_ARM_ELBOW:
                         {
-                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, -500);
+                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 500);
                             break;
                         }
                 
