@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="org.eclipse.cdt.utils.ui.controls.FileListControl" value="&quot;${workspace_loc:/${ProjName}/Drivers/NTCB572/Inc}&quot;"/>
+	<section name="OptionalMessageDialog.hide.">
+		<item key="askReindex" value="true"/>
+		<item key="askReindex.detail" value="0"/>
+	</section>
+</section>
