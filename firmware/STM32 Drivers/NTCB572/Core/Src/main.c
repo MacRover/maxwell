@@ -27,6 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "rad_ntcb572.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,18 +103,30 @@ int main(void)
   MX_ADC2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-    
+  MX_RAD_NTCB572_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     while (1)
     {
+    	float temperatureC = 0.0f;
+    	NTC_StatusTypeDef ntcStatus = NTC_ReadTemperatureC(&rad_ntc1, &temperatureC);
 
-    /* USER CODE END WHILE */
+    	//Check if read was successful
+    	if (ntcStatus == NTC_OK){
+    		// log
+    	}
+    	else {
+    	   // handle error
+    	}
 
-    /* USER CODE BEGIN 3 */
+    	HAL_Delay(1000); // Wait 1 second between reads
+
     }
+    /* USER CODE END WHILE */
+  /* USER CODE BEGIN 3 */
+
   /* USER CODE END 3 */
 }
 
