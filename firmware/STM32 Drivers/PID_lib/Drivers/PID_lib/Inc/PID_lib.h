@@ -18,9 +18,8 @@ typedef struct
     double ki;
     double kd;
     double max_output_abs;
-    double min_output_abs;
     double rollover_max;
-    double error_threshold;
+    double min_output_abs;
 } PID_InitTypeDef;
 
 typedef struct
@@ -41,6 +40,9 @@ typedef struct
 void PID_Init(PID_HandleTypeDef *PID);
 
 void PID_Update(PID_HandleTypeDef *PID);
+void PID_Update_RolloverCount(PID_HandleTypeDef *PID);
+void PID_Update_BangBang(PID_HandleTypeDef *PID);
+
 
 void PID_ChangeSetPoint(PID_HandleTypeDef *PID, double set_point);
 

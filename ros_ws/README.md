@@ -31,3 +31,6 @@ Clean the WS and rebuild:
 rm -rf build/ install/ log/ && colcon build --symlink-install
 ```
 
+## Usage
+Please refer to the [bringup documentation](src/bringup_py/README.md) within the `bringup_py` package for details.
+

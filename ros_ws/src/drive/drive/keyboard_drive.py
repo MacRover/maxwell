@@ -18,7 +18,7 @@ def getch():  # this function is used to get key input from user in the terminal
 def main():
     rclpy.init(args=None)
     node = Node("keyboard_controller")
-    publisher = node.create_publisher(Twist, "/cmd_vel", 10)
+    publisher = node.create_publisher(Twist, "/drive/cmd_vel", 10)
     vel_msg = Twist()
 
     print(

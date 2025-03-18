@@ -47,6 +47,7 @@
 #define AVERAGING_WINDOW_SIZE 10
 
 #define MOTOR_GEARING gearing
+#define STEPS_PER_REVOLUTION steps_per_revolution
 #define MAX_ROTATIONS max_rotations
 
 /* USER CODE END PD */
@@ -69,6 +70,7 @@ uint16_t min_angle;
 uint16_t max_angle;
 uint16_t gearing;
 uint16_t max_rotations;
+uint16_t steps_per_revolution;
 
 float software_stop = 0;
 uint8_t cw_enable = 0;
@@ -146,6 +148,24 @@ int main(void)
     rad_params.SMARTEN_SEMIN = 0b0000;
     rad_params.SMARTEN_SEUP = 0b00;
 
+    rad_params.PID_MIN_OUTPUT = 20;
+    rad_params.PID_MAX_OUTPUT = 50;
+
+    rad_params.HOME_OFFSET = 0;
+
+
+    //DRIVEDAY HARDCODE
+
+    rad_params.RAD_ID = 0x13;
+    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
+    rad_params.STEPPER_SPEED = 1000;
+    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; //every second
+    rad_params.P = 0.06;
+    rad_params.I = 0.000001;
+    rad_params.D = 0;
+    rad_params.PID_MIN_OUTPUT = 20;
+
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -197,6 +217,16 @@ int main(void)
 //        rad_params.ODOM_INTERVAL = 1000;
 //        rad_params.HEALTH_INTERVAL = 5000;
         //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
+//        rad_params.RAD_ID = 0x13;
+//		rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
+//		rad_params.STEPPER_SPEED = 1000;
+//		rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+//		rad_params.HEALTH_INTERVAL = 1000; //every second
+//		rad_params.P = 0.06;
+//		rad_params.I = 0.000001;
+//		rad_params.D = 0;
+//		rad_params.PID_MIN_OUTPUT = 20;
+
     }
     //free(temp);
 
@@ -214,6 +244,7 @@ int main(void)
         {
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
             break;
         }
         case RAD_TYPE_UNDEFINED:
@@ -221,6 +252,7 @@ int main(void)
         {
             MAX_ROTATIONS = 5; //60 degrees
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
             break;
         }
     }
@@ -231,11 +263,6 @@ int main(void)
     angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
     
     MX_CAN_UpdateIdAndFilters(&rad_can);
-
-    if (rad_params.STEPPER_SPEED == 0)
-	{
-		rad_params.STEPPER_SPEED = 1;
-	}
 
     uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
 
@@ -322,6 +349,7 @@ int main(void)
                     {
                         new_setpoint = max_angle;
                     }
+                    
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
                 }
@@ -810,6 +838,9 @@ int main(void)
                     {
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
+
+                    rad_state = RAD_STATE_INIT;
+
                     break;
                 }
                 case REBOOT:
@@ -821,6 +852,56 @@ int main(void)
                 {
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
+
+                    MX_CAN_UpdateIdAndFilters(&rad_can);
+
+                    break;
+                }
+                case SET_PID_MIN_OUTPUT:
+                {
+                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MIN_OUTPUT = pid_1.Init.min_output_abs;
+
+                    break;
+                }
+                case GET_PID_MIN_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_MIN_OUTPUT);
+                    break;
+                }
+                case SET_PID_MAX_OUTPUT:
+                {
+                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
+
+                    break;
+                }
+                case GET_PID_MAX_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, (uint16_t) pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
+                    break;
+                }
+                case SET_HOME_OFFSET:
+                {
+
+                    //don't apply offset without working encoder
+                    // if (rad_status.ENCODER_STATUS != AS5048A_OK)
+                    // {
+                    //     break;
+                    // }
+
+                    // //number of steps the stepper is offset by
+                    // double delta_stepper = (pid_1.__set_point - pid_1.feedback_adj);
+
+                    // //store values in PID reference frame
+                    // rad_params.HOME_OFFSET = delta_stepper;
+
+                    break;
+
+                }
+                case GET_HOME_OFFSET:
+                {
+                    //MX_CAN_Broadcast_Double_Data(&rad_can, rad_params.HOME_OFFSET, GET_HOME_OFFSET);
                     break;
                 }
                 default:
@@ -891,14 +972,29 @@ int main(void)
 
                 if ((steps_to_move > 0) && cw_enable)
                 {
+
+                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
+                    {
+                        TMC_2590_Stop(&tmc_2590_1);
+                    }
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
                 }
                 else if ((steps_to_move < 0) && ccw_enable)
                 {
+                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
+                    {
+                        TMC_2590_Stop(&tmc_2590_1);
+                    }
                     rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
                 }
 
                 steps_to_move = 0;
+
+                //keep the encoder updated if we still have it - for open loop
+                if ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) == AS5048A_OK)
+                {
+                    PID_Update_RolloverCount(&pid_1);
+                }
 
                 break;
             }
@@ -913,22 +1009,27 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
+
+                           
                             PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
                             PID_ChangeSetPoint(&pid_1, max_angle*MOTOR_GEARING);
                             software_stop = min_angle;
+
                             break;
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
+
                             PID_SetZeroPoint(&pid_1);
                             PID_ChangeSetPoint(&pid_1, min_angle*MOTOR_GEARING);
+
                             software_stop = max_angle;
                             break;
                         default:
                             break;
                     }
 
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
-                    PID_Update(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
 
                     
 
@@ -984,15 +1085,19 @@ int main(void)
                          //encoder has failed
                         rad_state = RAD_STATE_PULSE_CONTROL;
                     }
+                    ccw_enable = 0;
+                    cw_enable = 0;
                 }   
                 else
                 {
                     //reset failure counter
                     consecutive_encoder_failures = 0;
+
+                    //Don't update PID unless we have a new value
+                    PID_Update_BangBang(&pid_1);
                 }
 
                 
-                PID_Update(&pid_1);
 
                 if (ls_state == GPIO_PIN_SET)
                 {
@@ -1001,14 +1106,19 @@ int main(void)
 
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
                         {
+
+                            
                             PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
+                       
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
                         }
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
                         {
+                            
                             PID_SetZeroPoint(&pid_1);
+                            
                             cw_enable = 1;
                             ccw_enable = 0;
                             break;
@@ -1047,14 +1157,22 @@ int main(void)
                     }
                 }
 
+                //convert degrees to steps
+                int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0); // 0.555555556
+
                 if ((pid_1.output > 0) && cw_enable)
                 {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
                 }
                 else if ((pid_1.output < 0) && ccw_enable)
                 {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, (int16_t) pid_1.output);
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
                 }
+                else if ((cw_enable == 0) || (ccw_enable == 0))
+                {
+                    TMC_2590_Stop(&tmc_2590_1);
+                }
+
 
                 break;
             }
@@ -1087,6 +1205,8 @@ int main(void)
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
+            //Update TMC state as it changes asynchrnously
+            rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 

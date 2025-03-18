@@ -37,6 +37,10 @@ class VESC:
         self.scaling = 1
         self.cmd_id: CMD = CMD.CAN_PACKET_SET_RPM
         self.data = 0
+        self.gearing = 1.0
+    
+    def set_gear_reduction(self, gearing: float) -> None:
+        self.gearing = gearing
     
     def get_can_message(self) -> CANraw:
         self.can.address = self.id.value | (self.cmd_id.value << 8)
@@ -60,7 +64,7 @@ class VESC:
         rpm_min = 249
         if (rpm < 0): 
             rpm_min = -rpm_min
-        self.data = int(rpm * 10 * 3 + rpm_min)
+        self.data = int(rpm * 10 * 3 * self.gearing + rpm_min)
         self.scaling = 1
     
     def set_speed_mps(self, speed: float) -> None:
