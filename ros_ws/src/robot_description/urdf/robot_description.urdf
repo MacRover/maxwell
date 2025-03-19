@@ -3,25 +3,22 @@
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="robot_description" xmlns:xacro="http://www.ros.org/wiki/xacro"  >
-  <xacro:if value="$(arg is_simulation)">
-    <xacro:include filename="$(find robot_description)/urdf/gazebo.xacro" />
-  </xacro:if>
+  name="robot_description">
   <link
-    name="chassis">
+    name="arm_base_footprint">
     <inertial>
       <origin
-        xyz="0.98327730139548 1.07151242977811 0.880681745018112"
+        xyz="0.0245718759576531 0.0971703622253317 -0.0699463467606601"
         rpy="0 0 0" />
       <mass
-        value="3.00191258390929" />
+        value="119.491304287739" />
       <inertia
-        ixx="0.239986102764044"
-        ixy="0.00226006115800019"
-        ixz="-0.0170449261569708"
-        iyy="0.364192702183347"
-        iyz="0.000410044367257076"
-        izz="0.153655539258852" />
+        ixx="15.3504436258168"
+        ixy="3.96596317291848E-07"
+        ixz="1.83243379728635E-06"
+        iyy="19.953186801234"
+        iyz="4.36312632292381"
+        izz="9.79865788195426" />
     </inertial>
     <visual>
       <origin
@@ -29,7 +26,105 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/chassis.STL" />
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base_footprint.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="arm_base">
+    <inertial>
+      <origin
+        xyz="0.00139266117755199 0.0295153883369309 0.0797519788008734"
+        rpy="0 0 0" />
+      <mass
+        value="3.22741129215856" />
+      <inertia
+        ixx="0.0188290668811091"
+        ixy="-0.000207612351384155"
+        ixz="-8.10961041746693E-05"
+        iyy="0.0149405119098863"
+        iyz="-0.0016305031246679"
+        izz="0.0151539463795049" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.796078431372549 0.823529411764706 0.937254901960784 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_base.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_base_joint"
+    type="revolute">
+    <origin
+      xyz="0.025047 -0.11824 0.13851"
+      rpy="0 0 0.049606" />
+    <parent
+      link="arm_base_footprint" />
+    <child
+      link="arm_base" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="10"
+      velocity="10" />
+  </joint>
+  <link
+    name="arm_shoulder">
+    <inertial>
+      <origin
+        xyz="0.0484529280588457 -0.076199882567414 -0.0193978900454077"
+        rpy="0 0 0" />
+      <mass
+        value="0.974957548893572" />
+      <inertia
+        ixx="0.0019996818638543"
+        ixy="-2.6856548951694E-09"
+        ixz="5.58851482820311E-05"
+        iyy="0.0241635485497036"
+        iyz="1.05390600085211E-09"
+        izz="0.0221704192550498" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
       </geometry>
       <material
         name="">
@@ -43,141 +138,43 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/chassis.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <link
-    name="rear_right_swerve">
-    <inertial>
-      <origin
-        xyz="-0.0104494510740284 -0.0477345887574869 -0.0104244719000425"
-        rpy="0 0 0" />
-      <mass
-        value="0.542640143684388" />
-      <inertia
-        ixx="0.00079995914007838"
-        ixy="1.59982758198833E-06"
-        ixz="0.000136993625433279"
-        iyy="0.000590903972219635"
-        iyz="1.10148528801798E-06"
-        izz="0.000799957509622796" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_right_swerve.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_right_swerve.STL" />
+          filename="package://robot_description/meshes/arm_shoulder.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="rear_right_swerve_joint"
+    name="arm_shoulder_joint"
     type="revolute">
     <origin
-      xyz="0.68344 -0.49838 0.7682"
-      rpy="0 0 -1.5703" />
+      xyz="0.0635 -0.19367 0.3277"
+      rpy="3.1416 0.3735 1.5212" />
     <parent
-      link="chassis" />
+      link="arm_base" />
     <child
-      link="rear_right_swerve" />
-    <axis
-      xyz="0 0 1" />
-    <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="10"
-      velocity="10" />
-  </joint>
-  <link
-    name="rear_right_wheel">
-    <inertial>
-      <origin
-        xyz="1.59073720862324E-09 -0.000197750569955524 2.7684601812461E-05"
-        rpy="0 0 0" />
-      <mass
-        value="0.656482054320521" />
-      <inertia
-        ixx="0.00148549672252236"
-        ixy="-9.89490282732782E-11"
-        ixz="7.33170733284716E-11"
-        iyy="0.00271753332808322"
-        iyz="5.37902018164859E-08"
-        izz="0.0014863037774332" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_right_wheel.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_right_wheel.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="rear_right_wheel_joint"
-    type="continuous">
-    <origin
-      xyz="0 0.00025221 -0.123"
-      rpy="0 0 0" />
-    <parent
-      link="rear_right_swerve" />
-    <child
-      link="rear_right_wheel" />
+      link="arm_shoulder" />
     <axis
       xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
+      lower="-1.57"
+      upper="1.57"
       effort="10"
       velocity="10" />
   </joint>
   <link
-    name="rear_left_swerve">
+    name="arm_elbow">
     <inertial>
       <origin
-        xyz="1.51718870395889E-05 -0.0146301502407999 -0.0473418545998382"
+        xyz="-0.1060959449046 0.0408368222638692 0.0698500413919339"
         rpy="0 0 0" />
       <mass
-        value="0.547461864226621" />
+        value="1.84402735327987" />
       <inertia
-        ixx="0.000663188000274628"
-        ixy="-8.15227789668012E-10"
-        ixz="-3.52381215417115E-07"
-        iyy="0.000937168733698632"
-        iyz="1.91011664848317E-06"
-        izz="0.000591064539342772" />
+        ixx="0.00543516703844774"
+        ixy="0.0124030077463986"
+        ixz="-1.45477801304255E-08"
+        iyy="0.0845142534871854"
+        iyz="4.68695576828311E-09"
+        izz="0.0899370275946364" />
     </inertial>
     <visual>
       <origin
@@ -185,121 +182,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/rear_left_swerve.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_left_swerve.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="rear_left_swerve_joint"
-    type="revolute">
-    <origin
-      xyz="1.2863 -0.49838 0.7682"
-      rpy="0 0 -1.5703" />
-    <parent
-      link="chassis" />
-    <child
-      link="rear_left_swerve" />
-    <axis
-      xyz="0 0 1" />
-    <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="10"
-      velocity="10" />
-  </joint>
-  <link
-    name="rear_left_wheel">
-    <inertial>
-      <origin
-        xyz="-1.59073604288906E-09 0.000197750569954858 2.7684601812461E-05"
-        rpy="0 0 0" />
-      <mass
-        value="0.656482054320516" />
-      <inertia
-        ixx="0.00148549672252236"
-        ixy="-9.8949028528341E-11"
-        ixz="-7.33170735751615E-11"
-        iyy="0.00271753332808322"
-        iyz="-5.37902018164718E-08"
-        izz="0.00148630377743321" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_left_wheel.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/rear_left_wheel.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="rear_left_wheel_joint"
-    type="continuous">
-    <origin
-      xyz="0 -0.00025221 -0.123"
-      rpy="0 0 0" />
-    <parent
-      link="rear_left_swerve" />
-    <child
-      link="rear_left_wheel" />
-    <axis
-      xyz="0 1 0" />
-    <limit
-      effort="10"
-      velocity="10" />
-  </joint>
-  <link
-    name="front_left_swerve">
-    <inertial>
-      <origin
-        xyz="1.73514417078913E-05 -0.0133331786828048 -0.0537440061727622"
-        rpy="0 0 0" />
-      <mass
-        value="0.558004791412519" />
-      <inertia
-        ixx="0.000663539303072256"
-        ixy="-8.15227790064344E-10"
-        ixz="-3.52381215444682E-07"
-        iyy="0.000937984101930968"
-        iyz="1.91011664848573E-06"
-        izz="0.000591478575874573" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/front_left_swerve.STL" />
+          filename="package://robot_description/meshes/arm_elbow.STL" />
       </geometry>
       <material
         name="">
@@ -313,99 +196,43 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/front_left_swerve.STL" />
+          filename="package://robot_description/meshes/arm_elbow.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="front_left_swerve_joint"
+    name="arm_elbow_joint"
     type="revolute">
     <origin
-      xyz="1.2863 -1.4072 0.77214"
-      rpy="0 0 -1.5703" />
+      xyz="-0.22191 -0.00635 0.25014"
+      rpy="-1.5708 -1.3963 3.1416" />
     <parent
-      link="chassis" />
+      link="arm_shoulder" />
     <child
-      link="front_left_swerve" />
-    <axis
-      xyz="0 0 1" />
-    <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="10"
-      velocity="10" />
-  </joint>
-  <link
-    name="front_left_wheel">
-    <inertial>
-      <origin
-        xyz="-1.59073731964554E-09 0.000197750569956412 2.7684601812239E-05"
-        rpy="0 0 0" />
-      <mass
-        value="3.656482054320522" />
-      <inertia
-        ixx="0.00148549672252236"
-        ixy="-9.89490284633312E-11"
-        ixz="-7.33170737634534E-11"
-        iyy="0.00271753332808322"
-        iyz="-5.37902018166521E-08"
-        izz="0.00148630377743321" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/front_left_wheel.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://robot_description/meshes/front_left_wheel.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="front_left_wheel_joint"
-    type="continuous">
-    <origin
-      xyz="0 -0.00025221 -0.12694"
-      rpy="0 0 0" />
-    <parent
-      link="front_left_swerve" />
-    <child
-      link="front_left_wheel" />
+      link="arm_elbow" />
     <axis
       xyz="0 1 0" />
     <limit
+      lower="-1.57"
+      upper="1.57"
       effort="10"
       velocity="10" />
   </joint>
   <link
-    name="front_right_swerve">
+    name="arm_wrist">
     <inertial>
       <origin
-        xyz="-1.7351441706337E-05 0.0133331786828054 -0.0469723661727601"
+        xyz="0.00452642086525723 -0.0341652481567961 0.0380102710767077"
         rpy="0 0 0" />
       <mass
-        value="0.558004791412519" />
+        value="0.266662965128272" />
       <inertia
-        ixx="0.000663539303072266"
-        ixy="-8.15227791272557E-10"
-        ixz="3.52381215427771E-07"
-        iyy="0.000937984101930992"
-        iyz="-1.91011664848739E-06"
-        izz="0.000591478575874592" />
+        ixx="0.000424918034348284"
+        ixy="-1.542962546561E-07"
+        ixz="4.19717565955253E-08"
+        iyy="0.00039882459381919"
+        iyz="-4.47397837846059E-07"
+        izz="0.000295655638047142" />
     </inertial>
     <visual>
       <origin
@@ -413,7 +240,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/front_right_swerve.STL" />
+          filename="package://robot_description/meshes/arm_wrist.STL" />
       </geometry>
       <material
         name="">
@@ -427,43 +254,43 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/front_right_swerve.STL" />
+          filename="package://robot_description/meshes/arm_wrist.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="front_right_swerve_joint"
+    name="arm_wrist_joint"
     type="revolute">
     <origin
-      xyz="0.68344 -1.4072 0.76536"
-      rpy="0 0 -1.5703" />
+      xyz="0.2358 -0.019078 0.028575"
+      rpy="0 0 2.2066" />
     <parent
-      link="chassis" />
+      link="arm_elbow" />
     <child
-      link="front_right_swerve" />
+      link="arm_wrist" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 1 0" />
     <limit
-      lower="-3.14"
-      upper="3.14"
+      lower="-1.57"
+      upper="1.57"
       effort="10"
       velocity="10" />
   </joint>
   <link
-    name="front_right_wheel">
+    name="gripper">
     <inertial>
       <origin
-        xyz="1.59073687555633E-09 -0.000197750569955524 2.7684601812128E-05"
+        xyz="-0.0776681189833697 0.0081921997027346 -0.00504119866871313"
         rpy="0 0 0" />
       <mass
-        value="3.656482054320521" />
+        value="0.635591580584878" />
       <inertia
-        ixx="0.00148549672252236"
-        ixy="-9.89490282816427E-11"
-        ixz="7.33170737863754E-11"
-        iyy="0.00271753332808322"
-        iyz="5.3790201816682E-08"
-        izz="0.0014863037774332" />
+        ixx="0.000351925210187597"
+        ixy="-3.1754818227097E-07"
+        ixz="1.6060871751641E-06"
+        iyy="0.00118813268308321"
+        iyz="1.04694135391267E-08"
+        izz="0.000974385356510224" />
     </inertial>
     <visual>
       <origin
@@ -471,12 +298,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/front_right_wheel.STL" />
+          filename="package://robot_description/meshes/gripper.STL" />
       </geometry>
       <material
         name="">
         <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
       </material>
     </visual>
     <collision>
@@ -485,55 +312,26 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robot_description/meshes/front_right_wheel.STL" />
+          filename="package://robot_description/meshes/gripper.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="front_right_wheel_joint"
-    type="continuous">
+    name="gripper joint"
+    type="revolute">
     <origin
-      xyz="0 0.00025221 -0.12016"
-      rpy="0 0 0" />
+      xyz="0.0051746 -0.075951 0.035385"
+      rpy="-3.1368 0 1.5708" />
     <parent
-      link="front_right_swerve" />
+      link="arm_wrist" />
     <child
-      link="front_right_wheel" />
+      link="gripper" />
     <axis
-      xyz="0 1 0" />
+      xyz="1 0 0" />
     <limit
+      lower="-1.57"
+      upper="1.57"
       effort="10"
       velocity="10" />
   </joint>
-
-  <xacro:macro name="steering_module_controller" params="name">
-      <joint name="${name}_swerve_joint">
-          <command_interface name="position">
-              <param name="min">-${2 * 3.14}</param>
-              <param name="max">${2 * 3.14}</param>
-          </command_interface>
-          <state_interface name="position"/>
-          <state_interface name="velocity"/>
-          <state_interface name="acceleration"/>
-      </joint>
-      <joint name="${name}_wheel_joint">
-          <command_interface name="velocity">
-              <param name="min">-100</param>
-              <param name="max">100</param>
-          </command_interface>
-          <state_interface name="position"/>
-          <state_interface name="velocity"/>
-          <state_interface name="acceleration"/>
-      </joint>
-  </xacro:macro>
-
-  <ros2_control name="RoverJointControl" type="system">
-      <hardware>
-          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
-      </hardware>
-      <xacro:steering_module_controller name="front_left" />
-      <xacro:steering_module_controller name="front_right" />
-      <xacro:steering_module_controller name="rear_left" />
-      <xacro:steering_module_controller name="rear_right" />
-  </ros2_control>
 </robot>
