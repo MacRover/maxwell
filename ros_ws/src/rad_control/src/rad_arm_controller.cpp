@@ -22,7 +22,7 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   this->declare_parameter("b_elbow", 0.175);
   this->declare_parameter("shoulder_offset", 89.17);
   this->declare_parameter("elbow_offset", 114.724); 
-  this->declare_parameter("base_gear_reduction", 0);
+  this->declare_parameter("base_gear_reduction", 0.0);
   this->declare_parameter("screw_max", 13320); 
   this->declare_parameter("can_rate", 10);
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
@@ -64,8 +64,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   a_elbow = this->get_parameter("a_elbow").as_double();
   b_shoulder = this->get_parameter("b_shoulder").as_double();
   b_elbow = this->get_parameter("b_elbow").as_double();
-  screw_max = this->get_parameter("screw_max").as_double(); 
-  
+  // // screw max parameter add
 
   float base_angle = msg.position[0]; 
   float shoulder_angle = msg.position[1] + shoulder_offset;
@@ -77,14 +76,12 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float ls = pitch_angle + wrist_angle; 
   float rs = pitch_angle - wrist_angle; 
   float pi = 3.141592653;
-  
 
-
-  // Pretty sure isolating for Theta_M gives: 
-  // Possibly needed in degrees depending on movei
-  float theta_m_shoulder = 13320 - (2*pi/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle)+pow(a_shoulder,2)+pow(b_shoulder,2)));
-  float theta_m_elbow =13320 - (2*pi/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle)+pow(a_elbow,2)+pow(b_elbow,2)));
-  
+  // // Pretty sure isolating for Theta_M gives: 
+  // // Possibly needed in degrees depending on movei
+   float theta_m_shoulder = 13320 - (360/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle*pi/180)+pow(a_shoulder,2)+pow(b_shoulder,2)));
+   float theta_m_elbow = (360/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle*pi/180)+pow(a_elbow,2)+pow(b_elbow,2)));
+ 
 /*
   SHOULDER
   lmin = 0.33m 
