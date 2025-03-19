@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(custom_interfaces)
+project(viper_control)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,18 +7,34 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(custom_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/CANraw.msg"
-  "msg/SwerveModule.msg"
-  "msg/SwerveModulesList.msg"
-  "msg/RadStatus.msg"
-  "msg/SwerveModulePulse.msg"
-  "msg/ViperStatus.msg"
-  "msg/ViperCardStatus.msg"
-  DEPENDENCIES std_msgs
+set(Targets
+    viper_status
+    viper_tool
+  )
+
+foreach(target ${Targets})
+  add_executable(${target} src/${target}.cpp src/viper.cpp)
+  ament_target_dependencies(${target} rclcpp custom_interfaces std_msgs)
+  target_include_directories(${target} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  target_compile_features(${target} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+endforeach()
+
+install(TARGETS ${Targets}
+  DESTINATION lib/${PROJECT_NAME})
+
+# Install launch files.
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 if(BUILD_TESTING)
