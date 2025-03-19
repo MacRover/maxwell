@@ -5,7 +5,10 @@ rad_status_to_id = {
     "/drive/front_right/rad_status": 0x11,
     "/drive/front_left/rad_status": 0x12,
     "/drive/rear_left/rad_status": 0x13,
-    "/drive/rear_right/rad_status": 0x14
+    "/drive/rear_right/rad_status": 0x14,
+    "/arm/joint0/rad_status": 0x15,
+    "/arm/joint1/rad_status": 0x16,
+    "/arm/joint2/rad_status": 0x17
 }
 
 def generate_launch_description():

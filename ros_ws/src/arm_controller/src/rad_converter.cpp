@@ -16,7 +16,7 @@ RAD_Converter::RAD_Converter() : Node("rad_arm_converter"),
   for (int i = 0; i < NUM_JOINTS; i++)
   {
     sub_[i] = this->create_subscription<custom_interfaces::msg::RadStatus>(
-        "/joint" + std::to_string(i) + "/rad_status", 10,
+        "/arm/joint" + std::to_string(i) + "/rad_status", 10,
         [this, i](const custom_interfaces::msg::RadStatus::SharedPtr msg)
         {
           switch (i)
