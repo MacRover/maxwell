@@ -22,17 +22,17 @@ RAD_Converter::RAD_Converter() : Node("rad_arm_converter"),
           switch (i)
           {
           case 1: // Shoulder
-            joint_state_.position[i] = acos((a_shoulder*a_shoulder + b_shoulder*b_shoulder - pow((0.00254 / (2 * M_PI) * (13320 - msg->angle) + lmin_shoulder), 2)) / (2 * a_shoulder * b_shoulder));
+            joint_state_.position[i] = acos((a_shoulder*a_shoulder + b_shoulder*b_shoulder - pow((0.00254 / 360 * (13320 - msg->angle) + lmin_shoulder), 2)) / (2 * a_shoulder * b_shoulder));
             joint_state_.position[i] -= shoulder_offset;
             std::cout << "Shoulder: " << joint_state_.position[i]*180/M_PI << std::endl;
             break;
           case 2: // Elbow
-            joint_state_.position[i] = acos((a_elbow*a_elbow + b_elbow*b_elbow - pow((0.00254 / (2 * M_PI) * (13320 - msg->angle) + lmin_elbow), 2)) / (2 * a_elbow * b_elbow));
+            joint_state_.position[i] = acos((a_elbow*a_elbow + b_elbow*b_elbow - pow((0.00254 / 360 * (msg->angle) + lmin_elbow), 2)) / (2 * a_elbow * b_elbow));
             joint_state_.position[i] -= elbow_offset;
             std::cout << "Elbow: " << joint_state_.position[i]*180/M_PI << std::endl;
             break;
           default:
-            joint_state_.position[i] = msg->angle;
+            joint_state_.position[i] = 0.0;
             break;
           }
           // joint_state_.velocity[i] = msg->speed;

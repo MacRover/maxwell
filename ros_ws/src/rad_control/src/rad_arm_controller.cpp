@@ -28,7 +28,7 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
-    "/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1)
+    "/arm/hardware/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1)
   );
  /* pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
     "/arm/can/can_out", 10
@@ -67,7 +67,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   // // screw max parameter add
 
   float base_angle = msg.position[0]; 
-  float shoulder_angle = msg.position[1] + shoulder_offset;
+  float shoulder_angle = msg.position[1]*180/M_PI + shoulder_offset;
   float elbow_angle = msg.position[2] + elbow_offset;
   float pitch_angle = msg.position[3];
   float wrist_angle = msg.position[4];
@@ -107,7 +107,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   rad_gripper_arm.set_target_angle(gripper_angle);
 
   std::cout<< theta_m_shoulder << std::endl; 
-  std::cout<< theta_m_elbow << std::endl;
+  //std::cout<< theta_m_elbow << std::endl;
   this->_publish_to_can(); 
 }
 
