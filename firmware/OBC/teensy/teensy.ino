@@ -16,12 +16,12 @@
 #include "fans.h"
 #include "TSB.h"
 #include "servo.h" 
-#define ON_ROVER
+//#define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
-// #define USING_TSB
+ //#define USING_TSB
 //#define USING_FANS
 #define USING_SERVO
 
@@ -33,14 +33,14 @@
 #define MG_TO_MS2 0.0098066
 #define DEG_TO_RAD 0.01745329
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
-#define ROS_EXECUTE_INTERVAL(time,fn)  {\
-  static int64_t init = -1;\
-  if (init == -1){init = uxr_millis(); }\
-  if (uxr_millis() - init > time) { \
-    fn;\
-    init = uxr_millis();\
-  }\
-} 
+#define ROS_EXECUTE_INTERVAL(MS, X)  do { \
+  static volatile int64_t init = -1; \
+  if (init == -1) { init = uxr_millis();} \
+  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
+} while (0)\
+
+
+
 
 
 rcl_allocator_t allocator;
@@ -51,9 +51,7 @@ rcl_node_t teensy_node;
 rcl_publisher_t imu_pub;
 rcl_publisher_t gps_pub;
 rcl_publisher_t tsb_pub;
-rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
-   
+
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
@@ -75,6 +73,7 @@ IPAddress arduino_ip(192, 168, 1, 177);
 #endif
 
 unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0;
+rcl_init_options_t init_options;
 
 
 struct timespec tp;
@@ -167,16 +166,19 @@ void obc_destory_uros_entities()
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
-
+static bool options_initialized = false;
 bool obc_setup_uros()
 {
 #ifdef USING_ROS
-    set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     allocator = rcl_get_default_allocator();
 
-    
-    RCCHECK(rcl_init_options_init(&init_options, allocator));
-    RCCHECK(rcl_init_options_set_domain_id(&init_options, DOMAIN_ID));
+    if (!options_initialized) {
+        rcl_init_options_t local_init_options = rcl_get_zero_initialized_init_options();
+        RCCHECK(rcl_init_options_init(&local_init_options, allocator));
+        RCCHECK(rcl_init_options_set_domain_id(&local_init_options, DOMAIN_ID));
+        init_options = local_init_options;  
+        options_initialized = true;
+    }
 
     RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
@@ -271,6 +273,7 @@ return true;
 
 void setup()
 {
+    set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     Wire1.begin();
     Wire1.setClock(400000);
     Serial5.begin(38400);
@@ -283,29 +286,34 @@ void setup()
     obc_setup_imu();
     obc_setup_gps();
     obc_setup_tsb();
-    obc_setup_uros();
-    state_UROS = UROS_INIT;
+    state_UROS = UROS_FOUND;
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
 }
 
 void Uros_SM(){
    switch (state_UROS) {
-    case UROS_INIT:
-      ROS_EXECUTE_INTERVAL(500, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent_options(100, 1, rmw_options)) ? UROS_OK : UROS_ERROR;);
-      digitalWrite(LED_PIN, LOW);
+    case UROS_INIT: {
+      ROS_EXECUTE_INTERVAL(500, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_FOUND : UROS_INIT;);
       break;
-    case UROS_FOUND:
+    }
+    case UROS_FOUND:{
      if (obc_setup_uros()){
       state_UROS = UROS_OK;
      }
      else {
-      state_UROS = UROS_ERROR;
+      state_UROS = UROS_INIT;
      }
+     if (state_UROS == UROS_INIT) {
+      obc_destory_uros_entities();
+      };
       break;
-    case UROS_OK:
-      ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent_options(100, 1, rmw_options)) ? UROS_OK : UROS_ERROR;);
+    }
+    case UROS_OK:{
+      ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_OK : UROS_ERROR;);
+      
       if (state_UROS == UROS_OK) {
+        digitalWrite(LED_PIN, HIGH);
         if ((millis() - prev_time2) > 40) {
             prev_time2 = millis();
 
@@ -316,18 +324,21 @@ void Uros_SM(){
         #ifdef USING_SERVO
           servo_spin_executor();
         #endif
-    }
+        }
+        
+    
     break;
+    }
 
-    case UROS_ERROR:
+    case UROS_ERROR:{
       obc_destory_uros_entities();
       digitalWrite(LED_PIN, LOW);
       state_UROS = UROS_INIT;
       break;
+    }
       
-    default:
-      state_UROS = UROS_INIT;
-      break;
+  default:
+    break;
 }
 }
 void FANS_SM() {
