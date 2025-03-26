@@ -61,8 +61,16 @@
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string GRIPPER = "panda_hand";
-const std::string ARM_BASE = "panda_link0";
+const std::string GRIPPER_FRAME_ID = "gripper";
+const std::string BASE_FRAME_ID = "arm_base";
+const std::string BASE_FOOTPRINT_FRAME_ID = "arm_base_footprint";
+const std::string SHOULDER_JOINT_FRAME_ID = "arm_shoulder_joint";
+const std::string SHOULDER_FRAME_ID = "arm_shoulder";
+const std::string ELBOW_JOINT_FRAME_ID = "arm_elbow_joint";
+const std::string ELBOW_FRAME_ID = "arm_elbow";
+const std::string WRIST_FRAME_ID = "arm_wrist";
+const std::string WRIST_JOINT_FRAME_ID = "arm_wrist_joint";
+const std::string GRIPPER_JOINT_FRAME_ID = "gripper_joint";
 
 // Enums for button names -> axis/button array index
 // For XBOX 1 controller
@@ -89,7 +97,8 @@ enum Button
   MENU = 7,
   HOME = 8,
   LEFT_STICK_CLICK = 9,
-  RIGHT_STICK_CLICK = 10
+  RIGHT_STICK_CLICK = 10,
+  START = 11 //add button upload(11) instead of changeview (6) to switch between arm and gripper
 };
 
 // Some axes have offsets (e.g. the default trigger position is 1.0 not 0)
@@ -152,10 +161,10 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
  */
 void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons)
 {
-  if (buttons[CHANGE_VIEW] && frame_name == GRIPPER)
-    frame_name = ARM_BASE;
-  else if (buttons[MENU] && frame_name == ARM_BASE)
-    frame_name = GRIPPER;
+  if (buttons[START] && frame_name == GRIPPER_FRAME_ID)
+    frame_name = BASE_FRAME_ID;
+  else if (buttons[MENU] && frame_name == BASE_FRAME_ID)
+    frame_name = GRIPPER_FRAME_ID;
 }
 
 namespace moveit_servo
@@ -164,7 +173,7 @@ class JoyToServoPub : public rclcpp::Node
 {
 public:
   JoyToServoPub(const rclcpp::NodeOptions& options)
-    : Node("joy_to_twist_publisher", options), frame_to_publish_(ARM_BASE)
+    : Node("joy_to_twist_publisher", options), frame_to_publish_(BASE_FRAME_ID)
   {
     // Setup pub/sub
     joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
@@ -175,6 +184,27 @@ public:
     joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
     collision_pub_ =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("/planning_scene", rclcpp::SystemDefaultsQoS());
+
+    servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
+    servo_stop_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/stop_servo");
+    servo_unpause_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/unpause_servo");
+
+
+    servo_start_client_->wait_for_service(std::chrono::seconds(1));
+    servo_stop_client_->wait_for_service(std::chrono::seconds(1));
+    servo_unpause_client_->wait_for_service(std::chrono::seconds(1));
+
+    //servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+    //servo_stop_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+    //servo_unpause_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+
+
+    // Initialize an empty button state
+    last_buttons_.clear();
+
+    // Setup timer for button checking
+    //timer_ = this->create_wall_timer(std::chrono::milliseconds(100), [this, &buttons]() { checkButtons(buttons); });
+
 
     // Load the collision scene asynchronously
     collision_pub_thread_ = std::thread([this]() {
@@ -218,6 +248,36 @@ public:
     });
   }
 
+  private:
+  bool is_stopped_ = false;
+  void checkButtons(const std::vector<int>& buttons)
+  {
+    if (buttons[LEFT_STICK_CLICK] && !last_buttons_[LEFT_STICK_CLICK])
+    {
+      auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+      servo_start_client_->async_send_request(request);
+      is_stopped_ = false;
+    }
+
+    if (buttons[RIGHT_STICK_CLICK] && !last_buttons_[RIGHT_STICK_CLICK])
+    {
+      auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+      if (is_stopped_)
+      {
+        servo_unpause_client_->async_send_request(request);
+        is_stopped_ = false;
+      }
+      else
+      {
+        servo_stop_client_->async_send_request(request);
+        is_stopped_ = true;
+      }
+    }
+
+    last_buttons_ = buttons;
+  }
+
+  public:
   ~JoyToServoPub() override
   {
     if (collision_pub_thread_.joinable())
@@ -232,6 +292,12 @@ public:
 
     // This call updates the frame for twist commands
     updateCmdFrame(frame_to_publish_, msg->buttons);
+
+    if (last_buttons_.size() != msg->buttons.size()) {
+      last_buttons_.resize(msg->buttons.size(), 0);  // Resize dynamically
+    }
+    //check buttons to control servo
+    checkButtons(msg->buttons);
 
     // Convert the joystick message to Twist or JointJog and publish
     if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg))
@@ -256,6 +322,9 @@ private:
   rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
   rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr collision_pub_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_stop_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_unpause_client_;
+  std::vector<int> last_buttons_;
 
   std::string frame_to_publish_;
 
@@ -275,15 +344,6 @@ int main(int argc, char **argv)
   rclcpp::shutdown();
   return 0;
 }
-//int main(int argc, char **argv){
-//  rclcpp::init(argc, argv);
-//  rclcpp::NodeOptions options;
-
-  // Pass options to the constructor
-//  JoyToServoPub joy_to_servo_pub(options);
-
-//  return 0;
-//}
 
 // Register the component with class_loader
 RCLCPP_COMPONENTS_REGISTER_NODE(moveit_servo::JoyToServoPub)
