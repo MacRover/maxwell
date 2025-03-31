@@ -132,6 +132,9 @@ typedef enum __rad_can_id : uint8_t
     RAD__ARM__BASE     = 0x15,
     RAD__ARM__SHOULDER = 0x16,
     RAD__ARM__ELBOW    = 0x17,
+    RAD__LS            = 0x18,
+    RAD__RS            = 0x19, 
+    RAD__ARM__GRIPPER  = 0x20
 
 } RAD_ID;
 
