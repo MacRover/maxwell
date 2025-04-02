@@ -78,9 +78,9 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float pi = 3.141592653;
 
   // // Pretty sure isolating for Theta_M gives: 
-  // // Possibly needed in degrees depending on movei
+  // // Possibly needed in degrees depending on movei 8280, fr
    float theta_m_shoulder = 13320 - (360/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle*pi/180)+pow(a_shoulder,2)+pow(b_shoulder,2)));
-   float theta_m_elbow = -(360/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle*pi/180)+pow(a_elbow,2)+pow(b_elbow,2)));
+   float theta_m_elbow = (360/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle*pi/180)+pow(a_elbow,2)+pow(b_elbow,2)));
  
 /*
   SHOULDER
