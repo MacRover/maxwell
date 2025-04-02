@@ -125,17 +125,17 @@ def generate_launch_description():
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/arm_base_footprint", "frame_id": "/world"}],
-            ),
-            ComposableNode(
-                package="moveit_servo",
-                plugin="moveit_servo::JoyToServoPub",
-                name="controller_to_servo_node",
-            ),
-            ComposableNode(
-                package="joy",
-                plugin="joy::Joy",
-                name="joy_node",
-            ),
+            )
+            # ComposableNode(
+            #     package="moveit_servo",
+            #     plugin="moveit_servo::JoyToServoPub",
+            #     name="controller_to_servo_node",
+            # ),
+            # ComposableNode(
+            #     package="joy",
+            #     plugin="joy::Joy",
+            #     name="joy_node",
+            # ),
         ],
         output="screen",
     )

@@ -40,7 +40,7 @@ move_group_name:  arm  # Often 'manipulator' or 'arm'
 planning_frame: arm_base_footprint  # The MoveIt planning frame. Often 'base_link' or 'world'
 
 ## Other frames
-ee_frame: gripper  # The name of the IK tip link
+ee_frame_name: gripper  # The name of the IK tip link
 robot_link_command_frame: gripper
 
 ## Configure handling of singularities and joint limits
