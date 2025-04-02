@@ -41,6 +41,7 @@ planning_frame: arm_base_footprint  # The MoveIt planning frame. Often 'base_lin
 
 ## Other frames
 ee_frame: gripper  # The name of the IK tip link
+robot_link_command_frame: gripper
 
 ## Configure handling of singularities and joint limits
 lower_singularity_threshold:  17.0  # Start decelerating when the condition number hits this (close to singularity)

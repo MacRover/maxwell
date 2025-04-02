@@ -1,12 +1,15 @@
 import os
 import yaml
 from launch import LaunchDescription
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from launch.actions import ExecuteProcess
 import xacro
+from pathlib import Path
 from moveit_configs_utils import MoveItConfigsBuilder
 
 
@@ -34,7 +37,7 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     moveit_config = (
-        MoveItConfigsBuilder("arm")
+        MoveItConfigsBuilder("arm", package_name="arm_moveit_config")
         .robot_description(file_path="config/arm.urdf.xacro")
         .to_moveit_configs()
     )
@@ -65,6 +68,8 @@ def generate_launch_description():
         "config",
         "ros2_controllers.yaml",
     )
+    print("=======")
+    print(moveit_config.robot_description)
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -84,7 +89,7 @@ def generate_launch_description():
         ],
     )
 
-    panda_arm_controller_spawner = Node(
+    arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["arm_controller", "-c", "/controller_manager"],
@@ -121,16 +126,16 @@ def generate_launch_description():
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/arm_base_footprint", "frame_id": "/world"}],
             ),
-            # ComposableNode(
-            #     package="moveit_servo",
-            #     plugin="moveit_servo::JoyToServoPub",
-            #     name="controller_to_servo_node",
-            # ),
-            # ComposableNode(
-            #     package="joy",
-            #     plugin="joy::Joy",
-            #     name="joy_node",
-            # ),
+            ComposableNode(
+                package="moveit_servo",
+                plugin="moveit_servo::JoyToServoPub",
+                name="controller_to_servo_node",
+            ),
+            ComposableNode(
+                package="joy",
+                plugin="joy::Joy",
+                name="joy_node",
+            ),
         ],
         output="screen",
     )
@@ -147,13 +152,22 @@ def generate_launch_description():
         ],
         output="screen",
     )
+        # Delay start of robot_controller after `joint_state_broadcaster`
+    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = (
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[arm_controller_spawner],
+            )
+        )
+    )
 
     return LaunchDescription(
         [
             rviz_node,
             ros2_control_node,
             joint_state_broadcaster_spawner,
-            panda_arm_controller_spawner,
+            delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
             servo_node,
             container,
         ]
