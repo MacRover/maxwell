@@ -104,10 +104,11 @@ int main(void)
     /* USER CODE BEGIN 1 */
 
     //SET DEFAULT VALUES
-    rad_params.RAD_ID = 0xF0;
+
+	rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
-    rad_params.STEPPER_SPEED = 500;
+    rad_params.STEPPER_SPEED = 1000;
     rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
     rad_params.HEALTH_INTERVAL = 1000; //every second
     rad_params.P = 0.01;
@@ -138,7 +139,7 @@ int main(void)
     rad_params.DRVCTRL_INTPOL = 0b1;
     rad_params.DRVCTRL_MRES = 0b1000;
 
-    rad_params.SGCSCONF_CS = 5;
+    rad_params.SGCSCONF_CS = 10;
     rad_params.SGCSCONF_SFILT = 0b0;
     rad_params.SGCSCONF_SGT = 0b0000010;
 
@@ -149,22 +150,11 @@ int main(void)
     rad_params.SMARTEN_SEUP = 0b00;
 
     rad_params.PID_MIN_OUTPUT = 20;
-    rad_params.PID_MAX_OUTPUT = 50;
+    rad_params.PID_MAX_OUTPUT = 1000;
 
     rad_params.HOME_OFFSET = 0;
 
-
-    //DRIVEDAY HARDCODE
-
-    rad_params.RAD_ID = 0x13;
-    rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
-    rad_params.STEPPER_SPEED = 1000;
-    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
-    rad_params.HEALTH_INTERVAL = 1000; //every second
-    rad_params.P = 0.06;
-    rad_params.I = 0.000001;
-    rad_params.D = 0;
-    rad_params.PID_MIN_OUTPUT = 20;
+    
 
     /* USER CODE END 1 */
 
@@ -199,7 +189,6 @@ int main(void)
 
     MX_AT24C04C_1_Init(); 
     
-    //uint8_t *temp = (uint8_t*) malloc(sizeof(RAD_PARAMS_TypeDef));
 
     //temporary so we don't cook stepper settings from reading garbage data from eeprom
     RAD_PARAMS_TypeDef eeprom_params;
@@ -209,26 +198,15 @@ int main(void)
     if (rad_status.EEPROM_STATUS == AT24C04C_OK)
     {
         //NORMAL OPERATION
-        rad_params = eeprom_params;
+       rad_params = eeprom_params;
 
-        //IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
-        //rad_params.RAD_ID = 0x11;
-//        rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT;
-//        rad_params.ODOM_INTERVAL = 1000;
-//        rad_params.HEALTH_INTERVAL = 5000;
-        //memcpy(&backup, temp, sizeof(RAD_PARAMS_TypeDef));
-//        rad_params.RAD_ID = 0x13;
-//		rad_params.RAD_TYPE = RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT;
-//		rad_params.STEPPER_SPEED = 1000;
-//		rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
-//		rad_params.HEALTH_INTERVAL = 1000; //every second
-//		rad_params.P = 0.06;
-//		rad_params.I = 0.000001;
-//		rad_params.D = 0;
-//		rad_params.PID_MIN_OUTPUT = 20;
+    //     IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
+//     rad_params.RAD_ID = 0x19;
+//     rad_params.RAD_TYPE = RAD_TYPE_ARM_WRIST_RIGHT;
+//     rad_params.ODOM_INTERVAL = 100;
+//     rad_params.HEALTH_INTERVAL = 1000;
 
     }
-    //free(temp);
 
 
 
@@ -245,6 +223,49 @@ int main(void)
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
+            
+            break;
+        }
+        case RAD_TYPE_ARM_BASE:
+        {
+            MAX_ROTATIONS = RAD_TYPE_ARM_BASE_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_BASE_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_BASE_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_SHOULDER:
+        {
+            MAX_ROTATIONS = RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_SHOULDER_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_SHOULDER_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_ELBOW:
+        {
+            MAX_ROTATIONS = RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_ARM_ELBOW_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_ELBOW_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_WRIST_LEFT:
+        case RAD_TYPE_ARM_WRIST_RIGHT:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            break;
+        }
+        case RAD_TYPE_ARM_GRIPPER:
+        {
+            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
+            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
+            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_UNDEFINED:
@@ -253,6 +274,8 @@ int main(void)
             MAX_ROTATIONS = 5; //60 degrees
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
+            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+
             break;
         }
     }
@@ -943,7 +966,10 @@ int main(void)
             case RAD_STATE_PULSE_CONTROL:
             {
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
+                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
+
                 rad_status.ls_1 = ls_state;
+                rad_status.ls_2 = ls_state_2;
 
                 cw_enable = 1;
         	    ccw_enable = 1;
@@ -965,9 +991,44 @@ int main(void)
                             ccw_enable = 0;
                             break;
                         }
+                        case RAD_TYPE_ARM_SHOULDER:
+                        {
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
+                        case RAD_TYPE_ARM_ELBOW:
+                        {
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
+
                         default:
                             break;
 				    }
+                }
+                if (ls_state_2 == GPIO_PIN_SET)
+                {
+                    switch (rad_params.RAD_TYPE) 
+                    {
+                        case RAD_TYPE_ARM_SHOULDER:
+                        {
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+                        case RAD_TYPE_ARM_ELBOW:
+                        {
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+
+                        default:
+                            break;
+				    }
+                
                 }
 
                 if ((steps_to_move > 0) && cw_enable)
@@ -1004,8 +1065,12 @@ int main(void)
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
                 
+                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
+				rad_status.ls_2 = ls_state_2;
+
                 if (ls_state == GPIO_PIN_SET)
                 {
+                    TMC_2590_Stop(&tmc_2590_1);
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
@@ -1023,6 +1088,21 @@ int main(void)
 
                             software_stop = max_angle;
                             break;
+
+                        case RAD_TYPE_ARM_SHOULDER:
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
+                            break;
+
+                        case RAD_TYPE_ARM_BASE:
+                            PID_SetZeroPoint(&pid_1);
+                            break;
+
+                        case RAD_TYPE_ARM_ELBOW:
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS*360);
+                            break;
+                    
                         default:
                             break;
                     }
@@ -1037,6 +1117,32 @@ int main(void)
 
                     rad_state = RAD_STATE_ACTIVE;
         	    }
+                else if (ls_state_2 == GPIO_PIN_SET)
+                {
+                    TMC_2590_Stop(&tmc_2590_1);
+                    switch (rad_params.RAD_TYPE) 
+                    {
+                        case RAD_TYPE_ARM_SHOULDER:
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0);
+                            break;
+ 
+                        case RAD_TYPE_ARM_ELBOW:
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+                    PID_Update_BangBang(&pid_1);
+
+
+                    rad_state = RAD_STATE_ACTIVE;
+
+                }
                 else
                 {
                     switch (rad_params.RAD_TYPE)
@@ -1051,6 +1157,17 @@ int main(void)
                             rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, -50);
                             break;
                         }
+                        case RAD_TYPE_ARM_SHOULDER:
+                        {
+                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 500);
+                            break;
+                        }
+                        case RAD_TYPE_ARM_ELBOW:
+                        {
+                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 500);
+                            break;
+                        }
+                
                     
                     default:
                         break;
@@ -1068,6 +1185,10 @@ int main(void)
                 GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
                 rad_status.ls_1 = ls_state;
         
+                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
+                rad_status.ls_2 = ls_state_2;
+
+
                 uint8_t i = 0; //safety limit
                 static uint8_t consecutive_encoder_failures = 0;
                 while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
@@ -1123,10 +1244,46 @@ int main(void)
                             ccw_enable = 0;
                             break;
                         }
+                        case RAD_TYPE_ARM_SHOULDER:
+                        {
+                            PID_SetMaxPoint(&pid_1, 37);
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
+                        case RAD_TYPE_ARM_ELBOW:
+                        {
+                            cw_enable = 0;
+                            ccw_enable = 1;
+                            break;
+                        }
                         default:
                             break;
 				    }
 
+                }
+                else if (ls_state_2 == GPIO_PIN_SET)
+                {
+                    switch (rad_params.RAD_TYPE) 
+                    {
+                        case RAD_TYPE_ARM_SHOULDER:
+                        {
+                            PID_SetZeroPoint(&pid_1);
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+                        case RAD_TYPE_ARM_ELBOW:
+                        {
+                            cw_enable = 1;
+                            ccw_enable = 0;
+                            break;
+                        }
+
+                        default:
+                            break;
+				    }
+                
                 }
                 else 
                 {
@@ -1152,6 +1309,7 @@ int main(void)
                             }
                             break;
                         }
+                        
                         default:
                             break;
                     }
