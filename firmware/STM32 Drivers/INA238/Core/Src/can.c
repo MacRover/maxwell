@@ -68,7 +68,7 @@ void MX_CAN_Init(void)
 
   viper_can.hcan = hcan;
 
-  viper_can.id = 0x14;
+  viper_can.id = 0x1;
 
   viper_can.TxHeader.RTR = CAN_RTR_DATA;
   viper_can.TxHeader.IDE = CAN_ID_EXT;

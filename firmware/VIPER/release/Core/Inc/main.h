@@ -86,7 +86,9 @@ typedef struct
 	double OUTPUT_VOLTAGE_B;
 	double OUTPUT_POWER_A; // todo: incorporate into CAN call
 	double OUTPUT_POWER_B; // todo: incorporate into CAN call
-	double TEMPERATURE;
+	double TEMPERATURE_BACKPLANE;
+	double TEMPERATURE_CARD_A;
+	double TEMPERATURE_CARD_B;
 	double OUTPUT_DIAGNOSTIC_A;
 	double OUTPUT_DIAGNOSTIC_B;
 } VIPER_CARD_STATE_TypeDef;

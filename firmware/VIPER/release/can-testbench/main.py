@@ -177,8 +177,16 @@ def decode_message(msg):
 
     command = ""
 
-    if (command_id == 0xF1):
-        command = "Input Voltage"
+    if (command_id == 0x0D):
+        command = "Card Interval"
+    elif (command_id == 0x0A):
+        command = "Health Interval"
+    elif (command_id == 0xF3):
+        command = "Temperature Backplane"
+    elif (command_id == 0xF4):
+        command = "Temperature Card A"
+    elif (command_id == 0xF1):
+        command = "Input Voltage"  
     elif (command_id == 0xF5):
         command = "Temperature"
     elif (command_id == 0xF6):
