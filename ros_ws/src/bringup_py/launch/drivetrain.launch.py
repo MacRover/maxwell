@@ -130,7 +130,7 @@ def generate_launch_description():
         namespace="drive",
         parameters=[{
             "channel": can_channel,
-            "topic": "/can/can_out"
+            "raw_topic": "/can/can_out"
         }]
     )
 
