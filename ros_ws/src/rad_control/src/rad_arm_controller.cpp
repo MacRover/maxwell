@@ -2,6 +2,8 @@
 #include <chrono>
 #include <cmath> 
 #include "rad_control/rad_arm_controller.hpp"
+
+#define LEN_MM_TO_ROTATION (360/0.00254)
 using std::placeholders::_1;
 
 RAD_Arm_Controller::RAD_Arm_Controller() : 
@@ -14,29 +16,22 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   rad_rs_arm(&can_rs, RAD__RS)
  
 {
-  this->declare_parameter("lmin_shoulder", 0.33);
-  this->declare_parameter("lmin_elbow", 0.33);
-  this->declare_parameter("a_shoulder", 0.24);
-  this->declare_parameter("b_shoulder", 0.23);
-  this->declare_parameter("a_elbow", 0.216);
-  this->declare_parameter("b_elbow", 0.175);
-  this->declare_parameter("shoulder_offset", 89.17);
-  this->declare_parameter("elbow_offset", 114.724); 
+  this->declare_parameter<std::vector<double>>("lmins", {0.33, 0.33});        // Shoulder, elbow
+  this->declare_parameter<std::vector<double>>("a_lengths", {0.24, 0.216});   // Shoulder, elbow
+  this->declare_parameter<std::vector<double>>("b_lengths", {0.23, 0.175});   // Shoulder, elbow
+  this->declare_parameter<std::vector<double>>("offsets", {89.17, 114.724});  // Shoulder, elbow
   this->declare_parameter("base_gear_reduction", 0.0);
   this->declare_parameter("screw_max", 13320); 
   this->declare_parameter("can_rate", 10);
+  lmins = this->get_parameter("lmins").as_double_array();
+  a_lengths = this->get_parameter("a_lengths").as_double_array(); 
+  b_lengths = this->get_parameter("b_lengths").as_double_array();
+  offsets = this->get_parameter("offsets").as_double_array();
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1)
   );
- /* pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
-    "/arm/can/can_out", 10
-  ); */
-
-  /*timer_ = this->create_wall_timer(
-    std::chrono::milliseconds(100), std::bind(&RAD_Arm_Controller::_timer_callback, this) 
-  );*/
 }
 void RAD_Arm_Controller::_publish_to_can()
 {
@@ -54,17 +49,16 @@ void RAD_Arm_Controller::_publish_to_can()
     rate.sleep();
     can_pub_->publish(can_rs);
 }
+
+float RAD_Angle_Conversion(float angle, float lmin, float pi, float a, float b){
+
+  float length = sqrt(-2*a*b*cos(angle*pi/180) + pow(a,2) + pow(b,2)); 
+  float theta_m = LEN_MM_TO_ROTATION * (length - lmin); 
+
+  return theta_m; 
+}
 void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
 {
-  shoulder_offset = this->get_parameter("shoulder_offset").as_double();
-  elbow_offset = this->get_parameter("elbow_offset").as_double(); 
-  lmin_shoulder = this->get_parameter("lmin_shoulder").as_double(); 
-  lmin_elbow = this->get_parameter("lmin_elbow").as_double();
-  a_shoulder = this->get_parameter("a_shoulder").as_double();
-  a_elbow = this->get_parameter("a_elbow").as_double();
-  b_shoulder = this->get_parameter("b_shoulder").as_double();
-  b_elbow = this->get_parameter("b_elbow").as_double();
-  // // screw max parameter add
 
   float base_angle = msg.position[0]; 
   float shoulder_angle = msg.position[1] + shoulder_offset;
@@ -77,12 +71,9 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float rs = pitch_angle - wrist_angle; 
   float pi = 3.141592653;
 
-  // // Pretty sure isolating for Theta_M gives: 
-  // // Possibly needed in degrees depending on movei
-   float theta_m_shoulder = 13320 - (360/0.00254)*(-(lmin_shoulder)+sqrt(-2*a_shoulder*b_shoulder*cos(shoulder_angle*pi/180)+pow(a_shoulder,2)+pow(b_shoulder,2)));
-   float theta_m_elbow = (360/0.00254)*(-(lmin_elbow)+sqrt(-2*a_elbow*b_elbow*cos(elbow_angle*pi/180)+pow(a_elbow,2)+pow(b_elbow,2)));
- 
-/*
+  float theta_m_shoulder = 13320 - RAD_Angle_Conversion(shoulder_angle, lmins[0], pi, a_lengths[0], b_lengths[0]); 
+  float theta_m_elbow = RAD_Angle_Conversion(elbow_angle, lmins[1], pi, a_lengths[1], b_lengths[1]); 
+  /*
   SHOULDER
   lmin = 0.33m 
   lmax = 0.425m
@@ -94,9 +85,6 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   lmax 0.395m 
   side a = 0.216m 
   side b = 0.175m 
-
-  theta_s = acos((a^2 + b^2-L^2)/2*a*b)
-
 
 */
   rad_base_arm.set_target_angle(base_angle);
@@ -110,17 +98,6 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   std::cout<< theta_m_elbow << std::endl;
   this->_publish_to_can(); 
 }
-
-
-/*void RAD_Arm_Controller::_timer_callback(void)
-{
-    can_pub_->publish(can_base);
-    can_pub_->publish(can_pitch);
-    can_pub_->publish(can_shoulder);
-    can_pub_->publish(can_elbow);
-    can_pub_->publish(can_wrist);
-    can_pub_->publish(can_gripper);
-}*/
 int main(int argc, char ** argv)
 {
   (void) argc;
