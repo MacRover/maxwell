@@ -6,14 +6,14 @@ using std::placeholders::_1;
 
 RAD_Drive_Controller::RAD_Drive_Controller() : 
   Node("rad_drive_controller"),
-  rad_fl_drive(&can1, RAD__DRIVE__FRONT_LEFT),
-  rad_fr_drive(&can2, RAD__DRIVE__FRONT_RIGHT),
-  rad_bl_drive(&can3, RAD__DRIVE__BACK_LEFT),
-  rad_br_drive(&can4, RAD__DRIVE__BACK_RIGHT)
+  rad_fl_drive(&can1_raw, RAD__DRIVE__FRONT_LEFT),
+  rad_fr_drive(&can2_raw, RAD__DRIVE__FRONT_RIGHT),
+  rad_bl_drive(&can3_raw, RAD__DRIVE__BACK_LEFT),
+  rad_br_drive(&can4_raw, RAD__DRIVE__BACK_RIGHT)
 {
   this->declare_parameter("can_rate", 10);
-  sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
-  can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
+  delay_sec = (1.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
+  can_pub_ = this->create_publisher<CANstamped>("/can/can_out_queue", 10);
 
   sub_ = this->create_subscription<SwerveModulesList>(
     "/drive/modules_command", 10, std::bind(&RAD_Drive_Controller::_callback, this, _1)
@@ -32,14 +32,19 @@ RAD_Drive_Controller::RAD_Drive_Controller() :
 
 void RAD_Drive_Controller::_publish_to_can()
 {
-  rclcpp::Rate rate{std::chrono::milliseconds(sleep_msec)};
+  CANstamped can1, can2, can3, can4;
+  can1.stamp = this->now() + rclcpp::Duration::from_seconds(delay_sec * 0);
+  can2.stamp = this->now() + rclcpp::Duration::from_seconds(delay_sec * 1);
+  can3.stamp = this->now() + rclcpp::Duration::from_seconds(delay_sec * 2);
+  can4.stamp = this->now() + rclcpp::Duration::from_seconds(delay_sec * 3);
+  can1.can_raw = can1_raw;
+  can2.can_raw = can2_raw;
+  can3.can_raw = can3_raw;
+  can4.can_raw = can4_raw;
 
   can_pub_->publish(can1);
-  rate.sleep();
   can_pub_->publish(can2);
-  rate.sleep();
   can_pub_->publish(can3);
-  rate.sleep();
   can_pub_->publish(can4);
 
 }
