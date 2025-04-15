@@ -48,7 +48,22 @@ def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
         # calculation of the current velocity
 
-        v_f = v_i + acceleration*(time_elapsed)
+        print("time elapsed ", time_elapsed)
+        print("proj time", projected_time)
+        print("left", projected_time - time_elapsed)
+
+        if (time_elapsed >= (projected_time / 2)):
+            v_peak = v_i + abs(acceleration*(projected_time/2))
+            v_f = v_peak + acceleration*(projected_time - time_elapsed) # need to decrease acceleration
+            
+            # vi becomes v_peak
+            print("vf vpeak")
+            print(v_f)
+            print(v_peak)
+
+
+        else:
+            v_f = v_i + acceleration*(time_elapsed)
 
         # returning the velocity
 
@@ -64,21 +79,22 @@ def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
         
         if (cw_enable):
-
-            if (v_f < v_max):
+            
+            if (abs(v_f) > v_max):
+                print("v-final", v_max)
+                print(v_f)
+                return v_max
+            
+            elif (v_f < v_max):
                 print("v-final", v_f)
                 print("hi?")
                 return 
-            
-            elif (abs(v_f) > v_max):
-                print("v-final", v_max)
-                return v_max
             
         
         if (ccw_enable):
             if (v_f > -v_max):
                 print("v-final", v_f)
-                print("hi?")
+                #print("hi?")
                 return 
             
             elif (abs(v_f) > v_max):
@@ -135,7 +151,7 @@ steps_to_move = 90
 cw_enable = 1
 ccw_enable = 0
 acceleration = 2 # arbitrary, to be changed later
-time_wait = 7
+time_wait = 10
 
 # this is assuming a current velocity can be passed in, which, if we are switching to velocity-based PID, could be feesible
 v_i = 0 # this will be the initial velocity
