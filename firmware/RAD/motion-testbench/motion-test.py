@@ -31,16 +31,27 @@ def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
         if (cw_enable):
             print("cw enable selected")
+
+            # checks if we are below the halfway point, if so, make acceleration positive
             if (time_elapsed <= projected_time/2):
                 acceleration = abs(acceleration)
+
+            # checks if we are beyond the halfway point, if so, make acceleration negative
             else:
                 acceleration = -abs(acceleration)
+
+            # this makes sense because positive acceleration leads to faster motion.  We need to slow down motion at halfway
+
+        # if counterclockwise
         
         if (ccw_enable):
             print("ccw enable selected")
+
+            # If less than half of the time has passed and we are going CCW, NOW we use negative!
+            # the reason for this is because we are moving in the opposite direction
+            # if not we use positive
             if (time_elapsed <= projected_time/2):
                 acceleration = -abs(acceleration)
-                print("yes")
             else:
                 acceleration = abs(acceleration)
 
@@ -48,17 +59,31 @@ def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
         # calculation of the current velocity
 
-        print("time elapsed ", time_elapsed)
-        print("proj time", projected_time)
-        print("left", projected_time - time_elapsed)
+        print("time elapsed ", time_elapsed) # prints out the current time elapsed
+        print("proj time", projected_time) # reprints the current projected time
+        print("left", projected_time - time_elapsed) # prints out the current left time
+
+        # if the elapsed time is greater than the projected time divided by 2
 
         if (time_elapsed >= (projected_time / 2)):
-            v_peak = v_i + abs(acceleration*(projected_time/2))
-            v_f = v_peak + acceleration*(projected_time - time_elapsed) # need to decrease acceleration
+
+            # ACCELERATION MUST DECREASE HERE!
+
+            if (cw_enable):
+                # Here, acceleration is positive
+                v_peak = v_i + abs(acceleration*(projected_time/2)) # this should still be positive because it needs to decrease accordingly
+
+            elif (ccw_enable):
+                # here, acceleration will be negative
+                v_peak = v_i + -abs(acceleration*(projected_time/2)) # this should still be positive because it needs to decrease accordingly
+            
+            v_fixed = acceleration*(time_elapsed-(projected_time/2))
+            v_f = v_peak + v_fixed # need to decrease acceleration
             
             # vi becomes v_peak
             print("vf vpeak")
             print(v_f)
+            print(v_fixed)
             print(v_peak)
 
 
@@ -77,29 +102,36 @@ def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
         # something going very wrong with the program that needs to be fixed in here -----
 
+        # if clockwise is enabled
         
         if (cw_enable):
+
+            # absolute value of v_f is greater than v_max
             
             if (abs(v_f) > v_max):
-                print("v-final", v_max)
+                print("CASE 1")
+                print("v-final: MEASUREMENT TO RETURN:", v_max)
                 print(v_f)
                 return v_max
             
             elif (v_f < v_max):
-                print("v-final", v_f)
+                print("CASE 2")
+                print("v-final: MEASUREMENT TO RETURN:", v_f)
                 print("hi?")
-                return 
+                return v_f
             
         
         if (ccw_enable):
             if (v_f > -v_max):
-                print("v-final", v_f)
+                print("CASE 3")
+                print("v-final: MEASUREMENT TO RETURN:", v_f)
                 #print("hi?")
-                return 
+                return v_f
             
             elif (abs(v_f) > v_max):
-                print("v-final", v_max)
-                return v_max
+                print("CASE 4")
+                print("v-final: MEASUREMENT TO RETURN:", -v_max)
+                return -v_max
 
 
 
@@ -120,7 +152,7 @@ def time_calc(v_i, v_max, acceleration, steps_to_move): # verified with 1 test c
     print("tmin", t_min)
 
 
-    # finding the steps of increase'
+    # finding the steps of increase and decrease
 
     steps_increase = v_max*t_max - 0.5*acceleration*(t_max**2)
     print("steps inc", steps_increase)
@@ -148,10 +180,12 @@ def time_calc(v_i, v_max, acceleration, steps_to_move): # verified with 1 test c
 
 current_pos = 0
 steps_to_move = 90
-cw_enable = 1
-ccw_enable = 0
+cw_enable = 0
+ccw_enable = 1
 acceleration = 2 # arbitrary, to be changed later
-time_wait = 10
+time_wait = 14 #change this to test different times
+
+# issue: boundary change at the halfway
 
 # this is assuming a current velocity can be passed in, which, if we are switching to velocity-based PID, could be feesible
 v_i = 0 # this will be the initial velocity
@@ -175,7 +209,7 @@ v = velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceler
 
 # how it will work if we are moving one direction, then want to start moving in the other drection.  Need to stop first
 
-
+# this concern might be irrelevant
 
 
 
