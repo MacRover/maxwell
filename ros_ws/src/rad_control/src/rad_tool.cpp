@@ -72,6 +72,25 @@ void response_callback(const CANraw& msg)
   }
 }
 
+bool print_autocompleted_commands(std::map<std::string, uint8_t> map, std::string in)
+{
+  if (in.length() == 0)
+  {
+    return false;
+  }
+
+  bool ret = false;
+  for (const auto&[command_name, _] : map)
+  {
+    if (command_name.compare(0, in.length(), in) == 0 && command_name.length() != in.length())
+    {
+      std::cout << command_name << "  ";
+      ret = true;
+    }
+  }
+  return ret;
+}
+
 #define INPUT_CHECK(c) try {c} catch(...){RCLCPP_ERROR(can_config->get_logger(), "INVALID INPUT"); continue;}
 
 int main(int argc, char ** argv)
@@ -97,6 +116,8 @@ int main(int argc, char ** argv)
     ack = false;
     std::cout << "Enter RAD ID (q to exit) (prefix h for hex #) => ";
     std::getline (std::cin,in);
+    // Removing whitespace
+    in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
     if (in == "q" || std::cin.fail())
       break;
     
@@ -114,18 +135,36 @@ int main(int argc, char ** argv)
     do {
       std::cout << "Enter Command ('?' to list options) => ";
       std::getline (std::cin,in);
+      // Removing whitespace and capitalize
+      in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
+      std::transform(in.begin(), in.end(), in.begin(), toupper);
       if (in == "?")
       {
-        for (const auto&[command_name, _] : get_cmd)
-          std::cout << command_name << std::endl;
+        // List out all RAD commands
+        std::cout << " ========= SET COMMANDS =========" << std::endl;
         for (const auto&[command_name, _] : set_cmd)
           std::cout << command_name << std::endl;
+        std::cout << " ========= GET COMMANDS =========" << std::endl;
+        for (const auto&[command_name, _] : get_cmd)
+          std::cout << command_name << std::endl;
+        std::cout << " ========= CONFIG COMMANDS =========" << std::endl;
         for (const auto&[command_name, _] : other_cmd)
           std::cout << command_name << std::endl;
       }
+      else 
+      {
+        bool valid_input = false;
+        valid_input = valid_input || print_autocompleted_commands(get_cmd, in);
+        valid_input = valid_input || print_autocompleted_commands(set_cmd, in);
+        valid_input = valid_input || print_autocompleted_commands(other_cmd, in);
+        if (!valid_input)
+          break;
+        std::cout << std::endl;
+      }
     }
-    while (in == "?");
+    while (!get_cmd.count(in) && !set_cmd.count(in) && !other_cmd.count(in));
 
+    // Input check here to catch valid_input if it is false
     INPUT_CHECK(
     command_id = (get_cmd.count(in) == 1) ? get_cmd.at(in) : 
                  (set_cmd.count(in) == 1 ? set_cmd.at(in) : other_cmd.at(in));
@@ -137,6 +176,8 @@ int main(int argc, char ** argv)
       std::string val_in;
       std::cout << "Enter value (prefix h for hex #) => ";
       std::getline (std::cin,val_in);
+      // Removing whitespace
+      in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
 
       base = 10;
       INPUT_CHECK(
