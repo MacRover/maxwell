@@ -115,6 +115,8 @@ int main(void)
     rad_params.I = 0.0000001;
     rad_params.D = 0;
     
+    //Updated Params
+    //Datasheet and https://claude.ai/share/010610e9-27fd-4cc1-b8a9-1479f24feb58
     rad_params.CHOPCONF_CHM = 0b0; //Using spreadcycle
     rad_params.CHOPCONF_HDEC = 0b00;
     rad_params.CHOPCONF_HEND = 0b011; //Hysterisis of 0 - 4
