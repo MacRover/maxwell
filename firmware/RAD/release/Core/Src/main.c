@@ -117,11 +117,11 @@ int main(void)
     
     rad_params.CHOPCONF_CHM = 0b0; //Using spreadcycle
     rad_params.CHOPCONF_HDEC = 0b00;
-    rad_params.CHOPCONF_HEND = 0b0100;
-    rad_params.CHOPCONF_HSTRT = 0b110;
+    rad_params.CHOPCONF_HEND = 0b011; //Hysterisis of 0 - 4
+    rad_params.CHOPCONF_HSTRT = 0b11;
     rad_params.CHOPCONF_RNDTF = 0b0;
     rad_params.CHOPCONF_TBL = 0b10;
-    rad_params.CHOPCONF_TOFF = 0b100;
+    rad_params.CHOPCONF_TOFF = 0b1000; //lower chopper frequency
  
     rad_params.DRVCONF_DIS_S2G = 0b0; //short detection enabled
     rad_params.DRVCONF_EN_PFD = 0b0; //undervoltage under 7V - 5V logic not enough to drive stepper
