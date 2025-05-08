@@ -115,23 +115,23 @@ int main(void)
     rad_params.I = 0.0000001;
     rad_params.D = 0;
     
-    rad_params.CHOPCONF_CHM = 0b0;
+    rad_params.CHOPCONF_CHM = 0b0; //Using spreadcycle
     rad_params.CHOPCONF_HDEC = 0b00;
     rad_params.CHOPCONF_HEND = 0b0100;
     rad_params.CHOPCONF_HSTRT = 0b110;
     rad_params.CHOPCONF_RNDTF = 0b0;
     rad_params.CHOPCONF_TBL = 0b10;
     rad_params.CHOPCONF_TOFF = 0b100;
-
-    rad_params.DRVCONF_DIS_S2G = 0b0;
-    rad_params.DRVCONF_EN_PFD = 0b1;
-    rad_params.DRVCONF_EN_S2VS = 0b1;
-    rad_params.DRVCONF_OTSENS = 0b0;
+ 
+    rad_params.DRVCONF_DIS_S2G = 0b0; //short detection enabled
+    rad_params.DRVCONF_EN_PFD = 0b0; //undervoltage under 7V - 5V logic not enough to drive stepper
+    rad_params.DRVCONF_EN_S2VS = 0b1; //enable short and overcurrent protection
+    rad_params.DRVCONF_OTSENS = 0b1; //reduced temperature threshold for shutdown
     rad_params.DRVCONF_RDSEL = 0b11;
     rad_params.DRVCONF_SDOFF = 0b0;
-    rad_params.DRVCONF_SHRTSENS = 0b1;
+    rad_params.DRVCONF_SHRTSENS = 0b1; //High sensitivity to overcurrent
     rad_params.DRVCONF_SLP = 0b11110;
-    rad_params.DRVCONF_TS2G = 0b00;
+    rad_params.DRVCONF_TS2G = 0b11; //shortest delay for sensint shorts
     rad_params.DRVCONF_TST = 0b0;
     rad_params.DRVCONF_VSENSE = 0b0;
 
@@ -139,7 +139,7 @@ int main(void)
     rad_params.DRVCTRL_INTPOL = 0b1;
     rad_params.DRVCTRL_MRES = 0b1000;
 
-    rad_params.SGCSCONF_CS = 10;
+    rad_params.SGCSCONF_CS = 5;
     rad_params.SGCSCONF_SFILT = 0b0;
     rad_params.SGCSCONF_SGT = 0b0000010;
 
@@ -200,8 +200,12 @@ int main(void)
         //NORMAL OPERATION
        rad_params = eeprom_params;
 
+    
+
     //     IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
 //     rad_params.RAD_ID = 0x19;
+    // rad_params.SGCSCONF_CS = 5;
+
 //     rad_params.RAD_TYPE = RAD_TYPE_ARM_WRIST_RIGHT;
 //     rad_params.ODOM_INTERVAL = 100;
 //     rad_params.HEALTH_INTERVAL = 1000;
