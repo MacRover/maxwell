@@ -166,6 +166,11 @@ void RAD::set_rad_type(uint8_t type)
     _update_can_data(buf, 1);
 }
 
+void RAD::get_rad_type()
+{
+    _set_null_data(CAN_GET_RAD_TYPE);
+}
+
 void RAD::set_target_angle(double angle)
 {
     uint8_t ind = 0;
@@ -491,6 +496,34 @@ void RAD::get_sgcsconf_cs()
     _set_null_data(CAN_GET_SGCSCONF_CS);
 }
 
+void RAD::set_sgcsconf_sfilt(bool filtered)
+{
+    uint8_t buf[1];
+    buf[0] = filtered;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_SFILT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_sgcsconf_sfilt()
+{
+    _set_null_data(CAN_GET_SGCSCONF_SFILT);
+}
+
+void RAD::set_sgcsconf_sgt(int8_t threshold)
+{
+    uint8_t buf[1];
+    buf[0] = threshold;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_SGT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_sgcsconf_sgt()
+{
+    _set_null_data(CAN_GET_SGCSCONF_SGT);
+}
+
 void RAD::set_chopconf_tbl(uint8_t interval)
 {
     uint8_t buf[1];
@@ -502,7 +535,7 @@ void RAD::set_chopconf_tbl(uint8_t interval)
 
 void RAD::get_chopconf_tbl()
 {
-    _set_null_data(CAN_SET_CHOPCONF_TBL);
+    _set_null_data(CAN_GET_CHOPCONF_TBL);
 }
 
 void RAD::set_chopconf_chm(bool mode)
