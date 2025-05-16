@@ -2,6 +2,7 @@
 import time
 import rclpy
 from rclpy.node import Node
+from rclpy.duration import Duration
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 from custom_interfaces.msg import *
@@ -47,7 +48,7 @@ class VescController(Node):
 
         self.delay_sec = 1/(4*self.get_parameter("can_rate").get_parameter_value().integer_value)
         
-        self.pub = self.create_publisher(CANraw, "/can/can_out", 10)
+        self.pub = self.create_publisher(CANstamped, "/can/can_out_queue", 10)
 
         self.vfl = VESC(VESC_ID.FRONT_LEFT)
         self.vfr = VESC(VESC_ID.FRONT_RIGHT)
@@ -74,14 +75,15 @@ class VescController(Node):
             self.vbl.set_speed_mps(0.0)
             self.vbr.set_speed_mps(0.0)
         
-        time.sleep(self.delay_sec * 0.5)
-        self.pub.publish(self.vfl.get_can_message())
-        time.sleep(self.delay_sec)
-        self.pub.publish(self.vfr.get_can_message())
-        time.sleep(self.delay_sec)
-        self.pub.publish(self.vbl.get_can_message())
-        time.sleep(self.delay_sec)
-        self.pub.publish(self.vbr.get_can_message())
+        time = self.get_clock().now()
+        future_stamp = time + Duration(seconds=self.delay_sec * 0.5)
+        self.pub.publish(CANstamped(stamp=future_stamp.to_msg(), can_raw=self.vfl.get_can_message()))
+        future_stamp = time + Duration(seconds=self.delay_sec * 1.5)
+        self.pub.publish(CANstamped(stamp=future_stamp.to_msg(), can_raw=self.vfr.get_can_message()))
+        future_stamp = time + Duration(seconds=self.delay_sec * 2.5)
+        self.pub.publish(CANstamped(stamp=future_stamp.to_msg(), can_raw=self.vbl.get_can_message()))
+        future_stamp = time + Duration(seconds=self.delay_sec * 3.5)
+        self.pub.publish(CANstamped(stamp=future_stamp.to_msg(), can_raw=self.vbr.get_can_message()))
     
     def _odom_callback(self, msg):
         self.fr_theta = msg.front_right.angle
