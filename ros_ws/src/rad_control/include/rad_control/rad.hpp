@@ -324,9 +324,9 @@ public:
     /**
      * @brief Set short to GND protection state
      * 
-     * @param enabled 0 for disabled, 1 for enabled
+     * @param disabled 0 for enabled, 1 for disabled
      */
-    void set_drvconf_s2g(bool enabled);
+    void set_drvconf_s2g(bool disabled);
 
     /**
      * @brief Get short to GND protection state

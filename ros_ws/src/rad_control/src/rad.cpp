@@ -323,10 +323,10 @@ void RAD::get_drvconf_slp()
     _set_null_data(CAN_GET_DRVCONF_SLP);
 }
 
-void RAD::set_drvconf_s2g(bool enabled)
+void RAD::set_drvconf_s2g(bool disabled)
 {
     uint8_t buf[1];
-    buf[0] = enabled;
+    buf[0] = disabled;
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_S2G) << 8);
     _update_can_data(buf, 1);
