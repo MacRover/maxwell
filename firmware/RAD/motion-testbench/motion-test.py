@@ -1,6 +1,12 @@
 # Initializing Params
 
+# Note to future me: if you need to return steps instead of the velocity, that's not hard to do, just divide by time.  we will work something out
+
 import time
+
+
+# do not need cw_enable and ccw_enable, you will always be passed steps
+
 
 def velocity_function(current_pos, steps_to_move, cw_enable, ccw_enable, acceleration, v_i, v_max, start_time):
 
