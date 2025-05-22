@@ -25,7 +25,7 @@ def time_calc(v_i, v_max, acceleration, steps_to_move):
 
     return t_total
 
-def velocity_function(current_pos, steps_to_move, acceleration, v_i, v_max, start_time):
+def velocity_function(current_pos, steps_to_move, acceleration, v_i, v_max, start_time): # moving opposite direction, pass in negative vi
 
     set_point = current_pos + steps_to_move
 
@@ -49,11 +49,11 @@ def velocity_function(current_pos, steps_to_move, acceleration, v_i, v_max, star
         # Checking where we are in the motion (based on current time, that will set if acceleration is positive or negative)
         # I think we still will need this
 
-        if (time_elapsed <= projected_time/2):
-            acceleration = abs(acceleration)
+        if (time_elapsed >= projected_time/2):
+            acceleration = -abs(acceleration)
 
         else:
-            acceleration = -abs(acceleration)
+            acceleration = abs(acceleration)
 
             # this makes sense because positive acceleration leads to faster motion.  We need to slow down motion at halfway
 
@@ -61,14 +61,13 @@ def velocity_function(current_pos, steps_to_move, acceleration, v_i, v_max, star
 
         # if the elapsed time is greater than the projected time divided by 2
 
-        if (time_elapsed >= (projected_time / 2)):
+        if (time_elapsed >= (projected_time / 2)): # find an intersection point, not projected time / 2
+            # intersection time from up to down still needs to be found
 
             # ACCELERATION MUST DECREASE HERE!
 
             v_peak = v_i + abs(acceleration*(projected_time/2)) # this should still be positive because it needs to decrease accordingly
-            
-            v_fixed = acceleration*(time_elapsed-(projected_time/2))
-            v_f = v_peak + v_fixed # need to decrease acceleration
+            v_f = v_peak + acceleration*(time_elapsed-(projected_time/2)) # need to decrease acceleration
             
 
         else:
