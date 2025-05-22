@@ -215,6 +215,11 @@ public:
     void set_stepper_speed(float speed);
 
     /**
+     * @brief Get stepper speed of RAD motor (STEP/DIR)
+     */
+    void get_stepper_speed();
+
+    /**
      * @brief Set kP value of RAD motor
      * 
      * @param P kP value
@@ -241,6 +246,11 @@ public:
      * @param type RAD type
      */
     void set_rad_type(uint8_t type);
+
+    /**
+     * @brief Get RAD type of RAD
+     */
+    void get_rad_type();
 
     /**
      * @brief Get target angle of RAD motor (in deg)
@@ -271,11 +281,349 @@ public:
     void set_odom_interval(uint32_t period);
 
     /**
+     * @brief Get odometry/angle message interval
+     */
+    void get_odom_interval();
+
+    /**
      * @brief Set status message interval
      * 
      * @param period period of messages (in ms)
      */
     void set_health_interval(uint32_t period);
+
+    /**
+     * @brief Get status message interval
+     */
+    void get_health_interval();
+
+    /**
+     * @brief Set TEST mode to expose digital test values
+     * 
+     * @param enabled 0 for disable, 1 for enable
+     */
+    void set_drvconf_tst(bool enabled);
+
+    /**
+     * @brief Get TEST mode to expose digital test values
+     */
+    void get_drvconf_tst();
+
+    /**
+     * @brief Set slope control
+     * 
+     * @param slope 0 for minimum slope driver strength, 7 for maximum
+     */
+    void set_drvconf_slp(uint8_t slope);
+
+    /**
+     * @brief Get slope control
+     */
+    void get_drvconf_slp();
+
+    /**
+     * @brief Set short to GND protection state
+     * 
+     * @param disabled 0 for enabled, 1 for disabled
+     */
+    void set_drvconf_s2g(bool disabled);
+
+    /**
+     * @brief Get short to GND protection state
+     */
+    void get_drvconf_s2g();
+
+    /**
+     * @brief Set short detection delay for high-side and low-side FETs
+     * 
+     * @param delay b00 - 3.2 microsec
+     *              b01 - 1.6 microsec
+     *              b10 - 1.2 microsec
+     *              b11 - 0.8 microsec
+     */
+    void set_drvconf_ts2g(uint8_t delay);
+
+    /**
+     * @brief Get short detection delay
+     */
+    void get_drvconf_ts2g();
+
+    /**
+     * @brief Enable/disable STEP DIR
+     * 
+     * @param disabled 0 for enabled, 1 for disabled
+     */
+    void set_drvconf_sdoff(bool disabled);
+
+    /**
+     * @brief Get STEP DIR interface state
+     */
+    void get_drvconf_sdoff();
+
+    /**
+     * @brief Adjust sense resistor voltage between low and high sensitivity (high and low resistance respectively)
+     * 
+     * @param enabled 0 for higher sense voltage (.325V), 1 for lower (.173V)
+     */
+    void set_drvconf_vsense(bool enabled);
+
+    /**
+     * @brief Get sense resistor voltage bit
+     */
+    void get_drvconf_vsense();
+
+    /**
+     * @brief Set read out from TMC driver
+     * 
+     * @param readout value for readout type
+     *                b00 - Microstep position read back
+     *                b01 - StallGuard2 level read back
+     *                b10 - StallGuard2 and CoolStep current level read back
+     *                b11 - status flags and detectors
+     */
+    void set_drvconf_rdsel(uint8_t readout);
+
+    /**
+     * @brief Get read out type from TMC driver
+     */
+    void get_drvconf_rdsel();
+
+    /**
+     * @brief Set overtemperature sensitivity
+     * 
+     * @param lower_shutdown 0 for shutdown at 150C, 1 for shutdown at 136C
+     */
+    void set_drvconf_otsens(bool lower_shutdown);
+
+    /**
+     * @brief Get overtemperature sensitivity state
+     */
+    void get_drvconf_otsens();
+    
+    /**
+     * @brief Set short to GND detection sensitivity
+     * 
+     * @param sensitive 0 for not sensitive, 1 for sensitive
+     */
+    void set_drvconf_shrtsens(bool sensitive);
+
+    /**
+     * @brief Get short to GND detection sensitivity
+     */
+    void get_drvconf_shrtsens();
+
+    /**
+     * @brief Enable/disable passive fast decay (for reducing motor vibrations)
+     * 
+     * @param enabled 0 for no additional motor dampening, 1 for motor dampening
+     */
+    void set_drvconf_en_pfd(bool enabled);
+
+    /**
+     * @brief Get passive fast decay mode
+     */
+    void get_drvconf_en_pfd();
+
+    /**
+     * @brief Enable/disable short to VS protection
+     * 
+     * @param enabled 0 for no protection, 1 for protection
+     */
+    void set_drvconf_en_s2vs(bool enabled);
+
+    /**
+     * @brief Get short to VS protection mode
+     */
+    void get_drvconf_en_s2vs();
+
+    /**
+     * @brief Set minimum CoolStep current
+     * 
+     * @param lower_current 0 - 1/2 CS current setting, 1 - 1/4 CS
+     */
+    void set_smarten_seimin(bool lower_current);
+
+    /**
+     * @brief Get minimum CoolStep current
+     */
+    void get_smarten_seimin();
+
+    /**
+     * @brief Set current decrement speed (num of occurrences of SG measurements above threshold until current decreases)
+     * 
+     * @param samples     SG number of samples
+     *                    b00 - 32
+     *                    b01 - 8
+     *                    b10 - 2
+     *                    b11 - 1
+     */
+    void set_smarten_sedn(uint8_t samples);
+
+    /**
+     * @brief Get current decrement speed
+     */
+    void get_smarten_sedn();
+
+    /**
+     * @brief Set current increment speed (num of occurrences of SG measurements below threshold until current increases)
+     * 
+     * @param samples     SG number of samples
+     *                    b00 - 32
+     *                    b01 - 8
+     *                    b10 - 2
+     *                    b11 - 1
+     */
+    void set_smarten_seup(uint8_t samples);
+
+    /**
+     * @brief Get current increment speed
+     */
+    void get_smarten_seup();
+
+    /**
+     * @brief Set lower threshold setting for SG. If current is below threshold, increase current
+     * 
+     * @param threshold 4 bit unsigned int for min threshold
+     */
+    void set_smarten_semin(uint8_t threshold);
+
+    /**
+     * @brief Get lower threshold setting for SG
+     */
+    void get_smarten_semin();
+
+    /**
+     * @brief Set upper threshold setting for SG. If current is above threshold, decrease current
+     * 
+     * @param threshold 4 bit unsigned int for max threshold
+     */
+    void set_smarten_semax(uint8_t threshold);
+
+    /**
+     * @brief Get upper threshold setting for SG
+     */
+    void get_smarten_semax();
+
+    /**
+     * @brief Set blanking time
+     * 
+     * @param interval Blanking time interval, in system clock periods
+     *                 b00 - 16
+     *                 b01 - 24
+     *                 b10 - 36
+     *                 b11 - 54
+     */
+    void set_chopconf_tbl(uint8_t interval);
+
+    /**
+     * @brief Get blanking time setting
+     */
+    void get_chopconf_tbl();
+    
+    /**
+     * @brief Set chopper mode
+     * 
+     * @param mode 0 for standard mode, 1 for constant TOFF with fast decay time
+     */
+    void set_chopconf_chm(bool mode);
+
+    /**
+     * @brief Get chopper mode
+     */
+    void get_chopconf_chm();
+
+    /**
+     * @brief Enable/disable random TOFF
+     * 
+     * @param enabled 0 for fixed TOFF time, 1 for random mode
+     */
+    void set_chopconf_rndtf(bool enabled);
+
+    /**
+     * @brief Get random TOFF mode
+     */
+    void get_chopconf_rndtf();
+
+    /**
+     * @brief Set hysteresis decrement interval or fast decay mode
+     * 
+     * @param value 2-bit value. 
+     *              When chopper mode enabled, MSB indicating fast decay time
+     *              When chopper mode disabled, Hysteresis decrement period setting, in system clock periods
+     *              b00 - 16
+     *              b01 - 32
+     *              b10 - 48
+     *              b11 - 64
+     */
+    void set_chopconf_hdec(uint8_t value);
+
+    /**
+     * @brief Get hysteresis decrement interval or fast decay mode
+     */
+    void get_chopconf_hdec();
+
+    /**
+     * @brief Set hysteresis end value or sine wave offset
+     * 
+     * @param value 4-bit value.
+     */
+    void set_chopconf_hend(uint8_t value);
+
+    /**
+     * @brief Get hysteresis end value or sine wave offset
+     */
+    void get_chopconf_hend();
+
+    /**
+     * @brief Set hysteresis start value or fast decay time setting
+     * 
+     * @param value 3-bit value.
+     *              When chopper mode enabled, 3 LSBs specify duration of fast decay phase
+     *              When chopper mode disabled, hysteresis start offset from HEND (1 to 8)
+     */
+    void set_chopconf_hstrt(uint8_t value);
+
+    /**
+     * @brief Get hysteresis start value or fast decay time setting
+     * 
+     */
+    void get_chopconf_hstrt();
+
+    /**
+     * @brief Set the TOFF time
+     * 
+     * @param toff toff from 1-15; if toff is 0, MOSFETs are disabled
+     */
+    void set_chopconf_toff(uint8_t toff);
+
+    /**
+     * @brief Get the TOFF time
+     */
+    void get_chopconf_toff();
+
+    /**
+     * @brief Enable/Disable MicroPlyer Step interpolator
+     * 
+     * @param enabled 0 for disable, 1 for enable
+     */
+    void set_drvctrl_intpol(bool enabled);
+
+    /**
+     * @brief Get MicroPlyer Step interpolator state
+     */
+    void get_drvctrl_intpol();
+
+    /**
+     * @brief Enable/Disable double edge STEP pulses
+     * 
+     * @param enabled 0 for disable, 1 for enable
+     */
+    void set_drvctrl_dedge(bool enabled);
+
+    /**
+     * @brief Get DEDGE state
+     */
+    void get_drvctrl_dedge();
 
     /**
      * @brief Set Microstep Resolution of RAD motor
@@ -285,6 +633,35 @@ public:
     void set_drvctrl_mres(uint8_t mres);
 
     /**
+     * @brief Get Microstep Resolution of RAD motor
+     */
+    void get_drvctrl_mres();
+
+    /**
+     * @brief Enable/disable StallGuard2 filter
+     * 
+     * @param filtered 0 for standard mode, 1 for filtered mode
+     */
+    void set_sgcsconf_sfilt(bool filtered);
+
+    /**
+     * @brief Get StallGuard2 filter mode
+     */
+    void get_sgcsconf_sfilt();
+
+    /**
+     * @brief Set StallGuard2 threshold value for controlling stall indicator output
+     * 
+     * @param threshold 6-bit signed integer for stallguard threshold
+     */
+    void set_sgcsconf_sgt(int8_t threshold);
+
+    /**
+     * @brief Get StallGuard2 threshold value for controlling stall indicator output
+     */
+    void get_sgcsconf_sgt();
+
+    /**
      * @brief Set Current Scale of RAD motor
      * 
      * @param cs current scale
@@ -292,10 +669,20 @@ public:
     void set_sgcsconf_cs(uint8_t cs);
 
     /**
+     * @brief Get Current Scale of RAD motor
+     */
+    void get_sgcsconf_cs();
+
+    /**
      * @brief Save to EEPROM
      * 
      */
     void save_to_eeprom();
+
+    /**
+     * @brief Reload from EEPROM
+     */
+    void reload_from_eeprom();
 
     /**
      * @brief Set PID Min Output
@@ -330,6 +717,18 @@ public:
     void pulse_stepper(float steps);
 
     /**
+     * @brief Set home position of RAD
+     * 
+     * @param pos home position
+     */
+    void set_home_position(uint32_t pos);
+
+    /**
+     * @brief Get the home position of RAD
+     */
+    void get_home_position();
+
+    /**
      * @brief Set encoder offset for RAD motor
      * 
      */
@@ -343,6 +742,7 @@ public:
 
 
 private:
+    void _set_null_data(RAD_CAN_MSG msg);
     void _update_can_data(uint8_t* buf, size_t size);
 
     CANraw* l_can_msg;
