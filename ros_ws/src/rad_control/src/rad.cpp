@@ -149,20 +149,12 @@ void RAD::set_mul_factor(double factor)
 
 void RAD::calibrate_zero_pos()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_CALIBRATE_POS) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_CALIBRATE_POS);
 }
 
 void RAD::cancel_calibration()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_CANCEL_CALIBRATE_POS) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_CANCEL_CALIBRATE_POS);
 }
 
 void RAD::set_rad_type(uint8_t type)
@@ -172,6 +164,11 @@ void RAD::set_rad_type(uint8_t type)
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_RAD_TYPE) << 8);
     _update_can_data(buf, 1);
+}
+
+void RAD::get_rad_type()
+{
+    _set_null_data(CAN_GET_RAD_TYPE);
 }
 
 void RAD::set_target_angle(double angle)
@@ -192,6 +189,11 @@ void RAD::set_stepper_speed(float speed)
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_STEPPER_SPEED) << 8);
     _update_can_data(buf, 4);
+}
+
+void RAD::get_stepper_speed()
+{
+    _set_null_data(CAN_GET_STEPPER_SPEED);
 }
 
 void RAD::set_p_value(double P)
@@ -226,47 +228,32 @@ void RAD::set_d_value(double D)
 
 void RAD::get_target_angle()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_TARGET_ANGLE) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_TARGET_ANGLE);
 }
 
 void RAD::get_p_value()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_P_VALUE) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_P_VALUE);
 }
 
 void RAD::get_i_value()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_I_VALUE) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_I_VALUE);
 }
 
 void RAD::get_d_value()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_D_VALUE) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_D_VALUE);
 }
 
 void RAD::save_to_eeprom()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SAVE_TO_EEPROM) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_SAVE_TO_EEPROM);
+}
+
+void RAD::reload_from_eeprom()
+{
+    _set_null_data(CAN_RELOAD_FROM_EEPROM);
 }
 
 void RAD::set_odom_interval(uint32_t period)
@@ -279,6 +266,11 @@ void RAD::set_odom_interval(uint32_t period)
     _update_can_data(buf, 4);
 }
 
+void RAD::get_odom_interval()
+{
+    _set_null_data(CAN_GET_ODOM_INTERVAL);
+}
+
 void RAD::set_health_interval(uint32_t period)
 {
     uint8_t ind = 0;
@@ -287,6 +279,11 @@ void RAD::set_health_interval(uint32_t period)
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HEALTH_INTERVAL) << 8);
     _update_can_data(buf, 4);
+}
+
+void RAD::get_health_interval()
+{
+    _set_null_data(CAN_GET_HEALTH_INTERVAL);
 }
 
 void RAD::set_drvctrl_mres(uint8_t mres)
@@ -298,6 +295,193 @@ void RAD::set_drvctrl_mres(uint8_t mres)
     _update_can_data(buf, 1);
 }
 
+void RAD::set_drvconf_tst(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_TST) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_tst()
+{
+    _set_null_data(CAN_GET_DRVCONF_TST);
+}
+
+void RAD::set_drvconf_slp(uint8_t slope)
+{
+    uint8_t buf[1];
+    buf[0] = slope & 0b111;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_SLP) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_slp()
+{
+    _set_null_data(CAN_GET_DRVCONF_SLP);
+}
+
+void RAD::set_drvconf_s2g(bool disabled)
+{
+    uint8_t buf[1];
+    buf[0] = disabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_S2G) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_s2g()
+{
+    _set_null_data(CAN_GET_DRVCONF_S2G);
+}
+
+void RAD::set_drvconf_ts2g(uint8_t delay)
+{
+    uint8_t buf[1];
+    buf[0] = delay & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_TS2G) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_ts2g()
+{
+    _set_null_data(CAN_GET_DRVCONF_TS2G);
+}
+
+void RAD::set_drvconf_sdoff(bool disabled)
+{
+    uint8_t buf[1];
+    buf[0] = disabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_SDOFF) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_sdoff()
+{
+    _set_null_data(CAN_GET_DRVCONF_SDOFF);
+}
+
+void RAD::set_drvconf_vsense(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_VSENSE) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_vsense()
+{
+    _set_null_data(CAN_GET_DRVCONF_VSENSE);
+}
+
+void RAD::set_drvconf_rdsel(uint8_t readout)
+{
+    uint8_t buf[1];
+    buf[0] = readout & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_RDSEL) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_rdsel()
+{
+    _set_null_data(CAN_GET_DRVCONF_RDSEL);
+}
+
+void RAD::set_drvconf_otsens(bool lower_shutdown)
+{
+    uint8_t buf[1];
+    buf[0] = lower_shutdown;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_OTSENS) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_otsens()
+{
+    _set_null_data(CAN_GET_DRVCONF_OTSENS);
+}
+
+void RAD::set_drvconf_shrtsens(bool sensitive)
+{
+    uint8_t buf[1];
+    buf[0] = sensitive;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_SHRTSENS) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_shrtsens()
+{
+    _set_null_data(CAN_GET_DRVCONF_SHRTSENS);
+}
+
+void RAD::set_drvconf_en_pfd(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_EN_PFD) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_en_pfd()
+{
+    _set_null_data(CAN_GET_DRVCONF_EN_PFD);
+}
+
+void RAD::set_drvconf_en_s2vs(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCONF_EN_S2VS) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvconf_en_s2vs()
+{
+    _set_null_data(CAN_GET_DRVCONF_EN_S2VS);
+}
+
+void RAD::get_drvctrl_mres()
+{
+    _set_null_data(CAN_GET_DRVCTRL_MRES);
+}
+
+void RAD::set_drvctrl_dedge(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCTRL_DEDGE) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvctrl_dedge()
+{
+    _set_null_data(CAN_GET_DRVCTRL_DEDGE);
+}
+
+void RAD::set_drvctrl_intpol(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_DRVCTRL_INTPOL) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_drvctrl_intpol()
+{
+    _set_null_data(CAN_GET_DRVCTRL_INTPOL);
+}
+
 void RAD::set_sgcsconf_cs(uint8_t cs)
 {
     uint8_t buf[1];
@@ -306,6 +490,209 @@ void RAD::set_sgcsconf_cs(uint8_t cs)
                          ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_CS) << 8);
     _update_can_data(buf, 1);
 }
+
+void RAD::get_sgcsconf_cs()
+{
+    _set_null_data(CAN_GET_SGCSCONF_CS);
+}
+
+void RAD::set_sgcsconf_sfilt(bool filtered)
+{
+    uint8_t buf[1];
+    buf[0] = filtered;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_SFILT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_sgcsconf_sfilt()
+{
+    _set_null_data(CAN_GET_SGCSCONF_SFILT);
+}
+
+void RAD::set_sgcsconf_sgt(int8_t threshold)
+{
+    uint8_t buf[1];
+    buf[0] = threshold;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SGCSCONF_SGT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_sgcsconf_sgt()
+{
+    _set_null_data(CAN_GET_SGCSCONF_SGT);
+}
+
+void RAD::set_chopconf_tbl(uint8_t interval)
+{
+    uint8_t buf[1];
+    buf[0] = interval & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_TBL) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_tbl()
+{
+    _set_null_data(CAN_GET_CHOPCONF_TBL);
+}
+
+void RAD::set_chopconf_chm(bool mode)
+{
+    uint8_t buf[1];
+    buf[0] = mode;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_CHM) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_chm()
+{
+    _set_null_data(CAN_SET_CHOPCONF_CHM);
+}
+
+void RAD::set_chopconf_rndtf(bool enabled)
+{
+    uint8_t buf[1];
+    buf[0] = enabled;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_RNDTF) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_rndtf()
+{
+    _set_null_data(CAN_GET_CHOPCONF_RNDTF);
+}
+
+void RAD::set_chopconf_hdec(uint8_t value)
+{
+    uint8_t buf[1];
+    buf[0] = value & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_HDEC) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_hdec()
+{
+    _set_null_data(CAN_GET_CHOPCONF_HDEC);
+}
+
+void RAD::set_chopconf_hend(uint8_t value)
+{
+    uint8_t buf[1];
+    buf[0] = value & 0b1111;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_HEND) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_hend()
+{
+    _set_null_data(CAN_GET_CHOPCONF_HEND);
+}
+
+void RAD::set_chopconf_hstrt(uint8_t value)
+{
+    uint8_t buf[1];
+    buf[0] = value & 0b111;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_HSTRT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_hstrt()
+{
+    _set_null_data(CAN_GET_CHOPCONF_HSTRT);
+}
+
+void RAD::set_chopconf_toff(uint8_t toff)
+{
+    uint8_t buf[1];
+    buf[0] = toff;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_CHOPCONF_TOFF) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_chopconf_toff()
+{
+    _set_null_data(CAN_GET_CHOPCONF_TOFF);
+}
+
+void RAD::set_smarten_seimin(bool lower_current)
+{
+    uint8_t buf[1];
+    buf[0] = lower_current;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SMARTEN_SEIMIN) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_smarten_seimin()
+{
+    _set_null_data(CAN_GET_SMARTEN_SEIMIN);
+}
+
+void RAD::set_smarten_sedn(uint8_t samples)
+{
+    uint8_t buf[1];
+    buf[0] = samples & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SMARTEN_SEDN) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_smarten_sedn()
+{
+    _set_null_data(CAN_GET_SMARTEN_SEDN);
+}
+
+void RAD::set_smarten_seup(uint8_t samples)
+{
+    uint8_t buf[1];
+    buf[0] = samples & 0b11;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SMARTEN_SEUP) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_smarten_seup()
+{
+    _set_null_data(CAN_GET_SMARTEN_SEUP);
+}
+
+void RAD::set_smarten_semin(uint8_t threshold)
+{
+    uint8_t buf[1];
+    buf[0] = threshold & 0b1111;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SMARTEN_SEMIN) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_smarten_semin()
+{
+    _set_null_data(CAN_GET_SMARTEN_SEMIN);
+}
+
+void RAD::set_smarten_semax(uint8_t threshold)
+{
+    uint8_t buf[1];
+    buf[0] = threshold & 0b1111;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_SMARTEN_SEMAX) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_smarten_semax()
+{
+    _set_null_data(CAN_GET_SMARTEN_SEMAX);
+}
+
+
 
 void RAD::set_min_output(uint16_t min_output)
 {
@@ -319,11 +706,7 @@ void RAD::set_min_output(uint16_t min_output)
 
 void RAD::get_min_output()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_MIN_OUTPUT) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_PID_MIN_OUTPUT);
 }
 
 void RAD::set_max_output(uint16_t max_output)
@@ -338,13 +721,8 @@ void RAD::set_max_output(uint16_t max_output)
 
 void RAD::get_max_output()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_PID_MAX_OUTPUT) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_GET_PID_MAX_OUTPUT);
 }
-
 
 void RAD::pulse_stepper(float steps)
 {
@@ -356,21 +734,37 @@ void RAD::pulse_stepper(float steps)
     _update_can_data(buf, 4);
 }
 
+void RAD::set_home_position(uint32_t pos)
+{
+    uint8_t buf[4];
+    uint8_t i = 0;
+    __buffer_append_uint32(buf, pos, &i);
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                    ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HOME_POSITION) << 8);
+    _update_can_data(buf, 4);
+}
+
+void RAD::get_home_position()
+{
+    _set_null_data(CAN_GET_HOME_POSITION);
+}
+
 void RAD::set_home_offset()
 {
-    uint8_t buf[1];
-    buf[0] = 0;
-    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_HOME_OFFSET) << 8);
-    _update_can_data(buf, 1);
+    _set_null_data(CAN_SET_HOME_OFFSET);
 }
 
 void RAD::get_home_offset()
 {
+    _set_null_data(CAN_GET_HOME_OFFSET);
+}
+
+void RAD::_set_null_data(RAD_CAN_MSG msg)
+{
     uint8_t buf[1];
     buf[0] = 0;
     l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
-                        ((uint32_t)l_can_id) | ((uint32_t)(CAN_GET_HOME_OFFSET) << 8);
+                        ((uint32_t)l_can_id) | ((uint32_t)(msg) << 8);
     _update_can_data(buf, 1);
 }
 
