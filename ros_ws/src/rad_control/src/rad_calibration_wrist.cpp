@@ -11,31 +11,33 @@ RAD_Wrist_Init::RAD_Wrist_Init() :
 {
     this->declare_parameter<std::string>("can_topic", "/can/can_out");
     left_wrist_sub = this->create_subscription<RadStatus>(
-        "/arm/ls/rad_status", 10, std::bind(&RAD_Wrist_Init::_ls_callback, this, _1)
+        "/arm/wrist_ls/rad_status", 10, std::bind(&RAD_Wrist_Init::_ls_callback, this, _1)
       );
     right_wrist_sub = this->create_subscription<RadStatus>(
-        "/arm/rs/rad_status", 10, std::bind(&RAD_Wrist_Init::_rs_callback, this, _1)
+        "/arm/wrist_rs/rad_status", 10, std::bind(&RAD_Wrist_Init::_rs_callback, this, _1)
     );
 }
 
 void RAD_Wrist_Init::_ls_callback(const RadStatus& msg)
 {
-    this->left_ls = msg.ls_state_1;
+    this->left_ls = msg.ls_state_2;
 }
 
 void RAD_Wrist_Init::_rs_callback(const RadStatus& msg)
 {
-    this->right_ls = msg.ls_state_1;
+    this->right_ls = msg.ls_state_2;
 }
 
 bool RAD_Wrist_Init::is_roll_calibrated()
 {
-    return this->left_ls;
+    // right wrist for roll calibrate
+    return this->right_ls;
 }
 
 bool RAD_Wrist_Init::is_pitch_calibrated()
 {
-    return this->right_ls;
+    // left wrist for pitch calibrate
+    return this->left_ls;
 }
 
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;
@@ -68,6 +70,8 @@ int main(int argc, char ** argv)
     rate.sleep();
   }
 
+  RCLCPP_INFO(wrist_init_node->get_logger(), "Roll calibrated");
+
   while (!wrist_init_node->is_pitch_calibrated() && rclcpp::ok())
   {
     rad_ls.pulse_stepper(100);
@@ -83,7 +87,7 @@ int main(int argc, char ** argv)
   can_pub->publish(can1_raw);
   can_pub->publish(can2_raw);
 
-  RCLCPP_INFO(wrist_init_node->get_logger(), "Roll and Pitch calibrated");
+  RCLCPP_INFO(wrist_init_node->get_logger(), "Pitch calibrated");
 
   // kill node and spin thread
   spin_thread.~thread();

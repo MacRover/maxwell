@@ -8,7 +8,9 @@ rad_status_to_id = {
     "/drive/rear_right/rad_status": 0x14,
     "/arm/joint0/rad_status": 0x16,
     "/arm/joint1/rad_status": 0x15,
-    "/arm/joint2/rad_status": 0x17
+    "/arm/joint2/rad_status": 0x17,
+    "/arm/wrist_rs/rad_status": 0x18,
+    "/arm/wrist_ls/rad_status": 0x19,
 }
 
 def generate_launch_description():
