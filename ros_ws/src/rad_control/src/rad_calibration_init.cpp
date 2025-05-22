@@ -37,7 +37,7 @@ bool RAD_Init::finished()
 
 void RAD_Init::_callback(const RadStatus& msg, int id)
 {
-    this->ls[id] = msg.ls_state;
+    this->ls[id] = msg.ls_state_1;
 }
 
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;

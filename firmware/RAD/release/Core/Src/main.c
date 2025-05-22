@@ -364,13 +364,17 @@ int main(void)
                 {
                     double new_setpoint = decode_double_big_endian(new_message->data);
 
-                    if (new_setpoint < min_angle)
+                    if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                        rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
                     {
-                        new_setpoint = min_angle;
-                    }
-                    else if (new_setpoint > max_angle)
-                    {
-                        new_setpoint = max_angle;
+                        if (new_setpoint < min_angle)
+                        {
+                            new_setpoint = min_angle;
+                        }
+                        else if (new_setpoint > max_angle)
+                        {
+                            new_setpoint = max_angle;
+                        }
                     }
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
