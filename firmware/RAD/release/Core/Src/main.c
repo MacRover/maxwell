@@ -927,6 +927,17 @@ int main(void)
                     //MX_CAN_Broadcast_Double_Data(&rad_can, rad_params.HOME_OFFSET, GET_HOME_OFFSET);
                     break;
                 }
+
+                case SET_MAX_POINT:
+                {
+                    PID_SetMaxPoint(&pid_1, new_message->data[0]);
+                    break;
+                }
+                case SET_ZERO_POINT:
+                {
+                    PID_SetZeroPoint(&pid_1);
+                    break;
+                }
                 default:
                     break;
             }
