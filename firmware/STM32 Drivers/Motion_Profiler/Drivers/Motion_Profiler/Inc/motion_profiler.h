@@ -71,11 +71,7 @@ typedef struct
 Motion_Profiler_StatusTypeDef Motion_Profiler_Init(Motion_Profiler_HandleTypeDef *hprofiler);
 Motion_Profiler_StatusTypeDef Motion_Profiler_DeInit(Motion_Profiler_HandleTypeDef *hprofiler);
 
-
-Motion_Profiler_StatusTypeDef Motion_Profiler_GenerateNewTrajectory(Motion_Profiler_HandleTypeDef *hprofiler, double current_location, double desired_setpoint);
-
-
-Motion_Profiler_StatusTypeDef Motion_Profiler_GetVelocity(Motion_Profiler_HandleTypeDef *hprofiler, double current_location);
-
+float time_calc(float v_i, float v_max, float acceleration, uint32_t steps_to_move);
+float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time);
 
 #endif /* MOTION_PROFILER_INC_MOTION_PROFILER_H_ */

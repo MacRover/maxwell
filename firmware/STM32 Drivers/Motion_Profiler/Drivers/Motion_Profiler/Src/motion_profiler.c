@@ -9,6 +9,7 @@
 #include "motion_profiler.h"
 
 #include <math.h>
+#include <time.h>
 
 Motion_Profiler_StatusTypeDef Motion_Profiler_Init(Motion_Profiler_HandleTypeDef *hprofiler)
 {
@@ -69,130 +70,95 @@ Motion_Profiler_StatusTypeDef Motion_Profiler_DeInit(Motion_Profiler_HandleTypeD
 
 }
 
-Motion_Profiler_StatusTypeDef Motion_Profiler_GenerateNewTrajectory(Motion_Profiler_HandleTypeDef *hprofiler, double current_location, double desired_setpoint)
-{
+float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time) {
 
-    double error = fabs(desired_setpoint - current_location);
-
-    if (hprofiler == NULL)
-    {
-        return MOTION_PROFILER_ERROR;
-    }
-
-    if (hprofiler->State == MOTION_PROFILER_STATE_RESET)
-    {
-        // Peripheral is not initialized
-        return MOTION_PROFILER_ERROR;
-    }
-
-    if (hprofiler->State == MOTION_PROFILER_STATE_BUSY)
-    {
-        //Already in a profile, use current velocity as min velocity
-
-        if (hprofiler->Init.acceleration == 0)
-        {
-            hprofiler->blend_x_start = 0;
-            hprofiler->blend_x_end = 0;
-        }
-        else
-        {   
-            hprofiler->blend_x_start = (pow(hprofiler->Init.max_velocity, 2) - pow(hprofiler->current_velocity, 2))/(2*hprofiler->Init.acceleration);
-            hprofiler->blend_x_end = (pow(hprofiler->Init.max_velocity, 2) - pow(hprofiler->Init.min_velocity, 2))/(2*hprofiler->Init.acceleration);
-        }
-
-        hprofiler->current_min_velocity = hprofiler->current_velocity;
+	uint32_t set_point;
+	float projected_time;
+	uint32_t current_time;
+	float time_elapsed;
+	float v_peak;
+	float v_f;
 
 
-    }
-    else
-    {
+	set_point = current_pos + steps_to_move;
 
-        // Motion profiler is ready
-        if (hprofiler->Init.acceleration == 0)
-        {
-            hprofiler->blend_x_start = 0;
-            hprofiler->blend_x_end = 0;
-        }
-        else
-        {   
-            hprofiler->blend_x_start = (pow(hprofiler->Init.max_velocity, 2) - pow(hprofiler->Init.min_velocity, 2))/(2*hprofiler->Init.acceleration);
-            hprofiler->blend_x_end = hprofiler->blend_x_start;
-        }
+	// If the set point is identical to the current position, exit the program
 
-        hprofiler->current_min_velocity = hprofiler->Init.min_velocity;
+	if (set_point == current_pos) {
+		return MOTION_PROFILER_BUSY;
+	} else {
 
-    }
+		// Calculation of the projected time
 
-    if ((current_location + hprofiler->blend_x_start) > (desired_setpoint - hprofiler->blend_x_end))
-    {
-        //Can't hit max velocity
-        //Find point where ramp up meets ramp down, and then assign blendx from there
+		projected_time = (float) time_calc(v_i, v_max, acceleration, steps_to_move);
 
-        double offset_point = error/2 - (pow(hprofiler->current_velocity, 2) - pow(hprofiler->Init.min_velocity, 2))/(2*hprofiler->Init.acceleration)/2;
+		// Taking the current time
 
-        hprofiler->blend_x_start = offset_point;
-        hprofiler->blend_x_end = error - offset_point;
+		time_elapsed = current_time - (float) start_time;
 
-    }
+		// Checking where we are in the motion based on the current time
+		// todo: fix this after testing in the bay
 
-    hprofiler->start = current_location;
-    hprofiler->setpoint = desired_setpoint;
+		if (time_elapsed >= projected_time / 2) {
+			acceleration = -fabsf(acceleration);
+		} else {
+			acceleration = fabsf(acceleration);
+		}
 
-    hprofiler->State = MOTION_PROFILER_STATE_BUSY;
+		if (time_elapsed >= projected_time / 2 ) {
+
+			v_peak = v_i + fabsf(acceleration * (projected_time/2));
+			v_f = v_peak + acceleration*(time_elapsed-(projected_time/2));
+
+		} else {
+			v_f = v_i + acceleration*(time_elapsed);
+		}
+
+		// Returning the velocity
+
+		if (fabsf(v_f) > v_max) {
+			return v_max;
+		} else if (v_f < v_max) {
+			return v_f;
+		}
 
 
-    return MOTION_PROFILER_OK;
+	}
+}
+
+float time_calc(float v_i, float v_max, float acceleration, uint32_t steps_to_move) {
+
+	// Running time based calculations
+
+	float t_max;
+	float t_min;
+	uint32_t steps_increase;
+	uint32_t steps_decrease;
+	uint32_t standard_steps;
+	float t_level;
+	float t_total;
+
+	t_max = fabsf((v_max - v_i) / acceleration);
+	t_min = fabsf(-v_max / acceleration);
+
+	// Finding the steps of increase and decrease (which is needed later for total time)
+
+	steps_increase = v_max*t_max - 0.5 * acceleration*(t_max*t_max);
+	steps_decrease = v_max*t_min + 0.5*(-1*acceleration)*(t_min*t_min);
+	standard_steps = steps_to_move - steps_increase - steps_decrease;
+
+	// Finding the time at the level value
+
+	t_level = (float) standard_steps / v_max;
+	t_total = t_max + t_min + t_level;
+
+	// Return the total time
+
+	return t_total;
+
+
+
 
 }
 
-Motion_Profiler_StatusTypeDef Motion_Profiler_GetVelocity(Motion_Profiler_HandleTypeDef *hprofiler, double current_location)
-{
 
-    if (hprofiler == NULL)
-    {
-        return MOTION_PROFILER_ERROR;
-    }
-
-    if (hprofiler->State == MOTION_PROFILER_STATE_RESET)
-    {
-        // Peripheral is not initialized
-        return MOTION_PROFILER_ERROR;
-    }
-
-    if (hprofiler->State == MOTION_PROFILER_STATE_READY)
-    {
-        //No profile generated
-        return MOTION_PROFILER_NO_PROFILE;
-    }
-
-
-    //prioritize ramp down over ramp up
-
-    if (fabs(hprofiler->setpoint - current_location) <= hprofiler->blend_x_end)
-    {
-        hprofiler->current_velocity = sqrt(pow(hprofiler->Init.min_velocity, 2) + 2 * hprofiler->Init.acceleration * fabs(hprofiler->setpoint - current_location));
-
-        if ((fabs(hprofiler->setpoint - current_location) < hprofiler->Init.deadzone))
-        {
-            //Close enough to the target, suspend this profile
-            hprofiler->State = MOTION_PROFILER_STATE_READY;
-
-        }
-    
-    }
-    else if (fabs(current_location - hprofiler->start) <= hprofiler->blend_x_start)
-    {
-        //still ramping up. Find target velocity based on current displacement
-        //if accel is 0, blend_x is zero and this case is never triggered.
-
-        hprofiler->current_velocity = sqrt(pow(hprofiler->current_min_velocity, 2) + 2 * hprofiler->Init.acceleration * fabs(current_location - hprofiler->start));
-
-    }
-    else
-    {
-        hprofiler->current_velocity = hprofiler->Init.max_velocity;
-    }
-
-    return MOTION_PROFILER_OK;
-
-}
