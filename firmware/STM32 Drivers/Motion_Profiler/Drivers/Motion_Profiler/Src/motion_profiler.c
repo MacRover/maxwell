@@ -94,6 +94,8 @@ float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acce
 
 		// Taking the current time
 
+		// todo: fix getting current time
+
 		time_elapsed = current_time - (float) start_time;
 
 		// Checking where we are in the motion based on the current time
