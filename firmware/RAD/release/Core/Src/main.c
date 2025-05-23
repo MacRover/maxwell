@@ -257,7 +257,8 @@ int main(void)
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            // Wrist motors are the same as drive train
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_ARM_GRIPPER:
@@ -375,9 +376,14 @@ int main(void)
                         {
                             new_setpoint = max_angle;
                         }
+                        PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+                    }
+                    else
+                    {
+                        // Set raw setpoint for wrist motors
+                        PID_ChangeSetPoint(&pid_1, new_setpoint);
                     }
                     
-                    PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -934,12 +940,20 @@ int main(void)
 
                 case SET_MAX_POINT:
                 {
+                    // For wrist
                     PID_SetMaxPoint(&pid_1, new_message->data[0]);
+                    PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
                     break;
                 }
                 case SET_ZERO_POINT:
                 {
+                    // For wrist
                     PID_SetZeroPoint(&pid_1);
+                    PID_ChangeSetPoint(&pid_1, 0.0);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
                     break;
                 }
                 default:
@@ -1367,7 +1381,15 @@ int main(void)
 //                 sum = sum + angle_average_buffer[i];
 //             }
             //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
-            rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
+            {
+                rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            }
+            else
+            {
+                rad_status.current_angle = (double) (pid_1.feedback_adj);
+            }
         	//rad_status.current_angle = (double) pid_1.output;
             //AS5048A_ReadAngle(&as5048a_1);
             //rad_status.current_angle = as5048a_1.Angle_double;
