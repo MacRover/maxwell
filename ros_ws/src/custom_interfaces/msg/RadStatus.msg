@@ -16,4 +16,5 @@ uint8 encoder_status
 uint8 rad_state
 
 # limit switch state
-bool ls_state false
+bool ls_state_1 false
+bool ls_state_2 false

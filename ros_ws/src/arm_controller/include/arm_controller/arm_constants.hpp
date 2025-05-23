@@ -1,0 +1,11 @@
+#define lmin_shoulder 0.33
+#define lmin_elbow 0.33
+#define a_shoulder 0.24
+#define b_shoulder 0.23
+#define a_elbow 0.216
+#define b_elbow 0.175
+#define shoulder_offset 1.5563100940033439
+#define elbow_offset 2.0023115310579747
+#define base_gear_reduction 0
+#define screw_max 13320
+#define can_rate 10
