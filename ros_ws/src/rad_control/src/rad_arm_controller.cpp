@@ -8,24 +8,23 @@ using std::placeholders::_1;
 RAD_Arm_Controller::RAD_Arm_Controller() : 
   Node("rad_arm_controller"),
   rad_base_arm(&can_base, RAD__ARM__BASE), 
-  rad_ls_arm(&can_ls, RAD__ARM__LS),
+  rad_ls_arm(&can_ls, RAD__ARM__WRIST_LS),
   rad_gripper_arm(&can_gripper, RAD__ARM__GRIPPER),
   rad_shoulder_arm(&can_shoulder, RAD__ARM__SHOULDER),
   rad_elbow_arm(&can_elbow, RAD__ARM__ELBOW),
-  rad_rs_arm(&can_rs, RAD__ARM__RS)
+  rad_rs_arm(&can_rs, RAD__ARM__WRIST_RS)
 {
   this->declare_parameter<std::vector<double>>("lmins", {0.33, 0.33});        // Shoulder, elbow
   this->declare_parameter<std::vector<double>>("a_lengths", {0.24, 0.216});   // Shoulder, elbow
   this->declare_parameter<std::vector<double>>("b_lengths", {0.23, 0.175});   // Shoulder, elbow
   this->declare_parameter<std::vector<double>>("offsets", {89.17, 114.724});  // Shoulder, elbow
-  this->declare_parameter("gear_reduction", 60); 
   this->declare_parameter("screw_max", 13320.0);
+  this->declare_parameter("can_rate", 10); 
   lmins = this->get_parameter("lmins").as_double_array();
   a_lengths = this->get_parameter("a_lengths").as_double_array(); 
   b_lengths = this->get_parameter("b_lengths").as_double_array();
   offsets = this->get_parameter("offsets").as_double_array();
   screw_max = this->get_parameter("screw_max").as_double(); 
-  gear_reduction = this->get_parameter("gear_reduction").as_double(); 
 
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
 
@@ -67,8 +66,8 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float wrist_angle = msg.position[4];
   float gripper_angle = msg.position[5]; 
 
-  float ls = gear_reduction*(pitch_angle + wrist_angle); 
-  float rs = gear_reduction*(pitch_angle - wrist_angle); 
+  float ls = 60 *(pitch_angle + wrist_angle); 
+  float rs = 60 *(pitch_angle - wrist_angle); 
   float pi = 3.141592653;
 
   float theta_m_shoulder = screw_max - RAD_Angle_Conversion(shoulder_angle, lmins[0], pi, a_lengths[0], b_lengths[0]); 
