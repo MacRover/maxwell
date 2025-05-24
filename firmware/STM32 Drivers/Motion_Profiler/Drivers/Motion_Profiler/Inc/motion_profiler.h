@@ -1,8 +1,8 @@
 /*
  * motion_profiler.h
  *
- *  Created on: December 12, 2024
- *      Author: Ishan
+ *  Created on: May 24th, 2024
+ *      Author: Adam
  */
 
 
@@ -71,7 +71,7 @@ typedef struct
 Motion_Profiler_StatusTypeDef Motion_Profiler_Init(Motion_Profiler_HandleTypeDef *hprofiler);
 Motion_Profiler_StatusTypeDef Motion_Profiler_DeInit(Motion_Profiler_HandleTypeDef *hprofiler);
 
-float time_calc(float v_i, float v_max, float acceleration, uint32_t steps_to_move);
-float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time);
+float MOTION_PROFILE_TIME(float v_i, float v_max, float acceleration, uint32_t steps_to_move);
+float MOTION_PROFILE_VELOCITY(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time);
 
 #endif /* MOTION_PROFILER_INC_MOTION_PROFILER_H_ */

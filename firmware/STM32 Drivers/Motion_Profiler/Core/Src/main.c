@@ -24,6 +24,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
+#include "motion_profiler.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -102,6 +103,16 @@ int main(void)
   MX_ADC2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
+  uint32_t steps_to_move = 90;
+  uint32_t v_i = 0;
+  uint32_t v_max = 5;
+  uint32_t acceleration = 2;
+  uint32_t current_pos = 0;
+  uint32_t time_elapsed = 0;
+  float velocity = 0;
+  uint32_t movement_steps = 0;
+  uint32_t total_steps = 0;
     // Motion_Profiler_HandleTypeDef profile;
     
     // profile.Init.max_velocity = 10;
@@ -145,6 +156,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    	HAL_TIM_Base_Start(&htim2);
+
+
+    	// On first run, v_i = 0
+
+    	while (total_steps < steps_to_move) {
+
+
+			time_elapsed = __HAL_TIM_GET_COUNTER(&htim2);
+
+			velocity = MOTION_PROFILE_VELOCITY(current_pos, steps_to_move, acceleration, v_i, v_max, time_elapsed);
+
+			movement_steps = velocity * time_elapsed;
+
+			total_steps += movement_steps;
+
+			// Moving steps go here.  Need to link
+
+			// todo (in hatch) - figure out the linking
+
+			v_i = velocity;
+    	}
+
+
+
+
+
+
+
+
+
+
     }
   /* USER CODE END 3 */
 }

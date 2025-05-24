@@ -1,15 +1,14 @@
 /*
  * motion_profiler.c
  *
- *  Created on: December 12, 2024
- *      Author: Ishan
+ *  Created on: May 24th, 2025
+ *      Author: Adam
  */
 
 
 #include "motion_profiler.h"
 
 #include <math.h>
-#include <time.h>
 
 Motion_Profiler_StatusTypeDef Motion_Profiler_Init(Motion_Profiler_HandleTypeDef *hprofiler)
 {
@@ -70,12 +69,11 @@ Motion_Profiler_StatusTypeDef Motion_Profiler_DeInit(Motion_Profiler_HandleTypeD
 
 }
 
-float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time) {
+float MOTION_PROFILE_VELOCITY(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t time_elapsed) {
 
+	// Need to do some testing on the board, but start time might be 0 so we may not even need it!
 	uint32_t set_point;
 	float projected_time;
-	uint32_t current_time;
-	float time_elapsed;
 	float v_peak;
 	float v_f;
 
@@ -90,13 +88,12 @@ float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acce
 
 		// Calculation of the projected time
 
-		projected_time = (float) time_calc(v_i, v_max, acceleration, steps_to_move);
+		projected_time = (float) MOTION_PROFILE_TIME(v_i, v_max, acceleration, steps_to_move);
 
-		// Taking the current time
+		// Current time probably has to be passed in now that I think of it
 
 		// todo: fix getting current time
 
-		time_elapsed = current_time - (float) start_time;
 
 		// Checking where we are in the motion based on the current time
 		// todo: fix this after testing in the bay
@@ -126,9 +123,12 @@ float velocity_function(uint32_t current_pos, uint32_t steps_to_move, float acce
 
 
 	}
+
+	return MOTION_PROFILER_ERROR;
 }
 
-float time_calc(float v_i, float v_max, float acceleration, uint32_t steps_to_move) {
+
+float MOTION_PROFILE_TIME(float v_i, float v_max, float acceleration, uint32_t steps_to_move) {
 
 	// Running time based calculations
 
