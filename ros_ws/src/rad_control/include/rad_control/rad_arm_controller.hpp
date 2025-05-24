@@ -19,10 +19,11 @@ private:
 
   CANraw can_base, can_shoulder, can_gripper, can_elbow, can_rs, can_ls;
 
-
   RAD rad_base_arm, rad_ls_arm, rad_gripper_arm, rad_shoulder_arm, rad_elbow_arm, rad_rs_arm; 
 
   uint16_t sleep_msec;
 
-  double lmin_shoulder, lmin_elbow, a_shoulder, b_shoulder, a_elbow, b_elbow, base_gear_reduction, shoulder_offset, elbow_offset, screw_max;
+  std::vector<double> lmins, a_lengths, b_lengths, offsets; 
+
+  double screw_max;
 };
