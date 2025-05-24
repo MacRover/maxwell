@@ -14,11 +14,16 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   rad_elbow_arm(&can_elbow, RAD__ARM__ELBOW),
   rad_rs_arm(&can_rs, RAD__ARM__RS)
 {
-  this->declare_parameter<std::vector<double>>("lmins", {0.33, 0.33});        // Shoulder, elbow
-  this->declare_parameter<std::vector<double>>("a_lengths", {0.24, 0.216});   // Shoulder, elbow
-  this->declare_parameter<std::vector<double>>("b_lengths", {0.23, 0.175});   // Shoulder, elbow
-  this->declare_parameter<std::vector<double>>("offsets", {89.17, 114.724});  // Shoulder, elbow
-  this->declare_parameter("screw_max", 13320.0); 
+  this->declare_parameter("lmin_shoulder", 0.33);
+  this->declare_parameter("lmin_elbow", 0.33);
+  this->declare_parameter("a_shoulder", 0.24);
+  this->declare_parameter("b_shoulder", 0.23);
+  this->declare_parameter("a_elbow", 0.216);
+  this->declare_parameter("b_elbow", 0.175);
+  this->declare_parameter("shoulder_offset", 89.17);
+  this->declare_parameter("elbow_offset", 114.724); 
+  this->declare_parameter("base_gear_reduction", 0);
+  this->declare_parameter("screw_max", 13320); 
   this->declare_parameter("can_rate", 10);
   lmins = this->get_parameter("lmins").as_double_array();
   a_lengths = this->get_parameter("a_lengths").as_double_array(); 
