@@ -5,6 +5,7 @@
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
 #include <Servo.h>
+#include <RadioLib.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -24,6 +25,7 @@
  //#define USING_TSB
 //#define USING_FANS
 #define USING_SERVO
+#define USING_LORA
 
 
 #define DOMAIN_ID 5
@@ -38,8 +40,6 @@
   if (init == -1) { init = uxr_millis();} \
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
-
-
 
 
 
@@ -61,7 +61,9 @@ LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
-
+#ifdef USING_LORA
+    SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
+#endif
 Fan fan1, fan2, fan3;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
@@ -79,18 +81,9 @@ rcl_init_options_t init_options;
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
-#ifdef USING_GPS
-  gps_msg.latitude = 0;
-  gps_msg.longitude = 0;
-  gps_msg.altitude = 0;
-#endif
 
-#ifdef USING_LORA
-  // Create instance of Lora
-  Lora lora;
-#endif
 
-// Call InterruptTransmit and pass in corresponding GPS data as the data being sent.
+
 
 void updateICM_20948(ICM_20948_I2C* icm)
 {
@@ -290,6 +283,10 @@ void setup()
     Wire1.setClock(400000);
     Serial5.begin(38400);
     Serial.begin(115200);
+    #ifdef USING_LORA
+    radio.begin();
+    radio.startReceive();  
+    #endif
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
@@ -458,6 +455,15 @@ FANS_SM();
 
 #ifdef USING_TSB
 TSB_SM();
+#endif 
+
+#ifdef USING_LORA
+ if (Serial.available()) {
+    String line = Serial.readStringUntil('\n');
+
+    radio.transmit(line);
+    radio.startReceive();  
+  }
 #endif 
 
 
