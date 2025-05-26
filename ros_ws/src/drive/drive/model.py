@@ -6,8 +6,9 @@ import math
 
 from .drive_module import DriveModule
 
-from custom_interfaces.msg import SwerveModule
+from custom_interfaces.msg import SwerveModule, SwerveModulesList
 
+MAX_ANGLE = 120.0 * (np.pi / 180.0)
 
 class SteeringModel:
 
@@ -27,12 +28,18 @@ class SteeringModel:
 		self.ActuatorMatrixInv = np.linalg.pinv(self.ActuatorMatrix)
 		self.body_state = None
 
-	def updateOdom(self, driveModules: List[SwerveModule]):
+	def updateOdom(self, modules: SwerveModulesList):
+		driveModules = [
+			modules.front_left, 
+			modules.front_right, 
+			modules.rear_left, 
+			modules.rear_right
+		]
 		module_states = np.zeros((len(driveModules) * 2))
 		
 		for i, module in enumerate(driveModules):
-			module_states[2 * i] = module.speed * np.cos(module.angle)
-			module_states[2 * i + 1] = module.speed * np.sin(module.angle)
+			module_states[2 * i] = module.speed * np.cos(module.angle * np.pi / 180.0)
+			module_states[2 * i + 1] = module.speed * np.sin(module.angle * np.pi / 180.0)
 
 		self.body_state = np.matmul(self.ActuatorMatrixInv, module_states)
 		return self.body_state
@@ -52,11 +59,20 @@ class SteeringModel:
 			if abs(math.pi - angle) < 0.0001:
 				angle = 0.0
 				module.speed *= -1
-			if angle < 0:
+
+			if angle < -(np.pi / 2 + 0.5):
 				module.speed *= -1
 				angle += np.pi
+			elif angle > (np.pi / 2 + 0.5):
+				module.speed *= -1
+				angle -= np.pi
 			
-			module.angle = angle
+			if angle > MAX_ANGLE:
+				angle = MAX_ANGLE
+			elif angle < -MAX_ANGLE:
+				angle = -MAX_ANGLE
+
+			module.angle = angle * (180.0 / np.pi)
 			out.append(module)
 		
 		return out

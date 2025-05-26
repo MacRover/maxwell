@@ -33,6 +33,7 @@ setup(
             'heartbeat.py = drive.heartbeat:main',
             'vesc_status.py = drive.vesc_status:main',
             'xbox_drive.py = drive.xbox_drive:main',
+            'drive_modules_odom.py = drive.drive_modules_odom:main',
         ],
     },
 )
