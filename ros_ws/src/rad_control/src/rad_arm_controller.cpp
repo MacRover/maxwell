@@ -31,7 +31,7 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   can_pub_ = this->create_publisher<CANraw>("/can/can_out", 10);
 
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
-    "/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1));
+    "/arm/hardware/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1));
 }
 void RAD_Arm_Controller::_publish_to_can()
 {
@@ -60,11 +60,11 @@ float RAD_Angle_Conversion(float angle, float lmin, float pi, float a, float b){
 void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
 {
   float base_angle = msg.position[0]; 
-  float shoulder_angle = msg.position[1] + offsets[0];
-  float elbow_angle = msg.position[2] + offsets[1];
-  float pitch_angle = msg.position[3];
-  float wrist_angle = msg.position[4];
-  float gripper_angle = msg.position[5]; 
+  float shoulder_angle = msg.position[1]*180/M_PI + offsets[0];
+  float elbow_angle = msg.position[2]*180/M_PI + offsets[1];
+  float pitch_angle = msg.position[3]*180/M_PI;
+  float wrist_angle = msg.position[4]*180/M_PI;
+  float gripper_angle = msg.position[5]*180/M_PI; 
 
   float ls = 60 *(pitch_angle + wrist_angle); 
   float rs = 60 *(pitch_angle - wrist_angle); 
@@ -79,6 +79,10 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   rad_ls_arm.set_target_angle(ls);
   rad_rs_arm.set_target_angle(rs);
   rad_gripper_arm.set_target_angle(gripper_angle);
+
+  std::cout << "Shoulder: " << theta_m_shoulder << std::endl;
+  std::cout << "Elbow: " << theta_m_elbow << std::endl;
+
   this->_publish_to_can(); 
 }
 int main(int argc, char ** argv)

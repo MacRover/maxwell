@@ -68,8 +68,8 @@ def generate_launch_description():
         "config",
         "ros2_controllers.yaml",
     )
-    print("=======")
-    print(moveit_config.robot_description)
+    # print("=======")
+    # print(moveit_config.robot_description)
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -125,17 +125,17 @@ def generate_launch_description():
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/arm_base_footprint", "frame_id": "/world"}],
-            )
+            ),
             # ComposableNode(
             #     package="moveit_servo",
             #     plugin="moveit_servo::JoyToServoPub",
             #     name="controller_to_servo_node",
             # ),
-            # ComposableNode(
-            #     package="joy",
-            #     plugin="joy::Joy",
-            #     name="joy_node",
-            # ),
+            ComposableNode(
+                package="joy",
+                plugin="joy::Joy",
+                name="joy_node",
+            )
         ],
         output="screen",
     )
