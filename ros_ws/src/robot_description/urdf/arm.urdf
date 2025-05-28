@@ -205,7 +205,7 @@
     <child
       link="arm_elbow" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
       lower="0"
       upper="0.8"
