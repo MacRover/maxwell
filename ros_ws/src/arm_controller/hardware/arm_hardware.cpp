@@ -108,7 +108,8 @@ return_type RobotSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Durat
 
   for (auto i = 0ul; i < last_joint_state_.position.size(); i++)
   {
-    joint_position_[i] = last_joint_state_.position[i];
+    // joint_position_[i] = last_joint_state_.position[i];
+    joint_position_[i] = joint_position_command_[i];
   }
 
   return return_type::OK;

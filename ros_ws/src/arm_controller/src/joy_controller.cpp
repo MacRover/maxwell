@@ -115,9 +115,9 @@ std::map<Button, double> BUTTON_DEFAULTS;
  * @param joint A JointJog message to update in prep for publishing
  * @return return true if you want to publish a Twist, false if you want to publish a JointJog
  */
-bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& buttons,
-                     std::unique_ptr<geometry_msgs::msg::TwistStamped>& twist,
-                     std::unique_ptr<control_msgs::msg::JointJog>& joint)
+bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &buttons,
+                     std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
+                     std::unique_ptr<control_msgs::msg::JointJog> &joint)
 {
   // // Give joint jogging priority because it is only buttons
   // // If any joint jog command is requested, we are only publishing joint commands
@@ -138,11 +138,11 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
   // }
 
   // The bread and butter: map buttons to twist commands
-  twist->twist.linear.z = axes[RIGHT_STICK_Y];
-  twist->twist.linear.y = axes[RIGHT_STICK_X];
+  twist->twist.linear.z = 0.1 * axes[RIGHT_STICK_Y];
+  twist->twist.linear.y = 0.1 * axes[RIGHT_STICK_X];
 
-  double lin_x_right = -0.5 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
-  double lin_x_left = 0.5 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
+  double lin_x_right = -0.1 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
+  double lin_x_left = 0.1 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
   twist->twist.linear.x = lin_x_right + lin_x_left;
 
   twist->twist.angular.y = axes[LEFT_STICK_Y];
@@ -162,7 +162,7 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
 void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons)
 {
   if (buttons[START] && frame_name == GRIPPER_FRAME_ID)
-    frame_name = BASE_FRAME_ID;
+    frame_name = BASE_FOOTPRINT_FRAME_ID;
   else if (buttons[MENU] && frame_name == BASE_FRAME_ID)
     frame_name = GRIPPER_FRAME_ID;
 }
