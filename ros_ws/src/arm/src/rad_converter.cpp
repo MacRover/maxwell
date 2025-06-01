@@ -1,5 +1,5 @@
-#include "arm_controller/rad_converter.hpp"
-#include "arm_controller/arm_constants.hpp"
+#include "arm/rad_converter.hpp"
+#include "arm/arm_constants.hpp"
 #include <cmath>
 #include <iostream>
 
