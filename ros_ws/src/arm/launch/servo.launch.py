@@ -1,7 +1,7 @@
 import os
 import yaml
 from launch import LaunchDescription
-from launch.actions import RegisterEventHandler
+from launch.actions import RegisterEventHandler 
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -11,6 +11,8 @@ from launch.actions import ExecuteProcess
 import xacro
 from pathlib import Path
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def load_file(package_name, file_path):
@@ -161,6 +163,17 @@ def generate_launch_description():
             )
         )
     )
+    
+    move_group = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                os.path.join(
+                    get_package_share_directory("arm_moveit_config"), "launch"
+                ),
+                "/move_group.launch.py",
+            ]
+        )
+    )
 
     return LaunchDescription(
         [
@@ -170,5 +183,6 @@ def generate_launch_description():
             delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
             servo_node,
             container,
+            move_group
         ]
     )

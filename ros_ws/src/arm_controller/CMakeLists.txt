@@ -62,37 +62,6 @@ ament_target_dependencies(
   ${CONTROLLER_INCLUDE_DEPENDS}
 )
 
-add_executable(keyboard_controller src/keyboard_controller.cpp)
-ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs sensor_msgs)
-
-add_executable(joy_controller src/joy_controller.cpp)
-ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
-ament_target_dependencies(joy_controller rclcpp std_msgs sensor_msgs control_msgs std_srvs moveit_msgs rclcpp_components)
-target_include_directories(keyboard_controller PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(keyboard_controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
-
-add_executable(rad_converter src/rad_converter.cpp)
-ament_target_dependencies(rad_converter rclcpp sensor_msgs custom_interfaces trajectory_msgs)
-target_include_directories(rad_converter PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(rad_converter PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
-add_executable(arm_rad_dummy src/arm_rad_dummy.cpp)
-ament_target_dependencies(arm_rad_dummy rclcpp sensor_msgs)
-target_include_directories(arm_rad_dummy PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(arm_rad_dummy PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
-add_executable(servo_keyboard_input src/servo_keyboard_input.cpp)
-target_include_directories(servo_keyboard_input PUBLIC include)
-ament_target_dependencies(servo_keyboard_input rclcpp sensor_msgs control_msgs)
-
-
 pluginlib_export_plugin_description_file(hardware_interface arm_controller.xml)
 pluginlib_export_plugin_description_file(controller_interface arm_controller.xml)
 
@@ -101,38 +70,11 @@ install(
   DESTINATION include/arm_controller
 )
 
-install(TARGETS keyboard_controller
-  rad_converter
-  arm_rad_dummy
-  servo_keyboard_input
-  DESTINATION lib/${PROJECT_NAME})
-
-install(TARGETS joy_controller
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-# Install launch files.
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}/
-)
-
 install(TARGETS arm_controller
   EXPORT arm_controller
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 ament_package()
