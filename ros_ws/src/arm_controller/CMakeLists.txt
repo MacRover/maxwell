@@ -64,6 +64,7 @@ ament_target_dependencies(
 
 add_executable(keyboard_controller src/keyboard_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs sensor_msgs)
+
 add_executable(joy_controller src/joy_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
 ament_target_dependencies(joy_controller rclcpp std_msgs sensor_msgs control_msgs std_srvs moveit_msgs rclcpp_components)
@@ -87,6 +88,10 @@ target_include_directories(arm_rad_dummy PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(arm_rad_dummy PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
+add_executable(servo_keyboard_input src/servo_keyboard_input.cpp)
+target_include_directories(servo_keyboard_input PUBLIC include)
+ament_target_dependencies(servo_keyboard_input rclcpp sensor_msgs control_msgs)
+
 
 pluginlib_export_plugin_description_file(hardware_interface arm_controller.xml)
 pluginlib_export_plugin_description_file(controller_interface arm_controller.xml)
@@ -99,6 +104,7 @@ install(
 install(TARGETS keyboard_controller
   rad_converter
   arm_rad_dummy
+  servo_keyboard_input
   DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS joy_controller
