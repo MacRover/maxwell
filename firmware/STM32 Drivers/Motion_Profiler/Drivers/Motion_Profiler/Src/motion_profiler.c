@@ -7,8 +7,7 @@
 
 
 #include "motion_profiler.h"
-
-#include <math.h>
+#include <stddef.h>
 
 Motion_Profiler_StatusTypeDef Motion_Profiler_Init(Motion_Profiler_HandleTypeDef *hprofiler)
 {

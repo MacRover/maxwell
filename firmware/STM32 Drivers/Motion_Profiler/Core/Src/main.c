@@ -24,10 +24,13 @@
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
-#include "motion_profiler.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "motion.h"
+#include "tmc_2590.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +56,28 @@ void LS_Pressed_Callback(LS_NUMBER *num);
 
 /* USER CODE BEGIN PV */
 
+RAD_PARAMS_TypeDef rad_params;
+RAD_MOTION_PROFILE_TypeDef rad_motion_profile;
+
+uint8_t ESTOP = 0;
+uint8_t DISABLED = 0;
+
+uint16_t min_angle;
+uint16_t max_angle;
+uint16_t gearing;
+uint16_t max_rotations;
+uint16_t steps_per_revolution;
+
+float software_stop = 0;
+uint8_t cw_enable = 0;
+uint8_t ccw_enable = 0;
+
+double* angle_average_buffer;
+uint8_t buffer_head;
+
+int16_t steps_to_move;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +100,67 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+	  //SET DEFAULT VALUES
+
+		rad_params.RAD_ID = 0xF0;
+	    rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
+	    rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
+	    rad_params.STEPPER_SPEED = 1000;
+	    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
+	    rad_params.HEALTH_INTERVAL = 1000; //every second
+	    rad_params.P = 0.01;
+	    rad_params.I = 0.0000001;
+	    rad_params.D = 0;
+
+	    rad_params.CHOPCONF_CHM = 0b0;
+	    rad_params.CHOPCONF_HDEC = 0b00;
+	    rad_params.CHOPCONF_HEND = 0b0100;
+	    rad_params.CHOPCONF_HSTRT = 0b110;
+	    rad_params.CHOPCONF_RNDTF = 0b0;
+	    rad_params.CHOPCONF_TBL = 0b10;
+	    rad_params.CHOPCONF_TOFF = 0b100;
+
+	    rad_params.DRVCONF_DIS_S2G = 0b0;
+	    rad_params.DRVCONF_EN_PFD = 0b1;
+	    rad_params.DRVCONF_EN_S2VS = 0b1;
+	    rad_params.DRVCONF_OTSENS = 0b0;
+	    rad_params.DRVCONF_RDSEL = 0b11;
+	    rad_params.DRVCONF_SDOFF = 0b0;
+	    rad_params.DRVCONF_SHRTSENS = 0b1;
+	    rad_params.DRVCONF_SLP = 0b11110;
+	    rad_params.DRVCONF_TS2G = 0b00;
+	    rad_params.DRVCONF_TST = 0b0;
+	    rad_params.DRVCONF_VSENSE = 0b0;
+
+	    rad_params.DRVCTRL_DEDGE = 0b0;
+	    rad_params.DRVCTRL_INTPOL = 0b1;
+	    rad_params.DRVCTRL_MRES = 0b1000;
+
+	    rad_params.SGCSCONF_CS = 10;
+	    rad_params.SGCSCONF_SFILT = 0b0;
+	    rad_params.SGCSCONF_SGT = 0b0000010;
+
+	    rad_params.SMARTEN_SEDN = 0b00;
+	    rad_params.SMARTEN_SEIMIN = 0b0;
+	    rad_params.SMARTEN_SEMAX = 0b0000;
+	    rad_params.SMARTEN_SEMIN = 0b0000;
+	    rad_params.SMARTEN_SEUP = 0b00;
+
+	    rad_params.PID_MIN_OUTPUT = 20;
+	    rad_params.PID_MAX_OUTPUT = 1000;
+
+	    rad_params.HOME_OFFSET = 0;
+
+	    rad_motion_profile.STEPS_TO_MOVE = 90;
+	    rad_motion_profile.V_I = 0;
+	    rad_motion_profile.V_MAX = 5;
+	    rad_motion_profile.ACCELERATION = 2;
+	    rad_motion_profile.CURRENT_POS = 0;
+	    rad_motion_profile.TIME_ELAPSED = 0;
+	    rad_motion_profile.VELOCITY = 0;
+	    rad_motion_profile.MOVEMENT_STEPS = 0;
+	    rad_motion_profile.TOTAL_STEPS = 0;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -83,6 +169,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+
+
 
   /* USER CODE END Init */
 
@@ -104,15 +192,6 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  uint32_t steps_to_move = 90;
-  uint32_t v_i = 0;
-  uint32_t v_max = 5;
-  uint32_t acceleration = 2;
-  uint32_t current_pos = 0;
-  uint32_t time_elapsed = 0;
-  float velocity = 0;
-  uint32_t movement_steps = 0;
-  uint32_t total_steps = 0;
     // Motion_Profiler_HandleTypeDef profile;
     
     // profile.Init.max_velocity = 10;
@@ -162,22 +241,22 @@ int main(void)
 
     	// On first run, v_i = 0
 
-    	while (total_steps < steps_to_move) {
+    	while (rad_motion_profile.TOTAL_STEPS < rad_motion_profile.STEPS_TO_MOVE) {
 
 
-			time_elapsed = __HAL_TIM_GET_COUNTER(&htim2);
+			rad_motion_profile.TIME_ELAPSED = __HAL_TIM_GET_COUNTER(&htim2);
 
-			velocity = MOTION_PROFILE_VELOCITY(current_pos, steps_to_move, acceleration, v_i, v_max, time_elapsed);
+			rad_motion_profile.VELOCITY = MOTION_PROFILE_VELOCITY(rad_motion_profile.CURRENT_POS, rad_motion_profile.STEPS_TO_MOVE, rad_motion_profile.ACCELERATION, rad_motion_profile.V_I, rad_motion_profile.V_MAX, rad_motion_profile.TIME_ELAPSED);
 
-			movement_steps = velocity * time_elapsed;
+			rad_motion_profile.MOVEMENT_STEPS = rad_motion_profile.VELOCITY * rad_motion_profile.TIME_ELAPSED;
 
-			total_steps += movement_steps;
+			rad_motion_profile.TOTAL_STEPS += rad_motion_profile.MOVEMENT_STEPS;
 
 			// Moving steps go here.  Need to link
 
 			// todo (in hatch) - figure out the linking
 
-			v_i = velocity;
+			rad_motion_profile.V_I = rad_motion_profile.VELOCITY;
     	}
 
 
