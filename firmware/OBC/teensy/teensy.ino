@@ -438,7 +438,7 @@ void TSB_SM(){
   }
 }
 #ifdef USING_LORA
-void LoRa_State_Machine(){
+void LORA_SM(){
 switch (state_lora) {
 
     case LORA_INIT: {
@@ -542,7 +542,7 @@ TSB_SM();
 #endif 
 
 #ifdef USING_LORA
-  LoRa_State_Machine();
+  LORA_SM();
 #endif
 
 

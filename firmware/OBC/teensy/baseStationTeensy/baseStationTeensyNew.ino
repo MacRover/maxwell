@@ -7,99 +7,98 @@
 SX1262 radio = new Module(10, 3, 40, 39);
 
 
-volatile bool receivedFlag = false;
+volatile bool received_flag = false;
 
 
-int16_t rxState = RADIOLIB_ERR_NONE;
+int16_t reading_state = RADIOLIB_ERR_NONE;
 
 
-String rxData;
+String lora_data;
 
 
-enum RxState {
-  RX_INIT,         
-  RX_START_LISTEN,
-  RX_WAIT_FLAG,   
-  RX_READ_DATA,     
-};
+enum LORA_STATES {
+  LORA_INIT,         
+  LORA_LISTEN,
+  LORA_FLAG,   
+  LORA_PRINT,     
+} state_lora;
 
-RxState rxStateMachine = RX_INIT;
+
 
 
 #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
 #endif
-void onPacketReceived() {
-  receivedFlag = true;
+void packet_received() {
+  received_flag = true;
 }
 
 
 void setup() {
   Serial.begin(9600);
- 
+  state_lora = LORA_INIT;
 }
 
-
-void loop() {
-  switch (rxStateMachine) {
+void LORA_SM(){
+   switch (state_lora) {
 
     
-    case RX_INIT: {
-      Serial.print(F("[RX] Initializing SX1262 ... "));
+    case LORA_INIT: {
+      Serial.print(F(" Initializing SX1262 ... "));
       int16_t state = radio.begin(); 
       if (state != RADIOLIB_ERR_NONE) {
         Serial.print(F("FAILED, code "));
         Serial.println(state);
         while (true) {
           delay(500);
-          Serial.println(F("[RX] Radio init failed; halting."));
+          Serial.println(F(" Radio init failed; halting."));
         }
       }
       Serial.println(F("OK"));
 
       
-      radio.setPacketReceivedAction(onPacketReceived);
+      radio.setPacketReceivedAction(packet_received);
 
   
-      rxStateMachine = RX_START_LISTEN;
+      state_lora = LORA_LISTEN;
       break;
     }
 
    
-    case RX_START_LISTEN: {
-      Serial.println(F("[RX] Starting to listen for packets ..."));
-      rxState = radio.startReceive();
-      if (rxState != RADIOLIB_ERR_NONE) {
-        Serial.print(F("[RX] startReceive() failed, code "));
-        Serial.println(rxState);
+    case LORA_LISTEN: {
+      Serial.println(F(" Starting to listen for packets ..."));
+      reading_state = radio.startReceive();
+      if (reading_state != RADIOLIB_ERR_NONE) {
+        Serial.print(F(" startReceive() failed, code "));
+        Serial.println(reading_state);
        
         delay(500);
-        rxStateMachine = RX_START_LISTEN;
+        state_lora = LORA_LISTEN;
       } else {
        
-        rxStateMachine = RX_WAIT_FLAG;
+        state_lora = LORA_FLAG;
       }
       break;
     }
 
     
-    case RX_WAIT_FLAG: {
-      if (receivedFlag) {
-        rxStateMachine = RX_READ_DATA;
+    case LORA_FLAG: {
+      if (received_flag) {
+        state_lora = LORA_PRINT;
       }
     
       break;
     }
 
    
-    case RX_READ_DATA: {
-      receivedFlag = false;
-      int16_t state = radio.readData(rxData);
+    case LORA_PRINT: {
+      received_flag = false;
+      int16_t state = radio.readData(lora_data);
       if (state == RADIOLIB_ERR_NONE) {
     
-        Serial.println(F("[RX] Packet received!"));
+        Serial.println(F(" Packet received!"));
         Serial.print(F("  >> \""));
-        Serial.print(rxData);
+        Serial.print(lora_data);
         Serial.println(F("\""));
     
         Serial.print(F("  RSSI: "));
@@ -112,13 +111,19 @@ void loop() {
         Serial.print(radio.getFrequencyError());
         Serial.println(F(" Hz"));
       } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {
-        Serial.println(F("[RX] CRC error; packet malformed."));
+        Serial.println(F(" CRC error; packet malformed."));
       } else {
-        Serial.print(F("[RX] readData() failed, code "));
+        Serial.print(F(" readData() failed, code "));
         Serial.println(state);
       }
-      rxStateMachine = RX_START_LISTEN;
+      state_lora = LORA_LISTEN;
       break;
     }
   }
 }
+
+void loop() {
+  LORA_SM();
+
+  delay(1);
+} 
