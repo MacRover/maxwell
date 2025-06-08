@@ -22,7 +22,7 @@
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 //#define USING_GPS
- //#define USING_TSB
+//#define USING_TSB
 //#define USING_FANS
 //#define USING_SERVO
 #define USING_LORA
@@ -62,7 +62,23 @@ ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 #ifdef USING_LORA
-    SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
+SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
+
+int16_t transmissionState = RADIOLIB_ERR_NONE;
+
+
+volatile bool transmittedFlag = false;
+
+uint32_t packetCount = 0;
+
+
+char txBuffer[64] = { 0 };
+  #if defined(ESP8266) || defined(ESP32)
+  ICACHE_RAM_ATTR
+  #endif
+void onPacketSent() {
+  transmittedFlag = true;
+}
 #endif
 Fan fan1, fan2, fan3;
 
@@ -74,7 +90,7 @@ IPAddress arduino_ip(192, 168, 1, 177);
     IPAddress agent_ip(192, 168, 1, 199);
 #endif
 
-unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0;
+unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0, prev_time_lora = 0;
 rcl_init_options_t init_options;
 
 
@@ -283,19 +299,18 @@ void setup()
     Wire1.setClock(400000);
     Serial5.begin(38400);
     Serial.begin(115200);
-    #ifdef USING_LORA
-    radio.begin();
-    radio.startReceive();  
-    #endif
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
 
-    obc_setup_imu();
-    obc_setup_gps();
-    obc_setup_tsb();
+   obc_setup_imu();
+   obc_setup_gps();
+   obc_setup_tsb();
     state_UROS = UROS_FOUND;
+    #ifdef USING_LORA
+    txState = TX_INIT;
+    #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
 }
@@ -422,27 +437,96 @@ void TSB_SM(){
       break;
   }
 }
+#ifdef USING_LORA
+void LoRa_StateMachine(){
+switch (txState) {
 
+    case TX_INIT: {
+      int16_t state = radio.begin();
+   
+      radio.setPacketSentAction(onPacketSent);
+
+      
+      txState = TX_START_TRANSMIT;
+      break;
+    }
+
+    // ───────────────── TX_START_TRANSMIT ───────────────────────────────────────
+    case TX_START_TRANSMIT: {
+        packetCount++;
+        snprintf(
+        txBuffer, 
+        sizeof(txBuffer),
+        "PKT#%03lu LAT:%.6f,LON:%.6f,ALT:%.2f,COV:[%.2f,%.2f,%.2f]", 
+        (unsigned long)packetCount,
+        gps_msg.latitude, 
+        gps_msg.longitude, 
+        gps_msg.altitude,
+        gps_msg.position_covariance[8],
+        gps_msg.position_covariance[4],
+        gps_msg.position_covariance[0]
+      );
+
+
+        transmittedFlag = false; 
+        transmissionState = radio.startTransmit(txBuffer);
+        if (transmissionState != RADIOLIB_ERR_NONE) {
+          txState = TX_CLEANUP;
+        } else {
+        
+          txState = TX_WAIT_COMPLETE;
+        }
+        break;
+      }
+
+    case TX_WAIT_COMPLETE: {
+    
+      if (transmittedFlag) {
+      
+        txState = TX_CLEANUP;
+      }
+     
+      break;
+    }
+
+  
+    case TX_CLEANUP: {
+      radio.finishTransmit();
+      txState = TX_DELAY_BEFORE_NEXT;
+      break;
+    }
+
+   
+    case TX_DELAY_BEFORE_NEXT: {
+      if (millis() - prev_time_lora > 1000) {
+        prev_time_lora = millis();
+        txState = TX_START_TRANSMIT;
+      }
+      break;
+    }
+  }
+  }
+#endif
 
 
 void loop()
 {
  
 #ifdef USING_IMU_ONBOARD
-  updateLSM6DSM(&LSM6DSMR);
+    updateLSM6DSM(&LSM6DSMR);
 #else
     #ifdef USING_IMU_OTHER
-      if (ICM.dataReady())
-      {
-          ICM.getAGMT();
-          updateICM_20948(&ICM);
-      }
+    if (ICM.dataReady())
+    {
+        ICM.getAGMT();
+        updateICM_20948(&ICM);
+    }
     #endif
 #endif
 
 #ifdef USING_GPS
-  GNSS.checkUblox();
-  GNSS.checkCallbacks();
+    GNSS.checkUblox();
+    GNSS.checkCallbacks();
 #endif
 
 #ifdef USING_ROS
@@ -458,13 +542,8 @@ TSB_SM();
 #endif 
 
 #ifdef USING_LORA
- if (Serial.available()) {
-    String line = Serial.readStringUntil('\n');
-
-    radio.transmit(line);
-    radio.startReceive();  
-  }
-#endif 
+  LoRa_StateMachine();
+#endif
 
 
 delay(1);

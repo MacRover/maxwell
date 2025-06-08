@@ -22,6 +22,14 @@ enum TSB_STATES{
   TSB_ERROR
 } state_TSB;
 
+enum TxState {
+  TX_INIT,            
+  TX_START_TRANSMIT, 
+  TX_WAIT_COMPLETE,   
+  TX_CLEANUP,          
+  TX_DELAY_BEFORE_NEXT 
+} txState;
+
 enum EMC2305_Reg : uint8_t
 {
     FAN_1_TACH_TARGET_HIGH_BYTE = 0x3D,
