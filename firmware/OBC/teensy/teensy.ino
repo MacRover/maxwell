@@ -64,20 +64,20 @@ Adafruit_MCP9601 MCP;
 #ifdef USING_LORA
 SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
 
-int16_t transmissionState = RADIOLIB_ERR_NONE;
+int16_t Transmission_State = RADIOLIB_ERR_NONE;
 
 
-volatile bool transmittedFlag = false;
+volatile bool Transmitted_Flag = false;
 
-uint32_t packetCount = 0;
+uint32_t Packet_Count = 0;
 
 
-char txBuffer[64] = { 0 };
+char Lora_Buffer[256] = { 0 };
   #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
   #endif
-void onPacketSent() {
-  transmittedFlag = true;
+void Packet_Sent() {
+  transmitted_Flag = true;
 }
 #endif
 Fan fan1, fan2, fan3;
@@ -309,7 +309,7 @@ void setup()
    obc_setup_tsb();
     state_UROS = UROS_FOUND;
     #ifdef USING_LORA
-    txState = TX_INIT;
+    state_lora = LORA_INIT;
     #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
@@ -438,27 +438,27 @@ void TSB_SM(){
   }
 }
 #ifdef USING_LORA
-void LoRa_StateMachine(){
-switch (txState) {
+void LoRa_State_Machine(){
+switch (state_lora) {
 
-    case TX_INIT: {
+    case LORA_INIT: {
       int16_t state = radio.begin();
    
-      radio.setPacketSentAction(onPacketSent);
+      radio.setPacketSentAction(Packet_Sent);
 
       
-      txState = TX_START_TRANSMIT;
+      state_lora = LORA_TRANSMIT;
       break;
     }
 
-    // ───────────────── TX_START_TRANSMIT ───────────────────────────────────────
-    case TX_START_TRANSMIT: {
-        packetCount++;
+    
+    case LORA_TRANSMIT: {
+        Packet_Count++;
         snprintf(
-        txBuffer, 
-        sizeof(txBuffer),
+        Lora_Buffer, 
+        sizeof(Lora_Buffer),
         "PKT#%03lu LAT:%.6f,LON:%.6f,ALT:%.2f,COV:[%.2f,%.2f,%.2f]", 
-        (unsigned long)packetCount,
+        (unsigned long)Packet_Count,
         gps_msg.latitude, 
         gps_msg.longitude, 
         gps_msg.altitude,
@@ -468,39 +468,39 @@ switch (txState) {
       );
 
 
-        transmittedFlag = false; 
-        transmissionState = radio.startTransmit(txBuffer);
-        if (transmissionState != RADIOLIB_ERR_NONE) {
-          txState = TX_CLEANUP;
+        Transmitted_Flag = false; 
+        Transmission_State = radio.startTransmit(Lora_Buffer);
+        if (Transmission_State != RADIOLIB_ERR_NONE) {
+          state_lora = LORA_FINISH;
         } else {
         
-          txState = TX_WAIT_COMPLETE;
+          state_lora = LORA_FLAG;
         }
         break;
       }
 
-    case TX_WAIT_COMPLETE: {
+    case LORA_FLAG: {
     
-      if (transmittedFlag) {
+      if (Transmitted_Flag) {
       
-        txState = TX_CLEANUP;
+        state_lora = LORA_FINISH;
       }
      
       break;
     }
 
   
-    case TX_CLEANUP: {
+    case LORA_FINISH: {
       radio.finishTransmit();
-      txState = TX_DELAY_BEFORE_NEXT;
+      state_lora = LORA_DELAY;
       break;
     }
 
-   
-    case TX_DELAY_BEFORE_NEXT: {
+   // might be redundant and just put in LORA_FINISH
+    case LORA_DELAY: {
       if (millis() - prev_time_lora > 1000) {
         prev_time_lora = millis();
-        txState = TX_START_TRANSMIT;
+        state_lora = LORA_TRANSMIT;
       }
       break;
     }
@@ -542,7 +542,7 @@ TSB_SM();
 #endif 
 
 #ifdef USING_LORA
-  LoRa_StateMachine();
+  LoRa_State_Machine();
 #endif
 
 

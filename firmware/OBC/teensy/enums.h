@@ -22,13 +22,13 @@ enum TSB_STATES{
   TSB_ERROR
 } state_TSB;
 
-enum TxState {
-  TX_INIT,            
-  TX_START_TRANSMIT, 
-  TX_WAIT_COMPLETE,   
-  TX_CLEANUP,          
-  TX_DELAY_BEFORE_NEXT 
-} txState;
+enum LORA_STATES {
+  lORA_INIT,            
+  LORA_TRANSMIT, 
+  LORA_FLAG,   
+  LORA_FINISH,          
+  LORA_DELAY 
+} state_lora;
 
 enum EMC2305_Reg : uint8_t
 {
