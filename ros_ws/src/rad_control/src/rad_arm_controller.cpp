@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cmath> 
 #include "rad_control/rad_arm_controller.hpp"
+// ROS in
 #define LEN_MM_TO_ROTATION (360/0.00254)
 using std::placeholders::_1;
 
@@ -80,8 +81,13 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   rad_rs_arm.set_target_angle(rs);
   rad_gripper_arm.set_target_angle(gripper_angle);
 
-  std::cout << "Shoulder: " << theta_m_shoulder << std::endl;
-  std::cout << "Elbow: " << theta_m_elbow << std::endl;
+  // std::cout << "Shoulder: " << theta_m_shoulder << std::endl;
+  // std::cout << "Elbow: " << theta_m_elbow << std::endl;
+
+  //ROS info
+  RCLCPP_INFO(this->get_logger(), "Base angle: %f, Shoulder angle: %f, Elbow angle: %f, LS angle: %f, RS angle: %f, Gripper angle: %f", 
+              base_angle, shoulder_angle, elbow_angle, ls, rs, gripper_angle);
+  
 
   this->_publish_to_can(); 
 }
