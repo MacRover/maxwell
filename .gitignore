@@ -440,3 +440,5 @@ www/js/*
 # MacOS
 .DS_Store
 
+# micro_ros_setup
+uros/
