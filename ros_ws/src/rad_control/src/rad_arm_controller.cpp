@@ -86,7 +86,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
 
   //ROS info
   RCLCPP_INFO(this->get_logger(), "Base angle: %f, Shoulder angle: %f, Elbow angle: %f, LS angle: %f, RS angle: %f, Gripper angle: %f", 
-              base_angle, shoulder_angle, elbow_angle, ls, rs, gripper_angle);
+              base_angle, theta_m_shoulder, theta_m_elbow, ls, rs, gripper_angle);
   
 
   this->_publish_to_can(); 
