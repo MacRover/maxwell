@@ -313,7 +313,7 @@
     </collision>
   </link>
   <joint
-    name="gripper joint"
+    name="gripper_joint"
     type="revolute">
     <origin
       xyz="0.0038697 0.074295 0.0022774"
@@ -323,10 +323,10 @@
     <child
       link="gripper" />
     <axis
-      xyz="1 0 0" />
+      xyz="-1 0 0" />
     <limit
-      lower="-1.57"
-      upper="1.57"
+      lower="0"
+      upper="3.14"
       effort="10"
       velocity="10" />
   </joint>

@@ -72,7 +72,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float pi = 3.141592653;
 
   float theta_m_shoulder = screw_max - RAD_Angle_Conversion(shoulder_angle, lmins[0], pi, a_lengths[0], b_lengths[0]); 
-  float theta_m_elbow = 8297 + RAD_Angle_Conversion(elbow_angle, lmins[1], pi, a_lengths[1], b_lengths[1]); 
+  float theta_m_elbow = 8297 - RAD_Angle_Conversion(elbow_angle, lmins[1], pi, a_lengths[1], b_lengths[1]); 
  
   rad_base_arm.set_target_angle(base_angle);
   rad_shoulder_arm.set_target_angle(theta_m_shoulder);
