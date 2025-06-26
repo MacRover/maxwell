@@ -1119,8 +1119,8 @@ int main(void)
                             break;
 
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
-                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0.0);
                             break;
 
                         case RAD_TYPE_ARM_BASE:
@@ -1152,8 +1152,8 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
                             break;
  
                         case RAD_TYPE_ARM_ELBOW:
@@ -1275,7 +1275,7 @@ int main(void)
                         }
                         case RAD_TYPE_ARM_SHOULDER:
                         {
-                            PID_SetMaxPoint(&pid_1, 37);
+                            PID_SetZeroPoint(&pid_1);
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
@@ -1297,7 +1297,7 @@ int main(void)
                     {
                         case RAD_TYPE_ARM_SHOULDER:
                         {
-                            PID_SetZeroPoint(&pid_1);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
                             cw_enable = 1;
                             ccw_enable = 0;
                             break;

@@ -1,7 +1,7 @@
 import os
 import yaml
 from launch import LaunchDescription
-from launch.actions import RegisterEventHandler
+from launch.actions import RegisterEventHandler 
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -11,6 +11,8 @@ from launch.actions import ExecuteProcess
 import xacro
 from pathlib import Path
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def load_file(package_name, file_path):
@@ -68,8 +70,8 @@ def generate_launch_description():
         "config",
         "ros2_controllers.yaml",
     )
-    print("=======")
-    print(moveit_config.robot_description)
+    # print("=======")
+    # print(moveit_config.robot_description)
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -125,17 +127,17 @@ def generate_launch_description():
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/arm_base_footprint", "frame_id": "/world"}],
-            )
+            ),
             # ComposableNode(
             #     package="moveit_servo",
             #     plugin="moveit_servo::JoyToServoPub",
             #     name="controller_to_servo_node",
             # ),
-            # ComposableNode(
-            #     package="joy",
-            #     plugin="joy::Joy",
-            #     name="joy_node",
-            # ),
+            ComposableNode(
+                package="joy",
+                plugin="joy::Joy",
+                name="joy_node",
+            )
         ],
         output="screen",
     )
@@ -161,6 +163,17 @@ def generate_launch_description():
             )
         )
     )
+    
+    move_group = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                os.path.join(
+                    get_package_share_directory("arm_moveit_config"), "launch"
+                ),
+                "/move_group.launch.py",
+            ]
+        )
+    )
 
     return LaunchDescription(
         [
@@ -170,5 +183,6 @@ def generate_launch_description():
             delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
             servo_node,
             container,
+            move_group
         ]
     )

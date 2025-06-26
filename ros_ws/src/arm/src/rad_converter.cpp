@@ -1,5 +1,5 @@
-#include "arm_controller/rad_converter.hpp"
-#include "arm_controller/arm_constants.hpp"
+#include "arm/rad_converter.hpp"
+#include "arm/arm_constants.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -27,7 +27,7 @@ RAD_Converter::RAD_Converter() : Node("rad_arm_converter"),
             std::cout << "Shoulder: " << joint_state_.position[i]*180/M_PI << std::endl;
             break;
           case 2: // Elbow
-            joint_state_.position[i] = acos((a_elbow*a_elbow + b_elbow*b_elbow - pow((0.00254 / 360 * (msg->angle) + lmin_elbow), 2)) / (2 * a_elbow * b_elbow));
+            joint_state_.position[i] = acos((a_elbow*a_elbow + b_elbow*b_elbow - pow((0.00254 / 360 * (8297 - msg->angle) + lmin_elbow), 2)) / (2 * a_elbow * b_elbow));
             joint_state_.position[i] -= elbow_offset;
             std::cout << "Elbow: " << joint_state_.position[i]*180/M_PI << std::endl;
             break;
