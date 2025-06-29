@@ -97,6 +97,7 @@ typedef struct
     //UPDATE THIS TO INCLUDE ERRORS
     //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
     double current_angle;
+	double temperature;
 //    float current_speed;
 
     uint8_t EEPROM_STATUS;
@@ -104,6 +105,7 @@ typedef struct
     uint8_t ENCODER_STATUS;
     uint8_t RAD_STATE;
     uint8_t ls_1;
+	uint8_t NTC_STATUS;
 
 } RAD_STATUS_TypeDef;
 
