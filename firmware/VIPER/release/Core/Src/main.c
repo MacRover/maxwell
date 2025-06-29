@@ -226,7 +226,7 @@ int main(void)
 
 	while (1) {
 
-		//VIPER_Card_Check(&viper_state);
+		VIPER_Card_Check(&viper_state);
 
 		if (!queue_empty(&can_message_queue_global)) {
 			VIPER_CAN_Message_TypeDef *new_message =
