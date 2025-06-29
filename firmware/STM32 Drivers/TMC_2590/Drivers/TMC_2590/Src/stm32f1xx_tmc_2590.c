@@ -135,6 +135,33 @@ TMC_2590_StatusTypeDef TMC_2590_DeInit(TMC_2590_HandleTypeDef *htmc2590)
     return TMC_2590_OK;
 }
 
+//Used to indicate if the driver is free or not
+TMC_2590_StatusTypeDef TMC_2590_CheckState(TMC_2590_HandleTypeDef *htmc2590)
+{
+    if (htmc2590 == NULL)
+    {
+        return TMC_2590_ERROR;
+    }
+    // check driver state
+    if (htmc2590->State == TMC_2590_STATE_RESET)
+    {
+        // Peripheral is not initialized
+        return TMC_2590_ERROR;
+    }
+
+    if (htmc2590->State == TMC_2590_STATE_BUSY)
+    {
+        return TMC_2590_BUSY;
+    }
+
+    if (htmc2590->State == TMC_2590_STATE_ERROR)
+    {
+        return TMC_2590_ERROR;
+    }
+
+    return TMC_2590_OK;
+}
+
 TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
         TMC_2590_HandleTypeDef *htmc2590)
 {
@@ -207,7 +234,7 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int1
     htmc2590->State = TMC_2590_STATE_BUSY;
 
     // set dir
-    if (steps < 0)
+    if (((steps < 0) && (!htmc2590->Init.inverted)) || ((steps > 0) && (htmc2590->Init.inverted)))
     {
         HAL_GPIO_WritePin(htmc2590->Init.DIR_GPIO_Port, htmc2590->Init.DIR_Pin,
                 GPIO_PIN_RESET);
@@ -251,6 +278,15 @@ TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590, int1
     HAL_TIM_PWM_Start_DMA(htmc2590->Init.STEP_Tim, htmc2590->Init.STEP_Channel,
             (uint32_t*) htmc2590->__pwm_dma_ptr, pwm_pulses);
     return TMC_2590_OK;
+}
+
+void TMC_2590_Stop(TMC_2590_HandleTypeDef *htmc2590)
+{
+    if (htmc2590->State == TMC_2590_STATE_BUSY)
+    {
+        HAL_TIM_PWM_Stop_DMA(htmc2590->Init.STEP_Tim, htmc2590->Init.STEP_Channel);
+        htmc2590->State = TMC_2590_STATE_READY;
+    }
 }
 
 TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, uint32_t autoreload)

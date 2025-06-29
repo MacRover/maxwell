@@ -5,7 +5,7 @@ import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
 
-rad_id = 0x12
+rad_id = 0x15
 
 
 def main():
@@ -16,11 +16,12 @@ def main():
         while True:
             try: 
                 for msg in bus:
-                    if len(msg.data) == 8:
-                        float_convert = struct.unpack(">d",msg.data)[0]
-                        print(msg, round(float_convert, 5))
-                    else:
-                        print(msg)
+                    if ((msg.arbitration_id & 0xFF) == rad_id):
+                        if len(msg.data) == 8:
+                            float_convert = struct.unpack(">d",msg.data)[0]
+                            print(msg, round(float_convert, 5))
+                        else:
+                            print(msg)
             except KeyboardInterrupt:
                 i = input('command? ')
                 
@@ -43,7 +44,7 @@ def main():
                     send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
                 elif (i == "set target"):
                     j = input("target? ")
-                    send_float_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
+                    send_double_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
                 elif(i == "step motor"):
                     j = input("num pulses? ")
                     step_motor(bus=bus, id=rad_id, value=int(j))
@@ -79,8 +80,13 @@ def main():
                 elif (i == "set stepper speed"):
                     j = input("freq? ")
                     send_uint32_value(bus=bus, can_id=0x03, device_id=rad_id, value = int(j))
+                elif (i == "set pid max output"):
+                    j = input("max? ")
+                    send_uint16_value(bus=bus, can_id=0x59, device_id=rad_id, value = int(j))
+                elif (i == "get pid max output"):
+                    send_uint16_value(bus=bus, can_id=0x5A, device_id=rad_id, value = 0)
                 elif (i == "get stepper speed"):
-                    send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)
+                    send_uint32_value(bus=bus, can_id=0x04, device_id=rad_id, value = 0)                    
                 elif(i == "fix stepper"):
                     send_uint8_value(bus=bus, can_id=0x4B, device_id=rad_id, value =0b1) #INTPOL
                     time.sleep(0.1)
@@ -88,7 +94,12 @@ def main():
                     time.sleep(0.1)
                     send_uint8_value(bus=bus, can_id=0x4D, device_id=rad_id, value=0) #DEDGE
                     time.sleep(0.1)
-                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =5) #CS
+                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =10) #CS
+                elif(i == "set cs"):
+                    j = input("cs? ")
+                    send_uint8_value(bus=bus, can_id=0x31, device_id=rad_id, value =int(j))
+                elif(i == "get cs"):
+                    send_uint32_value(bus=bus, can_id=0x32, device_id=rad_id, value = 0)
                 elif( i == "estop"):
                     send_global_message(bus=bus, can_id=0x31, global_id_arg=0xFF)
                 elif( i == "disable"):
@@ -187,6 +198,15 @@ def send_uint32_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
     new_msg = can.Message(
         arbitration_id=__can_message_id(device_id, can_id),
         data=struct.pack(">I", value),
+        is_extended_id=True,
+    )
+    bus.send(msg=new_msg)
+
+
+def send_uint16_value(bus: can.BusABC, can_id: int, device_id: int, value: int):
+    new_msg = can.Message(
+        arbitration_id=__can_message_id(device_id, can_id),
+        data=struct.pack(">H", value),
         is_extended_id=True,
     )
     bus.send(msg=new_msg)

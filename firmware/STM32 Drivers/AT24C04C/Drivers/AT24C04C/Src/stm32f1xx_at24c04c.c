@@ -100,6 +100,8 @@ AT24C04C_StatusTypeDef AT24C04C_ReadData(AT24C04C_HandleTypeDef *hat24c04c, uint
 
     uint16_t I2C_Status = __mem_read(hat24c04c, address, buffer, len_bytes);
 
+    hat24c04c->State = AT24C04C_STATE_READY;
+
     if (I2C_Status == HAL_I2C_ERROR_TIMEOUT)
     {
         return AT24C04C_TIMEOUT;
@@ -108,8 +110,6 @@ AT24C04C_StatusTypeDef AT24C04C_ReadData(AT24C04C_HandleTypeDef *hat24c04c, uint
     {
         return AT24C04C_ERROR;
     }
-
-    hat24c04c->State = AT24C04C_STATE_READY;
 
     return AT24C04C_OK;
 }
@@ -143,6 +143,8 @@ AT24C04C_StatusTypeDef AT24C04C_WriteData(AT24C04C_HandleTypeDef *hat24c04c, uin
 
    uint16_t I2C_Status = __mem_write(hat24c04c, address, data, len_bytes);
 
+   hat24c04c->State = AT24C04C_STATE_READY;
+
     if (I2C_Status == HAL_I2C_ERROR_TIMEOUT)
     {
         return AT24C04C_TIMEOUT;
@@ -151,8 +153,6 @@ AT24C04C_StatusTypeDef AT24C04C_WriteData(AT24C04C_HandleTypeDef *hat24c04c, uin
     {
         return AT24C04C_ERROR;
     }
-
-    hat24c04c->State = AT24C04C_STATE_READY;
 
     return AT24C04C_OK;
 }

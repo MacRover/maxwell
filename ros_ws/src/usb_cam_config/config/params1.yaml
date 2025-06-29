@@ -7,7 +7,7 @@
       pixel_format: "mjpeg2rgb"  # see usb_cam/supported_formats for list of supported formats
       av_device_format: "YUV422P"
       image_width: 640
-      image_height: 480
+      image_height: 360
       camera_name: "test_camera"
       camera_info_url: "package://usb_cam_config/config/camera_info.yaml"
       brightness: -1
@@ -17,7 +17,7 @@
       gain: -1
       auto_white_balance: true
       white_balance: 4000
-      autoexposure: true
+      autoexposure: false
       exposure: 100
       autofocus: false
       focus: -1

@@ -27,12 +27,12 @@
 #define KEYCODE_R 0x72
 #define KEYCODE_F 0x66
 
-#define base_joint_vel 200
-#define pitch_joint_vel 200
-#define shoulder_joint_vel 200
-#define elbow_joint_vel 150
-#define wrist_joint_vel 200
-#define gripper_joint_vel 200
+#define base_joint_vel 75
+#define pitch_joint_vel 75
+#define shoulder_joint_vel 75
+#define elbow_joint_vel 75
+#define wrist_joint_vel 75
+#define gripper_joint_vel 75
 
 class KeyboardController
 {
@@ -132,54 +132,24 @@ void KeyboardController::keyLoop()
         joint_trajectory_.points[0].velocities[0] = base_joint_vel;
         dirty = true;
         break;
-      case KEYCODE_D: // gripper close
-        std::cout << "GRIPPER CLOSE" << std::endl;
-        joint_trajectory_.points[0].velocities[5] = gripper_joint_vel;
-        dirty = true;
-        break;
-      case KEYCODE_A:
-        std::cout << "GRIPPER OPEN" << std::endl; // DOWN is gripper open
-        joint_trajectory_.points[0].velocities[5] = -gripper_joint_vel;
-        dirty = true;
-        break;
       case KEYCODE_R: // shoulder up
         std::cout << "SHOULDER UP" << std::endl;
-        joint_trajectory_.points[0].velocities[2] = shoulder_joint_vel;
+        joint_trajectory_.points[0].velocities[1] = -shoulder_joint_vel;
         dirty = true;
         break;
       case KEYCODE_F: // shoulder down
         std::cout << "SHOULDER DOWN" << std::endl;
-        joint_trajectory_.points[0].velocities[2] = -shoulder_joint_vel;
+        joint_trajectory_.points[0].velocities[1] = shoulder_joint_vel;
         dirty = true;
         break;
       case KEYCODE_S: // Gripper down
-        std::cout << "GRIPPER DOWN" << std::endl;
-        joint_trajectory_.points[0].velocities[3] = elbow_joint_vel;
+        std::cout << "ELBOW DOWN" << std::endl;
+        joint_trajectory_.points[0].velocities[2] = -elbow_joint_vel;
         dirty = true;
         break;
       case KEYCODE_W:// Gripper up
-        std::cout << "GRIPPER UP" << std::endl;
-        joint_trajectory_.points[0].velocities[3] = -elbow_joint_vel;
-        dirty = true;
-        break;
-      case KEYCODE_DA:// Pitch down
-        std::cout << "PITCH DOWN" << std::endl;
-        joint_trajectory_.points[0].velocities[0] = pitch_joint_vel;
-        dirty = true;
-        break;
-      case KEYCODE_UA:// Pitch up
-        std::cout << "PITCH UP" << std::endl;
-        joint_trajectory_.points[0].velocities[0] = -pitch_joint_vel;
-        dirty = true;
-        break;
-      case KEYCODE_LA: // base left
-        std::cout << "BASE LEFT" << std::endl;
-        joint_trajectory_.points[0].velocities[4] = base_joint_vel;
-        dirty = true;
-        break;
-      case KEYCODE_RA: // base right
-        std::cout << "BASE RIGHT" << std::endl;
-        joint_trajectory_.points[0].velocities[4] = -base_joint_vel;
+        std::cout << "ELBOW UP" << std::endl;
+        joint_trajectory_.points[0].velocities[2] = elbow_joint_vel;
         dirty = true;
         break;
       default:

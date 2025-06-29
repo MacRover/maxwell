@@ -131,6 +131,8 @@ typedef struct
 
     GPIO_TypeDef *SG_TST_GPIO_Port; // SG_TST gpio port
     uint16_t SG_TST_Pin; // SG_TST gpio pin
+
+    uint8_t inverted; //Inverts direction
 } TMC_2590_InitTypeDef;
 
 /**
@@ -170,6 +172,8 @@ typedef struct __TMC_2590_HandleTypeDef
 TMC_2590_StatusTypeDef TMC_2590_Init(TMC_2590_HandleTypeDef *htmc2590);
 TMC_2590_StatusTypeDef TMC_2590_DeInit(TMC_2590_HandleTypeDef *htmc2590);
 
+TMC_2590_StatusTypeDef TMC_2590_CheckState(TMC_2590_HandleTypeDef *htmc2590);
+
 // write registers
 TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
         TMC_2590_HandleTypeDef *htmc2590);
@@ -177,6 +181,8 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
 // move X steps
 TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
         int16_t steps);
+
+void TMC_2590_Stop(TMC_2590_HandleTypeDef *htmc2590);
 
 TMC_2590_StatusTypeDef TMC_2590_SetTimAutoReload(TMC_2590_HandleTypeDef *htmc2590, 
 		uint32_t autoreload);
