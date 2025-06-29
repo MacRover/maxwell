@@ -109,7 +109,8 @@ typedef enum RAD_CAN_MSG : uint8_t
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
-    CAN_SEND_HEALTH_STATUS    = 252
+    CAN_SEND_HEALTH_STATUS    = 252,
+    CAN_SEND_TEMPERATURE      = 253
 
 } RAD_CAN_MSG;
 
