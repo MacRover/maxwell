@@ -505,18 +505,15 @@ void SystemClock_Config(void)
 
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
 	// Step 1: initialize viper_params (from EEPROM)
-	// AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 
 	// Step 2: set any relevant fields in viper_state from viper_params
 //	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;
-//	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
-//	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
-//	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
+	viper_state->CARD_0.ENABLE = 1; //Card zero is the jetson - ignore any eeprom for it, as it must always be on
 
-	viper_state->CARD_0.ENABLE = 1;
-	viper_state->CARD_1.ENABLE = 1;
-	viper_state->CARD_2.ENABLE = 1;
-	viper_state->CARD_3.ENABLE = 0;
+	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
+	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
+	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
 
 	// Step 3: Setup VIPER
 	VIPER_Card_Update_State(viper_state);
@@ -532,7 +529,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 	uint8_t infault[4] = {0};
 	uint8_t outfault[6] = {0};
 
-	if (1) {
+	if (c0) {
 		pgood[0] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_0_GPIO_Port,
 					PGOOD_CARD_0_Pin); // CARD 0
 		infault[0] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_0_GPIO_Port,
@@ -547,7 +544,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_0.OUTPUT_FAULT_B = outfault[1];
 	}
 
-	if (1) {
+	if (c1) {
 		pgood[1] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_1_GPIO_Port,
 					PGOOD_CARD_1_Pin); // CARD 1
 		infault[1] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_1_GPIO_Port,
@@ -559,7 +556,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_1.OUTPUT_FAULT_A = outfault[2];
 	}
 
-	if (1) {
+	if (c2) {
 		pgood[2] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_2_GPIO_Port,
 					PGOOD_CARD_2_Pin); // CARD 2
 		infault[2] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_2_GPIO_Port,
@@ -571,7 +568,7 @@ void VIPER_Card_Check(VIPER_STATE_TypeDef *viper_state) {
 		viper_state->CARD_2.OUTPUT_FAULT_A = outfault[3];
 	}
 
-	if (1) {
+	if (c3) {
 		pgood[3] = (uint8_t) HAL_GPIO_ReadPin(PGOOD_CARD_3_GPIO_Port,
 					PGOOD_CARD_3_Pin); // CARD 3
 		infault[3] = (uint8_t) HAL_GPIO_ReadPin(IN_FAULT_CARD_3_GPIO_Port,
@@ -651,7 +648,7 @@ void VIPER_Card_Update_Params(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_Typ
 	// STEP 2: Update EEPROM from viper_params
 	if (changed_flag)
 	{
-		// AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+		AT24C04C_WritePages(&at24c04c_1, (uint8_t*) viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 	}
 }
 
