@@ -1,0 +1,4 @@
+[submodule "ros_ws/src/micro_ros_setup"]
+	path = ros_ws/src/micro_ros_setup
+	url = https://github.com/micro-ROS/micro_ros_setup.git
+	branch = humble
