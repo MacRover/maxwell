@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>RAD</name>
+	<name>VIPER</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,29 +31,34 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Drivers/AS5048A</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AS5048A/Drivers/AS5048A</locationURI>
-		</link>
-		<link>
 			<name>Drivers/AT24C04C</name>
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/AT24C04C/Drivers/AT24C04C</locationURI>
 		</link>
 		<link>
-			<name>Drivers/NTCB572</name>
+			<name>Drivers/INA238</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/NTCB572/Drivers/NTCB572</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/INA238/Drivers/INA238</locationURI>
 		</link>
 		<link>
-			<name>Drivers/PID_lib</name>
+			<name>Drivers/MCP_3221</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/PID_lib/Drivers/PID_lib</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/MCP_3221/Drivers/MCP_3221</locationURI>
 		</link>
 		<link>
-			<name>Drivers/TMC_2590</name>
+			<name>Drivers/TCA9544A</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMC_2590/Drivers/TMC_2590</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TCA9544A/Drivers/TCA9544A</locationURI>
+		</link>
+		<link>
+			<name>Drivers/TMP_100</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_100/Drivers/TMP_100</locationURI>
+		</link>
+		<link>
+			<name>Drivers/TMP_1075</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/TMP_1075/Drivers/TMP_1075</locationURI>
 		</link>
 		<link>
 			<name>Drivers/queue</name>
