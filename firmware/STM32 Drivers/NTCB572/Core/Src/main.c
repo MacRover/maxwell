@@ -110,7 +110,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1)
     {
-    	float temperatureC = 0.0f;
+    	double temperatureC = 0.0f;
     	NTC_StatusTypeDef ntcStatus = NTC_ReadTemperatureC(&rad_ntc1, &temperatureC);
 
     	//Check if read was successful

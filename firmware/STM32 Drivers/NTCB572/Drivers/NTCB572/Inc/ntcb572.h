@@ -38,11 +38,11 @@ typedef struct
     ADC_HandleTypeDef *hadc;      // Pointer to the ADC handle used for readings
     uint32_t           Channel;   // ADC channel for the NTC voltage divider
 
-    float              SupplyVoltage;      // 3.3 V
-    float              RefResistorValue;   // 10 kΩ from schematic
-    float              Bvalue;             // B-constant from datasheet: 3455 K
-    float              R25;                // 10 kΩ
-    float              T25;                // 25 °C in Kelvin
+    double              SupplyVoltage;      // 3.3 V
+    double              RefResistorValue;   // 10 kΩ from schematic
+    double              Bvalue;             // B-constant from datasheet: 3455 K
+    double              R25;                // 10 kΩ
+    double              T25;                // 25 °C in Kelvin
     uint16_t           MaxAdcValue;        // 4095 for a 12-bit ADC
 
 } NTC_InitTypeDef;
@@ -57,8 +57,8 @@ typedef struct __NTC_HandleTypeDef
     volatile NTC_StateTypeDef State;
     volatile uint32_t  ErrorCode;
 
-    float lastResistance;            // Last computed resistance
-    float lastTemperatureC;          // Last computed temperature (°C)
+    double lastResistance;            // Last computed resistance
+    double lastTemperatureC;          // Last computed temperature (°C)
 
 } NTC_HandleTypeDef;
 
@@ -74,13 +74,13 @@ NTC_StatusTypeDef NTC_ReadRawAdc(NTC_HandleTypeDef *hntc, uint16_t *pRawAdcValue
 
 NTC_StatusTypeDef NTC_ConvertAdcToResistance(NTC_HandleTypeDef *hntc,
                                              uint16_t rawAdcValue,
-                                             float *pResistance);
+                                             double *pResistance);
 
 NTC_StatusTypeDef NTC_ResistanceToTemperature(NTC_HandleTypeDef *hntc,
-                                              float resistance,
-                                              float *pTemperature);
+                                              double resistance,
+                                              double *pTemperature);
 
-NTC_StatusTypeDef NTC_ReadTemperatureC(NTC_HandleTypeDef *hntc, float *pTemperature);
+NTC_StatusTypeDef NTC_ReadTemperatureC(NTC_HandleTypeDef *hntc, double *pTemperature);
 
 
 #endif

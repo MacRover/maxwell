@@ -150,7 +150,7 @@ NTC_StatusTypeDef NTC_ReadRawAdc(NTC_HandleTypeDef *hntc, uint16_t *pRawAdcValue
 
 NTC_StatusTypeDef NTC_ConvertAdcToResistance(NTC_HandleTypeDef *hntc,
                                              uint16_t rawAdcValue,
-                                             float *pResistance)
+                                             double *pResistance)
 {
     if ((hntc == NULL) || (pResistance == NULL))
     {
@@ -162,7 +162,7 @@ NTC_StatusTypeDef NTC_ConvertAdcToResistance(NTC_HandleTypeDef *hntc,
     }
 
     // Voltage across NTC is (ADC / MaxAdcValue) * SupplyVoltage
-    float v_ntc = ( (float)rawAdcValue / (float)hntc->Init.MaxAdcValue )
+    double v_ntc = ( (double)rawAdcValue / (double)hntc->Init.MaxAdcValue )
                   * hntc->Init.SupplyVoltage;
 
     // 	  Assume a simple voltage divider.
@@ -173,14 +173,14 @@ NTC_StatusTypeDef NTC_ConvertAdcToResistance(NTC_HandleTypeDef *hntc,
     //    The ADC measures V_NTC:
     //    R_NTC = (v_ntc / (V_supply - v_ntc)) * R_ref
 
-    float v_supply_minus_ntc = hntc->Init.SupplyVoltage - v_ntc;
+    double v_supply_minus_ntc = hntc->Init.SupplyVoltage - v_ntc;
     if (fabsf(v_supply_minus_ntc) < 1e-6f)
     {
         // Avoid division by zero
         return NTC_ERROR;
     }
 
-    float r_ntc = (v_ntc / v_supply_minus_ntc) * hntc->Init.RefResistorValue;
+    double r_ntc = (v_ntc / v_supply_minus_ntc) * hntc->Init.RefResistorValue;
 
     // Store result
     *pResistance = r_ntc;
@@ -190,8 +190,8 @@ NTC_StatusTypeDef NTC_ConvertAdcToResistance(NTC_HandleTypeDef *hntc,
 }
 
 NTC_StatusTypeDef NTC_ResistanceToTemperature(NTC_HandleTypeDef *hntc,
-                                              float resistance,
-                                              float *pTemperature)
+                                              double resistance,
+                                              double *pTemperature)
 {
     if ((hntc == NULL) || (pTemperature == NULL))
     {
@@ -207,16 +207,16 @@ NTC_StatusTypeDef NTC_ResistanceToTemperature(NTC_HandleTypeDef *hntc,
     //    T(K) = 1 / [ (1/T25) + (1/B) * ln(R/R25) ]
     //    Then T(°C) = T(K) - 273.15
     // Note: T25 typically 298.15 K for 25°C, R25 is nominal thermistor R at 25°C
-    float lnRatio = logf(resistance / hntc->Init.R25);
-    float invT = (1.0f / hntc->Init.T25) + (lnRatio / hntc->Init.Bvalue);
+    double lnRatio = logf(resistance / hntc->Init.R25);
+    double invT = (1.0f / hntc->Init.T25) + (lnRatio / hntc->Init.Bvalue);
     if (fabsf(invT) < 1e-12f)
     {
         // Avoid division by zero
         return NTC_ERROR;
     }
 
-    float tempK = 1.0f / invT;
-    float tempC = tempK - 273.15f;
+    double tempK = 1.0f / invT;
+    double tempC = tempK - 273.15f;
 
     // Store the result
     *pTemperature = tempC;
@@ -225,7 +225,7 @@ NTC_StatusTypeDef NTC_ResistanceToTemperature(NTC_HandleTypeDef *hntc,
     return NTC_OK;
 }
 
-NTC_StatusTypeDef NTC_ReadTemperatureC(NTC_HandleTypeDef *hntc, float *pTemperature)
+NTC_StatusTypeDef NTC_ReadTemperatureC(NTC_HandleTypeDef *hntc, double *pTemperature)
 {
     if ((hntc == NULL) || (pTemperature == NULL))
     {
@@ -244,14 +244,14 @@ NTC_StatusTypeDef NTC_ReadTemperatureC(NTC_HandleTypeDef *hntc, float *pTemperat
         return status;
     }
 
-    float r_ntc = 0.0f;
+    double r_ntc = 0.0f;
     status = NTC_ConvertAdcToResistance(hntc, rawVal, &r_ntc);
     if (status != NTC_OK)
     {
         return status;
     }
 
-    float tempC = 0.0f;
+    double tempC = 0.0f;
     status = NTC_ResistanceToTemperature(hntc, r_ntc, &tempC);
     if (status != NTC_OK)
     {
