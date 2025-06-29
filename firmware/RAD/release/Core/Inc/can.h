@@ -171,7 +171,8 @@ typedef enum
 
     
     SEND_ODOM_ANGLE = 0xFB,
-    SEND_HEALTH_STATUS = 0xFC
+    SEND_HEALTH_STATUS = 0xFC,
+    SEND_TEMPERATURE = 0xFD
 } RAD_CAN_CommandId;
 
 typedef struct

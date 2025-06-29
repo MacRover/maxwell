@@ -119,7 +119,10 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
             status->encoder_status = buf[2];
             status->rad_state = buf[3];
             status->ls_state = (bool)buf[4];
+            status->ntc_state = buf[5];
             break;
+        case CAN_SEND_TEMPERATURE:
+            status->temp = __buffer_get_float64(buf, &i);
         default:
             return 0;
     }
