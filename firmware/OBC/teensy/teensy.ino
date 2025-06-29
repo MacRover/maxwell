@@ -17,11 +17,11 @@
 #include "fans.h"
 #include "TSB.h"
 #include "servo.h" 
-//#define ON_ROVER
+#define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-//#define USING_GPS
+#define USING_GPS
 //#define USING_TSB
 //#define USING_FANS
 //#define USING_SERVO
@@ -77,7 +77,7 @@ char Lora_Buffer[256] = { 0 };
   ICACHE_RAM_ATTR
   #endif
 void Packet_Sent() {
-  transmitted_Flag = true;
+  Transmitted_Flag = true;
 }
 #endif
 Fan fan1, fan2, fan3;
@@ -309,7 +309,7 @@ void setup()
    obc_setup_tsb();
     state_UROS = UROS_FOUND;
     #ifdef USING_LORA
-    state_lora = LORA_INIT;
+    state_lora = lORA_INIT;
     #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
@@ -441,7 +441,7 @@ void TSB_SM(){
 void LORA_SM(){
 switch (state_lora) {
 
-    case LORA_INIT: {
+    case lORA_INIT: {
       int16_t state = radio.begin();
    
       radio.setPacketSentAction(Packet_Sent);
