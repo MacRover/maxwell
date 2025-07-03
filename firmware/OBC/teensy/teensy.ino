@@ -17,6 +17,7 @@
 #include "fans.h"
 #include "TSB.h"
 #include "servo.h" 
+#include "viper_topics.h"
 #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
@@ -207,6 +208,11 @@ bool obc_setup_uros()
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
 
+     #ifdef USING_LORA
+    if(!viper_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
+
+
      RCCHECK(rclc_publisher_init_default(
         &imu_pub, 
         &teensy_node, 
@@ -347,6 +353,10 @@ void Uros_SM(){
         }
         #ifdef USING_SERVO
           servo_spin_executor();
+        #endif
+
+        #ifdef USING_LORA
+          rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
         #endif
         }
         
