@@ -16,7 +16,7 @@ rcl_subscription_t card0_sub, card1_sub, card2_sub, card3_sub, card_health_sub;
 rclc_executor_t viper_executor;
 
 custom_interfaces__msg__ViperCardStatus card0_msg, card1_msg, card2_msg, card3_msg;
-custom_interfaces__msg__ViperStatus     card_health_msg;
+custom_interfaces__msg__ViperStatus card_health_msg;
 
 void card0_cb(const void * untyped_msg) {
   const custom_interfaces__msg__ViperCardStatus * incoming = 
@@ -49,48 +49,6 @@ void card_health_cb(const void * untyped_msg) {
   card_health_msg = *incoming;
 }
 
-static size_t formatVoltageA(
-  const custom_interfaces__msg__ViperCardStatus * msg,
-  char * buf,
-  size_t bufSize
-) {
-  return snprintf(buf, bufSize, "%.2f", msg->output_voltage_a);
-}
-
-static size_t formatVoltageAB(
-  const custom_interfaces__msg__ViperCardStatus * msg,
-  char * buf,
-  size_t bufSize
-) {
-  return snprintf(buf, bufSize, "%.2f,%.2f",
-                  msg->output_voltage_a,
-                  msg->output_voltage_b);
-}
-static size_t formatViperCardHealth(
-  const custom_interfaces__msg__ViperStatus * msg,
-  char * buf,
-  size_t bufSize
-){
-
-  uint32_t sec  = msg->header.stamp.sec;
-  return snprintf(
-    buf, bufSize,
-    "%u,"    // timestamp, with seconds 
-    "%u,%u,%u,%u,%u,%u,"  // six uint8 status fields
-    "%.2f",       // input_voltage
-    sec,
-    msg->eeprom_status,
-    msg->mux_status,
-    msg->card_0_status,
-    msg->card_1_status,
-    msg->card_2_status,
-    msg->card_3_status,
-    msg->input_voltage
-  );
-
-
-
-}
 
 bool viper_setup_subscription(
     rcl_node_t *node,
@@ -181,14 +139,47 @@ bool viper_setup_subscription(
 
 }
 
+String format_viper_message(){
+    
+    String message;
+    // Card 0 
+    message += String(card0_msg.output_voltage_a, 2);
+    message += ";";
+    // Card 1
+    message += String(card1_msg.output_voltage_a, 2);
+    message += " ";
+    message += String(card1_msg.output_voltage_b, 2);
+    message += ";";
+    // Card 2
+    message += String(card2_msg.output_voltage_a, 2);
+    message += " ";
+    message += String(card2_msg.output_voltage_b, 2);
+    message += ";"; 
+    // card 3
+    message += String(card3_msg.output_voltage_a, 2);
+    message += ";";
+
+    // Card Health
+    message+= String(card_health_msg.eeprom_status);
+    message+= ",";
+    message+= String(card_health_msg.mux_status);
+    message+= ",";
+
+    message+= String(card_health_msg.card_0_status);
+    message+= ",";
+    message+= String(card_health_msg.card_1_status);
+    message+= ",";
+    message+= String(card_health_msg.card_2_status);
+    message+= ",";
+    message+= String(card_health_msg.card_3_status);
+    message+= ",";
+
+    message+= String(card_health_msg.input_voltage, 2);
 
 
+    return message;
 
-
-
-
-
-
+}
 
 
 #endif 

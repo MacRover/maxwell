@@ -23,7 +23,7 @@ enum TSB_STATES{
 } state_TSB;
 
 enum LORA_STATES {
-  lORA_INIT,            
+  LORA_INIT,            
   LORA_TRANSMIT, 
   LORA_FLAG,   
   LORA_FINISH,          

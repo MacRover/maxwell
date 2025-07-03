@@ -26,7 +26,7 @@
 //#define USING_TSB
 //#define USING_FANS
 //#define USING_SERVO
-#define USING_LORA
+//#define USING_LORA
 
 
 #define DOMAIN_ID 5
@@ -70,10 +70,6 @@ int16_t Transmission_State = RADIOLIB_ERR_NONE;
 
 volatile bool Transmitted_Flag = false;
 
-uint32_t Packet_Count = 0;
-
-
-char Lora_Buffer[256] = { 0 };
   #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
   #endif
@@ -310,12 +306,12 @@ void setup()
     pinMode(IMU_INT1, OUTPUT);
 
 
-   obc_setup_imu();
-   obc_setup_gps();
-   obc_setup_tsb();
+    obc_setup_imu();
+    obc_setup_gps();
+    obc_setup_tsb();
     state_UROS = UROS_FOUND;
     #ifdef USING_LORA
-    state_lora = lORA_INIT;
+    state_lora = LORA_INIT;
     #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
@@ -447,66 +443,55 @@ void TSB_SM(){
       break;
   }
 }
+
 #ifdef USING_LORA
-void LORA_SM(){
-switch (state_lora) {
 
-    case lORA_INIT: {
+void LORA_SM() {
+  switch (state_lora) {
+
+    case LORA_INIT: {
       int16_t state = radio.begin();
-   
       radio.setPacketSentAction(Packet_Sent);
-
-      
       state_lora = LORA_TRANSMIT;
       break;
     }
 
-    
     case LORA_TRANSMIT: {
-        Packet_Count++;
-        snprintf(
-        Lora_Buffer, 
-        sizeof(Lora_Buffer),
-        "PKT#%03lu LAT:%.6f,LON:%.6f,ALT:%.2f,COV:[%.2f,%.2f,%.2f]", 
-        (unsigned long)Packet_Count,
-        gps_msg.latitude, 
-        gps_msg.longitude, 
-        gps_msg.altitude,
-        gps_msg.position_covariance[8],
-        gps_msg.position_covariance[4],
-        gps_msg.position_covariance[0]
-      );
+      String viper_message = format_viper_message();
+      String payload =   "LAT:" + String(gps_msg.latitude, 6)
+                       + ",LON:" + String(gps_msg.longitude, 6)
+                       + ",ALT:" + String(gps_msg.altitude, 2)
+                       + ",COV:["
+                       + String(gps_msg.position_covariance[8], 2)
+                       + "," + String(gps_msg.position_covariance[4], 2)
+                       + "," + String(gps_msg.position_covariance[0], 2)
+                       + "]"
+                       + "\n"
+                       + viper_message;
 
-
-        Transmitted_Flag = false; 
-        Transmission_State = radio.startTransmit(Lora_Buffer);
-        if (Transmission_State != RADIOLIB_ERR_NONE) {
-          state_lora = LORA_FINISH;
-        } else {
-        
-          state_lora = LORA_FLAG;
-        }
-        break;
-      }
-
-    case LORA_FLAG: {
-    
-      if (Transmitted_Flag) {
-      
+      Transmitted_Flag = false;
+      Transmission_State = radio.startTransmit(payload);
+      if (Transmission_State != RADIOLIB_ERR_NONE) {
         state_lora = LORA_FINISH;
+      } else {
+        state_lora = LORA_FLAG;
       }
-     
       break;
     }
 
-  
+    case LORA_FLAG: {
+      if (Transmitted_Flag) {
+        state_lora = LORA_FINISH;
+      }
+      break;
+    }
+
     case LORA_FINISH: {
       radio.finishTransmit();
       state_lora = LORA_DELAY;
       break;
     }
 
-   // might be redundant and just put in LORA_FINISH
     case LORA_DELAY: {
       if (millis() - prev_time_lora > 1000) {
         prev_time_lora = millis();
@@ -514,8 +499,9 @@ switch (state_lora) {
       }
       break;
     }
+
   }
-  }
+}
 #endif
 
 
@@ -540,19 +526,19 @@ void loop()
 #endif
 
 #ifdef USING_ROS
-Uros_SM();
+    Uros_SM();
 #endif 
 
 #ifdef USING_FANS
-FANS_SM();
+    FANS_SM();
 #endif
 
 #ifdef USING_TSB
-TSB_SM();
+    TSB_SM();
 #endif 
 
 #ifdef USING_LORA
-  LORA_SM();
+    LORA_SM();
 #endif
 
 
