@@ -6,17 +6,24 @@
 #include <Adafruit_MCP9601.h>
 #include <Servo.h>
 #include <RadioLib.h>
+#include "DFRobot_MultiGasSensor.h" //Have to download from https://github.com/DFRobot/DFRobot_MultiGasSensor/releases/tag/V3.0.0 
+#include "DFRobot_OzoneSensor.h" // https://github.com/DFRobot/DFRobot_OzoneSensor/releases/tag/V1.0.1 
 
 #include <cstdint>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
+#include <std_msgs/msg/uint8_multi_array>
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
+
 #include "fans.h"
 #include "TSB.h"
-#include "servo.h" 
+#include "servo.h"
+#include "science.h"
+
+
 #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
@@ -25,6 +32,7 @@
 //#define USING_TSB
 //#define USING_FANS
 //#define USING_SERVO
+#define USING_SCIENCE_SENSORS
 #define USING_LORA
 
 
@@ -51,9 +59,20 @@ rcl_node_t teensy_node;
 rcl_publisher_t imu_pub;
 rcl_publisher_t gps_pub;
 rcl_publisher_t tsb_pub;
+rcl_publisher_t hydrogen_pub;
+rcl_publisher_t ozone_pub;
+rcl_publisher_t health_pub;
 
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
+
+sensor_msgs__msg__Uint8MultiArray health_msg;
+static uint8_t health_data[6];
+
+std_msgs__msg__Uint8MultiArray__init(&health_msg); 
+health_msg.data.capacity = 6;
+health_msg.data.size = 6;
+health_msg.data.data = health_data;  
 
 
 
@@ -90,7 +109,7 @@ IPAddress arduino_ip(192, 168, 1, 177);
     IPAddress agent_ip(192, 168, 1, 199);
 #endif
 
-unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0, prev_time_lora = 0;
+unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0, prev_time_lora, prev_time_hydrogen, prev_time_ozone = 0;
 rcl_init_options_t init_options;
 
 
@@ -181,6 +200,9 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
     rcl_publisher_fini(&tsb_pub, &teensy_node);
+    rcl_publisher_fini(&hydrogen_pub, &teensy_node);
+    rcl_publisher_fini(&ozone_pub, &teensy_node);
+    rcl_publisher_fini(&health_pub, &teensy_node);
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
     rcl_subscription_fini(&servo3_sub, &teensy_node);
@@ -223,6 +245,24 @@ bool obc_setup_uros()
         &tsb_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray), 
+        "tsb"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &hydrogen_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), 
+        "tsb"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &ozone_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16), 
+        "tsb"
+    ));
+    RCCHECK(rclc_publisher_init_default(
+        &health_pub, 
+        &teensy_node, 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Uint8MultiArray), 
         "tsb"
     ));
 #endif
@@ -290,7 +330,24 @@ bool obc_setup_fans()
 return true;
 }
 
+bool obc_setup_hydrogen()
+{
+    #ifdef USING_SCIENCE_SENSORS
+        if (!hydrogen_sensor.begin()) {return false;}
+        hydrogen_sensor.setTempCompensation(hydrogen_sensor.OFF);  
+        hydrogen_sensor.changeAcquireMode(hydrogen_sensor.INITIATIVE);
+    #endif
+    return true;
+}
 
+bool obc_setup_ozone()
+{
+    #ifdef USING_SCIENCE_SENSORS
+        if (ozone_sensor.begin(I2C_ADDRESS_OZONE_SENSOR)) {return false;};
+        ozone_sensor.setModes(MEASURE_MODE_PASSIVE);
+    #endif
+    return true;
+}
 
 void setup()
 {
@@ -313,6 +370,8 @@ void setup()
     #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
+    state_hydrogen = HYDROGEN_INIT;
+    state_ozone = OZONE_INIT;
 }
 
 void Uros_SM(){
@@ -344,6 +403,9 @@ void Uros_SM(){
             rcl_publish(&imu_pub, &imu_msg, NULL);
             rcl_publish(&gps_pub, &gps_msg, NULL);
             rcl_publish(&tsb_pub, &tsb_msg, NULL);
+            rcl_publish(&hydrogen_pub, &hydrogen_msg, NULL);
+            rcl_publish(&ozone_pub, &ozone_msg, NULL);
+            rcl_publish(&health_pub, &health_msg, NULL);
         }
         #ifdef USING_SERVO
           servo_spin_executor();
@@ -508,6 +570,61 @@ switch (state_lora) {
   }
 #endif
 
+void HYDROGEN_SM(){
+  switch(state_hydrogen){
+    case HYDROGEN_INIT:
+        if (millis() - prev_time_hydrogen > 5000) {
+            prev_time_hydrogen = millis();
+            if (obc_setup_hydrogen()) {
+            state_hydrogen = HYDROGEN_OK;
+            }
+        }
+      break;
+
+    case HYDROGEN_OK:
+      if (hydrogen_sensor.dataIsAvailable())
+      {
+        update_hydrogen_message(AllDataAnalysis.gasconcentration);
+      }
+      //IDK how to error check for this class
+      break; 
+
+    case HYDROGEN_ERROR:
+      break;
+
+    default:
+      state_hydrogen = HYDROGEN_INIT;
+      break;
+  }
+}
+
+void OZONE_SM(){
+  switch(state_ozone){
+    case OZONE_INIT:
+      if (millis() - prev_time_ozone > 5000) {
+            prev_time_ozone = millis();
+            if (obc_setup_ozone()) {
+            state_ozone = OZONE_OK;
+            }
+        }
+      break;
+
+    case OZONE_OK:
+    {
+        update_ozone_message(ozone_sensor.readOzoneData());
+        //IDK how to error check for this class
+    }
+      break; 
+
+    case OZONE_ERROR:
+
+      break;
+
+    default:
+      state_ozone = OZONE_INIT;
+      break;
+  }
+}
 
 void loop()
 {
@@ -544,6 +661,19 @@ TSB_SM();
 #ifdef USING_LORA
   LORA_SM();
 #endif
+
+#ifdef USING_SCIENCE_SENSORS
+    HYDROGEN_SM();
+    OZONE_SM();
+#endif
+
+health_msg.data.data[0] = state_UROS;
+health_msg.data.data[1] = state_fans;
+health_msg.data.data[2] = state_TSB;
+health_msg.data.data[3] = state_lora;
+health_msg.data.data[4] = state_hydrogen;
+health_msg.data.data[5] = state_ozone;
+
 
 
 delay(1);
