@@ -37,7 +37,7 @@ bool RAD_Init::finished()
 
 void RAD_Init::_callback(const RadStatus& msg, int id)
 {
-    this->ls[id] = msg.ls_state;
+    this->ls[id] = msg.ls_state_1 || msg.ls_state_2;
 }
 
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;
@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
   can_pub = init_node->create_publisher<CANraw>(can_topic, 10);
   rclcpp::Rate rate{std::chrono::milliseconds(1000)};
 
-  RCLCPP_INFO(init_node->get_logger(), "Zeroing RAD drive motors");
+  RCLCPP_INFO(init_node->get_logger(), "Zeroing RAD motors");
   
   // Constantly rotate motors until it hits limit switch
   // Quit once all motors have been calibrated
