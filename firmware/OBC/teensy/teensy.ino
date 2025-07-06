@@ -180,7 +180,7 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&tsb_pub, &teensy_node);
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
-    rcl_subscription_fini(&servo3_sub, &teensy_node);
+    destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
@@ -257,8 +257,7 @@ void obc_setup_imu()
 void obc_setup_gps()
 {
 #ifdef USING_GPS
-    while (!GNSS.begin(Serial6
-    )) { delay(100); }
+    while (!GNSS.begin(Serial6)) { delay(100); }
     GNSS.setUART1Output(COM_TYPE_UBX);
     GNSS.setMeasurementRate(33.333);
     GNSS.setNavigationRate(6);

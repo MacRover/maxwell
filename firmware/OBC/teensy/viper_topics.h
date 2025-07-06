@@ -143,37 +143,48 @@ String format_viper_message(){
     
     String message;
     // Card 0 
+    message += String("C0 OVA: ");
     message += String(card0_msg.output_voltage_a, 2);
     message += ";";
     // Card 1
+    mesasge += String(" C1 OVA OVB: ");
     message += String(card1_msg.output_voltage_a, 2);
     message += " ";
     message += String(card1_msg.output_voltage_b, 2);
     message += ";";
     // Card 2
+    message += String(" C2 OVA OVB: ");
     message += String(card2_msg.output_voltage_a, 2);
     message += " ";
     message += String(card2_msg.output_voltage_b, 2);
     message += ";"; 
     // card 3
+    message += String(" C3 OVA");
     message += String(card3_msg.output_voltage_a, 2);
     message += ";";
 
     // Card Health
+    message += String(" EEPROM: ");
     message+= String(card_health_msg.eeprom_status);
     message+= ",";
+    message += String (" MUX: ");
     message+= String(card_health_msg.mux_status);
     message+= ",";
 
+    message += String(" C0: ");
     message+= String(card_health_msg.card_0_status);
     message+= ",";
+    message += String(" C1: ");
     message+= String(card_health_msg.card_1_status);
     message+= ",";
+    message += String(" C1: ");
     message+= String(card_health_msg.card_2_status);
     message+= ",";
+    message += String(" C2: ");
     message+= String(card_health_msg.card_3_status);
     message+= ",";
 
+    message += String(" Input V: ");
     message+= String(card_health_msg.input_voltage, 2);
 
 
@@ -181,6 +192,13 @@ String format_viper_message(){
 
 }
 
+void destroy_viper_topics(rcl_node_t *node){
+  rcl_subscription_fini(&card0_sub, node);
+  rcl_subscription_fini(&card1_sub, node);
+  rcl_subscription_fini(&card2_sub, node);
+  rcl_subscription_fini(&card3_sub, node);
+  rcl_subscription_fini(&card_health_sub, node);
+}
 
 #endif 
 
