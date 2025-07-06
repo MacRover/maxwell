@@ -147,7 +147,7 @@ String format_viper_message(){
     message += String(card0_msg.output_voltage_a, 2);
     message += ";";
     // Card 1
-    mesasge += String(" C1 OVA OVB: ");
+    message += String(" C1 OVA OVB: ");
     message += String(card1_msg.output_voltage_a, 2);
     message += " ";
     message += String(card1_msg.output_voltage_b, 2);
