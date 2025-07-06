@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
-#include <std_msgs/msg/uint8_multi_array>
+#include <std_msgs/msg/U_Int8_Multi_Array.h>
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
@@ -66,14 +66,8 @@ rcl_publisher_t health_pub;
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
-sensor_msgs__msg__Uint8MultiArray health_msg;
+std_msgs__msg__UInt8MultiArray health_msg;
 static uint8_t health_data[6];
-
-std_msgs__msg__Uint8MultiArray__init(&health_msg); 
-health_msg.data.capacity = 6;
-health_msg.data.size = 6;
-health_msg.data.data = health_data;  
-
 
 
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
@@ -118,7 +112,13 @@ extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 
 
+void health_msg_setup(){
 
+  std_msgs__msg__UInt8MultiArray__init(&health_msg); 
+  health_msg.data.capacity = 6;
+  health_msg.data.size = 6;
+  health_msg.data.data = health_data; 
+}
 
 void updateICM_20948(ICM_20948_I2C* icm)
 {
@@ -262,7 +262,7 @@ bool obc_setup_uros()
     RCCHECK(rclc_publisher_init_default(
         &health_pub, 
         &teensy_node, 
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Uint8MultiArray), 
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8MultiArray), 
         "tsb"
     ));
 #endif
@@ -360,7 +360,7 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
-
+   health_msg_setup(); 
    obc_setup_imu();
    obc_setup_gps();
    obc_setup_tsb();
