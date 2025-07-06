@@ -26,7 +26,7 @@
 //#define USING_TSB
 //#define USING_FANS
 //#define USING_SERVO
-//#define USING_LORA
+#define USING_LORA
 
 
 #define DOMAIN_ID 5
@@ -63,7 +63,7 @@ ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 #ifdef USING_LORA
-SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
+SX1262 radio = new Module(10, 32, 40, 39); // CS, DIO1, NRST, BUSY
 
 int16_t Transmission_State = RADIOLIB_ERR_NONE;
 
@@ -257,7 +257,8 @@ void obc_setup_imu()
 void obc_setup_gps()
 {
 #ifdef USING_GPS
-    while (!GNSS.begin(Serial5)) { delay(100); }
+    while (!GNSS.begin(Serial6
+    )) { delay(100); }
     GNSS.setUART1Output(COM_TYPE_UBX);
     GNSS.setMeasurementRate(33.333);
     GNSS.setNavigationRate(6);
@@ -299,7 +300,7 @@ void setup()
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     Wire1.begin();
     Wire1.setClock(400000);
-    Serial5.begin(38400);
+    Serial6.begin(38400);
     Serial.begin(115200);
 
     pinMode(LED_PIN, OUTPUT);
@@ -466,6 +467,7 @@ void LORA_SM() {
                        + "," + String(gps_msg.position_covariance[4], 2)
                        + "," + String(gps_msg.position_covariance[0], 2)
                        + "]"
+                       + "," + String(gps_msg.status.status)
                        + "\n"
                        + viper_message;
 

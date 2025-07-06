@@ -98,7 +98,8 @@ void LORA_SM(){
     
         Serial.println(F(" Packet received!"));
         Serial.print(F("  >> \""));
-        Serial.print(lora_data);
+        Serial.println(lora_data);
+        //Serial.println(sizeof(lora_data));
         Serial.println(F("\""));
     
         Serial.print(F("  RSSI: "));
