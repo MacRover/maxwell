@@ -4,5 +4,5 @@ initial_positions:
   arm_base_joint: 0.0
   arm_elbow_joint: 0.0
   arm_shoulder_joint: 0.0
-  arm_wrist_joint: 0.0
-  gripper_joint: 0.0
+  arm_wrist_joint: -0.44
+  gripper_joint: 0.44

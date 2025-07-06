@@ -28,11 +28,11 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
     return CallbackReturn::ERROR;
   }
 
-  // robot has 6 joints and 2 interfaces
-  joint_position_.assign(6, 0);
-  joint_velocities_.assign(6, 0);
-  joint_position_command_.assign(6, 0);
-  joint_velocities_command_.assign(6, 0);
+  // robot has 5 joints and 2 interfaces
+  joint_position_.assign(5, 0);
+  joint_velocities_.assign(5, 0);
+  joint_position_command_.assign(5, 0);
+  joint_velocities_command_.assign(5, 0);
 
 
   for (const auto & joint : info_.joints)
@@ -41,6 +41,12 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
     {
       joint_interfaces[interface.name].push_back(joint.name);
     }
+  }
+
+  for (auto i = 0ul; i < joint_position_command_.size(); i++)
+  {
+    // Change code below in future to be more flexible
+    joint_position_[i] = joint_position_command_[i] = std::stod(info_.joints[i].state_interfaces[0].initial_value);
   }
 
   node_ = std::make_shared<rclcpp::Node>("arm_hardware_interface");
