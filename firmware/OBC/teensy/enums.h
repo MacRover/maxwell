@@ -22,6 +22,14 @@ enum TSB_STATES{
   TSB_ERROR
 } state_TSB;
 
+enum LORA_STATES {
+  LORA_INIT,            
+  LORA_TRANSMIT, 
+  LORA_FLAG,   
+  LORA_FINISH,          
+  LORA_DELAY 
+} state_lora;
+
 enum EMC2305_Reg : uint8_t
 {
     FAN_1_TACH_TARGET_HIGH_BYTE = 0x3D,
