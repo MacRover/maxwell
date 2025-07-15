@@ -2,3 +2,6 @@
 	path = ros_ws/src/micro_ros_setup
 	url = https://github.com/micro-ROS/micro_ros_setup.git
 	branch = humble
+[submodule "ros_ws/src/gscam"]
+	path = ros_ws/src/gscam
+	url = https://github.com/ishanvermani/gscam.git
