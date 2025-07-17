@@ -251,19 +251,19 @@ bool obc_setup_uros()
         &hydrogen_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), 
-        "tsb"
+        "hydrogen"
     ));
     RCCHECK(rclc_publisher_init_default(
         &ozone_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16), 
-        "tsb"
+        "o3"
     ));
     RCCHECK(rclc_publisher_init_default(
         &health_pub, 
         &teensy_node, 
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8MultiArray), 
-        "tsb"
+        "health"
     ));
 #endif
     digitalWrite(LED_PIN, HIGH);
@@ -295,7 +295,7 @@ void obc_setup_imu()
 void obc_setup_gps()
 {
 #ifdef USING_GPS
-    while (!GNSS.begin(Serial5)) { delay(100); }
+    while (!GNSS.begin(Serial6)) { delay(100); }
     GNSS.setUART1Output(COM_TYPE_UBX);
     GNSS.setMeasurementRate(33.333);
     GNSS.setNavigationRate(6);
@@ -343,7 +343,7 @@ bool obc_setup_hydrogen()
 bool obc_setup_ozone()
 {
     #ifdef USING_SCIENCE_SENSORS
-        if (ozone_sensor.begin(I2C_ADDRESS_OZONE_SENSOR)) {return false;};
+        if (!ozone_sensor.begin(I2C_ADDRESS_OZONE_SENSOR)) {return false;};
         ozone_sensor.setModes(MEASURE_MODE_PASSIVE);
     #endif
     return true;
@@ -354,7 +354,7 @@ void setup()
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     Wire1.begin();
     Wire1.setClock(400000);
-    Serial5.begin(38400);
+    Serial6.begin(38400);
     Serial.begin(115200);
 
     pinMode(LED_PIN, OUTPUT);
@@ -611,8 +611,6 @@ void OZONE_SM(){
 
     case OZONE_OK:
     {
-        update_ozone_message(ozone_sensor.readOzoneData());
-        //IDK how to error check for this class
     }
       break; 
 
