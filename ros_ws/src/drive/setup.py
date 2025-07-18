@@ -34,6 +34,7 @@ setup(
             'vesc_status.py = drive.vesc_status:main',
             'xbox_drive.py = drive.xbox_drive:main',
             'drive_modules_odom.py = drive.drive_modules_odom:main',
+            'arm_base_controller.py = drive.arm_base_controller:main'
         ],
     },
 )
