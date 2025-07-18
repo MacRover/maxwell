@@ -13,6 +13,7 @@ std::shared_ptr<rclcpp::Node> can_config;
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;
 std::shared_ptr<rclcpp::Subscription<CANraw>> can_sub;
 uint8_t rad_id, command_id;
+bool id_assigned = false;
 
 
 #define INPUT_CHECK(c) try {c} catch(...){RCLCPP_ERROR(can_config->get_logger(), "INVALID INPUT"); continue;}
@@ -35,25 +36,32 @@ int main(int argc, char ** argv)
 
     std::string in;
 
-    std::cout << "Enter Science Arm RAD ID (prefix h for hex #) => ";
-    std::getline (std::cin,in);
-    // Removing whitespace
-    in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
-   
-    int base = 10;
-    INPUT_CHECK(
-        if (in[0] == 'h')
-        {
-        base = 16;
-        in = in.substr(1);
-        }
-        rad_id = std::stoi(in, 0, base);
-        rad.set_can_id(rad_id);
-    )
+    
+
+    
 
     while(true)
     {
-        ack = false;
+
+        if (!id_assigned)
+        {
+            std::cout << "Enter Science Arm RAD ID (prefix h for hex #) => ";
+            std::getline (std::cin,in);
+            // Removing whitespace
+            in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
+
+            INPUT_CHECK(
+            if (in[0] == 'h')
+            {
+            base = 16;
+            in = in.substr(1);
+            }
+            rad_id = std::stoi(in, 0, base);
+            rad.set_can_id(rad_id);
+            )
+            
+            id_assigned = true;
+        }
         std::cout << "Enter number of steps, prefaced by u (up) or d (down) (e.g. u600). q to quit=> ";
         std::getline (std::cin,in);
 
