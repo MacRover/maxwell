@@ -1,5 +1,5 @@
 # This config file is used by ros2_control
-controller_manager:
+arm/controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
@@ -9,7 +9,7 @@ controller_manager:
     arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-arm_controller:
+arm/arm_controller:
   ros__parameters:
     joints:
       - arm_base_joint
