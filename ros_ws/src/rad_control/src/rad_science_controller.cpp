@@ -50,13 +50,15 @@ int main(int argc, char ** argv)
             // Removing whitespace
             in.erase(std::remove_if(in.begin(), in.end(), isspace), in.end());
 
+            int base = 10;
+
             INPUT_CHECK(
             if (in[0] == 'h')
             {
             base = 16;
             in = in.substr(1);
             }
-            rad_id = std::stoi(in, 0, base);
+            rad_id = std::stoi(in, 0, 10);
             rad.set_can_id(rad_id);
             )
             
