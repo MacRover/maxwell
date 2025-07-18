@@ -115,34 +115,34 @@ std::map<Button, double> BUTTON_DEFAULTS;
  * @param joint A JointJog message to update in prep for publishing
  * @return return true if you want to publish a Twist, false if you want to publish a JointJog
  */
-bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& buttons,
-                     std::unique_ptr<geometry_msgs::msg::TwistStamped>& twist,
-                     std::unique_ptr<control_msgs::msg::JointJog>& joint)
+bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &buttons,
+                     std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
+                     std::unique_ptr<control_msgs::msg::JointJog> &joint)
 {
-  // Give joint jogging priority because it is only buttons
-  // If any joint jog command is requested, we are only publishing joint commands
-  if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
-  {
-    // Map the D_PAD to the proximal joints
-    joint->joint_names.push_back("panda_joint1");
-    joint->velocities.push_back(axes[D_PAD_X]);
-    joint->joint_names.push_back("panda_joint2");
-    joint->velocities.push_back(axes[D_PAD_Y]);
+  // // Give joint jogging priority because it is only buttons
+  // // If any joint jog command is requested, we are only publishing joint commands
+  // if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
+  // {
+  //   // Map the D_PAD to the proximal joints
+  //   joint->joint_names.push_back("panda_joint1");
+  //   joint->velocities.push_back(axes[D_PAD_X]);
+  //   joint->joint_names.push_back("panda_joint2");
+  //   joint->velocities.push_back(axes[D_PAD_Y]);
 
-    // Map the diamond to the distal joints
-    joint->joint_names.push_back("panda_joint7");
-    joint->velocities.push_back(buttons[B] - buttons[X]);
-    joint->joint_names.push_back("panda_joint6");
-    joint->velocities.push_back(buttons[Y] - buttons[A]);
-    return false;
-  }
+  //   // Map the diamond to the distal joints
+  //   joint->joint_names.push_back("panda_joint7");
+  //   joint->velocities.push_back(buttons[B] - buttons[X]);
+  //   joint->joint_names.push_back("panda_joint6");
+  //   joint->velocities.push_back(buttons[Y] - buttons[A]);
+  //   return false;
+  // }
 
   // The bread and butter: map buttons to twist commands
-  twist->twist.linear.z = axes[RIGHT_STICK_Y];
-  twist->twist.linear.y = axes[RIGHT_STICK_X];
+  twist->twist.linear.z = 0.1 * axes[RIGHT_STICK_Y];
+  twist->twist.linear.y = 0.1 * axes[RIGHT_STICK_X];
 
-  double lin_x_right = -0.5 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
-  double lin_x_left = 0.5 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
+  double lin_x_right = -0.1 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
+  double lin_x_left = 0.1 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
   twist->twist.linear.x = lin_x_right + lin_x_left;
 
   twist->twist.angular.y = axes[LEFT_STICK_Y];
@@ -162,7 +162,7 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
 void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons)
 {
   if (buttons[START] && frame_name == GRIPPER_FRAME_ID)
-    frame_name = BASE_FRAME_ID;
+    frame_name = BASE_FOOTPRINT_FRAME_ID;
   else if (buttons[MENU] && frame_name == BASE_FRAME_ID)
     frame_name = GRIPPER_FRAME_ID;
 }
@@ -205,47 +205,47 @@ public:
     // Setup timer for button checking
     //timer_ = this->create_wall_timer(std::chrono::milliseconds(100), [this, &buttons]() { checkButtons(buttons); });
 
+      //Collision not needed for now
+    // // Load the collision scene asynchronously
+    // collision_pub_thread_ = std::thread([this]() {
+    //   rclcpp::sleep_for(std::chrono::seconds(3));
+    //   // Create collision object, in the way of servoing
+    //   moveit_msgs::msg::CollisionObject collision_object;
+    //   collision_object.header.frame_id = "panda_link0";
+    //   collision_object.id = "box";
 
-    // Load the collision scene asynchronously
-    collision_pub_thread_ = std::thread([this]() {
-      rclcpp::sleep_for(std::chrono::seconds(3));
-      // Create collision object, in the way of servoing
-      moveit_msgs::msg::CollisionObject collision_object;
-      collision_object.header.frame_id = "panda_link0";
-      collision_object.id = "box";
+    //   shape_msgs::msg::SolidPrimitive table_1;
+    //   table_1.type = table_1.BOX;
+    //   table_1.dimensions = { 0.4, 0.6, 0.03 };
 
-      shape_msgs::msg::SolidPrimitive table_1;
-      table_1.type = table_1.BOX;
-      table_1.dimensions = { 0.4, 0.6, 0.03 };
+    //   geometry_msgs::msg::Pose table_1_pose;
+    //   table_1_pose.position.x = 0.6;
+    //   table_1_pose.position.y = 0.0;
+    //   table_1_pose.position.z = 0.4;
 
-      geometry_msgs::msg::Pose table_1_pose;
-      table_1_pose.position.x = 0.6;
-      table_1_pose.position.y = 0.0;
-      table_1_pose.position.z = 0.4;
+    //   shape_msgs::msg::SolidPrimitive table_2;
+    //   table_2.type = table_2.BOX;
+    //   table_2.dimensions = { 0.6, 0.4, 0.03 };
 
-      shape_msgs::msg::SolidPrimitive table_2;
-      table_2.type = table_2.BOX;
-      table_2.dimensions = { 0.6, 0.4, 0.03 };
+    //   geometry_msgs::msg::Pose table_2_pose;
+    //   table_2_pose.position.x = 0.0;
+    //   table_2_pose.position.y = 0.5;
+    //   table_2_pose.position.z = 0.25;
 
-      geometry_msgs::msg::Pose table_2_pose;
-      table_2_pose.position.x = 0.0;
-      table_2_pose.position.y = 0.5;
-      table_2_pose.position.z = 0.25;
+    //   collision_object.primitives.push_back(table_1);
+    //   collision_object.primitive_poses.push_back(table_1_pose);
+    //   collision_object.primitives.push_back(table_2);
+    //   collision_object.primitive_poses.push_back(table_2_pose);
+    //   collision_object.operation = collision_object.ADD;
 
-      collision_object.primitives.push_back(table_1);
-      collision_object.primitive_poses.push_back(table_1_pose);
-      collision_object.primitives.push_back(table_2);
-      collision_object.primitive_poses.push_back(table_2_pose);
-      collision_object.operation = collision_object.ADD;
+    //   moveit_msgs::msg::PlanningSceneWorld psw;
+    //   psw.collision_objects.push_back(collision_object);
 
-      moveit_msgs::msg::PlanningSceneWorld psw;
-      psw.collision_objects.push_back(collision_object);
-
-      auto ps = std::make_unique<moveit_msgs::msg::PlanningScene>();
-      ps->world = psw;
-      ps->is_diff = true;
-      collision_pub_->publish(std::move(ps));
-    });
+    //   auto ps = std::make_unique<moveit_msgs::msg::PlanningScene>();
+    //   ps->world = psw;
+    //   ps->is_diff = true;
+    //   collision_pub_->publish(std::move(ps));
+    // });
   }
 
   private:
@@ -311,7 +311,7 @@ public:
     {
       // publish the JointJog
       joint_msg->header.stamp = this->now();
-      joint_msg->header.frame_id = "panda_link3";
+      joint_msg->header.frame_id = "gripper_joint";
       joint_pub_->publish(std::move(joint_msg));
     }
   }

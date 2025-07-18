@@ -12,10 +12,13 @@ find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CANraw.msg"
+  "msg/CANstamped.msg"
   "msg/SwerveModule.msg"
   "msg/SwerveModulesList.msg"
   "msg/RadStatus.msg"
   "msg/SwerveModulePulse.msg"
+  "msg/ViperStatus.msg"
+  "msg/ViperCardStatus.msg"
   DEPENDENCIES std_msgs
 )
 

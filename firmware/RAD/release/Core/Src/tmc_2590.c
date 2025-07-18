@@ -35,6 +35,8 @@ void MX_TMC_2590_1_Init(void)
     tmc_2590_1.Init.SG_TST_GPIO_Port = DRIVER_SG_TEST_GPIO_Port;
     tmc_2590_1.Init.SG_TST_Pin = DRIVER_SG_TEST_Pin;
 
+    tmc_2590_1.Init.inverted = 0; //default - overwrite in main
+
     // this data should stored in EEPROM
     //These are default params if EEPROM cannot be read
     tmc_2590_1.ConfRegisters.CHOPCONF.chm = rad_params.CHOPCONF_CHM;

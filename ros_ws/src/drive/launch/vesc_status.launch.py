@@ -23,7 +23,7 @@ def generate_launch_description():
         parameters=[{
             "status": "STATUS_1",
             "motor": "BACK_RIGHT",
-            "namespace": "/drive/rear_right",
+            "namespace": "drive/rear_right",
             "status_rate": 15,
             "logging": False
         }]
@@ -37,7 +37,7 @@ def generate_launch_description():
         parameters=[{
             "status": "STATUS_1",
             "motor": "FRONT_RIGHT",
-            "namespace": "/drive/front_right",
+            "namespace": "drive/front_right",
             "status_rate": 15,
             "logging": False
         }]
@@ -51,7 +51,7 @@ def generate_launch_description():
         parameters=[{
             "status": "STATUS_1",
             "motor": "FRONT_LEFT",
-            "namespace": "/drive/front_left",
+            "namespace": "drive/front_left",
             "status_rate": 15,
             "logging": False
         }]
@@ -65,7 +65,7 @@ def generate_launch_description():
         parameters=[{
             "status": "STATUS_1",
             "motor": "BACK_LEFT",
-            "namespace": "/drive/rear_left",
+            "namespace": "drive/rear_left",
             "status_rate": 15,
             "logging": False
         }]

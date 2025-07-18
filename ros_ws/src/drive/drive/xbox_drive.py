@@ -40,14 +40,11 @@ class XboxSwerveDrive(XboxDrive):
 
         x = msg.axes[1]
         y = msg.axes[0]
-            
+        z = msg.axes[3]
+        
         self.vel_msg.linear.x = self._scale_with_deadzone(x,speed)
         self.vel_msg.linear.y = self._scale_with_deadzone(y,speed)
-        self.vel_msg.angular.z = 0.0
-        if (msg.buttons[5]):
-            self.vel_msg.linear.x = 0.0
-            self.vel_msg.linear.y = 0.0
-            self.vel_msg.angular.z = 0.001+self._scale_with_deadzone(msg.axes[3],speed)
+        self.vel_msg.angular.z = self._scale_with_deadzone(z,speed)
         self.pub_cmd_vel.publish(self.vel_msg)
 
 
