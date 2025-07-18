@@ -13,7 +13,7 @@ std::shared_ptr<rclcpp::Node> can_config;
 std::shared_ptr<rclcpp::Publisher<CANraw>> can_pub;
 std::shared_ptr<rclcpp::Subscription<CANraw>> can_sub;
 uint8_t rad_id, command_id;
-bool ack,ready;
+
 
 #define INPUT_CHECK(c) try {c} catch(...){RCLCPP_ERROR(can_config->get_logger(), "INVALID INPUT"); continue;}
 
