@@ -118,4 +118,12 @@ void servo_spin_executor() {
 
 }
 
+void servo_cleanup(rcl_node_t *node)
+{
+    rclc_executor_fini(&servo_executor);
+    rcl_subscription_fini(&servo1_sub, node);
+    rcl_subscription_fini(&servo2_sub, node);
+    rcl_subscription_fini(&servo3_sub, node);
+}
+
 #endif 

@@ -16,6 +16,7 @@
 #include "fans.h"
 #include "TSB.h"
 #include "servo.h" 
+#include "flashlight.h"
 //#define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
@@ -24,6 +25,7 @@
  //#define USING_TSB
 //#define USING_FANS
 #define USING_SERVO
+#define USING_FLASHLIGHT
 
 
 #define DOMAIN_ID 5
@@ -160,9 +162,10 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
     rcl_publisher_fini(&tsb_pub, &teensy_node);
-    rcl_subscription_fini(&servo1_sub, &teensy_node);
-    rcl_subscription_fini(&servo2_sub, &teensy_node);
-    rcl_subscription_fini(&servo3_sub, &teensy_node);
+    
+    servo_cleanup(&teensy_node);
+    flashlight_cleanup(&teensy_node);
+    
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
@@ -184,6 +187,9 @@ bool obc_setup_uros()
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
+    #ifdef USING_FLASHLIGHT
+    if(!flashlight_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
 
      RCCHECK(rclc_publisher_init_default(
@@ -323,6 +329,9 @@ void Uros_SM(){
         }
         #ifdef USING_SERVO
           servo_spin_executor();
+        #endif
+        #ifdef USING_FLASHLIGHT
+          flashlight_spin_executor();
         #endif
         }
         
