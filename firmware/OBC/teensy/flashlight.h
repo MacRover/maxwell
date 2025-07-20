@@ -80,7 +80,7 @@ bool flashlight_setup_subscription(
 
 
 void flashlight_spin_executor() {
-    rclc_executor_spin_some(&flashlight_executor, RCL_MS_TO_NS(1));
+    rclc_executor_spin_some(&flashlight_executor, RCL_MS_TO_NS(100));
 }
 
 void flashlight_cleanup(rcl_node_t *node) {
