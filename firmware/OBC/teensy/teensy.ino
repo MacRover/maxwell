@@ -6,8 +6,6 @@
 #include <Adafruit_MCP9601.h>
 #include <Servo.h>
 #include <RadioLib.h>
-#include "DFRobot_MultiGasSensor.h" //Have to download from https://github.com/DFRobot/DFRobot_MultiGasSensor/releases/tag/V3.0.0 
-#include "DFRobot_OzoneSensor.h" // https://github.com/DFRobot/DFRobot_OzoneSensor/releases/tag/V1.0.1 
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -24,7 +22,7 @@
 #include "science.h"
 
 
-#define ON_ROVER
+// #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
@@ -611,6 +609,10 @@ void OZONE_SM(){
 
     case OZONE_OK:
     {
+      int16_t ozoneConcentration = ozone_sensor.readOzoneData();
+      if (ozoneConcentration >= 0) {
+        update_ozone_message(ozoneConcentration);
+      }
     }
       break; 
 
