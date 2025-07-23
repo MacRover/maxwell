@@ -136,9 +136,9 @@ private:
   int16_t i2cReadOzoneData(uint8_t reg)
   {
     uint8_t i = 0;
-    uint8_t rxbuf[2]={0};
-    read_i2c_16bit(this->_addr, reg, (uint16_t *)&rxbuf);
-    return ((int16_t)rxbuf[0] << 8) + rxbuf[1];
+    uint16_t res;
+    read_i2c_16bit(this->_addr, reg, &res);
+    return (int16_t)res;
   }
 
   int getAverageNum(int bArray[], int iFilterLen)
