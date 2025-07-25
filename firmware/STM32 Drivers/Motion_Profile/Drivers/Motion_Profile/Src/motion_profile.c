@@ -14,31 +14,16 @@ Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *p
 
 	// Variable initializations for driver
 
-    profile->STEPS_TO_MOVE = 90; // Can be arbitrarily changed later
-    profile->V_I = 0;
-    profile->V_MAX = 5;
-    profile->ACCELERATION = 2;
-    profile->CURRENT_POS = 0;
-    profile->TIME_ELAPSED = 0;
-    profile->VELOCITY = 0;
-    profile->MOVEMENT_STEPS = 0;
-    profile->TOTAL_STEPS = 0;
-
-    return MOTION_PROFILE_OK;
-}
-
-Motion_Profile_StatusTypeDef Motion_Profile_Reset(Motion_Profile_HandleTypeDef *profile) {
-	profile->CURRENT_POS = 0;
-	profile->TIME_ELAPSED = 0;
-	profile->VELOCITY = 0;
-	profile->MOVEMENT_STEPS = 0;
-	profile->TOTAL_STEPS = 0;
+	if (profile == NULL) {
+		return MOTION_PROFILE_ERROR;
+	}
 
 	return MOTION_PROFILE_OK;
+
+
 }
 
-
-Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile, uint32_t start_time) {
+Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile) {
 
 	// Need to do some testing on the board, but start time might be 0 so we may not even need it!
 	uint32_t set_point;
@@ -58,15 +43,7 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 		projected_time = (float) Motion_Profile_Time(profile);
 
-		// Get the current time
-
-		current_time = HAL_GetTick();
-
-
-		profile->TIME_ELAPSED = (float) (current_time - start_time) / 1000;
-
-
-
+		// Elapsed time already calculated
 
 		// Checking where we are in the motion based on the current time
 		// todo: fix this after testing in the bay

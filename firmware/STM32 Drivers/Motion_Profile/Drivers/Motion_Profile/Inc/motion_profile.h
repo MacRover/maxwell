@@ -55,8 +55,7 @@ typedef struct {
 // TODO: Init/deinit properly
 
 Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *profile);
-Motion_Profile_StatusTypeDef Motion_Profile_Reset(Motion_Profile_HandleTypeDef *profile);
 float Motion_Profile_Time(Motion_Profile_HandleTypeDef *profile);
-Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile, uint32_t start_time);
+Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile);
 
 #endif /* MOTION_PROFILE_INC_MOTION_PROFILE_H_ */

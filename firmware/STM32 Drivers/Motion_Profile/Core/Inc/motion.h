@@ -11,7 +11,13 @@
 #include "main.h"
 #include "motion_profile.h"
 
-// Again I hope we can get away without this
+// Again I hope we can get away without this'
+
+extern Motion_Profile_HandleTypeDef motion_profile;
+
+void Profiler_Init();
+void Profiler_Reset();
+
 
 
 

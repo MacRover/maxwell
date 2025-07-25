@@ -226,37 +226,53 @@ int main(void)
 //		TMC_2590_Stop(&tmc_2590_1);
 //		HAL_Delay(100);
 
-    	int start_time = HAL_GetTick();
+    	uint32_t start_time = HAL_GetTick();
+    	uint32_t current_time = start_time;
 
     	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-    	HAL_Delay(1000);
+//    	HAL_Delay(1000);
 
 
     	    	// On first run, v_i = 0
 
-		while (rad_motion_profile.TOTAL_STEPS < rad_motion_profile.STEPS_TO_MOVE) {
+    	// Finding the time of the full profile
 
+    	float projected_time = Motion_Profile_Time(&motion_profile);
 
-			// Getting timer start
+		while (projected_time > current_time - start_time) {
 
-			rad_motion_profile.TIME_ELAPSED = (float) ((HAL_GetTick() - start_time) / 1000);
 
 			// Getting the motion profile velocity
 
-			rad_motion_profile.VELOCITY = Motion_Profile_Velocity(rad_motion_profile.CURRENT_POS, rad_motion_profile.STEPS_TO_MOVE, rad_motion_profile.ACCELERATION, rad_motion_profile.V_I, rad_motion_profile.V_MAX, rad_motion_profile.TIME_ELAPSED);
+			current_time = HAL_GetTick();
+
+			motion_profile.TIME_ELAPSED = (float) (start_time - HAL_GetTick()) / 1000;
+
+			motion_profile.VELOCITY = Motion_Profile_Velocity(&motion_profile);
 
 			// Getting the number of steps to move
-			rad_motion_profile.MOVEMENT_STEPS = rad_motion_profile.VELOCITY * rad_motion_profile.TIME_ELAPSED;
+			motion_profile.MOVEMENT_STEPS = motion_profile.VELOCITY * motion_profile.TIME_ELAPSED;
 
 			// Incrementing the total number of steps moved
-			rad_motion_profile.TOTAL_STEPS += rad_motion_profile.MOVEMENT_STEPS;
+			motion_profile.TOTAL_STEPS += motion_profile.MOVEMENT_STEPS;
 
-			// Moving the movement steps
+			// ^^ Logic here is likely subject to change as I figure out it's wrong todo fix this
+			// Pretty much the reason this is here is some kind of exit condition since that's still based on steps but I can't figure out where to refactor that yet
+			// todo: i have no idea if any of these values are needed ^^ we're not tracking by steps anymore
+			// todo: adam please fix this sooner rather than later
+
+			// Changing the velocity of the stepper
+
+			// Todo: Figure out changing the stepper speed
+
+			// Todo: See if auto reload works (and research it more)
+
+			uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, motion_profile.VELOCITY);
+
+			TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
 
 			// Moving steps go here.  Need to link
-
-			rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, rad_motion_profile.MOVEMENT_STEPS);
-			TMC_2590_Stop(&tmc_2590_1);
+			rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 100);
 
 
 
@@ -268,8 +284,10 @@ int main(void)
 			rad_motion_profile.V_I = rad_motion_profile.VELOCITY;
 		}
 
+		TMC_2590_Stop(&tmc_2590_1);
 
-		HAL_Delay(3000);
+
+
 
 		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
 
