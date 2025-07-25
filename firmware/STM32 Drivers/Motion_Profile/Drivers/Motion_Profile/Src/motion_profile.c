@@ -10,56 +10,92 @@
 #include <math.h>
 
 
-float Motion_Profile_Velocity(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t time_elapsed) {
+Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *profile) {
+
+	// Variable initializations for driver
+
+    profile->STEPS_TO_MOVE = 90; // Can be arbitrarily changed later
+    profile->V_I = 0;
+    profile->V_MAX = 5;
+    profile->ACCELERATION = 2;
+    profile->CURRENT_POS = 0;
+    profile->TIME_ELAPSED = 0;
+    profile->VELOCITY = 0;
+    profile->MOVEMENT_STEPS = 0;
+    profile->TOTAL_STEPS = 0;
+
+    return MOTION_PROFILE_OK;
+}
+
+Motion_Profile_StatusTypeDef Motion_Profile_Reset(Motion_Profile_HandleTypeDef *profile) {
+	profile->CURRENT_POS = 0;
+	profile->TIME_ELAPSED = 0;
+	profile->VELOCITY = 0;
+	profile->MOVEMENT_STEPS = 0;
+	profile->TOTAL_STEPS = 0;
+
+	return MOTION_PROFILE_OK;
+}
+
+
+Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile, uint32_t start_time) {
 
 	// Need to do some testing on the board, but start time might be 0 so we may not even need it!
 	uint32_t set_point;
+	uint32_t current_time;
 	float projected_time;
 	float v_peak;
 	float v_f;
-
-
-	set_point = current_pos + steps_to_move;
+	float time_elapsed;
 
 	// If the set point is identical to the current position, exit the program
 
-	if (set_point == current_pos) {
-		return MOTION_PROFILE_BUSY;
+	if (set_point == profile->CURRENT_POS) {
+		return MOTION_PROFILE_STATE_READY;
 	} else {
 
 		// Calculation of the projected time
 
-		projected_time = (float) Motion_Profile_Time(v_i, v_max, acceleration, steps_to_move);
+		projected_time = (float) Motion_Profile_Time(profile);
 
-		// Current time probably has to be passed in now that I think of it
+		// Get the current time
 
-		// todo: fix getting current time
+		current_time = HAL_GetTick();
+
+
+		profile->TIME_ELAPSED = (float) (current_time - start_time) / 1000;
+
+
 
 
 		// Checking where we are in the motion based on the current time
 		// todo: fix this after testing in the bay
 
-		if (time_elapsed >= projected_time / 2) {
-			acceleration = -fabsf(acceleration);
+		if (profile->TIME_ELAPSED >= projected_time / 2) {
+			profile->ACCELERATION = -fabsf(profile->ACCELERATION);
 		} else {
-			acceleration = fabsf(acceleration);
+			profile->ACCELERATION = fabsf(profile->ACCELERATION);
 		}
 
-		if (time_elapsed >= projected_time / 2 ) {
+		if (profile->TIME_ELAPSED >= (projected_time / 2) ) {
 
-			v_peak = v_i + fabsf(acceleration * (projected_time/2));
-			v_f = v_peak + acceleration*(time_elapsed-(projected_time/2));
+			v_peak = profile->V_I + fabsf(profile->ACCELERATION * (projected_time/2));
+			v_f = v_peak + profile->ACCELERATION*(profile->TIME_ELAPSED-(projected_time/2));
 
 		} else {
-			v_f = v_i + acceleration*(time_elapsed);
+			v_f = profile->V_I + profile->ACCELERATION*(profile->ACCELERATION);
 		}
 
 		// Returning the velocity
 
-		if (fabsf(v_f) > v_max) {
-			return v_max;
-		} else if (v_f < v_max) {
-			return v_f;
+		if (fabsf(v_f) > profile->V_MAX) {
+			profile->VELOCITY = profile->V_MAX;
+			return MOTION_PROFILE_STATE_BUSY;
+		} else if (fabsf(v_f) < profile->V_MAX) {
+			profile->VELOCITY = v_f;
+			return MOTION_PROFILE_STATE_BUSY;
+		} else {
+			return MOTION_PROFILE_STATE_ERROR;
 		}
 
 
@@ -69,7 +105,7 @@ float Motion_Profile_Velocity(uint32_t current_pos, uint32_t steps_to_move, floa
 }
 
 
-float Motion_Profile_Time(float v_i, float v_max, float acceleration, uint32_t steps_to_move) {
+float Motion_Profile_Time(Motion_Profile_HandleTypeDef *profile) {
 
 	// Running time based calculations
 
@@ -81,18 +117,18 @@ float Motion_Profile_Time(float v_i, float v_max, float acceleration, uint32_t s
 	float t_level;
 	float t_total;
 
-	t_max = fabsf((v_max - v_i) / acceleration);
-	t_min = fabsf(-v_max / acceleration);
+	t_max = fabsf((profile->V_MAX - profile->V_I) / profile->ACCELERATION);
+	t_min = fabsf(-profile->V_MAX / profile->ACCELERATION);
 
 	// Finding the steps of increase and decrease (which is needed later for total time)
 
-	steps_increase = v_max*t_max - 0.5 * acceleration*(t_max*t_max);
-	steps_decrease = v_max*t_min + 0.5*(-1*acceleration)*(t_min*t_min);
-	standard_steps = steps_to_move - steps_increase - steps_decrease;
+	steps_increase = profile->V_MAX*t_max - 0.5*profile->ACCELERATION*(t_max*t_max);
+	steps_decrease = profile->V_MAX*t_min + 0.5*(-1*profile->ACCELERATION)*(t_min*t_min);
+	standard_steps = profile->STEPS_TO_MOVE - steps_increase - steps_decrease;
 
 	// Finding the time at the level value
 
-	t_level = (float) standard_steps / v_max;
+	t_level = (float) standard_steps / profile->V_MAX;
 	t_total = t_max + t_min + t_level;
 
 	// Return the total time

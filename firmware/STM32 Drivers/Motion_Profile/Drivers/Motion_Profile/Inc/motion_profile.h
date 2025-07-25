@@ -34,6 +34,18 @@ typedef enum
     MOTION_PROFILE_STATE_ERROR = 0x06U, /*!< SPI error state                                    */
 } Motion_Profile_StateTypeDef;
 
+typedef struct {
+	uint32_t STEPS_TO_MOVE;
+	uint32_t V_I;
+	uint32_t V_MAX;
+	uint32_t ACCELERATION;
+	uint32_t CURRENT_POS;
+	float TIME_ELAPSED;
+	float VELOCITY;
+	uint32_t MOVEMENT_STEPS;
+	uint32_t TOTAL_STEPS;
+} Motion_Profile_HandleTypeDef;
+
 /**
  * @brief  Motion Profile Configuration Structure definition
  */
@@ -42,7 +54,9 @@ typedef enum
 
 // TODO: Init/deinit properly
 
-float Motion_Profile_Time(float v_i, float v_max, float acceleration, uint32_t steps_to_move);
-float Motion_Profile_Velocity(uint32_t current_pos, uint32_t steps_to_move, float acceleration, float v_i, float v_max, uint32_t start_time);
+Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *profile);
+Motion_Profile_StatusTypeDef Motion_Profile_Reset(Motion_Profile_HandleTypeDef *profile);
+float Motion_Profile_Time(Motion_Profile_HandleTypeDef *profile);
+Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile, uint32_t start_time);
 
 #endif /* MOTION_PROFILE_INC_MOTION_PROFILE_H_ */

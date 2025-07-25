@@ -116,7 +116,7 @@ typedef struct {
 	uint32_t V_MAX;
 	uint32_t ACCELERATION;
 	uint32_t CURRENT_POS;
-	uint32_t TIME_ELAPSED;
+	float TIME_ELAPSED;
 	float VELOCITY;
 	uint32_t MOVEMENT_STEPS;
 	uint32_t TOTAL_STEPS;

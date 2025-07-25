@@ -226,7 +226,7 @@ int main(void)
 //		TMC_2590_Stop(&tmc_2590_1);
 //		HAL_Delay(100);
 
-    	HAL_TIM_Base_Start(&htim2);
+    	int start_time = HAL_GetTick();
 
     	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
     	HAL_Delay(1000);
@@ -239,10 +239,7 @@ int main(void)
 
 			// Getting timer start
 
-			uint32_t counter = __HAL_TIM_GET_COUNTER(&htim2);
-
-			rad_motion_profile.TIME_ELAPSED = ((__HAL_TIM_GET_COUNTER(&htim2) * (htim2.Init.Prescaler + 1)) / 36) / 1000;
-			// 36 is the clock frequency.  We can make this nicer eventually.  1000 is for ms to s conversion
+			rad_motion_profile.TIME_ELAPSED = (float) ((HAL_GetTick() - start_time) / 1000);
 
 			// Getting the motion profile velocity
 
@@ -263,6 +260,7 @@ int main(void)
 
 
 
+
 			// todo (in hatch) - figure out the linking
 
 			// Setting the initial velocity to the final velocity
@@ -274,9 +272,6 @@ int main(void)
 		HAL_Delay(3000);
 
 		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-
-		HAL_TIM_Base_Stop(&htim2);
-
 
 
 
