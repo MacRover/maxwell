@@ -93,6 +93,7 @@ rcl_init_options_t init_options;
 
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
+static struct micro_ros_agent_locator locator;
 
 
 
@@ -188,6 +189,21 @@ static bool options_initialized = false;
 bool obc_setup_uros()
 {
 #ifdef USING_ROS
+    if (Ethernet.linkStatus() == LinkOFF) {
+		return false;
+	}
+
+	locator.address = agent_ip;
+	locator.port = 9999;
+
+	RCCHECK(rmw_uros_set_custom_transport(
+		false,
+		(void *) &locator,
+		arduino_native_ethernet_udp_transport_open,
+		arduino_native_ethernet_udp_transport_close,
+		arduino_native_ethernet_udp_transport_write,
+		arduino_native_ethernet_udp_transport_read
+	));
     allocator = rcl_get_default_allocator();
 
     if (!options_initialized) {
@@ -296,12 +312,11 @@ return true;
 
 void setup()
 {
-    set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     Wire1.begin();
     Wire1.setClock(400000);
     Serial6.begin(38400);
     Serial.begin(115200);
-
+    Ethernet.begin(arduino_mac, arduino_ip);
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
