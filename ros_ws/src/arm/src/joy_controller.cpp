@@ -39,6 +39,7 @@
  */
 
 #include <sensor_msgs/msg/joy.hpp>
+#include <std_msgs/msg/int32.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <control_msgs/msg/joint_jog.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -61,6 +62,7 @@
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
+const std::string GRIPPER_TOPIC = "/arm/finger/joints";
 const std::string GRIPPER_FRAME_ID = "gripper";
 const std::string BASE_FRAME_ID = "arm_base";
 const std::string BASE_FOOTPRINT_FRAME_ID = "arm_base_footprint";
@@ -117,25 +119,26 @@ std::map<Button, double> BUTTON_DEFAULTS;
  */
 bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &buttons,
                      std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
-                     std::unique_ptr<control_msgs::msg::JointJog> &joint)
+                     std::unique_ptr<std_msgs::msg::Int32> &joint)
 {
-  // // Give joint jogging priority because it is only buttons
-  // // If any joint jog command is requested, we are only publishing joint commands
-  // if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
-  // {
-  //   // Map the D_PAD to the proximal joints
-  //   joint->joint_names.push_back("panda_joint1");
-  //   joint->velocities.push_back(axes[D_PAD_X]);
-  //   joint->joint_names.push_back("panda_joint2");
-  //   joint->velocities.push_back(axes[D_PAD_Y]);
+  // Give joint jogging priority because it is only buttons
+  // If any joint jog command is requested, we are only publishing joint commands
+  if (buttons[A] || buttons[B] || buttons[X] || buttons[Y])
+  {
+    // // Map the D_PAD to the proximal joints
+    // joint->joint_names.push_back("panda_joint1");
+    // joint->velocities.push_back(axes[D_PAD_X]);
+    // joint->joint_names.push_back("panda_joint2");
+    // joint->velocities.push_back(axes[D_PAD_Y]);
 
-  //   // Map the diamond to the distal joints
-  //   joint->joint_names.push_back("panda_joint7");
-  //   joint->velocities.push_back(buttons[B] - buttons[X]);
-  //   joint->joint_names.push_back("panda_joint6");
-  //   joint->velocities.push_back(buttons[Y] - buttons[A]);
-  //   return false;
-  // }
+    // Map the diamond to the distal joints
+    // joint->joint_names.push_back("panda_joint7");
+    // joint->velocities.push_back(buttons[B] - buttons[X]);
+    // joint->joint_names.push_back("panda_joint6");
+    // joint->velocities.push_back(buttons[Y] - buttons[A]);
+    joint->data = buttons[B] - buttons[X];
+    return false;
+  }
 
   // The bread and butter: map buttons to twist commands
   twist->twist.linear.z = 0.1 * axes[RIGHT_STICK_Y];
@@ -182,6 +185,7 @@ public:
 
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(TWIST_TOPIC, rclcpp::SystemDefaultsQoS());
     joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
+    gripper_pub_ = this->create_publisher<std_msgs::msg::Int32>(GRIPPER_TOPIC, rclcpp::SystemDefaultsQoS());
     collision_pub_ =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("/planning_scene", rclcpp::SystemDefaultsQoS());
 
@@ -288,7 +292,8 @@ public:
   {
     // Create the messages we might publish
     auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
-    auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
+    // auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
+    auto joint_msg = std::make_unique<std_msgs::msg::Int32>();
 
     // This call updates the frame for twist commands
     updateCmdFrame(frame_to_publish_, msg->buttons);
@@ -309,10 +314,11 @@ public:
     }
     else
     {
-      // publish the JointJog
-      joint_msg->header.stamp = this->now();
-      joint_msg->header.frame_id = "gripper_joint";
-      joint_pub_->publish(std::move(joint_msg));
+      // // publish the JointJog
+      // joint_msg->header.stamp = this->now();
+      // joint_msg->header.frame_id = "gripper_joint";
+      // joint_pub_->publish(std::move(joint_msg));
+      gripper_pub_->publish(std::move(joint_msg));
     }
   }
 
@@ -321,6 +327,7 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
   rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
   rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr collision_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gripper_pub_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_stop_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_unpause_client_;
