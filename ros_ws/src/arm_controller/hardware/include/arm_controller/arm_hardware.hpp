@@ -7,6 +7,7 @@
 #include "vector"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "std_msgs/msg/float64.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -16,6 +17,7 @@
 
 using hardware_interface::return_type;
 using sensor_msgs::msg::JointState;
+using std_msgs::msg::Float64;
 
 namespace arm_controller
 {
@@ -41,6 +43,7 @@ protected:
   std::vector<double> joint_position_;
   std::vector<double> joint_velocities_;
   sensor_msgs::msg::JointState last_joint_state_;
+  Float64 gripper_angle;
 
   std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = {
     {"position", {}}, {"velocity", {}}};
@@ -49,6 +52,7 @@ protected:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<JointState>::SharedPtr joint_pub_;
   rclcpp::Subscription<JointState>::SharedPtr joint_sub_;
+  rclcpp::Subscription<Float64>::SharedPtr gripper_sub_;
   JointState joint_state_msg_;
 
 
