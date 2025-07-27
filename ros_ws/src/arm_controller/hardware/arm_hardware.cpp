@@ -57,12 +57,6 @@ CallbackReturn RobotSystem::on_init(const hardware_interface::HardwareInfo & inf
     [&](sensor_msgs::msg::JointState::SharedPtr msg) {
       last_joint_state_ = *msg;
     });
-  
-  gripper_sub_ = node_->create_subscription<std_msgs::msg::Float64>(
-    "/arm/gripper/angle", 10,
-    [&](std_msgs::msg::Float64::SharedPtr msg) {
-      gripper_angle = *msg;
-    });
 
   return CallbackReturn::SUCCESS;
 }
@@ -131,9 +125,7 @@ return_type RobotSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
   joint_state_msg_.header.stamp = node_->now();
   joint_state_msg_.name = joint_interfaces["position"];
-  joint_state_msg_.name.push_back("finger_joint");
   joint_state_msg_.position = joint_position_command_;
-  joint_state_msg_.position.push_back(gripper_angle.data);
 
   joint_pub_->publish(joint_state_msg_);
 
