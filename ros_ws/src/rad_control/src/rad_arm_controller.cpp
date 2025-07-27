@@ -21,11 +21,14 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   this->declare_parameter<std::vector<double>>("offsets", {89.17, 114.724});  // Shoulder, elbow
   this->declare_parameter("screw_max", 13320.0);
   this->declare_parameter("can_rate", 10); 
+  this->declare_parameter("gripper_steps", 200);
   lmins = this->get_parameter("lmins").as_double_array();
   a_lengths = this->get_parameter("a_lengths").as_double_array(); 
   b_lengths = this->get_parameter("b_lengths").as_double_array();
   offsets = this->get_parameter("offsets").as_double_array();
   screw_max = this->get_parameter("screw_max").as_double(); 
+
+  gripper_steps = this->get_parameter("gripper_steps").as_double(); 
 
   sleep_msec = (uint16_t)(1000.0 / (4.0 * (float)this->get_parameter("can_rate").as_int()));
 
@@ -33,6 +36,9 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
 
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "/arm/hardware/joint_states", 10, std::bind(&RAD_Arm_Controller::_callback, this, _1));
+  
+  gripper_sub_ = this->create_subscription<std_msgs::msg::Int32>(
+    "/arm/finger/joints", 10, std::bind(&RAD_Arm_Controller::_callback_gripper, this, _1));
 }
 void RAD_Arm_Controller::_publish_to_can()
 {
@@ -41,8 +47,6 @@ void RAD_Arm_Controller::_publish_to_can()
     can_pub_->publish(can_base);
     rate.sleep();
     can_pub_->publish(can_ls);
-    rate.sleep();
-    can_pub_->publish(can_gripper);
     rate.sleep();
     can_pub_->publish(can_shoulder);
     rate.sleep();
@@ -65,8 +69,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float elbow_angle = msg.position[2]*180/M_PI + offsets[1];
   float pitch_angle = msg.position[3]*180/M_PI;
   float wrist_angle = msg.position[4]*180/M_PI;
-  float gripper_angle = msg.position[5]*180/M_PI; 
-
+  
   float ls = 60 *(pitch_angle + wrist_angle); 
   float rs = 60 *(pitch_angle - wrist_angle); 
   float pi = 3.141592653;
@@ -79,17 +82,32 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   rad_elbow_arm.set_target_angle(theta_m_elbow);
   rad_ls_arm.set_target_angle(ls);
   rad_rs_arm.set_target_angle(rs);
-  rad_gripper_arm.set_target_angle(gripper_angle);
+  // rad_gripper_arm.set_target_angle(gripper_angle);
 
   // std::cout << "Shoulder: " << theta_m_shoulder << std::endl;
   // std::cout << "Elbow: " << theta_m_elbow << std::endl;
 
   //ROS info
-  RCLCPP_INFO(this->get_logger(), "Base angle: %f, Shoulder angle: %f, Elbow angle: %f, LS angle: %f, RS angle: %f, Gripper angle: %f", 
-              base_angle, theta_m_shoulder, theta_m_elbow, ls, rs, gripper_angle);
+  RCLCPP_INFO(this->get_logger(), "Base angle: %f, Shoulder angle: %f, Elbow angle: %f, LS angle: %f, RS angle: %f", 
+              base_angle, theta_m_shoulder, theta_m_elbow, ls, rs);
   
 
   this->_publish_to_can(); 
+}
+void RAD_Arm_Controller::_callback_gripper(const std_msgs::msg::Int32& msg)
+{
+  if(msg.data > 0){
+    rad_gripper_arm.pulse_stepper(gripper_steps);
+  } else if(msg.data < 0){
+    rad_gripper_arm.pulse_stepper(-gripper_steps);
+  } else {
+    rad_gripper_arm.pulse_stepper(0.0);
+  }
+
+  rclcpp::Rate rate{std::chrono::milliseconds(sleep_msec)};
+  can_pub_->publish(can_gripper);
+  rate.sleep();
+
 }
 int main(int argc, char ** argv)
 {
