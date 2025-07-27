@@ -1,5 +1,5 @@
 # MoveIt uses this configuration for controller management
-
+ros_control_namespace: /arm
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
 moveit_simple_controller_manager:

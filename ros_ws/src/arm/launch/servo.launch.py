@@ -77,6 +77,7 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[moveit_config.robot_description, ros2_controllers_path],
         output="screen",
+        namespace="arm",
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -87,14 +88,15 @@ def generate_launch_description():
             "--controller-manager-timeout",
             "300",
             "--controller-manager",
-            "/controller_manager",
+            "/arm/controller_manager",
         ],
     )
 
     arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["arm_controller", "-c", "/controller_manager"],
+        arguments=["arm_controller", "-c", "/arm/controller_manager"],
+        namespace="/arm",
     )
 
     # Launch as much as possible in components
@@ -121,12 +123,14 @@ def generate_launch_description():
                 plugin="robot_state_publisher::RobotStatePublisher",
                 name="robot_state_publisher",
                 parameters=[moveit_config.robot_description],
+                namespace="/arm"
             ),
             ComposableNode(
                 package="tf2_ros",
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/arm_base_footprint", "frame_id": "/world"}],
+                namespace="/arm"
             ),
             # ComposableNode(
             #     package="moveit_servo",
