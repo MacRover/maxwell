@@ -8,6 +8,8 @@
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <std_msgs/msg/float32.h>
+#include <Adafruit_PWMServoDriver.h>
+
 
 #define LED_PIN 13
 #define SERVO1_PIN 4
@@ -24,9 +26,9 @@ std_msgs__msg__Float32 servo1_msg, servo2_msg, servo3_msg;
 
 rclc_executor_t servo_executor;
 
-int servo1_angle_send = 90;
-int servo2_angle_send = 90;
-int servo3_angle_send = 90;
+extern int servo1_angle_send;
+extern int servo2_angle_send;
+extern int servo3_angle_send;
 
 
 void servo1_callback(const void *msgin) {
@@ -112,10 +114,7 @@ bool servo_setup_subscription(
 
 void servo_spin_executor() {
     rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(1));
-    servo1.write(servo1_angle_send);
-    servo2.write(servo2_angle_send);
-    servo3.write(servo3_angle_send);
-
+    setServoAngle(0); // Changed because we are using PWM
 }
 
 #endif 
