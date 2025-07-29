@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
-#include <std_msgs/msg/U_Int8_Multi_Array.h>
+#include <std_msgs/msg/u_int8_multi_array.h>
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
@@ -22,7 +22,7 @@
 #include "science.h"
 
 
-// #define ON_ROVER
+#define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER

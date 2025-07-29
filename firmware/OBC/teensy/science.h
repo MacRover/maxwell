@@ -8,7 +8,7 @@
 #include "i2c.h"
 
 #include <std_msgs/msg/int16.h>
-#include <std_msgs/msg/Float32.h>
+#include <std_msgs/msg/float32.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 
