@@ -978,8 +978,6 @@ int main(void)
                 cw_enable = 1;
         	    ccw_enable = 1;
 
-        	    rad_can.watchdog_enabled = 0;
-
                 if (ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
@@ -1341,6 +1339,7 @@ int main(void)
                 if (rad_can.watchdog_enabled && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
                 {
                     rad_state = RAD_STATE_PULSE_CONTROL;
+                    rad_can.watchdog_enabled = 0;
                 }
 
                 break;
@@ -1367,10 +1366,9 @@ int main(void)
         	//rad_status.current_angle = (double) pid_1.output;
             //AS5048A_ReadAngle(&as5048a_1);
             //rad_status.current_angle = as5048a_1.Angle_double;
-
+ 
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }
-
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;

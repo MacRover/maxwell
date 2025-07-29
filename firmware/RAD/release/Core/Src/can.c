@@ -342,6 +342,4 @@ uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
             (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET);
 }
 
-
-
 /* USER CODE END 1 */
