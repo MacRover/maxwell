@@ -69,6 +69,9 @@ void MX_CAN_Init(void)
 
     rad_can.id = 0xff;
 
+    rad_can.timer = 0;
+    rad_can.watchdog_enabled = 0;
+
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;
     rad_can.TxHeader.DLC = 0;
@@ -238,10 +241,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
     if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_GLOBAL)
     {
         queue_enqueue(&can_message_queue_global, new_message);
+        rad_can.timer = 0;
     }
     else if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_RAD)
     {
         queue_enqueue(&can_message_queue_rad, new_message);
+        rad_can.timer = 0;
     }
 
 
@@ -336,5 +341,7 @@ uint32_t __encode_ext_can_id(uint8_t device_id, uint8_t message_id)
             (CAN_MESSAGE_RESPONSE_RAD << CAN_MESSAGE_RESPONSE_OFFSET) |
             (message_id << CAN_MESSAGE_COMMAND_OFFSET) | (device_id << CAN_MESSAGE_DEVICE_ID_OFFSET);
 }
+
+
 
 /* USER CODE END 1 */
