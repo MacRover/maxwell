@@ -866,7 +866,7 @@ int main(void)
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
 
-                    rad_state = RAD_STATE_INIT;
+                    rad_state = RAD_STATE_PULSE_CONTROL;
 
                     break;
                 }
@@ -1366,7 +1366,7 @@ int main(void)
         	//rad_status.current_angle = (double) pid_1.output;
             //AS5048A_ReadAngle(&as5048a_1);
             //rad_status.current_angle = as5048a_1.Angle_double;
- 
+
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
