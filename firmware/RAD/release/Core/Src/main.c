@@ -866,7 +866,7 @@ int main(void)
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
 
-                    rad_state = RAD_STATE_INIT;
+                    rad_state = RAD_STATE_PULSE_CONTROL;
 
                     break;
                 }
