@@ -58,7 +58,6 @@ typedef struct
     uint8_t id;
 
     uint32_t timer;
-    uint32_t prev_timer;
     uint8_t watchdog_enabled;
 
     CAN_TxHeaderTypeDef TxHeader;
