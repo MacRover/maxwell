@@ -81,6 +81,8 @@ uint8_t buffer_head;
 
 int16_t steps_to_move;
 
+uint32_t prev_ms = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -374,6 +376,8 @@ int main(void)
                     }
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+                    // Enable Watch Dog here
+                    rad_can.watchdog_enabled = 1;
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -862,7 +866,7 @@ int main(void)
                         steps_to_move = -1*tmc_2590_1.Init.max_steps;
                     }
 
-                    rad_state = RAD_STATE_INIT;
+                    rad_state = RAD_STATE_PULSE_CONTROL;
 
                     break;
                 }
@@ -1117,7 +1121,7 @@ int main(void)
 
                     rad_state = RAD_STATE_ACTIVE;
         	    }
-                else if (ls_state_2 == GPIO_PIN_SET)
+                else if (ls_state_2 == GPIO_PIN_SET && rad_params.RAD_TYPE > RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT)
                 {
                     TMC_2590_Stop(&tmc_2590_1);
                     switch (rad_params.RAD_TYPE) 
@@ -1331,6 +1335,12 @@ int main(void)
                     TMC_2590_Stop(&tmc_2590_1);
                 }
 
+                // Once timeout is exceeded, disable close loop control
+                if (rad_can.watchdog_enabled && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
+                {
+                    rad_state = RAD_STATE_PULSE_CONTROL;
+                    rad_can.watchdog_enabled = 0;
+                }
 
                 break;
             }
@@ -1359,7 +1369,6 @@ int main(void)
 
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }
-        
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
@@ -1367,6 +1376,9 @@ int main(void)
             rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
+
+        rad_can.timer += HAL_GetTick() - prev_ms;
+        prev_ms = HAL_GetTick();
 
         /* USER CODE END WHILE */
 
