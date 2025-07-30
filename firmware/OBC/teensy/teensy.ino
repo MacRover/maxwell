@@ -20,8 +20,7 @@
 #include "TSB.h"
 #include "servo.h"
 #include "science.h"
-
-
+#include "viper_topics.h"
 #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
@@ -73,17 +72,13 @@ ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 #ifdef USING_LORA
-SX1262 radio = new Module(10, 3, 40, 39); // CS, DIO1, NRST, BUSY
+SX1262 radio = new Module(10, 32, 40, 39); // CS, DIO1, NRST, BUSY
 
 int16_t Transmission_State = RADIOLIB_ERR_NONE;
 
 
 volatile bool Transmitted_Flag = false;
 
-uint32_t Packet_Count = 0;
-
-
-char Lora_Buffer[256] = { 0 };
   #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
   #endif
@@ -107,6 +102,7 @@ rcl_init_options_t init_options;
 
 struct timespec tp;
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
+static struct micro_ros_agent_locator locator;
 
 
 
@@ -203,7 +199,7 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&health_pub, &teensy_node);
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
-    rcl_subscription_fini(&servo3_sub, &teensy_node);
+    destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
 }
@@ -211,6 +207,21 @@ static bool options_initialized = false;
 bool obc_setup_uros()
 {
 #ifdef USING_ROS
+    if (Ethernet.linkStatus() == LinkOFF) {
+		return false;
+	}
+
+	locator.address = agent_ip;
+	locator.port = 9999;
+
+	RCCHECK(rmw_uros_set_custom_transport(
+		false,
+		(void *) &locator,
+		arduino_native_ethernet_udp_transport_open,
+		arduino_native_ethernet_udp_transport_close,
+		arduino_native_ethernet_udp_transport_write,
+		arduino_native_ethernet_udp_transport_read
+	));
     allocator = rcl_get_default_allocator();
 
     if (!options_initialized) {
@@ -226,6 +237,11 @@ bool obc_setup_uros()
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
+
+     #ifdef USING_LORA
+    if(!viper_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
+
 
      RCCHECK(rclc_publisher_init_default(
         &imu_pub, 
@@ -349,12 +365,11 @@ bool obc_setup_ozone()
 
 void setup()
 {
-    set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
     Wire1.begin();
     Wire1.setClock(400000);
     Serial6.begin(38400);
     Serial.begin(115200);
-
+    Ethernet.begin(arduino_mac, arduino_ip);
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
@@ -364,7 +379,7 @@ void setup()
    obc_setup_tsb();
     state_UROS = UROS_FOUND;
     #ifdef USING_LORA
-    state_lora = lORA_INIT;
+    state_lora = LORA_INIT;
     #endif 
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
@@ -407,6 +422,10 @@ void Uros_SM(){
         }
         #ifdef USING_SERVO
           servo_spin_executor();
+        #endif
+
+        #ifdef USING_LORA
+          rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
         #endif
         }
         
@@ -497,66 +516,56 @@ void TSB_SM(){
       break;
   }
 }
+
 #ifdef USING_LORA
-void LORA_SM(){
-switch (state_lora) {
 
-    case lORA_INIT: {
+void LORA_SM() {
+  switch (state_lora) {
+
+    case LORA_INIT: {
       int16_t state = radio.begin();
-   
       radio.setPacketSentAction(Packet_Sent);
-
-      
       state_lora = LORA_TRANSMIT;
       break;
     }
 
-    
     case LORA_TRANSMIT: {
-        Packet_Count++;
-        snprintf(
-        Lora_Buffer, 
-        sizeof(Lora_Buffer),
-        "PKT#%03lu LAT:%.6f,LON:%.6f,ALT:%.2f,COV:[%.2f,%.2f,%.2f]", 
-        (unsigned long)Packet_Count,
-        gps_msg.latitude, 
-        gps_msg.longitude, 
-        gps_msg.altitude,
-        gps_msg.position_covariance[8],
-        gps_msg.position_covariance[4],
-        gps_msg.position_covariance[0]
-      );
+      String viper_message = format_viper_message();
+      String payload =   "LAT:" + String(gps_msg.latitude, 6)
+                       + ",LON:" + String(gps_msg.longitude, 6)
+                       + ",ALT:" + String(gps_msg.altitude, 2)
+                       + ",COV:["
+                       + String(gps_msg.position_covariance[8], 2)
+                       + "," + String(gps_msg.position_covariance[4], 2)
+                       + "," + String(gps_msg.position_covariance[0], 2)
+                       + "]"
+                       + "," + String(gps_msg.status.status)
+                       + "\n"
+                       + viper_message;
 
-
-        Transmitted_Flag = false; 
-        Transmission_State = radio.startTransmit(Lora_Buffer);
-        if (Transmission_State != RADIOLIB_ERR_NONE) {
-          state_lora = LORA_FINISH;
-        } else {
-        
-          state_lora = LORA_FLAG;
-        }
-        break;
-      }
-
-    case LORA_FLAG: {
-    
-      if (Transmitted_Flag) {
-      
+      Transmitted_Flag = false;
+      Transmission_State = radio.startTransmit(payload);
+      if (Transmission_State != RADIOLIB_ERR_NONE) {
         state_lora = LORA_FINISH;
+      } else {
+        state_lora = LORA_FLAG;
       }
-     
       break;
     }
 
-  
+    case LORA_FLAG: {
+      if (Transmitted_Flag) {
+        state_lora = LORA_FINISH;
+      }
+      break;
+    }
+
     case LORA_FINISH: {
       radio.finishTransmit();
       state_lora = LORA_DELAY;
       break;
     }
 
-   // might be redundant and just put in LORA_FINISH
     case LORA_DELAY: {
       if (millis() - prev_time_lora > 1000) {
         prev_time_lora = millis();
@@ -564,8 +573,9 @@ switch (state_lora) {
       }
       break;
     }
+
   }
-  }
+}
 #endif
 
 void HYDROGEN_SM(){
@@ -647,19 +657,19 @@ void loop()
 #endif
 
 #ifdef USING_ROS
-Uros_SM();
+    Uros_SM();
 #endif 
 
 #ifdef USING_FANS
-FANS_SM();
+    FANS_SM();
 #endif
 
 #ifdef USING_TSB
-TSB_SM();
+    TSB_SM();
 #endif 
 
 #ifdef USING_LORA
-  LORA_SM();
+    LORA_SM();
 #endif
 
 #ifdef USING_SCIENCE_SENSORS

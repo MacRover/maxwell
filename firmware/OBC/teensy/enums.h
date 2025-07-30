@@ -35,7 +35,7 @@ enum OZONE_STATES{
 } state_ozone;
 
 enum LORA_STATES {
-  lORA_INIT,            
+  LORA_INIT,            
   LORA_TRANSMIT, 
   LORA_FLAG,   
   LORA_FINISH,          

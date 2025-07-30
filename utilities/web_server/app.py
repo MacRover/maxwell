@@ -13,7 +13,7 @@ def reader():
         if line:
            
             latest['data'].append(line)
-            if len(latest['data']) > 5:
+            if len(latest['data']) > 10:
                
                 latest['data'].pop(0)
 
