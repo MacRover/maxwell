@@ -19,35 +19,43 @@ class DpadServoController(Node):
         self.servo3_angle = 90.0  
         self.declare_parameter("servo3_active", False)
         self.servo3_active = self.get_parameter("servo3_active").get_parameter_value().bool_value
+        self.prev_dpad_horizontal = 0
+        self.prev_dpad_vertical = 0
 
     def joy_callback(self, msg):
         # Read D-pad axes
         dpad_horizontal = msg.axes[6]  # Left: 1.0, Right: -1.0
         dpad_vertical = msg.axes[7]    # Up: 1.0, Down: -1.0
 
-      
-        if dpad_vertical == 1.0 and dpad_horizontal == 1.0:
+        if ((dpad_vertical != self.prev_dpad_vertical or
+            dpad_horizontal != self.prev_dpad_horizontal) and
+            (dpad_vertical or dpad_horizontal)):
+            self.update_servo_angles(dpad_horizontal, dpad_vertical)
+            self.publish_servo_angles()
+
+        self.prev_dpad_horizontal = dpad_horizontal
+        self.prev_dpad_vertical = dpad_vertical
+
+    def update_servo_angles(self, x, y):
+        if y == 1.0 and x == 1.0:
             self.servo3_angle = min(self.servo3_angle + 5.0, 180.0)  
             self.servo3_active = True
-        elif dpad_vertical == 1.0 and dpad_horizontal == -1.0:
+        elif y == 1.0 and x == -1.0:
             self.servo3_angle = max(self.servo3_angle - 5.0, 0.0)  
             self.servo3_active = True
         else:
             self.servo3_active = False
 
         if not self.servo3_active:
-            if dpad_vertical == 1.0:  # D-pad up
-                self.servo1_angle = min(self.servo1_angle + 5.0, 180.0)
-            elif dpad_vertical == -1.0:  # D-pad down
-                self.servo1_angle = max(self.servo1_angle - 5.0, 0.0)
+            if y == 1.0:  # D-pad up
+                self.servo1_angle = min(self.servo1_angle - 5.0, 180.0)
+            elif y == -1.0:  # D-pad down
+                self.servo1_angle = max(self.servo1_angle + 5.0, 0.0)
 
-            if dpad_horizontal == 1.0:  # D-pad left
-                self.servo2_angle = min(self.servo2_angle + 5.0, 180.0)
-            elif dpad_horizontal == -1.0:  # D-pad right
-                self.servo2_angle = max(self.servo2_angle - 5.0, 0.0)
-
-     
-        self.publish_servo_angles()
+            if x == 1.0:  # D-pad left
+                self.servo2_angle = min(self.servo2_angle - 5.0, 180.0)
+            elif x == -1.0:  # D-pad right
+                self.servo2_angle = max(self.servo2_angle + 5.0, 0.0)
 
     def publish_servo_angles(self):
       

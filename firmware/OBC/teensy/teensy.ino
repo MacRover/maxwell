@@ -4,7 +4,6 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
-#include <Servo.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -28,8 +27,7 @@
 
 
 #define DOMAIN_ID 5
-#define SERVOMIN 150
-#define SERVOMAX 600
+
 #define LED_PIN 13
 #define AD0_VAL 1
 #define IMU_INT1 23
@@ -57,8 +55,6 @@ rcl_publisher_t tsb_pub;
 
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
-
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(); 
 
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
@@ -102,15 +98,6 @@ void updateICM_20948(ICM_20948_I2C* icm)
     imu_msg.linear_acceleration_covariance[0] = -1;
 }
 
-void setServoAngle(uint8_t channel){
-    uint16_t pulse1 = map(servo1_angle_send, 0, 180, SERVOMIN, SERVOMAX);
-    uint16_t pulse2 = map(servo2_angle_send, 0, 180, SERVOMIN, SERVOMAX);
-    uint16_t pulse3 = map(servo3_angle_send, 0, 180, SERVOMIN, SERVOMAX);
-
-    pwm.setPWM(channel, 0, pulse1);
-    pwm.setPWM(channel + 1, 0, pulse2); 
-    pwm.setPWM(channel + 2, 0, pulse3);
-}
 void updateLSM6DSM(LSM6DSRSensor* sensor)
 {
     int32_t accel[3];
@@ -436,7 +423,6 @@ void TSB_SM(){
 
 void loop()
 {
-  setServoAngle(0); // Update servo angles
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
