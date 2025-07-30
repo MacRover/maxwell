@@ -4,7 +4,6 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
-#include <Servo.h>
 
 #include <cstdint>
 #include <rcl/rcl.h>
@@ -12,6 +11,7 @@
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
+
 
 #include "fans.h"
 #include "TSB.h"
@@ -27,6 +27,7 @@
 
 
 #define DOMAIN_ID 5
+
 #define LED_PIN 13
 #define AD0_VAL 1
 #define IMU_INT1 23
@@ -55,14 +56,16 @@ rcl_publisher_t tsb_pub;
 sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
-
-
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
 ICM_20948_I2C ICM;
 SFE_UBLOX_GNSS GNSS;
 Adafruit_MCP9601 MCP;
 
 Fan fan1, fan2, fan3;
+
+int servo1_angle_send = 90; 
+int servo2_angle_send = 90;
+int servo3_angle_send = 90;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
@@ -118,7 +121,6 @@ void updateLSM6DSM(LSM6DSRSensor* sensor)
     imu_msg.angular_velocity_covariance[0] = -1;
     imu_msg.linear_acceleration_covariance[0] = -1;
 }
-
 
 void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
 {
@@ -270,7 +272,6 @@ return true;
 }
 
 
-
 void setup()
 {
     set_microros_native_ethernet_udp_transports(arduino_mac, arduino_ip, agent_ip, 9999);
@@ -289,6 +290,9 @@ void setup()
     state_UROS = UROS_FOUND;
     state_TSB = TSB_INIT;
     state_fans = FANS_INIT;
+
+    pwm.begin();
+    pwm.setPWMFreq(50);  
 }
 
 void Uros_SM(){
@@ -341,6 +345,7 @@ void Uros_SM(){
     break;
 }
 }
+
 void FANS_SM() {
   switch (state_fans) {
     case FANS_INIT:
@@ -418,7 +423,6 @@ void TSB_SM(){
 
 void loop()
 {
- 
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
