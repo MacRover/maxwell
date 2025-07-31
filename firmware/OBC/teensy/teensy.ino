@@ -27,8 +27,8 @@
 // #define USING_IMU_OTHER
 #define USING_GPS
 //#define USING_TSB
-//#define USING_FANS
-//#define USING_SERVO
+#define USING_FANS
+#define USING_SERVO
 #define USING_SCIENCE_SENSORS
 #define USING_LORA
 
