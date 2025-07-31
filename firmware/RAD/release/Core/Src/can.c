@@ -240,13 +240,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
     if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_GLOBAL)
     {
-        queue_enqueue(&can_message_queue_global, new_message);
+        // Reset the WQT first before we queue the message, otherwise race condition
         rad_can.timer = 0;
+        queue_enqueue(&can_message_queue_global, new_message);
     }
     else if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_RAD)
     {
-        queue_enqueue(&can_message_queue_rad, new_message);
+        // Reset the WQT first before we queue the message, otherwise race condition
         rad_can.timer = 0;
+        queue_enqueue(&can_message_queue_rad, new_message);
     }
 
 
