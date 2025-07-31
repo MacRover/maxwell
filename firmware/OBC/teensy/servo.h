@@ -2,21 +2,20 @@
 #define SERVO_H
 
 #include <Arduino.h>
-#include <Servo.h>
 #include <micro_ros_arduino.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <std_msgs/msg/float32.h>
+#include <Adafruit_PWMServoDriver.h>
 
-#define LED_PIN 13
-#define SERVO1_PIN 4
-#define SERVO2_PIN 5
-#define SERVO3_PIN 37
+#define PCA9685_ADDR 0x40
+#define SERVOMIN 150
+#define SERVOMAX 600
+
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 
-
-Servo servo1, servo2, servo3;
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(PCA9685_ADDR, Wire1); 
 
 rcl_subscription_t servo1_sub, servo2_sub, servo3_sub;
 
@@ -24,9 +23,9 @@ std_msgs__msg__Float32 servo1_msg, servo2_msg, servo3_msg;
 
 rclc_executor_t servo_executor;
 
-int servo1_angle_send = 90;
-int servo2_angle_send = 90;
-int servo3_angle_send = 90;
+extern int servo1_angle_send;
+extern int servo2_angle_send;
+extern int servo3_angle_send;
 
 
 void servo1_callback(const void *msgin) {
@@ -53,11 +52,6 @@ bool servo_setup_subscription(
     rclc_support_t *support,
     rcl_allocator_t *allocator
 ) {
-    servo1.attach(SERVO1_PIN);
-    servo2.attach(SERVO2_PIN);
-    servo3.attach(SERVO3_PIN);
-     
-
     RCCHECK(rclc_subscription_init_default(
         &servo1_sub,
         node,
@@ -110,12 +104,19 @@ bool servo_setup_subscription(
     return true;
 }
 
+void setServoAngle(uint8_t channel){
+    uint16_t pulse1 = map(servo1_angle_send, 0, 180, SERVOMIN, SERVOMAX);
+    uint16_t pulse2 = map(servo2_angle_send, 0, 180, SERVOMIN, SERVOMAX);
+    uint16_t pulse3 = map(servo3_angle_send, 0, 180, SERVOMIN, SERVOMAX);
+
+    pwm.setPWM(channel, 0, pulse1);
+    pwm.setPWM(channel + 1, 0, pulse2); 
+    pwm.setPWM(channel + 2, 0, pulse3);
+}
+
 void servo_spin_executor() {
     rclc_executor_spin_some(&servo_executor, RCL_MS_TO_NS(1));
-    servo1.write(servo1_angle_send);
-    servo2.write(servo2_angle_send);
-    servo3.write(servo3_angle_send);
-
+    setServoAngle(0); // Changed because we are using PWM
 }
 
 #endif 

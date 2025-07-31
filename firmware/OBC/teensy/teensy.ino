@@ -34,6 +34,7 @@
 
 
 #define DOMAIN_ID 5
+
 #define LED_PIN 13
 #define AD0_VAL 1
 #define IMU_INT1 23
@@ -87,6 +88,10 @@ void Packet_Sent() {
 }
 #endif
 Fan fan1, fan2, fan3;
+
+int servo1_angle_send = 90; 
+int servo2_angle_send = 90;
+int servo3_angle_send = 90;
 
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
@@ -152,7 +157,6 @@ void updateLSM6DSM(LSM6DSRSensor* sensor)
     imu_msg.angular_velocity_covariance[0] = -1;
     imu_msg.linear_acceleration_covariance[0] = -1;
 }
-
 
 void updatePVTData(UBX_NAV_PVT_data_t* ubx_nav)
 {
@@ -385,6 +389,9 @@ void setup()
     state_fans = FANS_INIT;
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
+
+    pwm.begin();
+    pwm.setPWMFreq(50);  
 }
 
 void Uros_SM(){
@@ -444,6 +451,7 @@ void Uros_SM(){
     break;
 }
 }
+
 void FANS_SM() {
   switch (state_fans) {
     case FANS_INIT:
@@ -638,7 +646,6 @@ void OZONE_SM(){
 
 void loop()
 {
- 
 #ifdef USING_IMU_ONBOARD
     updateLSM6DSM(&LSM6DSMR);
 #else
