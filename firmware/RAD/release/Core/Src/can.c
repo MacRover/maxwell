@@ -69,6 +69,9 @@ void MX_CAN_Init(void)
 
     rad_can.id = 0xff;
 
+    rad_can.timer = 0;
+    rad_can.watchdog_enabled = 0;
+
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;
     rad_can.TxHeader.DLC = 0;
@@ -237,10 +240,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 
     if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_GLOBAL)
     {
+        // Reset the WQT first before we queue the message, otherwise race condition
+        rad_can.timer = 0;
         queue_enqueue(&can_message_queue_global, new_message);
     }
     else if (((rad_can.RxHeader.ExtId >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK) == CAN_MESSAGE_IDENTIFIER_RAD)
     {
+        // Reset the WQT first before we queue the message, otherwise race condition
+        rad_can.timer = 0;
         queue_enqueue(&can_message_queue_rad, new_message);
     }
 
