@@ -383,6 +383,7 @@ void setup()
     Ethernet.begin(arduino_mac, arduino_ip);
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
+    pinMode(FLASHLIGHT_PIN, OUTPUT);
 
    health_msg_setup(); 
    obc_setup_imu();
@@ -396,6 +397,8 @@ void setup()
     state_fans = FANS_INIT;
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
+
+    digitalWrite(FLASHLIGHT_PIN, LOW);
 
     pwm.begin();
     pwm.setPWMFreq(50);  
@@ -439,6 +442,7 @@ void Uros_SM(){
         #endif
         #ifdef USING_FLASHLIGHT
           flashlight_spin_executor();
+        #endif
 
         #ifdef USING_LORA
           rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
