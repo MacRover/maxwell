@@ -50,7 +50,7 @@ extern CAN_HandleTypeDef hcan;
 #define CAN_MESSAGE_DEVICE_ID_MASK 0xFF
 #define CAN_MESSAGE_DEVICE_ID_OFFSET 0
 
-#define CAN_MESSAGE_TIMEOUT_MS 1000
+#define CAN_MESSAGE_TIMEOUT_MS 5000
 
 typedef struct
 {
