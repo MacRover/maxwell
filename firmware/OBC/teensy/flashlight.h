@@ -11,6 +11,15 @@
 #define FLASHLIGHT_PIN 4
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 
+typedef enum {
+    LIGHT_OFF,
+    LIGHT_ON,
+    LIGHT_ON_EDGE,
+    LIGHT_OFF_EDGE,
+} light_state_t;
+
+light_state_t desired_light_state = LIGHT_OFF;
+
 rcl_service_t flashlight_service;
 
 std_srvs__srv__SetBool_Request flashlight_request;
@@ -20,17 +29,16 @@ rclc_executor_t flashlight_executor;
 
 void set_flashlight(bool state)
 {
-
     if (state)
     {
-        digitalWrite(FLASHLIGHT_PIN, HIGH);
+        // digitalWrite(FLASHLIGHT_PIN, HIGH);
+        desired_light_state = LIGHT_ON;
     }
     else
     {
-        digitalWrite(FLASHLIGHT_PIN, LOW);
+        // digitalWrite(FLASHLIGHT_PIN, LOW);
+        desired_light_state = LIGHT_OFF;
     }
-    
-
 }
 
 void flashlight_service_callback(const void * req_msg, void * res_msg) {
