@@ -18,7 +18,8 @@
 
 #include "fans.h"
 #include "TSB.h"
-#include "servo.h"
+#include "servo.h" 
+#include "flashlight.h"
 #include "science.h"
 #include "viper_topics.h"
 #define ON_ROVER
@@ -29,6 +30,7 @@
 //#define USING_TSB
 #define USING_FANS
 #define USING_SERVO
+#define USING_FLASHLIGHT
 #define USING_SCIENCE_SENSORS
 #define USING_LORA
 
@@ -65,7 +67,7 @@ sensor_msgs__msg__Imu imu_msg;
 sensor_msgs__msg__NavSatFix gps_msg;
 
 std_msgs__msg__UInt8MultiArray health_msg;
-static uint8_t health_data[6];
+static uint8_t health_data[7];
 
 
 LSM6DSRSensor LSM6DSMR(&Wire1, LSM6DSR_I2C_ADD_H);
@@ -93,6 +95,9 @@ int servo1_angle_send = 90;
 int servo2_angle_send = 90;
 int servo3_angle_send = 90;
 
+light_state_t light_state = LIGHT_OFF;
+int light_mode_counter = 0;
+
 uint8_t arduino_mac[] = { 0x04, 0xE9, 0xE5, 0x13, 0x0E, 0x4B };
 IPAddress arduino_ip(192, 168, 1, 177);
 #ifdef ON_ROVER
@@ -102,6 +107,7 @@ IPAddress arduino_ip(192, 168, 1, 177);
 #endif
 
 unsigned long prev_time1 = 0, prev_time2 = 0, prev_time_fan = 0, prev_time_tsb = 0, prev_time_lora, prev_time_hydrogen, prev_time_ozone = 0;
+unsigned long prev_time_flashlight = 0;
 rcl_init_options_t init_options;
 
 
@@ -114,8 +120,8 @@ static struct micro_ros_agent_locator locator;
 void health_msg_setup(){
 
   std_msgs__msg__UInt8MultiArray__init(&health_msg); 
-  health_msg.data.capacity = 6;
-  health_msg.data.size = 6;
+  health_msg.data.capacity = 7;
+  health_msg.data.size = 7;
   health_msg.data.data = health_data; 
 }
 
@@ -198,11 +204,13 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&gps_pub, &teensy_node);
     rcl_publisher_fini(&imu_pub, &teensy_node);
     rcl_publisher_fini(&tsb_pub, &teensy_node);
+    
+    servo_cleanup(&teensy_node);
+    flashlight_cleanup(&teensy_node);
+    
     rcl_publisher_fini(&hydrogen_pub, &teensy_node);
     rcl_publisher_fini(&ozone_pub, &teensy_node);
     rcl_publisher_fini(&health_pub, &teensy_node);
-    rcl_subscription_fini(&servo1_sub, &teensy_node);
-    rcl_subscription_fini(&servo2_sub, &teensy_node);
     destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
@@ -240,6 +248,9 @@ bool obc_setup_uros()
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
+    #ifdef USING_FLASHLIGHT
+    if(!flashlight_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
 
      #ifdef USING_LORA
@@ -376,6 +387,7 @@ void setup()
     Ethernet.begin(arduino_mac, arduino_ip);
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
+    pinMode(FLASHLIGHT_PIN, OUTPUT);
 
    health_msg_setup(); 
    obc_setup_imu();
@@ -389,6 +401,8 @@ void setup()
     state_fans = FANS_INIT;
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
+
+    digitalWrite(FLASHLIGHT_PIN, LOW);
 
     pwm.begin();
     pwm.setPWMFreq(50);  
@@ -429,6 +443,9 @@ void Uros_SM(){
         }
         #ifdef USING_SERVO
           servo_spin_executor();
+        #endif
+        #ifdef USING_FLASHLIGHT
+          flashlight_spin_executor();
         #endif
 
         #ifdef USING_LORA
@@ -690,7 +707,47 @@ health_msg.data.data[2] = state_TSB;
 health_msg.data.data[3] = state_lora;
 health_msg.data.data[4] = state_hydrogen;
 health_msg.data.data[5] = state_ozone;
+health_msg.data.data[6] = light_state;
 
+#ifdef USING_FLASHLIGHT
+  switch (light_state) {
+    case LIGHT_OFF:
+      if (light_state != desired_light_state) {
+        light_state = LIGHT_ON_EDGE;
+        prev_time_flashlight = millis();
+      }
+      break;
+    case LIGHT_ON_EDGE:
+      if (millis() - prev_time_flashlight > 100) {
+        prev_time_flashlight = millis();
+        digitalWrite(FLASHLIGHT_PIN, light_mode_counter % 2 == 0 ? HIGH : LOW);
+        if (light_mode_counter++ >= 1) {
+          light_state = LIGHT_ON;
+          light_mode_counter = 0;
+        }
+      }
+      break;
+    case LIGHT_ON:
+      if (light_state != desired_light_state) {
+        light_state = LIGHT_OFF_EDGE;
+        prev_time_flashlight = millis();
+      }
+      break;
+    case LIGHT_OFF_EDGE:
+      if (millis() - prev_time_flashlight > 100) {
+        prev_time_flashlight = millis();
+        digitalWrite(FLASHLIGHT_PIN, light_mode_counter % 2 == 0 ? LOW : HIGH);
+        if (light_mode_counter++ >= 6) {
+          light_state = LIGHT_OFF;
+          light_mode_counter = 0;
+        }
+      }
+      break;
+    default:
+      light_state = LIGHT_OFF;
+      break;
+  }
+#endif
 
 
 delay(1);
