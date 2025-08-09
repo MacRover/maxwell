@@ -8,8 +8,8 @@ microROS:
   port_number: 9999
 
 drive:
-  drive_mode: SWERVE_DRIVE
-  wait_until_positioned: True   # must be False when drive mode is TANK_STEER_HYBRID
+  drive_mode: TANK_STEER_HYBRID
+  wait_until_positioned: False   # must be False when drive mode is TANK_STEER_HYBRID
   vesc_controller_enabled: True
   can_rate: 10
   can_channel: can0
