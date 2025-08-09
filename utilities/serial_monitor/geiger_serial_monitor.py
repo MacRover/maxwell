@@ -17,15 +17,18 @@ import serial
 import time
 import argparse
 import sys
-import rospy 
+import rclpy
+from rclpy.node import Node
 from std_msgs.msg import Int32  
 from datetime import datetime
+import threading 
 
-class GeigerSerialMonitor:
+class GeigerSerialMonitor(Node):
     def __init__(self, port, baudrate=115200, timeout=1):
 
         #node 
-        rospy.init_node('geiger_publisher_node', anonymous=True) 
+        super().__init__('geiger_publisher_node') 
+
         """
         Initialize the serial monitor
         
@@ -40,8 +43,9 @@ class GeigerSerialMonitor:
         self.serial_conn = None
         self.running = False
 
-        self.publisher = rospy.Publisher('/geiger', Int32, queue_size=10)
-
+        self.publisher = self.create_publisher(Int32, '/geiger', 10)
+        self.start_time = time.time() 
+        
     def connect(self):
         """Establish serial connection"""
         try:
@@ -69,10 +73,9 @@ class GeigerSerialMonitor:
             print("Serial connection closed")
     
     def publish_geiger_count(self, geiger_count): 
-        if not rospy.is_shutdown(): 
-            msg = Int32() 
-            msg.data = geiger_count
-            self.publisher.publish(msg) 
+        msg = Int32()
+        msg.data = geiger_count
+        self.publisher.publish(msg)
 
     def monitor(self, log_file=None, display_raw=False, display_stats=True):
         """
@@ -209,7 +212,6 @@ def list_serial_ports():
         print("No serial ports found")
 
 def main():
-
     parser = argparse.ArgumentParser(description='Monitor Geiger Counter serial data')
     parser.add_argument('port', nargs='?', help='Serial port (e.g., COM3, /dev/ttyUSB0)')
     parser.add_argument('-b', '--baudrate', type=int, default=115200, help='Baud rate (default: 115200)')
@@ -220,6 +222,8 @@ def main():
     
     args = parser.parse_args()
     
+    rclpy.init(args=args) 
+
     if args.list_ports:
         list_serial_ports()
         return
@@ -231,12 +235,23 @@ def main():
         return
     
     # Create and start monitor
-    monitor = GeigerSerialMonitor(args.port, args.baudrate)
-    monitor.monitor(
-        log_file=args.log,
-        display_raw=args.raw,
-        display_stats=not args.no_stats
-    )
 
+    node = GeigerSerialMonitor(args.port, args.baudrate) 
+    try:
+        # Start monitoring in a separate thread so ROS2 can spin
+        monitor_thread = threading.Thread(
+            target=node.monitor,
+            args=(args.log, args.raw, not args.no_stats)
+        )
+        monitor_thread.daemon = True
+        monitor_thread.start()
+        
+        # Spin the node to handle ROS2 callbacks
+        rclpy.spin(node)
+
+    finally:
+        # Cleanup
+        node.destroy_node()
+        rclpy.shutdown()
 if __name__ == "__main__":
     main()
