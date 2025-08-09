@@ -1,12 +1,12 @@
 #!/bin/sh
 
-gst-launch-1.0 v4l2src device=/dev/video0 !  videoconvert !  video/x-raw,width=640,height=480,framerate=25/1 !   nvvidconv ! nvv4l2h265enc !   h265parse !   rtph265pay config-interval=1 !   udpsink host=127.0.0.1 port=5000 sync=false
+# gst-launch-1.0 v4l2src device=/dev/video0 !  videoconvert !  video/x-raw,width=640,height=480,framerate=25/1 !   nvvidconv ! nvv4l2h265enc !   h265parse !   rtph265pay config-interval=1 !   udpsink host=127.0.0.1 port=5000 sync=false
 
-sleep 1
+# sleep 1
 
-gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H265" !   rtpjitterbuffer latency=200 !   rtph265depay !   h265parse !   queue max-size-buffers=3000 max-size-time=0 max-size-bytes=0 !   avdec_h265 !   videoconvert !   videorate !   video/x-raw,framerate=15/1 !   autovideosink sync=false
+# gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H265" !   rtpjitterbuffer latency=200 !   rtph265depay !   h265parse !   queue max-size-buffers=3000 max-size-time=0 max-size-bytes=0 !   avdec_h265 !   videoconvert !   videorate !   video/x-raw,framerate=15/1 !   autovideosink sync=false
 
-gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H265" !   rtpjitterbuffer latency=200 !   rtph265depay !   h265parse !   queue max-size-buffers=3000 max-size-time=0 max-size-bytes=0 !   nvv4l2decoder !   nvvidconv !   videorate !   video/x-raw,framerate=15/1 !   v4l2sink device=/dev/video8 sync=false
+# gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H265" !   rtpjitterbuffer latency=200 !   rtph265depay !   h265parse !   queue max-size-buffers=3000 max-size-time=0 max-size-bytes=0 !   nvv4l2decoder !   nvvidconv !   videorate !   video/x-raw,framerate=15/1 !   v4l2sink device=/dev/video8 sync=false
 
 
 : <<'END'
