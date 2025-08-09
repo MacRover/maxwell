@@ -14,9 +14,9 @@ class TopicLogger(Node):
         super().__init__('topic_logger')
         
         # Configuration - adjust these as needed
-        self.gps_topic = '/gps'
-        self.hydrogen_topic = '/hydrogen'
-        self.o3_topic = '/o3'
+        self.gps_topic = '/obc/gps'
+        self.hydrogen_topic = '/obc/hydrogen'
+        self.o3_topic = '/obc/o3'
         self.geiger_topic = '/geiger'
         self.csv_filename = 'sensor_data_' + str(datetime.now().strftime('%H_%M')) + '.csv'
         self.log_rate_hz = 1.0  # Adjustable logging rate
