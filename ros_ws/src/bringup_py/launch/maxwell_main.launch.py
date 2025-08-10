@@ -27,12 +27,17 @@ def generate_launch_description():
         "drive_enabled",
         default_value=str(dp["drive_enabled"])
     )
+    arm_enabled_launch_arg = DeclareLaunchArgument(
+        "arm_enabled",
+        default_value=str(dp["arm_enabled"])
+    )
     foxglove_enabled_launch_arg = DeclareLaunchArgument(
         "foxglove_enabled",
         default_value=str(dp["foxglove_enabled"])
     )
     microros = LaunchConfiguration("microROS_enabled")
     drive_enabled = LaunchConfiguration("drive_enabled")
+    arm_enabled = LaunchConfiguration("arm_enabled")
     foxglove_enabled = LaunchConfiguration("foxglove_enabled")
 
     uros_agent_node = Node(
@@ -59,7 +64,13 @@ def generate_launch_description():
                 os.path.join(get_package_share_directory("bringup_py"), "launch"),
                 "/arm.launch.py"
             ]
-        )
+        ),
+        launch_arguments={
+            "is_standalone": "False",
+            "can_rate": str(dp["arm"]["can_rate"]),
+            "can_channel": str(dp["arm"]["can_channel"])
+        }.items(),
+        condition=IfCondition(arm_enabled)
     )
 
     drivetrain_launch = IncludeLaunchDescription(
@@ -83,6 +94,7 @@ def generate_launch_description():
         [
             microros_launch_arg,
             drive_enabled_launch_arg,
+            arm_enabled_launch_arg,
             foxglove_enabled_launch_arg,
             uros_agent_node,
             foxglove_launch,

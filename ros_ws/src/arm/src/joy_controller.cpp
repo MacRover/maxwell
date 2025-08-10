@@ -59,7 +59,7 @@
 #include <thread>
 
 // We'll just set up parameters here
-const std::string JOY_TOPIC = "/joy";
+const std::string JOY_TOPIC = "/joy1";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
 const std::string GRIPPER_TOPIC = "/arm/finger/joints";

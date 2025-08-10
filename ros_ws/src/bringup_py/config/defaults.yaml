@@ -4,6 +4,8 @@ microROS_enabled: False
 
 drive_enabled: True
 
+arm_enabled: True
+
 microROS:
   port_number: 9999
 
@@ -11,5 +13,9 @@ drive:
   drive_mode: SWERVE_DRIVE
   wait_until_positioned: True   # must be False when drive mode is TANK_STEER_HYBRID
   vesc_controller_enabled: False
+  can_rate: 10
+  can_channel: can0
+
+arm:
   can_rate: 10
   can_channel: can0
