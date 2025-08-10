@@ -63,6 +63,7 @@ const std::string JOY_TOPIC = "/joy1";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
 const std::string GRIPPER_TOPIC = "/arm/finger/joints";
+const std::string BASE_TOPIC = "/arm/base/joints";
 const std::string GRIPPER_FRAME_ID = "gripper";
 const std::string BASE_FRAME_ID = "arm_base";
 const std::string BASE_FOOTPRINT_FRAME_ID = "arm_base_footprint";
@@ -119,7 +120,8 @@ std::map<Button, double> BUTTON_DEFAULTS;
  */
 bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &buttons,
                      std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
-                     std::unique_ptr<std_msgs::msg::Int32> &joint)
+                     std::unique_ptr<std_msgs::msg::Int32> &joint0, 
+                    std::unique_ptr<std_msgs::msg::Int32> &joint1)
 {
   // Give joint jogging priority because it is only buttons
   // If any joint jog command is requested, we are only publishing joint commands
@@ -136,7 +138,8 @@ bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &but
     // joint->velocities.push_back(buttons[B] - buttons[X]);
     // joint->joint_names.push_back("panda_joint6");
     // joint->velocities.push_back(buttons[Y] - buttons[A]);
-    joint->data = buttons[B] - buttons[X];
+    joint1->data = buttons[B] - buttons[X];
+    joint0->data = buttons[A] - buttons[Y];
     return false;
   }
 
@@ -186,6 +189,7 @@ public:
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(TWIST_TOPIC, rclcpp::SystemDefaultsQoS());
     joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
     gripper_pub_ = this->create_publisher<std_msgs::msg::Int32>(GRIPPER_TOPIC, rclcpp::SystemDefaultsQoS());
+    base_pub_ = this->create_publisher<std_msgs::msg::Int32>(BASE_TOPIC, rclcpp::SystemDefaultsQoS());
     collision_pub_ =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("/planning_scene", rclcpp::SystemDefaultsQoS());
 
@@ -294,6 +298,7 @@ public:
     auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
     // auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
     auto joint_msg = std::make_unique<std_msgs::msg::Int32>();
+    auto joint_msg2 = std::make_unique<std_msgs::msg::Int32>();
 
     // This call updates the frame for twist commands
     updateCmdFrame(frame_to_publish_, msg->buttons);
@@ -305,7 +310,7 @@ public:
     checkButtons(msg->buttons);
 
     // Convert the joystick message to Twist or JointJog and publish
-    if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg))
+    if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, joint_msg2))
     {
       // publish the TwistStamped
       twist_msg->header.frame_id = frame_to_publish_;
@@ -318,8 +323,13 @@ public:
       // joint_msg->header.stamp = this->now();
       // joint_msg->header.frame_id = "gripper_joint";
       // joint_pub_->publish(std::move(joint_msg));
-      gripper_pub_->publish(std::move(joint_msg));
+      // gripper_pub_->publish(std::move(joint_msg));
+      // base_pub_->publish(std::move(joint_msg2));
     }
+
+    // Continuously jog base and gripper
+    gripper_pub_->publish(std::move(joint_msg));
+    base_pub_->publish(std::move(joint_msg2));
   }
 
 private:
@@ -328,6 +338,7 @@ private:
   rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
   rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr collision_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr gripper_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr base_pub_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_stop_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_unpause_client_;

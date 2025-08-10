@@ -15,10 +15,12 @@ public:
 private:
   void _callback(const sensor_msgs::msg::JointState& msg);
   void _callback_gripper(const std_msgs::msg::Int32& msg);
+  void _callback_base(const std_msgs::msg::Int32& msg);
   void _publish_to_can();
   std::shared_ptr<rclcpp::Publisher<CANraw> > can_pub_;
   std::shared_ptr<rclcpp::Subscription<sensor_msgs::msg::JointState> > sub_;
   std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Int32>> gripper_sub_;
+  std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Int32>> base_sub_;
 
   CANraw can_base, can_shoulder, can_gripper, can_elbow, can_rs, can_ls;
 

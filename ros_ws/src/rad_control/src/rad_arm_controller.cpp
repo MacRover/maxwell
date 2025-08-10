@@ -39,6 +39,9 @@ RAD_Arm_Controller::RAD_Arm_Controller() :
   
   gripper_sub_ = this->create_subscription<std_msgs::msg::Int32>(
     "/arm/finger/joints", 10, std::bind(&RAD_Arm_Controller::_callback_gripper, this, _1));
+
+  base_sub_ = this->create_subscription<std_msgs::msg::Int32>(
+    "/arm/base/joints", 10, std::bind(&RAD_Arm_Controller::_callback_base, this, _1));
 }
 void RAD_Arm_Controller::_publish_to_can()
 {
@@ -77,7 +80,7 @@ void RAD_Arm_Controller::_callback(const sensor_msgs::msg::JointState& msg)
   float theta_m_shoulder = screw_max - RAD_Angle_Conversion(shoulder_angle, lmins[0], pi, a_lengths[0], b_lengths[0]); 
   float theta_m_elbow = 8297 - RAD_Angle_Conversion(elbow_angle, lmins[1], pi, a_lengths[1], b_lengths[1]); 
  
-  rad_base_arm.set_target_angle(base_angle);
+  // rad_base_arm.set_target_angle(base_angle);
   rad_shoulder_arm.set_target_angle(theta_m_shoulder);
   rad_elbow_arm.set_target_angle(theta_m_elbow);
   rad_ls_arm.set_target_angle(ls);
@@ -103,12 +106,21 @@ void RAD_Arm_Controller::_callback_gripper(const std_msgs::msg::Int32& msg)
   } else {
     rad_gripper_arm.pulse_stepper(0.0);
   }
-
-  rclcpp::Rate rate{std::chrono::milliseconds(sleep_msec)};
   can_pub_->publish(can_gripper);
-  rate.sleep();
-
 }
+
+void RAD_Arm_Controller::_callback_base(const std_msgs::msg::Int32& msg)
+{
+    if(msg.data > 0){
+    rad_base_arm.pulse_stepper(gripper_steps);
+  } else if(msg.data < 0){
+    rad_base_arm.pulse_stepper(-gripper_steps);
+  } else {
+    rad_base_arm.pulse_stepper(0.0);
+  }
+  can_pub_->publish(can_base);
+}
+
 int main(int argc, char ** argv)
 {
   (void) argc;
