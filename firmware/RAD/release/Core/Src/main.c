@@ -259,7 +259,8 @@ int main(void)
             MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
             MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
             STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
+            // Wrist motors are the same as drive train
+            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
             break;
         }
         case RAD_TYPE_ARM_GRIPPER:
@@ -366,16 +367,25 @@ int main(void)
                 {
                     double new_setpoint = decode_double_big_endian(new_message->data);
 
-                    if (new_setpoint < min_angle)
+                    if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                        rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
                     {
-                        new_setpoint = min_angle;
+                        if (new_setpoint < min_angle)
+                        {
+                            new_setpoint = min_angle;
+                        }
+                        else if (new_setpoint > max_angle)
+                        {
+                            new_setpoint = max_angle;
+                        }
+                        PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     }
-                    else if (new_setpoint > max_angle)
+                    else
                     {
-                        new_setpoint = max_angle;
+                        // Set raw setpoint for wrist motors
+                        PID_ChangeSetPoint(&pid_1, new_setpoint);
                     }
                     
-                    PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     // Enable Watch Dog here
                     rad_can.watchdog_enabled = 1;
                     break;
@@ -931,6 +941,25 @@ int main(void)
                     //MX_CAN_Broadcast_Double_Data(&rad_can, rad_params.HOME_OFFSET, GET_HOME_OFFSET);
                     break;
                 }
+
+                case SET_MAX_POINT:
+                {
+                    // For wrist
+                    PID_SetMaxPoint(&pid_1, new_message->data[0]);
+                    PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
+                case SET_ZERO_POINT:
+                {
+                    // For wrist
+                    PID_SetZeroPoint(&pid_1);
+                    PID_ChangeSetPoint(&pid_1, 0.0);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
                 default:
                     break;
             }
@@ -1094,8 +1123,8 @@ int main(void)
                             break;
 
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
-                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
+                            PID_SetZeroPoint(&pid_1);
+                            PID_ChangeSetPoint(&pid_1, 0.0);
                             break;
 
                         case RAD_TYPE_ARM_BASE:
@@ -1127,8 +1156,8 @@ int main(void)
                     switch (rad_params.RAD_TYPE) 
                     {
                         case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
+                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
                             break;
  
                         case RAD_TYPE_ARM_ELBOW:
@@ -1250,7 +1279,7 @@ int main(void)
                         }
                         case RAD_TYPE_ARM_SHOULDER:
                         {
-                            PID_SetMaxPoint(&pid_1, 37);
+                            PID_SetZeroPoint(&pid_1);
                             cw_enable = 0;
                             ccw_enable = 1;
                             break;
@@ -1272,7 +1301,7 @@ int main(void)
                     {
                         case RAD_TYPE_ARM_SHOULDER:
                         {
-                            PID_SetZeroPoint(&pid_1);
+                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
                             cw_enable = 1;
                             ccw_enable = 0;
                             break;
@@ -1362,7 +1391,15 @@ int main(void)
 //                 sum = sum + angle_average_buffer[i];
 //             }
             //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
-            rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
+            {
+                rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
+            }
+            else
+            {
+                rad_status.current_angle = (double) (pid_1.feedback_adj);
+            }
         	//rad_status.current_angle = (double) pid_1.output;
             //AS5048A_ReadAngle(&as5048a_1);
             //rad_status.current_angle = as5048a_1.Angle_double;

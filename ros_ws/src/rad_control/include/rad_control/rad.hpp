@@ -106,6 +106,10 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_PID_MAX_OUTPUT      = 90,
     CAN_SET_HOME_OFFSET         = 91,
     CAN_GET_HOME_OFFSET         = 92,
+    CAN_SET_MAX_POINT           = 93,
+    CAN_GET_MAX_POINT           = 94,
+    CAN_SET_ZERO_POINT          = 95,
+    CAN_GET_ZERO_POINT          = 96,
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
@@ -132,6 +136,9 @@ typedef enum __rad_can_id : uint8_t
     RAD__ARM__BASE     = 0x15,
     RAD__ARM__SHOULDER = 0x16,
     RAD__ARM__ELBOW    = 0x17,
+    RAD__ARM__WRIST_LS = 0x18,
+    RAD__ARM__WRIST_RS = 0x19,
+    RAD__ARM__GRIPPER = 0x00
 
 } RAD_ID;
 
@@ -739,6 +746,19 @@ public:
      * 
      */
     void get_home_offset();
+
+    /**
+     * @brief Set zero point for RAD encoder
+     * 
+     */
+    void set_zero_point();
+
+    /**
+     * @brief Set max point for RAD encoder
+     * 
+     * @param rollover_count rollover count (max point = rollover_count * MOTOR_GEARING)
+     */
+    void set_max_point(uint8_t rollover_count);
 
 
 private:

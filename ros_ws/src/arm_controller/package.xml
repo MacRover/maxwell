@@ -10,12 +10,28 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>custom_interfaces</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>moveit_msgs</depend>
+  <depend>rclcpp_components</depend>
   <depend>trajectory_msgs</depend>
+
+  <depend>rclcpp_lifecycle</depend>
+  <depend>rcpputils</depend>
+  <depend>control_msgs</depend>
+  <depend>controller_interface</depend>
+  <depend>hardware_interface</depend>
+  <depend>kdl_parser</depend>
+  <depend>pluginlib</depend>
+  <depend>realtime_tools</depend>
+  <depend>backward_ros</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

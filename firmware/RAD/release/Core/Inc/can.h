@@ -173,6 +173,10 @@ typedef enum
     GET_PID_MAX_OUTPUT = 0x5A,
     SET_HOME_OFFSET = 0x5B,
     GET_HOME_OFFSET = 0x5C,
+    SET_MAX_POINT = 0x5D,
+    GET_MAX_POINT = 0x5E,
+    SET_ZERO_POINT = 0x5F,
+    GET_ZERO_POINT = 0x60,
 
     
     SEND_ODOM_ANGLE = 0xFB,
