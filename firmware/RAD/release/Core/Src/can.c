@@ -70,7 +70,7 @@ void MX_CAN_Init(void)
     rad_can.id = 0xff;
 
     rad_can.timer = 0;
-    rad_can.watchdog_enabled = 0;
+    rad_can.watchdog_kick = 0;
 
     rad_can.TxHeader.RTR = CAN_RTR_DATA;
     rad_can.TxHeader.IDE = CAN_ID_EXT;

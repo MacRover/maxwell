@@ -54,7 +54,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -377,7 +376,10 @@ int main(void)
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     // Enable Watch Dog here
-                    rad_can.watchdog_enabled = 1;
+                    if (rad_params.WATCH_DOG_ENABLED)
+                    {
+                    	rad_can.watchdog_kick = 1;
+                    }
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -408,6 +410,19 @@ int main(void)
                 {
                     MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
                     break;
+                }
+                case SET_RAD_FLAGS:
+                {
+                	uint8_t flags = new_message->data[0];
+                	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
+                	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
+                	break;
+                }
+                case GET_RAD_FLAGS:
+                {
+                	uint8_t flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
+                	MX_CAN_Broadcast_Uint8_Data(&rad_can, flags, GET_RAD_FLAGS);
+                	break;
                 }
                 case SET_P_VALUE:
                 {
@@ -1035,6 +1050,12 @@ int main(void)
                 
                 }
 
+                if (!rad_params.SW_STOP_ENABLED)
+                {
+                	cw_enable = 1;
+                	ccw_enable = 1;
+                }
+
                 if ((steps_to_move > 0) && cw_enable)
                 {
 
@@ -1319,6 +1340,12 @@ int main(void)
                     }
                 }
 
+                if (!rad_params.SW_STOP_ENABLED)
+                {
+                	cw_enable = 1;
+                	ccw_enable = 1;
+                }
+
                 //convert degrees to steps
                 int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0); // 0.555555556
 
@@ -1336,10 +1363,10 @@ int main(void)
                 }
 
                 // Once timeout is exceeded, disable close loop control
-                if (rad_can.watchdog_enabled && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
+                if (rad_can.watchdog_kick && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
                 {
                     rad_state = RAD_STATE_PULSE_CONTROL;
-                    rad_can.watchdog_enabled = 0;
+                    rad_can.watchdog_kick = 0;
                 }
 
                 break;
