@@ -1248,7 +1248,7 @@ int main(void)
 
                 
 
-                if (ls_state == GPIO_PIN_SET)
+                 if (rad_params.SW_STOP_ENABLED && ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -1290,7 +1290,7 @@ int main(void)
 				    }
 
                 }
-                else if (ls_state_2 == GPIO_PIN_SET)
+                else if (rad_params.SW_STOP_ENABLED && ls_state_2 == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -1341,12 +1341,6 @@ int main(void)
                         default:
                             break;
                     }
-                }
-
-                if (!rad_params.SW_STOP_ENABLED)
-                {
-                	cw_enable = 1;
-                	ccw_enable = 1;
                 }
 
                 //convert degrees to steps
