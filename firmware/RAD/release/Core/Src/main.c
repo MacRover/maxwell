@@ -140,7 +140,7 @@ int main(void)
     rad_params.DRVCTRL_INTPOL = 0b1;
     rad_params.DRVCTRL_MRES = 0b1000;
 
-    rad_params.SGCSCONF_CS = 10;
+    rad_params.SGCSCONF_CS = 5;
     rad_params.SGCSCONF_SFILT = 0b0;
     rad_params.SGCSCONF_SGT = 0b0000010;
 
@@ -154,6 +154,9 @@ int main(void)
     rad_params.PID_MAX_OUTPUT = 1000;
 
     rad_params.HOME_OFFSET = 0;
+
+    rad_params.SW_STOP_ENABLED = 0;
+    rad_params.WATCH_DOG_ENABLED = 0;
 
     
 
@@ -209,7 +212,7 @@ int main(void)
 
     }
 
-
+    rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
 
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
@@ -416,12 +419,12 @@ int main(void)
                 	uint8_t flags = new_message->data[0];
                 	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
                 	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
+                	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
                 	break;
                 }
                 case GET_RAD_FLAGS:
                 {
-                	uint8_t flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
-                	MX_CAN_Broadcast_Uint8_Data(&rad_can, flags, GET_RAD_FLAGS);
+                	MX_CAN_Broadcast_Uint8_Data(&rad_can, rad_status.flags, GET_RAD_FLAGS);
                 	break;
                 }
                 case SET_P_VALUE:

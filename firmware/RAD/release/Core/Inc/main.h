@@ -108,6 +108,7 @@ typedef struct
     uint8_t TMC_STATUS;
     uint8_t ENCODER_STATUS;
     uint8_t RAD_STATE;
+    uint8_t flags;
     uint8_t ls_1;
 	uint8_t ls_2;
 

@@ -284,11 +284,12 @@ void MX_CAN_Broadcast_Health_Message(RAD_CAN_TypeDef *rad_can_handle, RAD_STATUS
     rad_can_handle->TxData[1] = status.TMC_STATUS;
     rad_can_handle->TxData[2] = status.ENCODER_STATUS;
     rad_can_handle->TxData[3] = status.RAD_STATE;
-    rad_can_handle->TxData[4] = status.ls_1;
-    rad_can_handle->TxData[5] = status.ls_2;
+    rad_can_handle->TxData[4] = status.flags;
+    rad_can_handle->TxData[5] = status.ls_1;
+    rad_can_handle->TxData[6] = status.ls_2;
 
 
-    rad_can_handle->TxHeader.DLC = 6; //float
+    rad_can_handle->TxHeader.DLC = 7; //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, SEND_HEALTH_STATUS);
 
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
