@@ -53,6 +53,15 @@ def generate_launch_description():
         condition=IfCondition(foxglove_enabled)
     )
 
+    arm_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                os.path.join(get_package_share_directory("bringup_py"), "launch"),
+                "/arm.launch.py"
+            ]
+        )
+    )
+
     drivetrain_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -78,5 +87,6 @@ def generate_launch_description():
             uros_agent_node,
             foxglove_launch,
             drivetrain_launch,
+            arm_launch,
         ]
     )

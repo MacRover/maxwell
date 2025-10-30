@@ -118,7 +118,8 @@ uint8_t decode_can_msg(const CANraw* can_msg, RadStatus* status)
             status->tmc_status = buf[1];
             status->encoder_status = buf[2];
             status->rad_state = buf[3];
-            status->ls_state = (bool)buf[4];
+            status->ls_state_1 = (bool)buf[4];
+            status->ls_state_2 = (bool)buf[5];
             break;
         default:
             return 0;
@@ -757,6 +758,20 @@ void RAD::set_home_offset()
 void RAD::get_home_offset()
 {
     _set_null_data(CAN_GET_HOME_OFFSET);
+}
+
+void RAD::set_max_point(uint8_t rollover_count)
+{
+    uint8_t buf[1];
+    buf[0] = rollover_count;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                    ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_MAX_POINT) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::set_zero_point()
+{
+    _set_null_data(CAN_SET_ZERO_POINT);
 }
 
 void RAD::set_rad_flags(uint8_t flags)

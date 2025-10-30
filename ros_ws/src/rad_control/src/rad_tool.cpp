@@ -102,6 +102,7 @@ std::map<std::string, uint8_t> set_cmd = {
   {"SET_PID_MAX_OUTPUT", CAN_SET_PID_MAX_OUTPUT},
   {"ASSIGN_DEVICE_ID", CAN_ASSIGN_DEVICE_ID},
   {"PULSE_STEPPER", CAN_PULSE_STEPPER},
+  {"SET_MAX_POINT", CAN_SET_MAX_POINT},
   {"SET_RAD_FLAGS", CAN_SET_RAD_FLAGS}
 };
 std::map<std::string, uint8_t> other_cmd = {
@@ -109,7 +110,8 @@ std::map<std::string, uint8_t> other_cmd = {
   {"SAVE_TO_EEPROM", CAN_SAVE_TO_EEPROM},
   {"RELOAD_FROM_EEPROM", CAN_RELOAD_FROM_EEPROM},
   {"CALIBRATE", CAN_CALIBRATE_POS},
-  {"CANCEL_CALIBRATE", CAN_CANCEL_CALIBRATE_POS}
+  {"CANCEL_CALIBRATE", CAN_CANCEL_CALIBRATE_POS},
+  {"SET_ZERO_POINT", CAN_SET_ZERO_POINT},
 };
 
 
@@ -130,7 +132,7 @@ void response_callback(const CANraw& msg)
     }
     else
     {
-      RCLCPP_INFO(can_config->get_logger(), "Value: %d", msg.data[0]);
+      RCLCPP_INFO(can_config->get_logger(), "Value: %d", msg.data.back());
     }
     ack = true;
   }
@@ -380,6 +382,9 @@ int main(int argc, char ** argv)
         case CAN_PULSE_STEPPER:
           rad.pulse_stepper(std::stof(val_in));
           break;
+        case CAN_SET_MAX_POINT:
+          rad.set_max_point((uint8_t)std::stoi(val_in, 0, base));
+          break;
         case CAN_SET_RAD_FLAGS:
           rad.set_rad_flags((uint8_t)std::stoi(val_in, 0, base));
           break;
@@ -535,6 +540,9 @@ int main(int argc, char ** argv)
           break;
         case CAN_SET_HOME_OFFSET:
           rad.set_home_offset();
+          break;
+        case CAN_SET_ZERO_POINT:
+          rad.set_zero_point();
           break;
       }
     }
