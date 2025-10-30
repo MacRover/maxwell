@@ -92,6 +92,9 @@ typedef struct __attribute__((packed)){
 	uint16_t PID_MIN_OUTPUT;
 	uint16_t PID_MAX_OUTPUT;
 	double HOME_OFFSET;
+
+	uint8_t WATCH_DOG_ENABLED;
+	uint8_t SW_STOP_ENABLED;
 } RAD_PARAMS_TypeDef;
 
 typedef struct
@@ -105,6 +108,7 @@ typedef struct
     uint8_t TMC_STATUS;
     uint8_t ENCODER_STATUS;
     uint8_t RAD_STATE;
+    uint8_t flags;
     uint8_t ls_1;
 	uint8_t ls_2;
 

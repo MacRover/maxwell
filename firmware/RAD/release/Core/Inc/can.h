@@ -58,7 +58,7 @@ typedef struct
     uint8_t id;
 
     uint32_t timer;
-    uint8_t watchdog_enabled;
+    uint8_t watchdog_kick;
 
     CAN_TxHeaderTypeDef TxHeader;
     uint8_t TxData[8];
@@ -173,6 +173,8 @@ typedef enum
     GET_PID_MAX_OUTPUT = 0x5A,
     SET_HOME_OFFSET = 0x5B,
     GET_HOME_OFFSET = 0x5C,
+	SET_RAD_FLAGS = 0x5D,
+	GET_RAD_FLAGS = 0x5E,
 
     
     SEND_ODOM_ANGLE = 0xFB,

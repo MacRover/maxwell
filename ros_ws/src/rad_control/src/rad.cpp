@@ -759,6 +759,20 @@ void RAD::get_home_offset()
     _set_null_data(CAN_GET_HOME_OFFSET);
 }
 
+void RAD::set_rad_flags(uint8_t flags)
+{
+    uint8_t buf[1];
+    buf[0] = flags;
+    l_can_msg->address = (CAN_MESSAGE_IDENTIFIER_RAD << CAN_MESSAGE_IDENTIFIER_OFFSET) | 
+                         ((uint32_t)l_can_id) | ((uint32_t)(CAN_SET_RAD_FLAGS) << 8);
+    _update_can_data(buf, 1);
+}
+
+void RAD::get_rad_flags()
+{
+    _set_null_data(CAN_GET_RAD_FLAGS);
+}
+
 void RAD::_set_null_data(RAD_CAN_MSG msg)
 {
     uint8_t buf[1];

@@ -54,7 +54,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -141,7 +140,7 @@ int main(void)
     rad_params.DRVCTRL_INTPOL = 0b1;
     rad_params.DRVCTRL_MRES = 0b1000;
 
-    rad_params.SGCSCONF_CS = 10;
+    rad_params.SGCSCONF_CS = 5;
     rad_params.SGCSCONF_SFILT = 0b0;
     rad_params.SGCSCONF_SGT = 0b0000010;
 
@@ -155,6 +154,9 @@ int main(void)
     rad_params.PID_MAX_OUTPUT = 1000;
 
     rad_params.HOME_OFFSET = 0;
+
+    rad_params.SW_STOP_ENABLED = 0;
+    rad_params.WATCH_DOG_ENABLED = 0;
 
     
 
@@ -210,7 +212,7 @@ int main(void)
 
     }
 
-
+    rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
 
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();
@@ -377,7 +379,10 @@ int main(void)
                     
                     PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
                     // Enable Watch Dog here
-                    rad_can.watchdog_enabled = 1;
+                    if (rad_params.WATCH_DOG_ENABLED)
+                    {
+                    	rad_can.watchdog_kick = 1;
+                    }
                     break;
                 }
                 case GET_ENCODER_VALUE:
@@ -408,6 +413,19 @@ int main(void)
                 {
                     MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
                     break;
+                }
+                case SET_RAD_FLAGS:
+                {
+                	uint8_t flags = new_message->data[0];
+                	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
+                	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
+                	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
+                	break;
+                }
+                case GET_RAD_FLAGS:
+                {
+                	MX_CAN_Broadcast_Uint8_Data(&rad_can, rad_status.flags, GET_RAD_FLAGS);
+                	break;
                 }
                 case SET_P_VALUE:
                 {
@@ -1035,6 +1053,12 @@ int main(void)
                 
                 }
 
+                if (!rad_params.SW_STOP_ENABLED)
+                {
+                	cw_enable = 1;
+                	ccw_enable = 1;
+                }
+
                 if ((steps_to_move > 0) && cw_enable)
                 {
 
@@ -1224,7 +1248,7 @@ int main(void)
 
                 
 
-                if (ls_state == GPIO_PIN_SET)
+                 if (rad_params.SW_STOP_ENABLED && ls_state == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -1266,7 +1290,7 @@ int main(void)
 				    }
 
                 }
-                else if (ls_state_2 == GPIO_PIN_SET)
+                else if (rad_params.SW_STOP_ENABLED && ls_state_2 == GPIO_PIN_SET)
                 {
                     switch (rad_params.RAD_TYPE) 
                     {
@@ -1336,10 +1360,10 @@ int main(void)
                 }
 
                 // Once timeout is exceeded, disable close loop control
-                if (rad_can.watchdog_enabled && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
+                if (rad_can.watchdog_kick && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
                 {
                     rad_state = RAD_STATE_PULSE_CONTROL;
-                    rad_can.watchdog_enabled = 0;
+                    rad_can.watchdog_kick = 0;
                 }
 
                 break;
