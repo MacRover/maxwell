@@ -110,6 +110,8 @@ typedef enum RAD_CAN_MSG : uint8_t
     CAN_GET_MAX_POINT           = 94,
     CAN_SET_ZERO_POINT          = 95,
     CAN_GET_ZERO_POINT          = 96,
+    CAN_SET_RAD_FLAGS           = 97,
+    CAN_GET_RAD_FLAGS           = 98,
 
 
     CAN_SEND_ODOM_ANGLE       = 251,
@@ -760,6 +762,17 @@ public:
      */
     void set_max_point(uint8_t rollover_count);
 
+    /**
+     * @brief Set RAD config flags
+     *
+     */
+    void set_rad_flags(uint8_t flags);
+
+    /**
+     * @brief Get RAD config flags
+     * 
+     */
+    void get_rad_flags();
 
 private:
     void _set_null_data(RAD_CAN_MSG msg);

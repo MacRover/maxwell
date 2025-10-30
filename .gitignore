@@ -88,6 +88,11 @@ CATKIN_IGNORE
 
 # VSCode gitignore
 .vscode/*
+.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -333,6 +338,8 @@ firmware/**/*.launch
 !firmware/**/.cproject
 !firmware/**/.project
 !firmware/RAD/release
+!firmware/VIPER/release
+
 
 # Logs
 npm-debug.log*
@@ -440,3 +447,6 @@ www/js/*
 # MacOS
 .DS_Store
 
+# micro_ros_setup
+uros/
+ros2.repos

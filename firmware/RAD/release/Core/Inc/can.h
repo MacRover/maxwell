@@ -50,10 +50,15 @@ extern CAN_HandleTypeDef hcan;
 #define CAN_MESSAGE_DEVICE_ID_MASK 0xFF
 #define CAN_MESSAGE_DEVICE_ID_OFFSET 0
 
+#define CAN_MESSAGE_TIMEOUT_MS 1000
+
 typedef struct
 {
     CAN_HandleTypeDef hcan;
     uint8_t id;
+
+    uint32_t timer;
+    uint8_t watchdog_kick;
 
     CAN_TxHeaderTypeDef TxHeader;
     uint8_t TxData[8];
@@ -172,6 +177,8 @@ typedef enum
     GET_MAX_POINT = 0x5E,
     SET_ZERO_POINT = 0x5F,
     GET_ZERO_POINT = 0x60,
+	SET_RAD_FLAGS = 0x61,
+	GET_RAD_FLAGS = 0x62,
 
     
     SEND_ODOM_ANGLE = 0xFB,
@@ -203,8 +210,6 @@ void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value,
 void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint16_Data(RAD_CAN_TypeDef *rad_can_handle, uint16_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value, uint16_t message_id);
-
-
 
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_STATUS_TypeDef status);
