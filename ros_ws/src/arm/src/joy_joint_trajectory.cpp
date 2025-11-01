@@ -47,6 +47,7 @@ JoyJointTrajectoryController::JoyJointTrajectoryController() : Node("joy_joint_t
         "/arm_controller/joint_trajectory", 10);
 
     traj_msg_.joint_names = {"arm_base_joint", "arm_shoulder_joint", "arm_elbow_joint", "arm_wrist_joint", "arm_pitch_joint", "gripper_joint"};
+    traj_msg_.points.resize(1);
 }
 
 void JoyJointTrajectoryController::joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
@@ -54,7 +55,7 @@ void JoyJointTrajectoryController::joyCallback(const sensor_msgs::msg::Joy::Shar
     traj_msg_.points[0].velocities = 
     {
         (msg->buttons[X_BUTTON] - msg->buttons[B_BUTTON]) * RAD_STEPS, // Base rotation
-        (msg->buttons[Y_BUTTON] - msg->buttons[A_BUTTON]) * RAD_STEPS, // Shoulder movement
+        (msg->buttons[A_BUTTON] - msg->buttons[Y_BUTTON]) * RAD_STEPS, // Shoulder movement
         (msg->axes[DPAD_UP_DOWN]) * RAD_STEPS,                         // Elbow movement
         (msg->axes[DPAD_LEFT_RIGHT]) * RAD_STEPS,                      // Wrist rotation
         (msg->buttons[BACK_BUTTON] - msg->buttons[START_BUTTON]) * RAD_STEPS, // Pitch control
