@@ -26,8 +26,11 @@ find_package(custom_interfaces REQUIRED)
 add_executable(keyboard_controller src/keyboard_controller.cpp)
 ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs sensor_msgs)
 
+add_executable(joy_joint_trajectory_controller src/joy_joint_trajectory.cpp)
+ament_target_dependencies(joy_joint_trajectory_controller rclcpp trajectory_msgs sensor_msgs)
+target_compile_features(joy_joint_trajectory_controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
 add_executable(joy_controller src/joy_controller.cpp)
-ament_target_dependencies(keyboard_controller rclcpp trajectory_msgs)
 ament_target_dependencies(joy_controller rclcpp std_msgs sensor_msgs control_msgs std_srvs moveit_msgs rclcpp_components)
 target_include_directories(keyboard_controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -59,6 +62,7 @@ install(TARGETS keyboard_controller
   arm_rad_dummy
   servo_keyboard_input
   joy_controller
+  joy_joint_trajectory_controller
   DESTINATION lib/${PROJECT_NAME})
 
 
