@@ -67,10 +67,26 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 		if (fabsf(v_f) > profile->V_MAX) {
 			profile->VELOCITY = profile->V_MAX;
-			return MOTION_PROFILE_STATE_BUSY;
+
+			// Checking to see if we are at the end of the profile
+
+			if (profile->TIME_ELAPSED >= (projected_time)) {
+				return MOTION_PROFILE_STATE_DONE;
+			} else {
+				return MOTION_PROFILE_STATE_BUSY;
+			}
+
 		} else if (fabsf(v_f) < profile->V_MAX) {
 			profile->VELOCITY = v_f;
-			return MOTION_PROFILE_STATE_BUSY;
+
+			// Checking to see if we are at the end of the profile
+
+			if (profile->TIME_ELAPSED >= (projected_time)) {
+				return MOTION_PROFILE_STATE_DONE;
+			} else {
+				return MOTION_PROFILE_STATE_BUSY;
+			}
+
 		} else {
 			return MOTION_PROFILE_STATE_ERROR;
 		}
@@ -78,7 +94,7 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 	}
 
-	return MOTION_PROFILE_ERROR;
+	return MOTION_PROFILE_STATE_ERROR;
 }
 
 

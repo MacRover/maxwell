@@ -20,7 +20,7 @@ typedef enum
     MOTION_PROFILE_OK = 0x00U,
     MOTION_PROFILE_ERROR = 0x01U,
     MOTION_PROFILE_BUSY = 0x02U,
-    MOTION_PROFILE_NO_PROFILE = 0x03U
+	MOTION_PROFILE_DONE = 0x03U
 } Motion_Profile_StatusTypeDef;
 
 /**
@@ -31,7 +31,8 @@ typedef enum
     MOTION_PROFILE_STATE_RESET = 0x00U, /*!< Peripheral not Initialized                         */
     MOTION_PROFILE_STATE_READY = 0x01U, /*!< Peripheral Initialized and ready for use           */
     MOTION_PROFILE_STATE_BUSY = 0x02U, /*!< an internal process is ongoing                     */
-    MOTION_PROFILE_STATE_ERROR = 0x06U, /*!< SPI error state                                    */
+	MOTION_PROFILE_STATE_DONE = 0x03U,
+    MOTION_PROFILE_STATE_ERROR = 0x06U /*!< SPI error state                                    */
 } Motion_Profile_StateTypeDef;
 
 typedef struct {
