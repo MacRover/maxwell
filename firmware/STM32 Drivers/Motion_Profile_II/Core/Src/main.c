@@ -223,6 +223,7 @@ int main(void)
     MX_AS5048A_1_Init();
     MX_PID_1_Init();
     MX_RAD_NTCB572_Init();
+    MX_PROFILER_INIT();
 
 
     switch(rad_params.RAD_TYPE)
@@ -1518,14 +1519,14 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
     TMC_2590_TIM_PWM_PulseFinishedCallback(&tmc_2590_1, htim);
 }
 
-void MOTION_PROFILE_Set_Speed(void) {
+void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 
 	//1 calculate ARR from inputted desired freq
 	//Will be an integer floor divide so will not always be the same as input
 
 	// Todo see if inserting the velocity here is gonna work as we want it to
 
-	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, motion_profile.VELOCITY);
+	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, velocity);
 
 	// Todo: Need to figure out how to do the reset
 
@@ -1540,11 +1541,54 @@ void MOTION_PROFILE_Set_Speed(void) {
 
 void Motion_Profile_Run(void) {
 
-	// 1. Kinda want some kind of "if ready" thing
+	// Save the current stepper speed in a local variable
 
-	// 2.  Get the time
+	uint16_t current_rad_stepper_speed = rad_params.STEPPER_SPEED;
+
+
+	// Get the current time
+
+	uint32_t start_time = HAL_GetTick();
+	uint8_t flag = 0;
+
+	// START THE WHILE LOOPS
+
+	while (!flag) {
+
+
+		// Calculate the time elapsed
+
+		rad_motion_profile.TIME_ELAPSED = (float) ((HAL_GetTick() - current_time) / 1000);
+
+		// Run the velocity command
+
+		Motion_Profile_Velocity(rad_motion_profile);
+
+		// Alterations of stepper speed, based on the motion profile state
+
+
+		if (positive state) {
+
+			// Set the stepper speed to that found in the motion profile params
+			MOTION_PROFILE_Set_Speed(rad_motion_profile.VELOCITY);
+
+
+		} else if (done state) {
+
+			MOTION_PROFILE_Set_Speed(current_rad_stepper_speed);
+			flag = 1;
+		}
+	}
+
+
+
+
+
+
 
 	// 3. Run the velocity command
+
+
 
 	// 4. Set stepper speed using the motion profile velocity command
 

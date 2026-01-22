@@ -129,6 +129,8 @@ typedef struct {
 	uint32_t TOTAL_STEPS;
 } RAD_MOTION_PROFILE_TypeDef;
 
+
+
 extern RAD_PARAMS_TypeDef rad_params;
 extern RAD_MOTION_PROFILE_TypeDef rad_motion_profile;
 

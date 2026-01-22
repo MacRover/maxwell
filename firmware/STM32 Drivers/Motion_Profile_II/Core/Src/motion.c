@@ -2,7 +2,7 @@
  * motion.c
  *
  *  Created on: Jun 7, 2025
- *      Author: zokur
+ *      Author: Adam
  */
 
 #include "motion.h"
@@ -10,7 +10,7 @@
 Motion_Profile_HandleTypeDef motion_profile;
 
 
-void Profiler_Init() {
+void MX_PROFILER_INIT() {
 
     motion_profile.STEPS_TO_MOVE = 90; // Can be arbitrarily changed later
     motion_profile.V_I = 0;
@@ -27,7 +27,7 @@ void Profiler_Init() {
     	Error_Handler();
     }
 
- void Profiler_Reset() {
+ void MX_PROFILER_RESET() {
 
 	motion_profile.V_I = 0;
 	motion_profile.CURRENT_POS = 0;
