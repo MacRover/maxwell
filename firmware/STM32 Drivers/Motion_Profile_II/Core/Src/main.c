@@ -1566,6 +1566,8 @@ void Motion_Profile_Run(void) {
 
 		// Alterations of stepper speed, based on the motion profile state
 
+		// TODO: put this in after 3TR, figure out how to extract the state from the driver (currently returning the state, just need a way to capture it)
+
 
 		if (positive state) {
 
