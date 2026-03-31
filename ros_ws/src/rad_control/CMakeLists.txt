@@ -19,6 +19,7 @@ set(Targets
     rad_drive_controller
     rad_status
     rad_tool
+    rad_science_controller
     rad_calibration_init
     rad_calibration_wrist
     rover_steer_pos
