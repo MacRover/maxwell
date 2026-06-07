@@ -21,16 +21,16 @@
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
-#define ON_ROVER
+// #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-#define USING_GPS
+// #define USING_GPS
 //#define USING_TSB
-#define USING_FANS
-#define USING_SERVO
-#define USING_SCIENCE_SENSORS
-#define USING_LORA
+// #define USING_FANS
+// #define USING_SERVO
+// #define USING_SCIENCE_SENSORS
+// #define USING_LORA
 
 
 #define DOMAIN_ID 5
@@ -47,6 +47,30 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
+// --- LED INDICATOR SETUP ---
+#define PIN_LED_RED 2   // Change to actual Red pin
+#define PIN_LED_GREEN 3 // Change to actual Green pin
+#define PIN_LED_BLUE 4  // Change to actual Blue pin
+
+#define LED_STATE_OFF 0
+#define LED_STATE_AUTO 1
+#define LED_STATE_TELEOP 2
+#define LED_STATE_ARRIVED 3
+
+rcl_subscription_t led_sub;
+std_msgs__msg__Int32 led_msg;
+rclc_executor_t led_executor;
+
+volatile int current_led_state = LED_STATE_OFF;
+unsigned long last_flash_time = 0;
+bool flash_state = false;
+
+// Subscriber Callback
+void led_subscription_callback(const void * msgin) {
+  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
+  current_led_state = msg->data;
+}
+// ---------------------------
 
 
 rcl_allocator_t allocator;
@@ -203,6 +227,10 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&health_pub, &teensy_node);
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
+
+    rcl_subscription_fini(&led_sub, &teensy_node);
+    rclc_executor_fini(&led_executor);
+
     destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
@@ -212,20 +240,20 @@ bool obc_setup_uros()
 {
 #ifdef USING_ROS
     if (Ethernet.linkStatus() == LinkOFF) {
-		return false;
-	}
+    return false;
+  }
 
-	locator.address = agent_ip;
-	locator.port = 9999;
+  locator.address = agent_ip;
+  locator.port = 9999;
 
-	RCCHECK(rmw_uros_set_custom_transport(
-		false,
-		(void *) &locator,
-		arduino_native_ethernet_udp_transport_open,
-		arduino_native_ethernet_udp_transport_close,
-		arduino_native_ethernet_udp_transport_write,
-		arduino_native_ethernet_udp_transport_read
-	));
+  RCCHECK(rmw_uros_set_custom_transport(
+    false,
+    (void *) &locator,
+    arduino_native_ethernet_udp_transport_open,
+    arduino_native_ethernet_udp_transport_close,
+    arduino_native_ethernet_udp_transport_write,
+    arduino_native_ethernet_udp_transport_read
+  ));
     allocator = rcl_get_default_allocator();
 
     if (!options_initialized) {
@@ -236,8 +264,21 @@ bool obc_setup_uros()
         options_initialized = true;
     }
 
+    // 1. Core structures must be initialized FIRST
     RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
+
+    // 2. NOW you can attach the LED subscriber and executor to the node
+    RCCHECK(rclc_subscription_init_default(
+        &led_sub,
+        &teensy_node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+        "rover_led_state"
+    ));
+    
+    RCCHECK(rclc_executor_init(&led_executor, &support.context, 1, &allocator));
+    RCCHECK(rclc_executor_add_subscription(&led_executor, &led_sub, &led_msg, &led_subscription_callback, ON_NEW_DATA));
+
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
@@ -245,7 +286,6 @@ bool obc_setup_uros()
      #ifdef USING_LORA
     if(!viper_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
-
 
      RCCHECK(rclc_publisher_init_default(
         &imu_pub, 
@@ -390,6 +430,10 @@ void setup()
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
 
+    pinMode(PIN_LED_RED, OUTPUT);
+    pinMode(PIN_LED_GREEN, OUTPUT);
+    pinMode(PIN_LED_BLUE, OUTPUT);
+
     pwm.begin();
     pwm.setPWMFreq(50);  
 }
@@ -413,6 +457,7 @@ void Uros_SM(){
       break;
     }
     case UROS_OK:{
+
       ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_OK : UROS_ERROR;);
       
       if (state_UROS == UROS_OK) {
@@ -434,6 +479,8 @@ void Uros_SM(){
         #ifdef USING_LORA
           rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
         #endif
+
+        rclc_executor_spin_some(&led_executor, RCL_MS_TO_NS(10));
         }
         
     
@@ -644,6 +691,39 @@ void OZONE_SM(){
   }
 }
 
+void LED_SM() {
+  switch (current_led_state) {
+    case LED_STATE_AUTO: // Solid Red
+      analogWrite(PIN_LED_RED, 255);
+      analogWrite(PIN_LED_GREEN, 0);
+      analogWrite(PIN_LED_BLUE, 0);
+      break;
+      
+    case LED_STATE_TELEOP: // Solid Blue
+      analogWrite(PIN_LED_RED, 0);
+      analogWrite(PIN_LED_GREEN, 0);
+      analogWrite(PIN_LED_BLUE, 255);
+      break;
+      
+    case LED_STATE_ARRIVED: // Flashing Green
+      analogWrite(PIN_LED_RED, 0);
+      analogWrite(PIN_LED_BLUE, 0);
+      // Non-blocking 500ms flash
+      if (millis() - last_flash_time > 500) { 
+        last_flash_time = millis();
+        flash_state = !flash_state;
+        analogWrite(PIN_LED_GREEN, flash_state ? 255 : 0);
+      }
+      break;
+      
+    default: // Off / Idle
+      analogWrite(PIN_LED_RED, 0);
+      analogWrite(PIN_LED_GREEN, 0);
+      analogWrite(PIN_LED_BLUE, 0);
+      break;
+  }
+}
+
 void loop()
 {
 #ifdef USING_IMU_ONBOARD
@@ -683,6 +763,7 @@ void loop()
     HYDROGEN_SM();
     OZONE_SM();
 #endif
+LED_SM();
 
 health_msg.data.data[0] = state_UROS;
 health_msg.data.data[1] = state_fans;
