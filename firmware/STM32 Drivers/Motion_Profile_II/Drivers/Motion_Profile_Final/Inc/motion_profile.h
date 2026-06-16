@@ -36,16 +36,24 @@ typedef enum
 } Motion_Profile_StateTypeDef;
 
 typedef struct {
+
+
 	uint32_t STEPS_TO_MOVE;
-	uint32_t V_I;
-	uint32_t V_MAX;
-	uint32_t ACCELERATION;
 	uint32_t CURRENT_POS;
 	uint32_t SET_POINT;
-	float TIME_ELAPSED;
-	float VELOCITY;
 	uint32_t MOVEMENT_STEPS;
 	uint32_t TOTAL_STEPS;
+
+	float V_I;
+	float V_MAX;
+	float ACCELERATION;
+	float VELOCITY;
+
+	float TIME_ELAPSED;
+	float T_INCREASING;
+	float T_DECREASING;
+	float T_LEVEL;
+	float T_TOTAL;
 } Motion_Profile_HandleTypeDef;
 
 /**
@@ -57,7 +65,7 @@ typedef struct {
 // TODO: Init/deinit properly
 
 Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *profile);
-float Motion_Profile_Time(Motion_Profile_HandleTypeDef *profile);
+void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile);
 Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile);
 
 #endif /* MOTION_PROFILE_INC_MOTION_PROFILE_H_ */
