@@ -21,8 +21,10 @@
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
+#include "led.h"
 // #define ON_ROVER
 #define USING_ROS
+#define USING_LED
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 // #define USING_GPS
@@ -31,7 +33,6 @@
 // #define USING_SERVO
 // #define USING_SCIENCE_SENSORS
 // #define USING_LORA
-
 
 #define DOMAIN_ID 5
 
@@ -46,31 +47,6 @@
   if (init == -1) { init = uxr_millis();} \
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
-
-// --- LED INDICATOR SETUP ---
-#define PIN_LED_RED 2   // Change to actual Red pin
-#define PIN_LED_GREEN 3 // Change to actual Green pin
-#define PIN_LED_BLUE 4  // Change to actual Blue pin
-
-#define LED_STATE_OFF 0
-#define LED_STATE_AUTO 1
-#define LED_STATE_TELEOP 2
-#define LED_STATE_ARRIVED 3
-
-rcl_subscription_t led_sub;
-std_msgs__msg__Int32 led_msg;
-rclc_executor_t led_executor;
-
-volatile int current_led_state = LED_STATE_OFF;
-unsigned long last_flash_time = 0;
-bool flash_state = false;
-
-// Subscriber Callback
-void led_subscription_callback(const void * msgin) {
-  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  current_led_state = msg->data;
-}
-// ---------------------------
 
 
 rcl_allocator_t allocator;
@@ -228,8 +204,10 @@ void obc_destory_uros_entities()
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
 
+    #ifdef USING_LED
     rcl_subscription_fini(&led_sub, &teensy_node);
     rclc_executor_fini(&led_executor);
+    #endif
 
     destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
@@ -268,16 +246,9 @@ bool obc_setup_uros()
     RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
 
-    // 2. NOW you can attach the LED subscriber and executor to the node
-    RCCHECK(rclc_subscription_init_default(
-        &led_sub,
-        &teensy_node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-        "rover_led_state"
-    ));
-    
-    RCCHECK(rclc_executor_init(&led_executor, &support.context, 1, &allocator));
-    RCCHECK(rclc_executor_add_subscription(&led_executor, &led_sub, &led_msg, &led_subscription_callback, ON_NEW_DATA));
+    #ifdef USING_LED
+    if(!led_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
 
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
@@ -430,9 +401,9 @@ void setup()
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
 
-    pinMode(PIN_LED_RED, OUTPUT);
-    pinMode(PIN_LED_GREEN, OUTPUT);
-    pinMode(PIN_LED_BLUE, OUTPUT);
+    #ifdef USING_LED
+    LED_setup();
+    #endif
 
     pwm.begin();
     pwm.setPWMFreq(50);  
@@ -480,7 +451,9 @@ void Uros_SM(){
           rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
         #endif
 
+        #ifdef USING_LED
         rclc_executor_spin_some(&led_executor, RCL_MS_TO_NS(10));
+        #endif
         }
         
     
@@ -691,39 +664,6 @@ void OZONE_SM(){
   }
 }
 
-void LED_SM() {
-  switch (current_led_state) {
-    case LED_STATE_AUTO: // Solid Red
-      analogWrite(PIN_LED_RED, 255);
-      analogWrite(PIN_LED_GREEN, 0);
-      analogWrite(PIN_LED_BLUE, 0);
-      break;
-      
-    case LED_STATE_TELEOP: // Solid Blue
-      analogWrite(PIN_LED_RED, 0);
-      analogWrite(PIN_LED_GREEN, 0);
-      analogWrite(PIN_LED_BLUE, 255);
-      break;
-      
-    case LED_STATE_ARRIVED: // Flashing Green
-      analogWrite(PIN_LED_RED, 0);
-      analogWrite(PIN_LED_BLUE, 0);
-      // Non-blocking 500ms flash
-      if (millis() - last_flash_time > 500) { 
-        last_flash_time = millis();
-        flash_state = !flash_state;
-        analogWrite(PIN_LED_GREEN, flash_state ? 255 : 0);
-      }
-      break;
-      
-    default: // Off / Idle
-      analogWrite(PIN_LED_RED, 0);
-      analogWrite(PIN_LED_GREEN, 0);
-      analogWrite(PIN_LED_BLUE, 0);
-      break;
-  }
-}
-
 void loop()
 {
 #ifdef USING_IMU_ONBOARD
@@ -763,7 +703,9 @@ void loop()
     HYDROGEN_SM();
     OZONE_SM();
 #endif
+#ifdef USING_LED
 LED_SM();
+#endif
 
 health_msg.data.data[0] = state_UROS;
 health_msg.data.data[1] = state_fans;
