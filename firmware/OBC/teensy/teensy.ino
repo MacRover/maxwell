@@ -704,7 +704,7 @@ void loop()
     OZONE_SM();
 #endif
 #ifdef USING_LED
-LED_SM();
+  LED_SM();
 #endif
 
 health_msg.data.data[0] = state_UROS;

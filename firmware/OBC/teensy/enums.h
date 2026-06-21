@@ -42,6 +42,13 @@ enum LORA_STATES {
   LORA_DELAY 
 } state_lora;
 
+enum LED_States {
+  LED_STATE_OFF,
+  LED_STATE_AUTO,
+  LED_STATE_TELEOP,
+  LED_STATE_ARRIVED
+};
+
 enum EMC2305_Reg : uint8_t
 {
     FAN_1_TACH_TARGET_HIGH_BYTE = 0x3D,

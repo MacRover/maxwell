@@ -5,7 +5,7 @@ rcl_subscription_t led_sub;
 std_msgs__msg__Int32 led_msg;
 rclc_executor_t led_executor;
 
-volatile int current_led_state = LED_STATE_OFF;
+volatile LED_States current_led_state = LED_STATE_OFF;
 unsigned long last_flash_time = 0;
 bool flash_state = false;
 
@@ -40,7 +40,7 @@ bool led_setup_subscription(rcl_node_t *node, rclc_support_t *support, rcl_alloc
 // Subscriber Callback
 void led_subscription_callback(const void * msgin) {
   const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  current_led_state = msg->data;
+  current_led_state = static_cast<LED_States>(msg->data);
 }
 
 // State Machine
