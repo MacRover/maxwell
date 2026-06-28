@@ -22,6 +22,7 @@
 #include "science.h"
 #include "viper_topics.h"
 #include "led.h"
+#include "enums.h"
 // #define ON_ROVER
 #define USING_ROS
 #define USING_LED
@@ -34,13 +35,22 @@
 // #define USING_SCIENCE_SENSORS
 // #define USING_LORA
 
+// --- STATE VARIABLES ---
+UROS_states state_UROS;
+fan_states state_fans;
+TSB_STATES state_TSB;
+HYDROGEN_STATES state_hydrogen;
+OZONE_STATES state_ozone;
+LORA_STATES state_lora;
+
+
 #define DOMAIN_ID 5
 
 #define LED_PIN 13
 #define AD0_VAL 1
 #define IMU_INT1 23
 #define MG_TO_MS2 0.0098066
-#define DEG_TO_RAD 0.01745329
+#define DEG_TO_RAD 0.01745329 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 #define ROS_EXECUTE_INTERVAL(MS, X)  do { \
   static volatile int64_t init = -1; \

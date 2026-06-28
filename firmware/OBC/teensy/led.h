@@ -2,21 +2,23 @@
 #define LED_H
 
 #include <Arduino.h>
+#include <micro_ros_arduino.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
+#include <rclc/executor.h>      // <--- This explicitly fixes the 'does not name a type' error!
 #include <std_msgs/msg/int32.h>
-#include "enums.h"
+#include "enums.h"              // <--- Kept your awesome enum update
 
 // --- LED INDICATOR PINS ---
 #define PIN_LED_RED 2   
 #define PIN_LED_GREEN 3 
 #define PIN_LED_BLUE 4  
 
-
+// --- GLOBAL VARIABLES ---
 extern rcl_subscription_t led_sub;
 extern std_msgs__msg__Int32 led_msg;
 extern rclc_executor_t led_executor;
-extern volatile LED_States current_led_state;
+extern volatile LED_States current_led_state; // Kept your enum type
 
 // --- FUNCTION PROTOTYPES ---
 void LED_setup();
