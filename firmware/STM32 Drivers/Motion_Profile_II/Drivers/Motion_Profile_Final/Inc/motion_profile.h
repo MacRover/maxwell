@@ -38,7 +38,7 @@ typedef enum
 typedef struct {
 
 
-	uint32_t STEPS_TO_MOVE;
+	int32_t STEPS_TO_MOVE;
 	uint32_t CURRENT_POS;
 	uint32_t SET_POINT;
 	uint32_t MOVEMENT_STEPS;
@@ -46,6 +46,7 @@ typedef struct {
 
 	float V_I;
 	float V_MAX;
+	float V_PEAK;
 	float ACCELERATION;
 	float VELOCITY;
 
@@ -54,6 +55,8 @@ typedef struct {
 	float T_DECREASING;
 	float T_LEVEL;
 	float T_TOTAL;
+
+	int8_t DIRECTION;
 } Motion_Profile_HandleTypeDef;
 
 /**

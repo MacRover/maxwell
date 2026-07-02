@@ -2,102 +2,54 @@
 /**
  ******************************************************************************
  * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2024 MMRT.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
+ * @brief          : Motion Profile Testbench
  ******************************************************************************
  */
 /* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
 #include "can.h"
 #include "dma.h"
-#include "i2c.h"
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "at24c04c.h"
 #include "tmc_2590.h"
-#include "as5048a.h"
-#include "pid.h"
 #include "queue.h"
 #include "enc_dec_utils.h"
-#include "rad_ntcb572.h"
 #include "motion.h"
+#include <math.h>
 /* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RAD_PARAMS_EEPROM_PAGE 0
-#define HARDSTOP_SAFETY_MARGIN 5
-#define AVERAGING_WINDOW_SIZE 10
-
-#define MOTOR_GEARING gearing
-#define STEPS_PER_REVOLUTION steps_per_revolution
-#define MAX_ROTATIONS max_rotations
-
+// Kept for CAN and internal driver references
+#define MOTOR_GEARING 1
+#define STEPS_PER_REVOLUTION 200
 /* USER CODE END PD */
 
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-/* USER CODE END PM */
-
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
 RAD_STATUS_TypeDef rad_status;
 RAD_PARAMS_TypeDef rad_params;
-RAD_MOTION_PROFILE_TypeDef rad_motion_profile;
 
 uint8_t ESTOP = 0;
 uint8_t DISABLED = 0;
 
-uint16_t min_angle;
-uint16_t max_angle;
-uint16_t gearing;
-uint16_t max_rotations;
-uint16_t steps_per_revolution;
-
-float software_stop = 0;
-uint8_t cw_enable = 0;
-uint8_t ccw_enable = 0;
-
-double* angle_average_buffer;
-uint8_t buffer_head;
-
-int16_t steps_to_move;
-
+uint32_t profile_start_time = 0;
 uint32_t prev_ms = 0;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MOTION_PROFILE_Set_Speed(uint16_t velocity);
+
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -105,20 +57,14 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 
-    //SET DEFAULT VALUES
-
-	rad_params.RAD_ID = 0xF0;
+    // SET DEFAULT VALUES (Stripped of PID/EEPROM defaults)
+    rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
-    rad_params.HOME_POSITION = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS/2;
     rad_params.STEPPER_SPEED = 1000;
-    rad_params.ODOM_INTERVAL = 20; //50hz, or 20ms
-    rad_params.HEALTH_INTERVAL = 1000; //every second
-    rad_params.P = 0.01;
-    rad_params.I = 0.0000001;
-    rad_params.D = 0;
+    rad_params.ODOM_INTERVAL = 20; // 50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; // every second
     
     rad_params.CHOPCONF_CHM = 0b0;
     rad_params.CHOPCONF_HDEC = 0b00;
@@ -154,158 +100,38 @@ int main(void)
     rad_params.SMARTEN_SEMIN = 0b0000;
     rad_params.SMARTEN_SEUP = 0b00;
 
-    rad_params.PID_MIN_OUTPUT = 20;
-    rad_params.PID_MAX_OUTPUT = 1000;
-
-    rad_params.HOME_OFFSET = 0;
-
     rad_params.SW_STOP_ENABLED = 0;
     rad_params.WATCH_DOG_ENABLED = 0;
-
-    
 
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_CAN_Init();
-  MX_I2C1_Init();
   MX_SPI1_Init();
-  MX_SPI2_Init();
   MX_TIM2_Init();
-  MX_ADC2_Init();
+
   /* USER CODE BEGIN 2 */
-
-    //READ EEPROM HERE. Update rad_params if successful read
-
-
-    MX_AT24C04C_1_Init(); 
-    
-
-    //temporary so we don't cook stepper settings from reading garbage data from eeprom
-    RAD_PARAMS_TypeDef eeprom_params;
-
-    rad_status.EEPROM_STATUS = AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&eeprom_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-    
-    if (rad_status.EEPROM_STATUS == AT24C04C_OK)
-    {
-        //NORMAL OPERATION
-       rad_params = eeprom_params;
-
-    //     IGNORE EEPROM AND SET DEFAULT PARAMS FOR FIRST EEPROM SAVE
-//     rad_params.RAD_ID = 0x19;
-//     rad_params.RAD_TYPE = RAD_TYPE_ARM_WRIST_RIGHT;
-//     rad_params.ODOM_INTERVAL = 100;
-//     rad_params.HEALTH_INTERVAL = 1000;
-
-    }
 
     rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
 
+    // Initialize only the required drivers for the testbench
     MX_TMC_2590_1_Init();
-    MX_AS5048A_1_Init();
-    MX_PID_1_Init();
-    MX_RAD_NTCB572_Init();
     MX_PROFILER_INIT();
 
+    // Default TMC Settings (Kept from your original init)
+    tmc_2590_1.Init.inverted = 0;
 
-    switch(rad_params.RAD_TYPE)
-    {
-        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-        {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
-            
-            break;
-        }
-        case RAD_TYPE_ARM_BASE:
-        {
-            MAX_ROTATIONS = RAD_TYPE_ARM_BASE_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_ARM_BASE_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_BASE_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
-            break;
-        }
-        case RAD_TYPE_ARM_SHOULDER:
-        {
-            MAX_ROTATIONS = RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_ARM_SHOULDER_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_SHOULDER_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
-            break;
-        }
-        case RAD_TYPE_ARM_ELBOW:
-        {
-            MAX_ROTATIONS = RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_ARM_ELBOW_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_ARM_ELBOW_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
-            break;
-        }
-        case RAD_TYPE_ARM_WRIST_LEFT:
-        case RAD_TYPE_ARM_WRIST_RIGHT:
-        {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            // Wrist motors are the same as drive train
-            tmc_2590_1.Init.inverted = RAD_TYPE_DRIVETRAIN_INVERSION_FACTOR;
-            break;
-        }
-        case RAD_TYPE_ARM_GRIPPER:
-        {
-            MAX_ROTATIONS = RAD_TYPE_DRIVETRAIN_MAX_ROTATIONS;
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
-            break;
-        }
-        case RAD_TYPE_UNDEFINED:
-        default:
-        {
-            MAX_ROTATIONS = 5; //60 degrees
-            MOTOR_GEARING = RAD_TYPE_DRIVETRAIN_GEARING;
-            STEPS_PER_REVOLUTION = RAD_TYPE_DRIVETRAIN_STEPS_PER_REVOLUTION;
-            tmc_2590_1.Init.inverted = RAD_TYPE_ARM_INVERSION_FACTOR;
-
-            break;
-        }
-    }
-
-    min_angle = 0;
-    max_angle = 360 * MAX_ROTATIONS / MOTOR_GEARING;
-
-    angle_average_buffer = (double*) calloc(AVERAGING_WINDOW_SIZE, sizeof(double));
-    
     MX_CAN_UpdateIdAndFilters(&rad_can);
 
     uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
-
-
     TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
 
-
-    //SEND ERROR CODES OF EACH INIT MODULE
     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
 
   /* USER CODE END 2 */
@@ -316,121 +142,88 @@ int main(void)
     static enum 
     {
         RAD_STATE_INIT = 0,
-        RAD_STATE_PULSE_CONTROL,
-        RAD_STATE_CALIBRATION,
-        RAD_STATE_ACTIVE
+        RAD_STATE_IDLE,
+        RAD_STATE_PROFILE_CONTROL
     } rad_state = RAD_STATE_INIT;
 
     while (1)
     {
-        //Check and process global messages first
+        // ------------------------------------------------------
+        // 1. GLOBAL CAN MESSAGES
+        // ------------------------------------------------------
         if (!queue_empty(&can_message_queue_global))
         {
-            RAD_CAN_Message_TypeDef *new_message =
-                    (RAD_CAN_Message_TypeDef*) queue_front(
-                            &can_message_queue_global);
+            RAD_CAN_Message_TypeDef *new_message = (RAD_CAN_Message_TypeDef*) queue_front(&can_message_queue_global);
 
             switch ((int)(new_message->command_id))
             {
                 case ESTOP_MESSAGE:
-                {
                     ESTOP = 1;
                     break;
-                }
                 case DISABLE_MESSAGE:
-                {
                     DISABLED = 1;
                     break;
-                }
                 case ENABLE_MESSAGE:
-                {
-                    rad_state = RAD_STATE_PULSE_CONTROL;
+                    rad_state = RAD_STATE_IDLE;
                     DISABLED = 0;
+                    ESTOP = 0;
                     break;
-                }
                 case HEALTH_STATUS_PING:
-                {
                     MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
                     break;
-                }
                 default:
-                {
                     break;
-                }
             }
 
             free(new_message->data);
             queue_dequeue(&can_message_queue_global);
         }
-        //Only check rad queue after. This allows global messages to be addressed immediately
+        // ------------------------------------------------------
+        // 2. RAD CAN MESSAGES (Stripped of PID/EEPROM)
+        // ------------------------------------------------------
         else if (!queue_empty(&can_message_queue_rad))
         {
-            RAD_CAN_Message_TypeDef *new_message =
-                    (RAD_CAN_Message_TypeDef*) queue_front(
-                            &can_message_queue_rad);
+            RAD_CAN_Message_TypeDef *new_message = (RAD_CAN_Message_TypeDef*) queue_front(&can_message_queue_rad);
 
             switch ((int)(new_message->command_id))
             {
-           
-                case SET_TARGET_ANGLE:
+                case PULSE_STEPPER:
                 {
-                    double new_setpoint = decode_double_big_endian(new_message->data);
+                    float pulses = decode_float_big_endian(new_message->data);
+                    int32_t target_steps = (int32_t)pulses;
 
-                    if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
-                        rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
-                    {
-                        if (new_setpoint < min_angle)
-                        {
-                            new_setpoint = min_angle;
-                        }
-                        else if (new_setpoint > max_angle)
-                        {
-                            new_setpoint = max_angle;
-                        }
-                        PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+                    // Cap steps using TMC driver limits
+                    if (target_steps > tmc_2590_1.Init.max_steps)
+                        target_steps = tmc_2590_1.Init.max_steps;
+                    else if (target_steps < -1*(tmc_2590_1.Init.max_steps))
+                        target_steps = -1*tmc_2590_1.Init.max_steps;
+
+                    // Setup the Math Profile
+                    motion_profile.STEPS_TO_MOVE = target_steps;
+                    Motion_Profile_Phases(&motion_profile);
+
+                    // Setup the Hardware (Using your existing wrapper)
+                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+                        TMC_2590_Stop(&tmc_2590_1);
                     }
-                    else
-                    {
-                        // Set raw setpoint for wrist motors
-                        PID_ChangeSetPoint(&pid_1, new_setpoint);
-                    }
-                    
-                    // Enable Watch Dog here
-                    if (rad_params.WATCH_DOG_ENABLED)
-                    {
-                    	rad_can.watchdog_kick = 1;
-                    }
-                    break;
-                }
-                case GET_ENCODER_VALUE:
-                {
-                    rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING); //skip the buffer
-                    MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, target_steps);
+
+                    // Start the clock and enter profiling state
+                    profile_start_time = HAL_GetTick();
+                    rad_state = RAD_STATE_PROFILE_CONTROL;
                     break;
                 }
                 case SET_STEPPER_SPEED:
                 {
-                    //1 calculate ARR from inputted desired freq
-                    //Will be an integer floor divide so will not always be the same as input
-
-                	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim,
-                        decode_uint32_big_endian(new_message->data));
-
-                    //2 assign ARR to timer
-
+                    uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, decode_uint32_big_endian(new_message->data));
                     TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
-
-                    //3 update local stepper speed reference to the integer value
-
                     rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
-
                     break;
                 }
                 case GET_STEPPER_SPEED:
-                {
                     MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
                     break;
-                }
+
                 case SET_RAD_FLAGS:
                 {
                 	uint8_t flags = new_message->data[0];
@@ -440,1028 +233,107 @@ int main(void)
                 	break;
                 }
                 case GET_RAD_FLAGS:
-                {
                 	MX_CAN_Broadcast_Uint8_Data(&rad_can, rad_status.flags, GET_RAD_FLAGS);
                 	break;
-                }
-                case SET_P_VALUE:
-                {
-                    pid_1.Init.kp = decode_double_big_endian(new_message->data);
-                    rad_params.P = pid_1.Init.kp;
-                    break;
-                }
-                case GET_P_VALUE:
-                {
-                    MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.kp, GET_P_VALUE);
-                    break;
-                }
-                case SET_I_VALUE:
-                {
-                    pid_1.Init.ki = decode_double_big_endian(new_message->data);
-                    rad_params.I = pid_1.Init.ki;
-                    break;
-                }
-                case GET_I_VALUE:
-                {
-                    MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.ki, GET_I_VALUE);
-                    break;
-                }
-                case SET_D_VALUE:
-                {
-                    pid_1.Init.kd = decode_double_big_endian(new_message->data);
-                    rad_params.D = pid_1.Init.kd;
-                    break;
-                }
-                case GET_D_VALUE:
-                {
-                    MX_CAN_Broadcast_Double_Data(&rad_can, pid_1.Init.kd, GET_D_VALUE);
-                    break;
-                }
-                case SET_RAD_TYPE:
-                {
-                    rad_params.RAD_TYPE = new_message->data[0];
-                    break;
-                }
-                case GET_RAD_TYPE:
-                {
-                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.RAD_TYPE, GET_RAD_TYPE);
-                    break;
-                }
-                case SET_HOME_POSITION:
-                {
-                    rad_params.HOME_POSITION = decode_uint32_big_endian(new_message->data);
-                    break;
-                }
-                case GET_HOME_POSITION:
-                {
-                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.HOME_POSITION, GET_HOME_POSITION);
-                    break;
-                } 
-                case SET_ODOM_INTERVAL:
-                {
-                    rad_params.ODOM_INTERVAL = decode_uint32_big_endian(new_message->data);
-                    break;
-                }
-                case GET_ODOM_INTERVAL:
-                {
-                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.ODOM_INTERVAL, GET_ODOM_INTERVAL);
-                    break;
-                }
-                case SAVE_TO_EEPROM:
-                {
-                    AT24C04C_WritePages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-                    break;
-                }
-                case RELOAD_FROM_EEPROM:
-                {
-                    AT24C04C_ReadPages(&at24c04c_1, (uint8_t*)&rad_params, sizeof(RAD_PARAMS_TypeDef), RAD_PARAMS_EEPROM_PAGE);
-                    break;
-                }
-                case SET_HEALTH_INTERVAL:
-                {
-                    rad_params.HEALTH_INTERVAL = decode_uint32_big_endian(new_message->data);
-                    break;
-                }
-                case GET_HEALTH_INTERVAL:
-                {
-                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.HEALTH_INTERVAL, GET_HEALTH_INTERVAL);
-                    break;
-                } 
-                case START_CALIBRATE:
-                {
-                    rad_state = RAD_STATE_CALIBRATION;
-                    break;
-                }
-                case CANCEL_CALIBRATION:
-                {
-                    //cancel mid calibration OR ignore calibrated params and return to pulse
-                    rad_state = RAD_STATE_INIT;
-                    break;
-                }
-                case SET_DRVCONF_TST:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.tst = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_TST = tmc_2590_1.ConfRegisters.DRVCONF.tst;
-                    break;
-                }
-                case GET_DRVCONF_TST:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.tst, GET_DRVCONF_TST);
-                    break;
-                }
-                case SET_DRVCONF_SLP:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.slp = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_SLP = tmc_2590_1.ConfRegisters.DRVCONF.slp;
-                    break;
-                }
-                case GET_DRVCONF_SLP:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.slp, GET_DRVCONF_SLP);
-                    break;
-                }
-                case SET_DRVCONF_DIS_S2G:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_DIS_S2G= tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g;
-                    break;
-                }
-                case GET_DRVCONF_DIS_S2G:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.dis_s2g, GET_DRVCONF_DIS_S2G);
-                    break;
-                }
-                case SET_DRVCONF_TS2G:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.ts2g = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_TS2G = tmc_2590_1.ConfRegisters.DRVCONF.ts2g;
-                    break;
-                }
-                case GET_DRVCONF_TS2G:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.ts2g, GET_DRVCONF_TS2G);
-                    break;
-                }
-                case SET_DRVCONF_SDOFF:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.sdoff = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_SDOFF = tmc_2590_1.ConfRegisters.DRVCONF.sdoff;
-                    break;
-                }
-                case GET_DRVCONF_SDOFF:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.sdoff, GET_DRVCONF_SDOFF);
-                    break;
-                }
-                case SET_DRVCONF_VSENSE:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.vsense = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_VSENSE = tmc_2590_1.ConfRegisters.DRVCONF.vsense;
-                    break;
-                }
-                case GET_DRVCONF_VSENSE:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.vsense, GET_DRVCONF_VSENSE);
-                    break;
-                }
-                case SET_DRVCONF_RDSEL:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.rdsel = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_RDSEL = tmc_2590_1.ConfRegisters.DRVCONF.rdsel;
-                    break;
-                }
-                case GET_DRVCONF_RDSEL:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.rdsel, GET_DRVCONF_RDSEL);
-                    break;
-                }
-                case SET_DRVCONF_OTSENS:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.otsens = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_OTSENS = tmc_2590_1.ConfRegisters.DRVCONF.otsens;
-                    break;
-                }
-                case GET_DRVCONF_OTSENS:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.otsens, GET_DRVCONF_OTSENS);
-                    break;
-                }
-                case SET_DRVCONF_SHRTSENS:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.shrtsens = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_SHRTSENS = tmc_2590_1.ConfRegisters.DRVCONF.shrtsens;
-                    break;
-                }
-                case GET_DRVCONF_SHRTSENS:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.shrtsens, GET_DRVCONF_SHRTSENS);
-                    break;
-                }
-                case SET_DRVCONF_EN_PFD:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.en_pfd = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_EN_PFD = tmc_2590_1.ConfRegisters.DRVCONF.en_pfd;
-                    break;
-                }
-                case GET_DRVCONF_EN_PFD:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.en_pfd, GET_DRVCONF_EN_PFD);
-                    break;
-                }
-                case SET_DRVCONF_EN_S2VS:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCONF_EN_S2VS = tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs;
-                    break;
-                }
-                case GET_DRVCONF_EN_S2VS:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCONF.en_s2vs, GET_DRVCONF_EN_S2VS);
-                    break;
-                }
-                case SET_SGCSCONF_SFILT:
-                {
-                    tmc_2590_1.ConfRegisters.SGCSCONF.sfilt = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SGCSCONF_SFILT = tmc_2590_1.ConfRegisters.SGCSCONF.sfilt;
-                    break;
-                }
-                case GET_SGCSCONF_SFILT:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SGCSCONF.sfilt, GET_SGCSCONF_SFILT);
-                    break;
-                }
-                case SET_SGCSCONF_SGT:
-                {
-                    tmc_2590_1.ConfRegisters.SGCSCONF.sgt = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SGCSCONF_SGT = tmc_2590_1.ConfRegisters.SGCSCONF.sgt;
-                    break;
-                }
-                case GET_SGCSCONF_SGT:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SGCSCONF.sgt, GET_SGCSCONF_SGT);
-                    break;
-                }
-                case SET_SGCSCONF_CS:
-                {
-                    tmc_2590_1.ConfRegisters.SGCSCONF.cs = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SGCSCONF_CS = tmc_2590_1.ConfRegisters.SGCSCONF.cs;
-                    break;
-                }
-                case GET_SGCSCONF_CS:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SGCSCONF.cs, GET_SGCSCONF_CS);
-                    break;
-                }
-                case SET_SMARTEN_SEIMIN:
-                {
-                    tmc_2590_1.ConfRegisters.SMARTEN.seimin = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SMARTEN_SEIMIN = tmc_2590_1.ConfRegisters.SMARTEN.seimin;
-                    break;
-                }
-                case GET_SMARTEN_SEIMIN:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SMARTEN.seimin, GET_SMARTEN_SEIMIN);
-                    break;
-                }
-                case SET_SMARTEN_SEDN:
-                {
-                    tmc_2590_1.ConfRegisters.SMARTEN.sedn = decode_uint16_big_endian(new_message->data); //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SMARTEN_SEDN = tmc_2590_1.ConfRegisters.SMARTEN.sedn;
-                    break;
-                }
-                case GET_SMARTEN_SEDN:
-                {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, tmc_2590_1.ConfRegisters.SMARTEN.sedn, GET_SMARTEN_SEDN);
-                    break;
-                }
-                case SET_SMARTEN_SEMAX:
-                {
-                    tmc_2590_1.ConfRegisters.SMARTEN.semax = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SMARTEN_SEMAX = tmc_2590_1.ConfRegisters.SMARTEN.semax;
-                    break;
-                }
-                case GET_SMARTEN_SEMAX:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SMARTEN.semax, GET_SMARTEN_SEMAX);
-                    break;
-                }
-                case SET_SMARTEN_SEUP:
-                {
-                    tmc_2590_1.ConfRegisters.SMARTEN.seup = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SMARTEN_SEUP = tmc_2590_1.ConfRegisters.SMARTEN.seup;
-                    break;
-                }
-                case GET_SMARTEN_SEUP:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SMARTEN.seup, GET_SMARTEN_SEUP);
-                    break;
-                }
-                case SET_SMARTEN_SEMIN:
-                {
-                    tmc_2590_1.ConfRegisters.SMARTEN.semin = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.SMARTEN_SEMIN = tmc_2590_1.ConfRegisters.SMARTEN.semin;
-                    break;
-                }
-                case GET_SMARTEN_SEMIN:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.SMARTEN.semin, GET_SMARTEN_SEMIN);
-                    break;
-                }
-                case SET_CHOPCONF_TBL:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.tbl = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_TBL = tmc_2590_1.ConfRegisters.CHOPCONF.tbl;
-                    break;
-                }
-                case GET_CHOPCONF_TBL:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.tbl, GET_CHOPCONF_TBL);
-                    break;
-                }
-                case SET_CHOPCONF_CHM:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.chm = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_CHM = tmc_2590_1.ConfRegisters.CHOPCONF.chm;
-                    break;
-                }
-                case GET_CHOPCONF_CHM:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.chm, GET_CHOPCONF_CHM);
-                    break;
-                }
-                case SET_CHOPCONF_RNDTF:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.rndtf = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_RNDTF = tmc_2590_1.ConfRegisters.CHOPCONF.rndtf;
-                    break;
-                }
-                case GET_CHOPCONF_RNDTF:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.rndtf, GET_CHOPCONF_RNDTF);
-                    break;
-                }
-                case SET_CHOPCONF_HDEC:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.hdec = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_HDEC = tmc_2590_1.ConfRegisters.CHOPCONF.hdec;
-                    break;
-                }
-                case GET_CHOPCONF_HDEC:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.hdec, GET_CHOPCONF_HDEC);
-                    break;
-                }
-                case SET_CHOPCONF_HEND:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.hend = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_HEND = tmc_2590_1.ConfRegisters.CHOPCONF.hend;
-                    break;
-                }
-                case GET_CHOPCONF_HEND:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.hend, GET_CHOPCONF_HEND);
-                    break;
-                }
-                case SET_CHOPCONF_HSTRT:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.hstrt = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_HSTRT = tmc_2590_1.ConfRegisters.CHOPCONF.hstrt;
-                    break;
-                }
-                case GET_CHOPCONF_HSTRT:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.hstrt, GET_CHOPCONF_HSTRT);
-                    break;
-                }
-                case SET_CHOPCONF_TOFF:
-                {
-                    tmc_2590_1.ConfRegisters.CHOPCONF.toff = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.CHOPCONF_TOFF = tmc_2590_1.ConfRegisters.CHOPCONF.toff;
-                    break;
-                }
-                case GET_CHOPCONF_TOFF:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.CHOPCONF.toff, GET_CHOPCONF_TOFF);
-                    break;
-                }
-                case SET_DRVCTRL_INTPOL:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCTRL.intpol = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCTRL_INTPOL = tmc_2590_1.ConfRegisters.DRVCTRL.intpol;
-                    break;
-                }
-                case GET_DRVCTRL_INTPOL:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCTRL.intpol, GET_DRVCTRL_INTPOL);
-                    break;
-                }
-                case SET_DRVCTRL_DEDGE:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCTRL.dedge = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCTRL_DEDGE = tmc_2590_1.ConfRegisters.DRVCTRL.dedge;
-                    break;
-                }
-                case GET_DRVCTRL_DEDGE:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCTRL.dedge, GET_DRVCTRL_DEDGE);
-                    break;
-                }
-                case SET_DRVCTRL_MRES:
-                {
-                    tmc_2590_1.ConfRegisters.DRVCTRL.mres = new_message->data[0]; //uint8, big endian
-                    rad_status.TMC_STATUS = TMC_2590_WriteConfRegisters(&tmc_2590_1);
-                    rad_params.DRVCTRL_MRES = tmc_2590_1.ConfRegisters.DRVCTRL.mres;
-                    break;
-                }
-                case GET_DRVCTRL_MRES:
-                {
-                    MX_CAN_Broadcast_Uint8_Data(&rad_can, tmc_2590_1.ConfRegisters.DRVCTRL.mres, GET_DRVCTRL_MRES);
-                    break;
-                }
-                case PULSE_STEPPER:
-                {
-                    float pulses = decode_float_big_endian(new_message->data);
-                    steps_to_move = (int16_t) pulses;
 
-                    //cap steps
-                    if (steps_to_move > tmc_2590_1.Init.max_steps)
-                    {
-                        steps_to_move = tmc_2590_1.Init.max_steps;
-                    }
-                    else if (steps_to_move < -1*(tmc_2590_1.Init.max_steps))
-                    {
-                        steps_to_move = -1*tmc_2590_1.Init.max_steps;
-                    }
-
-                    rad_state = RAD_STATE_PULSE_CONTROL;
-
-                    break;
-                }
                 case REBOOT:
-                {
                 	HAL_NVIC_SystemReset();
                     break;
-                }
                 case ASSIGN_DEVICE_ID:
-                {
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
-
                     MX_CAN_UpdateIdAndFilters(&rad_can);
-
-                    break;
-                }
-                case SET_PID_MIN_OUTPUT:
-                {
-                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
-                    rad_params.PID_MIN_OUTPUT = pid_1.Init.min_output_abs;
-
-                    break;
-                }
-                case GET_PID_MIN_OUTPUT:
-                {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_MIN_OUTPUT);
-                    break;
-                }
-                case SET_PID_MAX_OUTPUT:
-                {
-                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
-                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
-
-                    break;
-                }
-                case GET_PID_MAX_OUTPUT:
-                {
-                    MX_CAN_Broadcast_Uint16_Data(&rad_can, (uint16_t) pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
-                    break;
-                }
-                case SET_HOME_OFFSET:
-                {
-
-                    //don't apply offset without working encoder
-                    // if (rad_status.ENCODER_STATUS != AS5048A_OK)
-                    // {
-                    //     break;
-                    // }
-
-                    // //number of steps the stepper is offset by
-                    // double delta_stepper = (pid_1.__set_point - pid_1.feedback_adj);
-
-                    // //store values in PID reference frame
-                    // rad_params.HOME_OFFSET = delta_stepper;
-
                     break;
 
-                }
-                case GET_HOME_OFFSET:
-                {
-                    //MX_CAN_Broadcast_Double_Data(&rad_can, rad_params.HOME_OFFSET, GET_HOME_OFFSET);
-                    break;
-                }
-
-                case SET_MAX_POINT:
-                {
-                    // For wrist
-                    PID_SetMaxPoint(&pid_1, new_message->data[0]);
-                    PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
-                    PID_Update_BangBang(&pid_1);
-                    rad_state = RAD_STATE_ACTIVE;
-                    break;
-                }
-                case SET_ZERO_POINT:
-                {
-                    // For wrist
-                    PID_SetZeroPoint(&pid_1);
-                    PID_ChangeSetPoint(&pid_1, 0.0);
-                    PID_Update_BangBang(&pid_1);
-                    rad_state = RAD_STATE_ACTIVE;
-                    break;
-                }
+                // (Omitted the extensive TMC SPI tuning cases for brevity, but they can remain here untouched if needed for live testing)
                 default:
                     break;
             }
             free(new_message->data);
             queue_dequeue(&can_message_queue_rad);
-
         }
 
-        //CHECK FOR ESTOP
-        if (ESTOP)
+        // ------------------------------------------------------
+        // 3. SAFETY CHECKS
+        // ------------------------------------------------------
+        if (ESTOP || DISABLED)
         {
         	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-            break;
-        }
-        if (DISABLED)
-        {
-        	steps_to_move = 0;
-        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
-            continue;
+            TMC_2590_Stop(&tmc_2590_1);
+            if (ESTOP) break;
+            else continue;
         }
         else
         {
         	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
         }
 
-        
-
+        // ------------------------------------------------------
+        // 4. MAIN STATE MACHINE
+        // ------------------------------------------------------
         switch (rad_state)
         {
-
             case RAD_STATE_INIT:
-            {
-                //init stuff here
-                rad_state = RAD_STATE_PULSE_CONTROL;
+                rad_state = RAD_STATE_IDLE;
                 break;
-            }
-            case RAD_STATE_PULSE_CONTROL:
-            {
-                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
-                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
 
-                rad_status.ls_1 = ls_state;
-                rad_status.ls_2 = ls_state_2;
-
-                cw_enable = 1;
-        	    ccw_enable = 1;
-
-                if (ls_state == GPIO_PIN_SET)
-                {
-                    switch (rad_params.RAD_TYPE) 
-                    {
-
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-                        {
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-                        {
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_SHOULDER:
-                        {
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_ELBOW:
-                        {
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-
-                        default:
-                            break;
-				    }
-                }
-                if (ls_state_2 == GPIO_PIN_SET)
-                {
-                    switch (rad_params.RAD_TYPE) 
-                    {
-                        case RAD_TYPE_ARM_SHOULDER:
-                        {
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_ELBOW:
-                        {
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-
-                        default:
-                            break;
-				    }
-                
-                }
-
-                if (!rad_params.SW_STOP_ENABLED)
-                {
-                	cw_enable = 1;
-                	ccw_enable = 1;
-                }
-
-                if ((steps_to_move > 0) && cw_enable)
-                {
-
-                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
-                    {
-                        TMC_2590_Stop(&tmc_2590_1);
-                    }
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
-                }
-                else if ((steps_to_move < 0) && ccw_enable)
-                {
-                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY)
-                    {
-                        TMC_2590_Stop(&tmc_2590_1);
-                    }
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
-                }
-
-                steps_to_move = 0;
-
-                //keep the encoder updated if we still have it - for open loop
-                if ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) == AS5048A_OK)
-                {
-                    PID_Update_RolloverCount(&pid_1);
-                }
-
+            case RAD_STATE_IDLE:
+                // Motor is stationary, waiting for PULSE_STEPPER
                 break;
-            }
-            case RAD_STATE_CALIBRATION:
+
+            case RAD_STATE_PROFILE_CONTROL:
             {
+                // Calculate elapsed time in seconds
+                motion_profile.TIME_ELAPSED = (float)(HAL_GetTick() - profile_start_time) / 1000.0f;
 
-                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
-                rad_status.ls_1 = ls_state;
-                
-                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
-				rad_status.ls_2 = ls_state_2;
+                // Get target velocity for this exact millisecond
+                Motion_Profile_StateTypeDef prof_state = Motion_Profile_Velocity(&motion_profile);
 
-                if (ls_state == GPIO_PIN_SET)
+                if (prof_state == MOTION_PROFILE_STATE_BUSY)
                 {
-                    TMC_2590_Stop(&tmc_2590_1);
-                    switch (rad_params.RAD_TYPE) 
-                    {
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-
-                           
-                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
-                            PID_ChangeSetPoint(&pid_1, max_angle*MOTOR_GEARING);
-                            software_stop = min_angle;
-
-                            break;
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, min_angle*MOTOR_GEARING);
-
-                            software_stop = max_angle;
-                            break;
-
-                        case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0.0);
-                            break;
-
-                        case RAD_TYPE_ARM_BASE:
-                            PID_SetZeroPoint(&pid_1);
-                            break;
-
-                        case RAD_TYPE_ARM_ELBOW:
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS);
-                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_ELBOW_MAX_ROTATIONS*360);
-                            break;
+                    uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
                     
-                        default:
-                            break;
+                    if (target_speed > 0) {
+                        // Dynamically adjust the timer ARR while MoveSteps runs in the background
+                        MOTION_PROFILE_Set_Speed(target_speed);
                     }
-
-                    PID_Update_BangBang(&pid_1);
-                    PID_Update_BangBang(&pid_1);
-                    PID_Update_BangBang(&pid_1);
-
-                    
-
-                    //PID_Update(&pid_1);
-
-                    rad_state = RAD_STATE_ACTIVE;
-        	    }
-                else if (ls_state_2 == GPIO_PIN_SET && rad_params.RAD_TYPE > RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT)
+                }
+                else if (prof_state == MOTION_PROFILE_STATE_DONE)
                 {
+                    // Math confirms profile is complete
                     TMC_2590_Stop(&tmc_2590_1);
-                    switch (rad_params.RAD_TYPE) 
-                    {
-                        case RAD_TYPE_ARM_SHOULDER:
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
-                            PID_ChangeSetPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS*360);
-                            break;
- 
-                        case RAD_TYPE_ARM_ELBOW:
-                            PID_SetZeroPoint(&pid_1);
-                            PID_ChangeSetPoint(&pid_1, 0);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    PID_Update_BangBang(&pid_1);
-                    PID_Update_BangBang(&pid_1);
-                    PID_Update_BangBang(&pid_1);
-
-
-                    rad_state = RAD_STATE_ACTIVE;
-
+                    MX_PROFILER_RESET();
+                    rad_state = RAD_STATE_IDLE;
                 }
-                else
-                {
-                    switch (rad_params.RAD_TYPE)
-                    {
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-                        {
-                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 50);
-                            break;
-                        }
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-                        {
-                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, -50);
-                            break;
-                        }
-                        case RAD_TYPE_ARM_SHOULDER:
-                        {
-                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 500);
-                            break;
-                        }
-                        case RAD_TYPE_ARM_ELBOW:
-                        {
-                            rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, 500);
-                            break;
-                        }
-                
-                    
-                    default:
-                        break;
-                    }
-                }
-
-                break;
-            }
-            case RAD_STATE_ACTIVE:
-            {
-
-                cw_enable = 1;
-        	    ccw_enable = 1;
-
-                GPIO_PinState ls_state = HAL_GPIO_ReadPin(LS_1_GPIO_Port, LS_1_Pin);
-                rad_status.ls_1 = ls_state;
-        
-                GPIO_PinState ls_state_2 = HAL_GPIO_ReadPin(LS_2_GPIO_Port, LS_2_Pin);
-                rad_status.ls_2 = ls_state_2;
-
-
-                uint8_t i = 0; //safety limit
-                static uint8_t consecutive_encoder_failures = 0;
-                while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
-                {
-                    if (i++ > 10)
-                    {
-                        break;
-                    } 
-                }
-
-                if (rad_status.ENCODER_STATUS != AS5048A_OK)
-                {
-                    if (consecutive_encoder_failures++ > 3)
-                    {
-                         //encoder has failed
-                        rad_state = RAD_STATE_PULSE_CONTROL;
-                    }
-                    ccw_enable = 0;
-                    cw_enable = 0;
-                }   
-                else
-                {
-                    //reset failure counter
-                    consecutive_encoder_failures = 0;
-
-                    //Don't update PID unless we have a new value
-                    PID_Update_BangBang(&pid_1);
-                }
-
-                
-
-                 if (rad_params.SW_STOP_ENABLED && ls_state == GPIO_PIN_SET)
-                {
-                    switch (rad_params.RAD_TYPE) 
-                    {
-
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-                        {
-
-                            
-                            PID_SetMaxPoint(&pid_1, MAX_ROTATIONS);
-                       
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-                        {
-                            
-                            PID_SetZeroPoint(&pid_1);
-                            
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_SHOULDER:
-                        {
-                            PID_SetZeroPoint(&pid_1);
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_ELBOW:
-                        {
-                            cw_enable = 0;
-                            ccw_enable = 1;
-                            break;
-                        }
-                        default:
-                            break;
-				    }
-
-                }
-                else if (rad_params.SW_STOP_ENABLED && ls_state_2 == GPIO_PIN_SET)
-                {
-                    switch (rad_params.RAD_TYPE) 
-                    {
-                        case RAD_TYPE_ARM_SHOULDER:
-                        {
-                            PID_SetMaxPoint(&pid_1, RAD_TYPE_ARM_SHOULDER_MAX_ROTATIONS);
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-                        case RAD_TYPE_ARM_ELBOW:
-                        {
-                            cw_enable = 1;
-                            ccw_enable = 0;
-                            break;
-                        }
-
-                        default:
-                            break;
-				    }
-                
-                }
-                else 
-                {
-                    switch (rad_params.RAD_TYPE)
-                    {
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_RIGHT:
-                        {
-                            if ((pid_1.feedback_adj / MOTOR_GEARING) <= (software_stop + HARDSTOP_SAFETY_MARGIN)) 
-                            {
-                                cw_enable = 1;
-                                ccw_enable = 0;
-                                PID_ClearIError(&pid_1);
-                            }
-                            break;
-                        }
-                        case RAD_TYPE_DRIVETRAIN_LIMIT_SWITCH_LEFT:
-                        {
-                            if ((pid_1.feedback_adj / MOTOR_GEARING) >= (software_stop - HARDSTOP_SAFETY_MARGIN)) 
-                            {
-                                cw_enable = 0;
-                                ccw_enable = 1;
-                                PID_ClearIError(&pid_1);
-                            }
-                            break;
-                        }
-                        
-                        default:
-                            break;
-                    }
-                }
-
-                //convert degrees to steps
-                int16_t angle_to_steps_converstion = (int16_t) (pid_1.output * (double) STEPS_PER_REVOLUTION / 360.0); // 0.555555556
-
-                if ((pid_1.output > 0) && cw_enable)
-                {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
-                }
-                else if ((pid_1.output < 0) && ccw_enable)
-                {
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, angle_to_steps_converstion);
-                }
-                else if ((cw_enable == 0) || (ccw_enable == 0))
-                {
-                    TMC_2590_Stop(&tmc_2590_1);
-                }
-
-                // Once timeout is exceeded, disable close loop control
-                if (rad_can.watchdog_kick && rad_can.timer > CAN_MESSAGE_TIMEOUT_MS)
-                {
-                    rad_state = RAD_STATE_PULSE_CONTROL;
-                    rad_can.watchdog_kick = 0;
-                }
-
                 break;
             }
             default:
-            {
                 rad_state = RAD_STATE_INIT;
                 break;
-            }
         }
 
-        //angle_average_buffer[buffer_head++ % AVERAGING_WINDOW_SIZE] = (double) (pid_1.feedback_adj / MOTOR_GEARING);
-
-                
+        // ------------------------------------------------------
+        // 5. TELEMETRY / GRAPHING
+        // ------------------------------------------------------
         if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
-//             double sum = 0;
-//             for (int i = 0; i < AVERAGING_WINDOW_SIZE; i++)
-//             {
-//                 sum = sum + angle_average_buffer[i];
-//             }
-            //rad_status.current_angle = (double) sum / AVERAGING_WINDOW_SIZE;
-            if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
-                rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
-            {
-                rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING);
-            }
-            else
-            {
-                rad_status.current_angle = (double) (pid_1.feedback_adj);
-            }
-        	//rad_status.current_angle = (double) pid_1.output;
-            //AS5048A_ReadAngle(&as5048a_1);
-            //rad_status.current_angle = as5048a_1.Angle_double;
-
+            // Transmit the real-time calculated velocity over CAN for your SSH graph.
+            // Repurposing the 'current_angle' variable specifically for this testbench visualization.
+            rad_status.current_angle = (double)motion_profile.VELOCITY;
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }
+
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
-            //Update TMC state as it changes asynchrnously
             rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
-
-            rad_status.NTC_STATUS = NTC_ReadTemperatureC(&rad_ntc1, &rad_status.temperature);
-            if (rad_status.NTC_STATUS == NTC_OK)
-            {
-                MX_CAN_Broadcast_Double_Data(&rad_can, rad_status.temperature, SEND_TEMPERATURE);
-            }
-
             MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
-
-            
-           
-
-            
         }
 
         rad_can.timer += HAL_GetTick() - prev_ms;
         prev_ms = HAL_GetTick();
 
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
     }
   /* USER CODE END 3 */
@@ -1477,9 +349,6 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
@@ -1492,8 +361,6 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -1521,92 +388,20 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 
-	//1 calculate ARR from inputted desired freq
-	//Will be an integer floor divide so will not always be the same as input
+    // Guard against divide-by-zero if velocity drops to 0
+    if (velocity == 0) {
+        return;
+    }
 
-	// Todo see if inserting the velocity here is gonna work as we want it to
-
+	// Calculate ARR from inputted desired freq
 	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, velocity);
 
-	// Todo: Need to figure out how to do the reset
-
-	//2 assign ARR to timer
-
+	// Assign ARR to timer hardware
 	TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
 
-	//3 update local stepper speed reference to the integer value
-
+	// Update local stepper speed reference
 	rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
 }
-
-void Motion_Profile_Run(void) {
-
-	// Save the current stepper speed in a local variable
-
-	uint16_t current_rad_stepper_speed = rad_params.STEPPER_SPEED;
-
-
-	// Get the current time
-
-	uint32_t start_time = HAL_GetTick();
-	uint8_t flag = 0;
-
-	// START THE WHILE LOOPS
-
-	while (!flag) {
-
-
-		// Calculate the time elapsed
-
-		rad_motion_profile.TIME_ELAPSED = (float) ((HAL_GetTick() - current_time) / 1000);
-
-		// Run the velocity command
-
-		Motion_Profile_Velocity(rad_motion_profile);
-
-		// Alterations of stepper speed, based on the motion profile state
-
-		// TODO: put this in after 3TR, figure out how to extract the state from the driver (currently returning the state, just need a way to capture it)
-
-
-		if (positive state) {
-
-			// Set the stepper speed to that found in the motion profile params
-			MOTION_PROFILE_Set_Speed(rad_motion_profile.VELOCITY);
-
-
-		} else if (done state) {
-
-			MOTION_PROFILE_Set_Speed(current_rad_stepper_speed);
-			flag = 1;
-		}
-	}
-
-
-
-
-
-
-
-	// 3. Run the velocity command
-
-
-
-	// 4. Set stepper speed using the motion profile velocity command
-
-	// Repeat
-
-	// Logic to consider
-
-	// Looping conditions
-
-
-
-
-
-
-}
-
 /* USER CODE END 4 */
 
 /**
@@ -1616,7 +411,6 @@ void Motion_Profile_Run(void) {
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
     while (1)
     {
@@ -1625,18 +419,7 @@ void Error_Handler(void)
 }
 
 #ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

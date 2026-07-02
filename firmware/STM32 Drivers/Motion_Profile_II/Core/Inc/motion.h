@@ -15,8 +15,8 @@
 
 extern Motion_Profile_HandleTypeDef motion_profile;
 
-void MX_PROFILER_INIT();
-void MX_PROFILER_RESET();
+void MX_PROFILER_INIT(void);
+void MX_PROFILER_RESET(void);
 
 
 

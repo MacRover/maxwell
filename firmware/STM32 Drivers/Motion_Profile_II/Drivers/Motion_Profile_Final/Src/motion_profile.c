@@ -40,13 +40,13 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 	if (profile->TIME_ELAPSED < end_of_increase) {
 		float accel_rate = fabsf(profile->ACCELERATION);
-		velocity = profile->V_I + profile->ACCELERATION*profile->TIME_ELAPSED;
+		velocity = profile->V_I + accel_rate*profile->TIME_ELAPSED;
 	}
 	
 	// Phase 2: Level Velocity
 
 	else if (profile->TIME_ELAPSED < end_of_level) {
-		velocity = profile->V_MAX;
+		velocity = profile->V_PEAK;
 	}
 
 	// Phase 3: Decreasing
@@ -55,7 +55,7 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 		float decel_rate = -fabsf(profile->ACCELERATION);
 		// Need a deceleration time as well as this won't just work on it's own
 		float decel_time = profile->TIME_ELAPSED - end_of_level;
-		velocity = profile->V_MAX + decel_rate*decel_time;
+		velocity = profile->V_PEAK + decel_rate*decel_time;
 	}
 
 	// Done case
@@ -74,12 +74,11 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 
 	if (velocity >= profile->V_MAX) {
-		profile->VELOCITY = profile->V_MAX;
+		velocity = profile->V_MAX;
 	} else if (velocity <= 0.0f) {
-		profile->VELOCITY = 0.0f;
-	} else {
-		profile->VELOCITY = velocity;
+		velocity = 0.0f;
 	}
+	profile->VELOCITY = velocity * profile->DIRECTION;
 
 	return MOTION_PROFILE_STATE_BUSY;
 
@@ -169,6 +168,14 @@ void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile) {
 
 	// Running time based calculations
 
+	if (profile->STEPS_TO_MOVE >= 0) {
+		profile->DIRECTION = 1;
+	} else {
+		profile->DIRECTION = -1;
+	}
+
+	float abs_steps = fabsf((float)profile->STEPS_TO_MOVE);
+
 	uint32_t steps_increase;
 	uint32_t steps_decrease;
 	uint32_t standard_steps;
@@ -191,15 +198,27 @@ void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile) {
 	steps_decrease = profile->V_MAX*profile->T_DECREASING + 0.5f*(deceleration_rate)*(profile->T_DECREASING*profile->T_DECREASING);
 
 
-	if (steps_increase + steps_decrease > profile->STEPS_TO_MOVE) {
+	if (steps_increase + steps_decrease > abs_steps) {
 
 		// No standard steps at all
 		standard_steps = 0;
 		profile->T_LEVEL = 0;
+
+		// Need to recalculate the peak velocity that the profile will go up to
+
+		profile->V_PEAK = sqrtf(profile->ACCELERATION * abs_steps + 0.5f * (profile->V_I * profile->V_I));
+
+		// Need to recalculate T_INCREASING and T_DECREASING
+
+		profile->T_INCREASING = fabsf((profile->V_PEAK - profile->V_I) / profile->ACCELERATION);
+		profile->T_DECREASING = fabsf((profile->V_PEAK / profile->ACCELERATION));
+
 	} else {
 
-		standard_steps = profile->STEPS_TO_MOVE - steps_increase - steps_decrease;
+		standard_steps = abs_steps - steps_increase - steps_decrease;
 		profile->T_LEVEL = (float) standard_steps / profile->V_MAX;
+
+		profile->V_PEAK = profile->V_MAX;
 	}
 
 	// Finding the time at the level value
