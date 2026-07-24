@@ -1,0 +1,148 @@
+#include <Arduino.h>
+#include <eXoCAN.h>
+
+// Initialize the CAN object
+eXoCAN can;
+
+// link to  eXoCAN
+// https://github.com/exothink/eXoCAN
+
+// idk if this will work but do we have anything to lose, no!
+
+// Buffer for incoming UART characters from the Pico
+String input_buffer = "";
+bool is_can_open = false;
+
+void setup() {
+  // Serial1 is PA9 (TX) and PA10 (RX) on the Blue Pill
+  // We use 115200 to match the Pico and python-can script
+  Serial1.begin(115200);
+  
+  // Initialize CAN bus to 500kbps by default 
+  // (Matches the S6 command and your python script)
+  can.begin(STD_ID_LEN, BR500K, PORTA_11_12_XCVR);
+  
+  // Set up CAN filters to receive everything
+  can.filterMask16Init(0, 0, 0, 0, 0);
+  
+  input_buffer.reserve(30); // Prevent memory fragmentation
+}
+
+void loop() {
+  // 1. Check for incoming CAN messages and send them to the Pico over UART
+  if (is_can_open && can.receive(can.id, can.fltIdx, can.rxbytes)) {
+    send_can_to_uart(can.id, (can.id > 0x7FF), can.rxbytes.length, can.rxbytes.bytes);
+  }
+
+  // 2. Check for incoming UART commands from the Pico and process them
+  while (Serial1.available() > 0) {
+    char in_char = Serial1.read();
+    
+    // LAWICEL commands always end with a carriage return '\r'
+    if (in_char == '\r') {
+      parse_slcan_command(input_buffer);
+      input_buffer = ""; // Clear buffer for the next command
+    } else {
+      input_buffer += in_char;
+    }
+  }
+}
+
+// ---------------------------------------------------------
+// Helper: Format received CAN frames into SLCAN ASCII strings
+// ---------------------------------------------------------
+void send_can_to_uart(uint32_t id, bool is_extended, uint8_t length, uint8_t *data) {
+  char out_buf[30];
+  
+  // Format the header (t for standard 11-bit, T for extended 29-bit)
+  if (is_extended) {
+    sprintf(out_buf, "T%08X%d", id, length); 
+  } else {
+    sprintf(out_buf, "t%03X%d", id, length);
+  }
+  
+  // Append the data bytes as HEX
+  int offset = strlen(out_buf);
+  for (int i = 0; i < length; i++) {
+    sprintf(out_buf + offset + (i * 2), "%02X", data[i]);
+  }
+  
+  // Append carriage return and send over UART
+  sprintf(out_buf + strlen(out_buf), "\r");
+  Serial1.print(out_buf);
+}
+
+// ---------------------------------------------------------
+// Helper: Parse SLCAN ASCII strings and execute them
+// ---------------------------------------------------------
+void parse_slcan_command(String cmd) {
+  if (cmd.length() == 0) return;
+  
+  char command_type = cmd[0];
+  
+  // Handle Standard (t) or Extended (T) frame transmission
+  if (command_type == 't' || command_type == 'T') {
+    if (!is_can_open) return; // Ignore if bus is closed
+    
+    int id_len = (command_type == 't') ? 3 : 8;
+    
+    // Extract ID
+    String id_str = cmd.substring(1, 1 + id_len);
+    uint32_t can_id = strtol(id_str.c_str(), NULL, 16);
+    
+    // Extract DLC (Data Length Code)
+    int dlc = cmd.substring(1 + id_len, 2 + id_len).toInt();
+    if (dlc > 8) dlc = 8; // Failsafe
+    
+    // Extract Data
+    uint8_t payload[8] = {0};
+    int data_start = 2 + id_len;
+    for (int i = 0; i < dlc; i++) {
+      String byte_str = cmd.substring(data_start + (i * 2), data_start + (i * 2) + 2);
+      payload[i] = (uint8_t)strtol(byte_str.c_str(), NULL, 16);
+    }
+    
+    // Send out to the physical CAN bus
+    // eXoCAN automatically handles extended IDs if id > 0x7FF
+    can.transmit(can_id, payload, dlc);
+    
+    // SLCAN standard expects 'z' or '\r' upon successful transmission
+    Serial1.print((command_type == 't') ? "z\r" : "Z\r");
+  } 
+  
+  // Handle Open CAN Bus command
+  else if (command_type == 'O') {
+    is_can_open = true;
+    Serial1.print("\r");
+  }
+  
+  // Handle Close CAN Bus command
+  else if (command_type == 'C') {
+    is_can_open = false;
+    Serial1.print("\r");
+  }
+  
+  // Handle Setup Bitrate (e.g., S6 = 500k)
+  // python-can sends this when connecting. We already initialized 
+  // at 500k in setup(), so we just acknowledge it to keep python-can happy.
+  else if (command_type == 'S') {
+    // If you need dynamic baud rates later, you would read cmd[1] 
+    // and re-initialize the 'can' object here.
+    Serial1.print("\r");
+  }
+  
+  // Handle Hardware/Firmware Version requests (optional but good practice)
+  else if (command_type == 'V' || command_type == 'v') {
+    Serial1.print("v1014\r"); // Dummy version
+  }
+  
+  // Handle Serial Number requests
+  else if (command_type == 'N') {
+    Serial1.print("N0001\r");
+  }
+  
+  // Unknown command
+  else {
+    Serial1.print(char(7)); // SLCAN standard error is the BEL character
+  }
+}

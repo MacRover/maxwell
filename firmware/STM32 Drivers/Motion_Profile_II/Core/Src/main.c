@@ -140,6 +140,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   // TODO YOUR TRASH THIS IS WRONG - THIS IS SO WRONG WITH RAD STATE
+    // THIS IS ACTUALLY FINE
 
     static enum 
     {
@@ -247,6 +248,30 @@ int main(void)
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
                     MX_CAN_UpdateIdAndFilters(&rad_can);
+                    break;
+
+                case SET_VMAX:
+                    motion_profile.V_MAX = decode_float_big_endian(new_message->data);
+                    break;
+
+                case GET_VMAX:
+                    MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.V_MAX, GET_VMAX);
+                    break;
+
+                case SET_ACCELERATION:
+                    motion_profile.ACCELERATION = decode_float_big_endian(new_message->data);
+                    break;
+
+                case GET_ACCELERATION:
+                    MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.ACCELERATION, GET_ACCELERATION);
+                    break;
+                
+                case SET_STEPS_TO_MOVE:
+                    motion_profile.STEPS_TO_MOVE = decode_int32_big_endian(new_message->data);
+                    break;
+
+                case GET_STEPS_TO_MOVE:
+                    MX_CAN_Broadcast_Int32_Data(&rad_can, motion_profile.STEPS_TO_MOVE, GET_STEPS_TO_MOVE);
                     break;
 
                 // (Omitted the extensive TMC SPI tuning cases for brevity, but they can remain here untouched if needed for live testing)

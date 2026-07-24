@@ -82,3 +82,25 @@ double decode_double_big_endian(uint8_t *data)
 
     return *((double*) &fpt_bin);
 }
+
+int32_t decode_int32_big_endian(uint8_t *data) {
+
+    // Adam made this to do the motion profile we've got no clue if it's working until I (Adam) test it!
+    // pretty much copied uint32_t and then casted it over
+
+    uint32_t fpt_bin = (data[0] << 24) | (data[1] << 16) | (data[2] << 8)
+            | data[3];
+
+    return *((int32_t*) &fpt_bin);
+}
+
+void encode_int32_big_endian(int32_t value, uint8_t *data)
+{
+    uint32_t *fpt_bin_ptr = (uint32_t*) &value;
+
+    data[0] = ((*fpt_bin_ptr) & 0xff000000) >> 24;
+    data[1] = ((*fpt_bin_ptr) & 0x00ff0000) >> 16;
+    data[2] = ((*fpt_bin_ptr) & 0x0000ff00) >> 8;
+    data[3] = (*fpt_bin_ptr) & 0x000000ff;
+}
+

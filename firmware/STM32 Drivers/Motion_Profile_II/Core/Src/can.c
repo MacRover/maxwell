@@ -317,6 +317,18 @@ void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t valu
             rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
 }
 
+void MX_CAN_Broadcast_Float_Data(RAD_CAN_TypeDef *rad_can_handle, float value, uint16_t message_id) {
+
+        // also editied by adam, we will see if this works
+
+        encode_float_big_endian(value, &(rad_can_handle->TxData[0]));
+        rad_can_handle->TxHeader.DLC = sizeof(float); //float
+        rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+        HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+                rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
 void MX_CAN_Broadcast_Uint16_Data(RAD_CAN_TypeDef *rad_can_handle, uint16_t value, uint16_t message_id)
 {
     encode_uint16_big_endian(value, &(rad_can_handle->TxData[0]));
@@ -331,6 +343,16 @@ void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value,
 {
     rad_can_handle->TxData[0] = value;
     rad_can_handle->TxHeader.DLC = sizeof(uint8_t); //float
+    rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
+
+    HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),
+            rad_can_handle->TxData, &(rad_can_handle->TxMailbox));
+}
+
+void MX_CAN_Broadcast_Int32_Data(RAD_CAN_TypeDef *rad_can_handle, int32_t value, uint16_t message_id)
+{
+    encode_int32_big_endian(value, &(rad_can_handle->TxData[0]));
+    rad_can_handle->TxHeader.DLC = sizeof(int32_t); //float
     rad_can_handle->TxHeader.ExtId = __encode_ext_can_id(rad_can_handle->id, message_id);
 
     HAL_CAN_AddTxMessage(&(rad_can_handle->hcan), &(rad_can_handle->TxHeader),

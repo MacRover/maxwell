@@ -23,4 +23,7 @@ uint32_t decode_uint32_big_endian(uint8_t *data);
 uint16_t decode_uint16_big_endian(uint8_t *data);
 double decode_double_big_endian(uint8_t *data);
 
+void encode_int32_big_endian(int32_t value, uint8_t *data);
+int32_t decode_int32_big_endian(uint8_t *data);
+
 #endif /* INC_ENC_DEC_UTILS_H_ */

@@ -180,6 +180,15 @@ typedef enum
 	SET_RAD_FLAGS = 0x61,
 	GET_RAD_FLAGS = 0x62,
 
+
+    SET_VMAX = 0x63,
+    GET_VMAX = 0x64,
+    SET_ACCELERATION = 0x65,
+    GET_ACCELERATION = 0x66,
+    SET_STEPS_TO_MOVE = 0x67,
+    GET_STEPS_TO_MOVE = 0x68,
+
+
     
     SEND_ODOM_ANGLE = 0xFB,
     SEND_HEALTH_STATUS = 0xFC,
@@ -211,6 +220,8 @@ void MX_CAN_Broadcast_Double_Data(RAD_CAN_TypeDef *rad_can_handle, double value,
 void MX_CAN_Broadcast_Uint32_Data(RAD_CAN_TypeDef *rad_can_handle, uint32_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint16_Data(RAD_CAN_TypeDef *rad_can_handle, uint16_t value, uint16_t message_id);
 void MX_CAN_Broadcast_Uint8_Data(RAD_CAN_TypeDef *rad_can_handle, uint8_t value, uint16_t message_id);
+void MX_CAN_Broadcast_Float_Data(RAD_CAN_TypeDef *rad_can_handle, float value, uint16_t message_id);
+void MX_CAN_Broadcast_Int32_Data(RAD_CAN_TypeDef *rad_can_handle, int32_t value, uint16_t message_id);
 
 void MX_CAN_Broadcast_RAD_Status(RAD_CAN_TypeDef *rad_can_handle,
         RAD_STATUS_TypeDef status);
