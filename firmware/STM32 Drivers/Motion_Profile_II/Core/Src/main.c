@@ -139,6 +139,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  // TODO YOUR TRASH THIS IS WRONG - THIS IS SO WRONG WITH RAD STATE
+
     static enum 
     {
         RAD_STATE_INIT = 0,
@@ -189,6 +191,8 @@ int main(void)
             {
                 case PULSE_STEPPER:
                 {
+
+                    // REVIEW THIS
                     float pulses = decode_float_big_endian(new_message->data);
                     int32_t target_steps = (int32_t)pulses;
 
@@ -282,6 +286,8 @@ int main(void)
                 break;
 
             case RAD_STATE_PROFILE_CONTROL:
+
+            // REVIEW THIS SOME MORE
             {
                 // Calculate elapsed time in seconds
                 motion_profile.TIME_ELAPSED = (float)(HAL_GetTick() - profile_start_time) / 1000.0f;
