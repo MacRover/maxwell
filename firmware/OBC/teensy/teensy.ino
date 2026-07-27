@@ -4,7 +4,8 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <LSM6DSRSensor.h>
 #include <Adafruit_MCP9601.h>
-#include <Servo.h>
+// #include <Servo.h>
+#include <chrono>
 #include <RadioLib.h>
 
 #include <cstdint>
@@ -15,9 +16,8 @@
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 
-
-#include "fans.h"
 #include "TSB.h"
+#include "fans.h"
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
@@ -26,11 +26,11 @@
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
 #define USING_GPS
-//#define USING_TSB
+#define USING_TSB
 #define USING_FANS
 #define USING_SERVO
 #define USING_SCIENCE_SENSORS
-#define USING_LORA
+// #define USING_LORA
 
 
 #define DOMAIN_ID 5
@@ -47,7 +47,8 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
-
+//Define Fan_test using PWM
+//#define FANTEST 0
 
 rcl_allocator_t allocator;
 rclc_support_t support;
@@ -465,11 +466,18 @@ void FANS_SM() {
 
 
     case FANS_OK:
-        setFanRPM(&fan1, MIN_RPM);
-        setFanRPM(&fan2, MIN_RPM);
+      #ifdef FANTEST
+        testPWMControl(&fan1);
+        testPWMControl(&fan2);
+      #else 
+        TSBControlFAN(&fan1, &tsb1);
+        TSBControlFAN(&fan2, &tsb1);
+        //TSBControlFAN(&fan3, &tsb1);
+        //setFanRPM(&fan1, MIN_RPM);
+        //setFanRPM(&fan2, MIN_RPM);
         // setFanRPM(&fan3, MIN_RPM);
+      #endif
       break;
-
     case FANS_ERROR:
       // Try to connect to fans every 5 seconds 
       if (millis() - prev_time_fan > 5000){
@@ -667,13 +675,13 @@ void loop()
     Uros_SM();
 #endif 
 
-#ifdef USING_FANS
-    FANS_SM();
-#endif
-
 #ifdef USING_TSB
     TSB_SM();
 #endif 
+
+#ifdef USING_FANS
+    FANS_SM();
+#endif
 
 #ifdef USING_LORA
     LORA_SM();

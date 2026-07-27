@@ -8,7 +8,12 @@
 #define U15_ADDR (uint8_t)0x2C
 
 #define MIN_RPM 1000
-#define MAX_RPM 6400
+#define MAX_RPM 3800
+
+#define MIN_TEMP 35
+#define MAX_TEMP 65
+
+int speed_index = 1000;
 
 typedef struct Fan {
     uint8_t id;
@@ -81,4 +86,30 @@ void enableFanControl(Fan* fan)
         0xF6);
 }
 
+
+// Test-only function
+void testPWMControl(Fan *fan)  {
+    if (speed_index<MIN_RPM || speed_index>MAX_RPM){
+        speed_index =MIN_RPM;
+    }
+    setFanRPM(fan, speed_index);
+    speed_index++;
+}
+
+void TSBControlFAN(Fan* fan, TSB* tsb) {
+    int16_t temp = tsb->thermocouple_temp;
+
+    if (state_TSB != TSB_OK ||temp>MAX_TEMP) {
+        setFanRPM(fan, MAX_RPM);
+    } else if(temp<MIN_TEMP){
+        setFanRPM(fan, MIN_RPM);
+    } else {
+        float fraction = (temp-MIN_TEMP)/(MAX_TEMP-MIN_TEMP);
+        uint16_t rpm = fraction*(MAX_RPM-MIN_RPM) + MIN_RPM;
+        setFanRPM(fan, rpm) ;
+    }
+}
+
+
 #endif
+
