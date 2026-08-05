@@ -38,14 +38,14 @@ void setFanRPM(Fan* fan, uint16_t speed)
 
     uint16_t tachCount = (uint16_t)(7864320 / speed);
     fan->tach_target = speed;
-    uint8_t high = (tachCount & 0x1FE0) >> 5;
-    uint8_t low = (tachCount & 0x1F) << 3;
+    uint8_t high = (tachCount & 0x1FE0) >> 5; 
+    uint8_t low = (tachCount & 0x1F) << 3; 
 
     write_i2c_8bit(
         fan->address, 
         FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset), 
         high);
-    
+
     write_i2c_8bit(
         fan->address, 
         FAN_1_TACH_TARGET_LOW_BYTE + (fan->offset), 
@@ -78,7 +78,7 @@ void enableFanControl(Fan* fan)
     write_i2c_8bit(
         fan->address, 
         FAN_1_CONFIG + (fan->offset), 
-        0x2B | (1 << 7));
+        0x3B | (1 << 7));
         
     write_i2c_8bit(
         fan->address,
@@ -93,21 +93,16 @@ void testPWMControl(Fan *fan)  {
         speed_index =MIN_RPM;
     }
     setFanRPM(fan, speed_index);
-    speed_index++;
+    //speed_index++;
 }
 
 void TSBControlFAN(Fan* fan, TSB* tsb) {
     int16_t temp = tsb->thermocouple_temp;
 
-    if (state_TSB != TSB_OK ||temp>MAX_TEMP) {
-        setFanRPM(fan, MAX_RPM);
-    } else if(temp<MIN_TEMP){
-        setFanRPM(fan, MIN_RPM);
-    } else {
-        float fraction = (temp-MIN_TEMP)/(MAX_TEMP-MIN_TEMP);
-        uint16_t rpm = fraction*(MAX_RPM-MIN_RPM) + MIN_RPM;
-        setFanRPM(fan, rpm) ;
-    }
+    float fraction = (temp-MIN_TEMP)/(MAX_TEMP-MIN_TEMP);
+    uint16_t rpm = fraction*(MAX_RPM-MIN_RPM) + MIN_RPM;
+
+    setFanRPM(fan, rpm) ;
 }
 
 

@@ -21,7 +21,7 @@
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
-#define ON_ROVER
+// #define ON_ROVER
 #define USING_ROS
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
