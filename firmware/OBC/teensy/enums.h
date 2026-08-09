@@ -3,9 +3,6 @@
 
 #include <cstdint>
 
-// ==========================================
-// 1. DEFINE THE ENUM TYPES (The Blueprints)
-// ==========================================
 
 enum UROS_states {
   UROS_INIT,
@@ -85,6 +82,6 @@ extern TSB_STATES state_TSB;
 extern HYDROGEN_STATES state_hydrogen;
 extern OZONE_STATES state_ozone;
 extern LORA_STATES state_lora;
-// Note: current_led_state is already extern'd inside led.h
+
 
 #endif
