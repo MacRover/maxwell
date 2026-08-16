@@ -349,8 +349,13 @@ int main(void)
         if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
         {
             // Transmit the real-time calculated velocity over CAN for your SSH graph.
-            // Repurposing the 'current_angle' variable specifically for this testbench visualization.
-            rad_status.current_angle = (double)motion_profile.VELOCITY;
+            
+            // Send the velocity properly, not the garbage you were doing before
+
+            MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
+
+            // TODO: There may be some issues here with dropping frames if we are putting these too close together
+            
             MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
         }
 

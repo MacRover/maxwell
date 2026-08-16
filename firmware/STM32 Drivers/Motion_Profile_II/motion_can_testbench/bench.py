@@ -1,6 +1,8 @@
 import can  # https://python-can.readthedocs.io/en/stable/installation.html
 import struct
 import time
+import matplotlib.pyplot as plt
+from collections import deque
 
 # Define your Pico's serial port here. 
 # Examples -> Windows: 'COM3', Linux: '/dev/ttyACM0', Mac: '/dev/tty.usbmodem1234'
@@ -9,6 +11,26 @@ rad_id = 0x15
 
 def main():
     sleep_time = 3
+
+    # Graph setup and initialization
+
+    # --- GRAPH SETUP ---
+    plt.ion() # Turn on interactive mode so it doesn't block the CAN loop
+    fig, ax = plt.subplots()
+    line, = ax.plot([], [], lw=2)
+    ax.set_title('Live Motor Velocity Profile')
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Velocity (Hz / Steps per sec)')
+    ax.grid(True)
+    
+    # Store up to 250 data points (5 seconds of data at 50Hz)
+    max_points = 250 
+    times = deque(maxlen=max_points)
+    velocities = deque(maxlen=max_points)
+    
+    start_time = time.time()
+    last_plot_time = 0
+
     
     # Initialize using the 'slcan' interface instead of 'pcan'
     # ttyBaudrate is the UART speed between the PC and the Pico
@@ -29,6 +51,23 @@ def main():
                             if cmd_id == 0x68:
                                 int_convert = struct.unpack(">i", msg.data)[0]
                                 print(f"Steps: {int_convert}")
+
+                            elif cmd_id == 0xFE: # NEW: SEND_VELOCITY Hook
+                                velocity = struct.unpack(">f", msg.data)[0]
+                                current_time = time.time() - start_time
+                                
+                                # Store the data point
+                                times.append(current_time)
+                                velocities.append(velocity)
+                                
+                                # Only redraw the graph at 10Hz (every 0.1s) to prevent CAN lag
+                                if (current_time - last_plot_time) > 0.1:
+                                    line.set_data(times, velocities)
+                                    ax.relim()
+                                    ax.autoscale_view()
+                                    fig.canvas.draw()
+                                    fig.canvas.flush_events()
+                                    last_plot_time = current_time
                             else:
                                 float_convert = struct.unpack(">f", msg.data)[0]
                                 print(msg, round(float_convert, 5))

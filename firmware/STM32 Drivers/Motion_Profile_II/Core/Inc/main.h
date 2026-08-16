@@ -103,6 +103,7 @@ typedef struct
     //ENSURE EACH LIBRARY IS SENDING APPROPRIATE ERRORS 
     double current_angle;
 	double temperature;
+	float velocity;
 //    float current_speed;
 
     uint8_t EEPROM_STATUS;

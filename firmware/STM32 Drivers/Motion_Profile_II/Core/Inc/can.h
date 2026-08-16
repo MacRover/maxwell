@@ -192,7 +192,11 @@ typedef enum
     
     SEND_ODOM_ANGLE = 0xFB,
     SEND_HEALTH_STATUS = 0xFC,
-    SEND_TEMPERATURE = 0xFD
+    SEND_TEMPERATURE = 0xFD,
+
+    // Adding send velocity so the profile actually properly sends the velocity
+    // Then we can do it through a different odom message and get the float and add it to an array
+    SEND_VELOCITY = 0xFE
 } RAD_CAN_CommandId;
 
 typedef struct
