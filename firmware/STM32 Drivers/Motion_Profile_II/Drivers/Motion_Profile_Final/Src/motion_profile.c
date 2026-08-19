@@ -176,9 +176,9 @@ void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile) {
 
 	float abs_steps = fabsf((float)profile->STEPS_TO_MOVE);
 
-	uint32_t steps_increase;
-	uint32_t steps_decrease;
-	uint32_t standard_steps;
+	float steps_increase;
+	float steps_decrease;
+	float standard_steps;
 
 	profile->T_INCREASING = fabsf((profile->V_MAX - profile->V_I) / profile->ACCELERATION);
 	profile->T_DECREASING = fabsf((profile->V_MAX / profile->ACCELERATION));
@@ -216,7 +216,7 @@ void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile) {
 	} else {
 
 		standard_steps = abs_steps - steps_increase - steps_decrease;
-		profile->T_LEVEL = (float) standard_steps / profile->V_MAX;
+		profile->T_LEVEL = standard_steps / profile->V_MAX;
 
 		profile->V_PEAK = profile->V_MAX;
 	}

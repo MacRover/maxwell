@@ -259,7 +259,11 @@ int main(void)
                     break;
 
                 case SET_ACCELERATION:
-                    motion_profile.ACCELERATION = decode_float_big_endian(new_message->data);
+                    float new_accel = decode_float_big_endian(new_message->data);
+                    if (new_accel > 0.0f) {
+                        // Invalid acceleration value, ignore the command
+                    	motion_profile.ACCELERATION = new_accel;
+                    }
                     break;
 
                 case GET_ACCELERATION:
@@ -352,7 +356,11 @@ int main(void)
             
             // Send the velocity properly, not the garbage you were doing before
 
-            MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
+            if (rad_state == RAD_STATE_PROFILE_CONTROL) {
+
+                MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
+
+            }
 
             // TODO: There may be some issues here with dropping frames if we are putting these too close together
             
