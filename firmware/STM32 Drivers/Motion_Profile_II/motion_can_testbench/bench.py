@@ -6,8 +6,8 @@ from collections import deque
 
 # Define your Pico's serial port here. 
 # Examples -> Windows: 'COM3', Linux: '/dev/ttyACM0', Mac: '/dev/tty.usbmodem1234'
-SERIAL_PORT = 'COM3'
-rad_id = 0x15
+SERIAL_PORT = 'COM4'
+rad_id = 0xF0
 
 def main():
     sleep_time = 3

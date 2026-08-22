@@ -6,11 +6,12 @@
  ******************************************************************************
  */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "can.h"
 #include "dma.h"
+#include "i2c.h"
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
@@ -24,6 +25,11 @@
 #include <math.h>
 /* USER CODE END Includes */
 
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 // Kept for CAN and internal driver references
@@ -31,7 +37,13 @@
 #define STEPS_PER_REVOLUTION 200
 /* USER CODE END PD */
 
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE BEGIN PV */
 RAD_STATUS_TypeDef rad_status;
 RAD_PARAMS_TypeDef rad_params;
@@ -42,14 +54,24 @@ uint8_t DISABLED = 0;
 uint32_t profile_start_time = 0;
 uint32_t prev_ms = 0;
 
+uint16_t odom_counter = 0;
+uint16_t idle_counter = 0;
+
+uint8_t led_on = 0;
+
+void MOTION_PROFILE_Set_Speed(uint16_t velocity);
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void MOTION_PROFILE_Set_Speed(uint16_t velocity);
-
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -57,6 +79,7 @@ void MOTION_PROFILE_Set_Speed(uint16_t velocity);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
     // SET DEFAULT VALUES (Stripped of PID/EEPROM defaults)
@@ -106,16 +129,30 @@ int main(void)
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
   SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_CAN_Init();
+  MX_I2C1_Init();
   MX_SPI1_Init();
+  MX_SPI2_Init();
   MX_TIM2_Init();
-
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
     rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
@@ -312,6 +349,7 @@ int main(void)
 
             case RAD_STATE_IDLE:
                 // Motor is stationary, waiting for PULSE_STEPPER
+            	idle_counter++;
                 break;
 
             case RAD_STATE_PROFILE_CONTROL:
@@ -356,6 +394,15 @@ int main(void)
             
             // Send the velocity properly, not the garbage you were doing before
 
+
+        	if (!led_on) {
+        		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+        		led_on = 1;
+        	} else {
+        		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        		led_on = 0;
+        	}
+
             if (rad_state == RAD_STATE_PROFILE_CONTROL) {
 
                 MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
@@ -364,20 +411,24 @@ int main(void)
 
             // TODO: There may be some issues here with dropping frames if we are putting these too close together
             
-            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+            odom_counter++;
+            //MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+
+            MX_CAN_Broadcast_Uint8_Data(&rad_can, 1, SEND_VELOCITY);
         }
 
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
             rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
-            MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+            //MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 
         rad_can.timer += HAL_GetTick() - prev_ms;
         prev_ms = HAL_GetTick();
 
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
     }
   /* USER CODE END 3 */
@@ -393,6 +444,9 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
@@ -405,6 +459,8 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -463,7 +519,18 @@ void Error_Handler(void)
 }
 
 #ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

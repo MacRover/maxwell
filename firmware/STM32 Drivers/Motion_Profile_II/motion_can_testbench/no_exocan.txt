@@ -1,12 +1,20 @@
+#include <Arduino.h>
 #include <assert.h>
 
 #define DEBUG 0
 
-#define LED_PIN_EXTERNAL PC13
-
 // RX - A9, TX - A10
 HardwareSerial HSerial(PA10, PA9);
 #define SERIAL HSerial
+
+#define LED_PIN PC13
+#define LED_PIN_EXTERNAL PB11
+
+// Diagnostic variables
+String input_buffer = "";
+bool is_can_open = false;
+bool led_status = true;
+bool led_status_external = false;
 
 /* Symbolic names for bit rate of CAN message                                */
 typedef enum {CAN_50KBPS, CAN_100KBPS, CAN_125KBPS, CAN_250KBPS, CAN_500KBPS, CAN_1000KBPS} BITRATE;
@@ -508,103 +516,152 @@ uint8_t CANMsgAvail(void)
   return CAN1->RF0R & 0x3UL;
 }
 
+// ---------------------------------------------------------
+// PICO INTEGRATION: YOUR LED HELPER & SLCAN LOGIC
+// ---------------------------------------------------------
 
-uint8_t counter = 0;
-uint8_t frameLength = 0;
-unsigned long previousMillis = 0;     // stores last time output was updated
-const long interval = 1000;           // transmission interval (milliseconds)
+void toggleLED(uint8_t led_pin, bool &specific_led_status) {
+  if (specific_led_status == false) {
+      digitalWrite(led_pin, HIGH);
+      specific_led_status = true;
+    }
+  else {
+      digitalWrite(led_pin, LOW);
+      specific_led_status = false;
+  }
+}
+
+void send_can_to_uart(uint32_t id, bool is_extended, uint8_t length, uint8_t *data) {
+  char out_buf[30];
+  
+  if (is_extended) {
+    sprintf(out_buf, "T%08X%d", id, length); 
+  } else {
+    sprintf(out_buf, "t%03X%d", id, length);
+  }
+  
+  int offset = strlen(out_buf);
+  for (int i = 0; i < length; i++) {
+    sprintf(out_buf + offset + (i * 2), "%02X", data[i]);
+  }
+  
+  sprintf(out_buf + strlen(out_buf), "\r");
+  SERIAL.print(out_buf);
+}
+
+void parse_slcan_command(String cmd) {
+  if (cmd.length() == 0) return;
+  
+  char command_type = cmd[0];
+  
+  if (command_type == 't' || command_type == 'T') {
+    if (!is_can_open) return; 
+    
+    int id_len = (command_type == 't') ? 3 : 8;
+    String id_str = cmd.substring(1, 1 + id_len);
+    uint32_t can_id = strtol(id_str.c_str(), NULL, 16);
+    
+    int dlc = cmd.substring(1 + id_len, 2 + id_len).toInt();
+    if (dlc > 8) dlc = 8; 
+    
+    uint8_t payload[8] = {0};
+    int data_start = 2 + id_len;
+    for (int i = 0; i < dlc; i++) {
+      String byte_str = cmd.substring(data_start + (i * 2), data_start + (i * 2) + 2);
+      payload[i] = (uint8_t)strtol(byte_str.c_str(), NULL, 16);
+    }
+    
+    CAN_msg_t tx_msg;
+    tx_msg.id = can_id;
+    tx_msg.format = (command_type == 'T') ? EXTENDED_FORMAT : STANDARD_FORMAT;
+    tx_msg.type = DATA_FRAME;
+    tx_msg.len = dlc;
+    for(int i = 0; i < dlc; i++) {
+      tx_msg.data[i] = payload[i];
+    }
+    
+    // DEBUG LOOPBACK TRICK
+    send_can_to_uart(can_id, (command_type == 'T'), dlc, payload);
+
+    CANSend(&tx_msg);
+    toggleLED(LED_PIN_EXTERNAL, led_status_external);
+    
+    SERIAL.print((command_type == 't') ? "z\r" : "Z\r");
+  } 
+  else if (command_type == 'O') {
+    is_can_open = true;
+    SERIAL.print("\r");
+  }
+  else if (command_type == 'C') {
+    is_can_open = false;
+    SERIAL.print("\r");
+  }
+  else if (command_type == 'S') {
+    SERIAL.print("\r");
+  }
+  else if (command_type == 'V' || command_type == 'v') {
+    SERIAL.print("v1014\r"); 
+  }
+  else if (command_type == 'N') {
+    SERIAL.print("N0001\r");
+  }
+  else {
+    SERIAL.print(char(7)); 
+  }
+}
+
+// ---------------------------------------------------------
+// PICO INTEGRATION: SETUP & LOOP
+// ---------------------------------------------------------
 
 void setup() {
-  
+  // CRITICAL CHANGE: Updated from 9600 to 115200 to match Pico
   SERIAL.begin(115200);
 
+  pinMode(LED_PIN, OUTPUT);
   pinMode(LED_PIN_EXTERNAL, OUTPUT);
 
-  digitalWrite(LED_PIN_EXTERNAL, LOW);
-  delay(1000);
-  digitalWrite(LED_PIN_EXTERNAL, HIGH);
-
-  delay(1000);
- 
-  bool ret = CANInit(CAN_500KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
-//  bool ret = CANInit(CAN_500KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
-//  bool ret = CANInit(CAN_500KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
-//  bool ret = CANInit(CAN_1000KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
-  //bool ret = CANInit(CAN_1000KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
-  //bool ret = CANInit(CAN_1000KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
-  if (!ret) while(true) { SERIAL.println("Failed to initialize CAN"); delay(500);}
+  // Your requested boot loop sequence
+  for (int i = 0; i < 10; i++) {
+    toggleLED(LED_PIN, led_status);
+    toggleLED(LED_PIN_EXTERNAL, led_status_external);
+    delay(500);
+  }
+  
+  // Untouched from your snippet (Remap 2 = PB8/PB9)
+  bool ret = CANInit(CAN_500KBPS, 2);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
+  
+  if (!ret) while(true) { 
+    SERIAL.println("Failed to initialize CAN"); 
+    delay(500);
+  }
+  
+  input_buffer.reserve(30);
 }
 
 void loop() {
-  CAN_msg_t CAN_TX_msg;
   CAN_msg_t CAN_RX_msg;
 
-  CAN_TX_msg.data[0] = 0x00;
-  CAN_TX_msg.data[1] = 0x01;
-  CAN_TX_msg.data[2] = 0x02;
-  CAN_TX_msg.data[3] = 0x03;
-  CAN_TX_msg.data[4] = 0x04;
-  CAN_TX_msg.data[5] = 0x05;
-  CAN_TX_msg.data[6] = 0x06;
-  CAN_TX_msg.data[7] = 0x07;
-  CAN_TX_msg.len = frameLength;
-
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    if ( ( counter % 2) == 0) {
-      CAN_TX_msg.type = DATA_FRAME;
-      if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
-      CAN_TX_msg.format = EXTENDED_FORMAT;
-      CAN_TX_msg.id = 0x32F103;
-    // } else {
-    //   CAN_TX_msg.type = DATA_FRAME;
-    //   if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
-    //   CAN_TX_msg.format = STANDARD_FORMAT;
-    //   CAN_TX_msg.id = 0x103;
-    // }
-    CANSend(&CAN_TX_msg);
-    frameLength++;
-    if (frameLength == 9) frameLength = 0;
-    counter++;
-  }
-  
-  if(CANMsgAvail()) {
+  // 1. Check for incoming CAN messages and send them to the Pico over UART
+  if (is_can_open && CANMsgAvail()) {
     CANReceive(&CAN_RX_msg);
+    toggleLED(LED_PIN_EXTERNAL, led_status_external);
+    send_can_to_uart(CAN_RX_msg.id, (CAN_RX_msg.format == EXTENDED_FORMAT), CAN_RX_msg.len, CAN_RX_msg.data);
+    toggleLED(LED_PIN, led_status);
+  }
 
-    if (CAN_RX_msg.format == EXTENDED_FORMAT) {
-      SERIAL.print("Extended ID: 0x");
-      if (CAN_RX_msg.id < 0x10000000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x1000000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x100000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x1000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
-      SERIAL.print(CAN_RX_msg.id, HEX);
-    } else {
-      SERIAL.print("Standard ID: 0x");
-      if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
-      SERIAL.print(CAN_RX_msg.id, HEX);
-      SERIAL.print("     ");
-    }
+  // 2. Check for incoming UART commands from the Pico and process them
+  while (SERIAL.available() > 0) {
+    char in_char = SERIAL.read();
 
-    SERIAL.print(" DLC: ");
-    SERIAL.print(CAN_RX_msg.len);
-    if (CAN_RX_msg.type == DATA_FRAME) {
-      SERIAL.print(" Data: ");
-      for(int i=0; i<CAN_RX_msg.len; i++) {
-        SERIAL.print("0x"); 
-        SERIAL.print(CAN_RX_msg.data[i], HEX); 
-        if (i != (CAN_RX_msg.len-1))  SERIAL.print(" ");
-      }
-      SERIAL.println();
+    toggleLED(LED_PIN, led_status);
+    
+    // LAWICEL commands always end with a carriage return '\r'
+    if (in_char == '\r') {
+      parse_slcan_command(input_buffer);
+      input_buffer = ""; // Clear buffer for the next command
     } else {
-      SERIAL.println(" Data: REMOTE REQUEST FRAME");
+      input_buffer += in_char;
     }
   }
-    
-//  delay(1);
-
 }
