@@ -2,10 +2,8 @@
 
 #define DEBUG 0
 
-#define LED_PIN_EXTERNAL PC13
-
 // RX - A9, TX - A10
-HardwareSerial HSerial(PA10, PA9);
+HardwareSerial HSerial(PA10, PA9); 
 #define SERIAL HSerial
 
 /* Symbolic names for bit rate of CAN message                                */
@@ -327,8 +325,9 @@ bool CANInit(BITRATE bitrate, int remap)
     GPIOD->ODR |= 0x1UL << 0;        // PD0 Upll-up
   }
 
-  CAN1->MCR |= 0x1UL;                   // Require CAN1 to Initialization mode 
-  while (!(CAN1->MSR & 0x1UL));         // Wait for Initialization mode
+  CAN1->MCR |= 0x1UL;                   // Require CAN1 to Initialization mode
+  SERIAL.println("Waiting for initialization...");
+  // while (!(CAN1->MSR & 0x1UL));         // Wait for Initialization mode
 
   //CAN1->MCR = 0x51UL;                 // Hardware initialization(No automatic retransmission)
   CAN1->MCR = 0x41UL;                   // Hardware initialization(With automatic retransmission)
@@ -494,6 +493,8 @@ void CANSend(CAN_msg_t* CAN_tx_msg)
     SERIAL.println(CAN1->MSR);
     SERIAL.println(CAN1->TSR);
   }
+
+  // SERIAL.println("Sent CAN Frame!");
 }
 
  /**
@@ -514,20 +515,117 @@ uint8_t frameLength = 0;
 unsigned long previousMillis = 0;     // stores last time output was updated
 const long interval = 1000;           // transmission interval (milliseconds)
 
+void SLCANSendFrame(const CAN_msg_t* msg)
+{
+    // Only extended data frames for this bench
+    if (msg->format != EXTENDED_FORMAT)
+        return;
+
+    SERIAL.print("T");
+
+    // 29-bit CAN ID, exactly 8 hex characters
+    char idbuf[9];
+    snprintf(idbuf, sizeof(idbuf), "%08lX",
+             (unsigned long)msg->id);
+    SERIAL.print(idbuf);
+
+    // DLC
+    SERIAL.print(msg->len, HEX);
+
+    // Data
+    for (uint8_t i = 0; i < msg->len; i++) {
+        char databuf[3];
+        snprintf(databuf, sizeof(databuf), "%02X", msg->data[i]);
+        SERIAL.print(databuf);
+    }
+
+    SERIAL.write('\r');
+}
+
+
+bool SLCANReceiveCommand()
+{
+    static char buffer[40];
+    static uint8_t index = 0;
+
+    while (SERIAL.available()) {
+
+        char c = SERIAL.read();
+
+        if (c == '\r') {
+
+            buffer[index] = '\0';
+            index = 0;
+
+            // Need at least:
+            // T + 8 ID chars + DLC
+            if (strlen(buffer) < 10)
+                return false;
+
+            // Extended data frame
+            if (buffer[0] != 'T')
+                return false;
+
+            CAN_msg_t msg;
+
+            msg.format = EXTENDED_FORMAT;
+            msg.type = DATA_FRAME;
+            msg.ch = 0;
+
+            // Parse 29-bit ID
+            char idstr[9];
+            memcpy(idstr, &buffer[1], 8);
+            idstr[8] = '\0';
+
+            msg.id = strtoul(idstr, NULL, 16);
+
+            // DLC
+            msg.len = (uint8_t)(buffer[9] - '0');
+
+            if (msg.len > 8)
+                return false;
+
+            // Parse data
+            for (uint8_t i = 0; i < msg.len; i++) {
+
+                char byteStr[3];
+                byteStr[0] = buffer[10 + i * 2];
+                byteStr[1] = buffer[11 + i * 2];
+                byteStr[2] = '\0';
+
+                msg.data[i] = (uint8_t)strtoul(byteStr, NULL, 16);
+            }
+
+            CANSend(&msg);
+
+            return true;
+        }
+
+        // Prevent buffer overflow
+        if (index < sizeof(buffer) - 1) {
+            buffer[index++] = c;
+        }
+        else {
+            index = 0;
+        }
+    }
+
+    return false;
+}
+
+
 void setup() {
+
+  pinMode(LED_BUILTIN, OUTPUT);
   
   SERIAL.begin(115200);
 
-  pinMode(LED_PIN_EXTERNAL, OUTPUT);
-
-  digitalWrite(LED_PIN_EXTERNAL, LOW);
   delay(1000);
-  digitalWrite(LED_PIN_EXTERNAL, HIGH);
 
-  delay(1000);
+  SERIAL.println("CAN init");
  
-  bool ret = CANInit(CAN_500KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
-//  bool ret = CANInit(CAN_500KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
+//  bool ret = CANInit(CAN_500KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
+  bool ret = CANInit(CAN_500KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
 //  bool ret = CANInit(CAN_500KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
 //  bool ret = CANInit(CAN_1000KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
   //bool ret = CANInit(CAN_1000KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
@@ -539,70 +637,77 @@ void loop() {
   CAN_msg_t CAN_TX_msg;
   CAN_msg_t CAN_RX_msg;
 
-  CAN_TX_msg.data[0] = 0x00;
-  CAN_TX_msg.data[1] = 0x01;
-  CAN_TX_msg.data[2] = 0x02;
-  CAN_TX_msg.data[3] = 0x03;
-  CAN_TX_msg.data[4] = 0x04;
-  CAN_TX_msg.data[5] = 0x05;
-  CAN_TX_msg.data[6] = 0x06;
-  CAN_TX_msg.data[7] = 0x07;
-  CAN_TX_msg.len = frameLength;
+  // UART -> CAN
+  SLCANReceiveCommand();
 
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    if ( ( counter % 2) == 0) {
-      CAN_TX_msg.type = DATA_FRAME;
-      if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
-      CAN_TX_msg.format = EXTENDED_FORMAT;
-      CAN_TX_msg.id = 0x32F103;
-    // } else {
-    //   CAN_TX_msg.type = DATA_FRAME;
-    //   if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
-    //   CAN_TX_msg.format = STANDARD_FORMAT;
-    //   CAN_TX_msg.id = 0x103;
-    // }
-    CANSend(&CAN_TX_msg);
-    frameLength++;
-    if (frameLength == 9) frameLength = 0;
-    counter++;
-  }
+
+  digitalWrite(LED_BUILTIN, LOW);
+
+  // CAN_TX_msg.data[0] = 0x00;
+  // CAN_TX_msg.data[1] = 0x01;
+  // CAN_TX_msg.data[2] = 0x02;
+  // CAN_TX_msg.data[3] = 0x03;
+  // CAN_TX_msg.data[4] = 0x04;
+  // CAN_TX_msg.data[5] = 0x05;
+  // CAN_TX_msg.data[6] = 0x06;
+  // CAN_TX_msg.data[7] = 0x07;
+  // CAN_TX_msg.len = 8;
+
+  // unsigned long currentMillis = millis();
+  // if (currentMillis - previousMillis >= interval) {
+  //   previousMillis = currentMillis;
+  //   // if ( ( counter % 2) == 0) {
+  //     CAN_TX_msg.type = DATA_FRAME;
+  //     if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
+  //     CAN_TX_msg.format = EXTENDED_FORMAT;
+  //     CAN_TX_msg.id = 0x32F103;
+  //   // } else {
+  //   //   CAN_TX_msg.type = DATA_FRAME;
+  //   //   if (CAN_TX_msg.len == 0) CAN_TX_msg.type = REMOTE_FRAME;
+  //   //   CAN_TX_msg.format = STANDARD_FORMAT;
+  //   //   CAN_TX_msg.id = 0x103;
+  //   // }
+  // //  CANSend(&CAN_TX_msg);
+  //   // frameLength++;
+  //   // if (frameLength == 9) frameLength = 0;
+  //   counter++;
+  // }
   
   if(CANMsgAvail()) {
     CANReceive(&CAN_RX_msg);
+    SLCANSendFrame(&CAN_RX_msg);
 
-    if (CAN_RX_msg.format == EXTENDED_FORMAT) {
-      SERIAL.print("Extended ID: 0x");
-      if (CAN_RX_msg.id < 0x10000000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x1000000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x100000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x1000) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
-      SERIAL.print(CAN_RX_msg.id, HEX);
-    } else {
-      SERIAL.print("Standard ID: 0x");
-      if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
-      if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
-      SERIAL.print(CAN_RX_msg.id, HEX);
-      SERIAL.print("     ");
-    }
+    // if (CAN_RX_msg.format == EXTENDED_FORMAT) {
+    //   SERIAL.print("Extended ID: 0x");
+    //   if (CAN_RX_msg.id < 0x10000000) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x1000000) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x100000) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x10000) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x1000) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
+    //   SERIAL.print(CAN_RX_msg.id, HEX);
+    // } else {
+    //   SERIAL.print("Standard ID: 0x");
+    //   if (CAN_RX_msg.id < 0x100) SERIAL.print("0");
+    //   if (CAN_RX_msg.id < 0x10) SERIAL.print("0");
+    //   SERIAL.print(CAN_RX_msg.id, HEX);
+    //   SERIAL.print("     ");
+    // }
 
-    SERIAL.print(" DLC: ");
-    SERIAL.print(CAN_RX_msg.len);
-    if (CAN_RX_msg.type == DATA_FRAME) {
-      SERIAL.print(" Data: ");
-      for(int i=0; i<CAN_RX_msg.len; i++) {
-        SERIAL.print("0x"); 
-        SERIAL.print(CAN_RX_msg.data[i], HEX); 
-        if (i != (CAN_RX_msg.len-1))  SERIAL.print(" ");
-      }
-      SERIAL.println();
-    } else {
-      SERIAL.println(" Data: REMOTE REQUEST FRAME");
-    }
+    // SERIAL.print(" DLC: ");
+    // SERIAL.print(CAN_RX_msg.len);
+    // if (CAN_RX_msg.type == DATA_FRAME) {
+    //   SERIAL.print(" Data: ");
+    //   for(int i=0; i<CAN_RX_msg.len; i++) {
+    //     SERIAL.print("0x"); 
+    //     SERIAL.print(CAN_RX_msg.data[i], HEX); 
+    //     if (i != (CAN_RX_msg.len-1))  SERIAL.print(" ");
+    //   }
+    //   SERIAL.println();
+    // } else {
+    //   SERIAL.println(" Data: REMOTE REQUEST FRAME");
+    // }
   }
     
 //  delay(1);

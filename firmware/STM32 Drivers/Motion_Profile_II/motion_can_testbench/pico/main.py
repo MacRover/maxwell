@@ -8,22 +8,20 @@ import time
 uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
 
 # Turn on an LED so we know the code is active
-
 led = Pin("LED", Pin.OUT)
-led_external = Pin(15, Pin.OUT);
+led_external = Pin(15, Pin.OUT)
 
 led.value(0)
 led_external.value(0)
 
 for i in range(10):
     led.toggle()
-    led_external.toggle();
+    led_external.toggle()
     time.sleep(0.5)
 
 # Setup a poller to read raw text from the USB port without triggering the REPL
 usb_poll = select.poll()
 usb_poll.register(sys.stdin, select.POLLIN)
-
 
 while True:
     # 1. Read from USB (python-can) and pass to UART (Blue Pill)
@@ -41,8 +39,5 @@ while True:
         led_external.toggle()
         # Write directly to the stdout buffer to avoid formatting issues
         sys.stdout.buffer.write(data)
-        sys.stdout.buffer.flush()
+        # sys.stdout.buffer.flush()
         led.toggle()
-
-
-# close micropython connection befroe the bench script is running

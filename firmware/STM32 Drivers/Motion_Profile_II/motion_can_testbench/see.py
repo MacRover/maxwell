@@ -2,7 +2,7 @@ import serial
 import sys
 
 # Set your COM port here
-PORT = 'COM4'
+PORT = 'COM11'
 # The baud rate here doesn't strictly matter for the Pico's USB virtual serial port, 
 # but matching it to your STM32's baud rate is good practice.
 BAUD_RATE = 115200 
