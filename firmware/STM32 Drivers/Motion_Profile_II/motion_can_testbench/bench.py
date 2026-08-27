@@ -6,7 +6,7 @@ from collections import deque
 
 # Define your Pico's serial port here. 
 # Examples -> Windows: 'COM3', Linux: '/dev/ttyACM0', Mac: '/dev/tty.usbmodem1234'
-SERIAL_PORT = 'COM11'
+SERIAL_PORT = 'COM4'
 rad_id = 0xF0
 
 def main():
@@ -40,40 +40,53 @@ def main():
         #send_can_id(bus=bus, id=0x1A54, value=0xB0)
         while True:
             try: 
-                for msg in bus:
-                    if ((msg.arbitration_id & 0xFF) == rad_id):
-                        if len(msg.data) == 8:
-                            float_convert = struct.unpack(">d",msg.data)[0]
+
+                msg = bus.recv(timeout=0.01)
+
+                plt.pause(0.001)
+
+                if msg is None:
+                    continue
+
+                if ((msg.arbitration_id & 0xFF) == rad_id):
+                    if len(msg.data) == 8:
+                        float_convert = struct.unpack(">d",msg.data)[0]
+                        print(msg, round(float_convert, 5))
+
+                    elif len(msg.data) == 4:
+                        cmd_id = (msg.arbitration_id >> 8) & 0xFF # check command ID hence the shift
+                        if cmd_id == 0x68:
+                            int_convert = struct.unpack(">i", msg.data)[0]
+                            print(f"Steps: {int_convert}")
+
+                        elif cmd_id == 0xFE: # NEW: SEND_VELOCITY Hook
+                            velocity = struct.unpack(">f", msg.data)[0]
+                            current_time = time.time() - start_time
+                            print(msg, round(velocity, 5))
+                            
+                            # Store the data point
+                            times.append(current_time)
+                            velocities.append(velocity)
+                            
+                            # Only redraw the graph at 10Hz (every 0.1s) to prevent CAN lag
+                            if (current_time - last_plot_time) > 0.1:
+                                line.set_data(times, velocities)
+                                ax.relim()
+                                ax.autoscale_view()
+                                fig.canvas.draw()
+                                fig.canvas.flush_events()
+                                last_plot_time = current_time
+                        else:
+                            float_convert = struct.unpack(">f", msg.data)[0]
                             print(msg, round(float_convert, 5))
 
-                        elif len(msg.data) == 4:
-                            cmd_id = (msg.arbitration_id >> 8) & 0xFF # check command ID hence the shift
-                            if cmd_id == 0x68:
-                                int_convert = struct.unpack(">i", msg.data)[0]
-                                print(f"Steps: {int_convert}")
+                    else:
+                        print(msg)
+                        # pass
 
-                            elif cmd_id == 0xFE: # NEW: SEND_VELOCITY Hook
-                                velocity = struct.unpack(">f", msg.data)[0]
-                                current_time = time.time() - start_time
-                                
-                                # Store the data point
-                                times.append(current_time)
-                                velocities.append(velocity)
-                                
-                                # Only redraw the graph at 10Hz (every 0.1s) to prevent CAN lag
-                                if (current_time - last_plot_time) > 0.1:
-                                    line.set_data(times, velocities)
-                                    ax.relim()
-                                    ax.autoscale_view()
-                                    fig.canvas.draw()
-                                    fig.canvas.flush_events()
-                                    last_plot_time = current_time
-                            else:
-                                float_convert = struct.unpack(">f", msg.data)[0]
-                                print(msg, round(float_convert, 5))
+            except (IndexError, ValueError):
 
-                        else:
-                            print(msg)
+                continue
             except KeyboardInterrupt:
                 i = input('command? ')
                 
@@ -254,6 +267,7 @@ def send_float_value(bus: can.BusABC, can_id: int, device_id: int, value: float)
         data=struct.pack(">f", value),
         is_extended_id=True,
     )
+    print(f"\n---> SENDING: {new_msg}")
     bus.send(msg=new_msg)
 
 def send_uint32_value(bus: can.BusABC, can_id: int, device_id: int, value: int):

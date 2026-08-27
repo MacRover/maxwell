@@ -455,6 +455,11 @@ void CANSend(CAN_msg_t* CAN_tx_msg)
 {
   volatile int count = 0;
 
+  if (CAN1->sTxMailBox[0].TIR & 0x1UL) {
+    CAN1->TSR |= (1UL << 7);
+    while((CAN1->TSR & (1UL << 26)) == 0);
+  }
+
   uint32_t out = 0;
   if (CAN_tx_msg->format == EXTENDED_FORMAT) { // Extended frame format
       out = ((CAN_tx_msg->id & CAN_EXT_ID_MASK) << 3U) | STM32_CAN_TIR_IDE;
@@ -488,10 +493,17 @@ void CANSend(CAN_msg_t* CAN_tx_msg)
 
   // The mailbox don't becomes empty while loop
   if (CAN1->sTxMailBox[0].TIR & 0x1UL) {
-    SERIAL.println("Send Fail");
-    SERIAL.println(CAN1->ESR);
-    SERIAL.println(CAN1->MSR);
-    SERIAL.println(CAN1->TSR);
+    // SERIAL.println("Send Fail");
+    // SERIAL.println(CAN1->ESR);
+    // SERIAL.println(CAN1->MSR);
+    // SERIAL.println(CAN1->TSR);
+
+    for (int i = 0; i < 6; i++) {
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(50);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(50);
+    }
   }
 
   // SERIAL.println("Sent CAN Frame!");
@@ -521,6 +533,10 @@ void SLCANSendFrame(const CAN_msg_t* msg)
     if (msg->format != EXTENDED_FORMAT)
         return;
 
+    if (SERIAL.availableForWrite() < 32) {
+      return;
+    }
+
     SERIAL.print("T");
 
     // 29-bit CAN ID, exactly 8 hex characters
@@ -543,71 +559,180 @@ void SLCANSendFrame(const CAN_msg_t* msg)
 }
 
 
+// bool SLCANReceiveCommand()
+// {
+//     static char buffer[40];
+//     static uint8_t index = 0;
+
+//     while (SERIAL.available()) {
+
+//         char c = SERIAL.read();
+
+//         if (index == 0) {
+//             if (c != 'T' && c != 'O' && c != 'C' && c != 'S' && c != 's' && c != 'V' && c != '\r') {
+//                 continue; 
+//             }
+//         }
+
+//         if (c == '\r' || c == '\n') {
+
+//             buffer[index] = '\0';
+//             index = 0;
+
+//             if (buffer[0] == 'O' || buffer[0] == 'C' || buffer[0] == 'S' || buffer[0] == 's' || buffer[0] == 'V') {
+//                 SERIAL.write('\r');
+//                 return true;
+//             }
+
+//             // Need at least:
+//             // T + 8 ID chars + DLC
+//             if (strlen(buffer) < 10)
+//                 return false;
+
+//             // Extended data frame
+//             if (buffer[0] != 'T')
+//                 return false;
+
+//             CAN_msg_t msg;
+
+//             msg.format = EXTENDED_FORMAT;
+//             msg.type = DATA_FRAME;
+//             msg.ch = 0;
+
+//             // Parse 29-bit ID
+//             char idstr[9];
+//             memcpy(idstr, &buffer[1], 8);
+//             idstr[8] = '\0';
+
+//             msg.id = strtoul(idstr, NULL, 16);
+
+//             // DLC
+//             msg.len = (uint8_t)(buffer[9] - '0');
+
+//             if (msg.len > 8)
+//                 return false;
+
+//             // Parse data
+//             for (uint8_t i = 0; i < msg.len; i++) {
+
+//                 char byteStr[3];
+//                 byteStr[0] = buffer[10 + i * 2];
+//                 byteStr[1] = buffer[11 + i * 2];
+//                 byteStr[2] = '\0';
+
+//                 msg.data[i] = (uint8_t)strtoul(byteStr, NULL, 16);
+//             }
+
+//             digitalWrite(LED_BUILTIN, LOW);
+//             delay(1000);
+//             digitalWrite(LED_BUILTIN, HIGH);
+//             delay(200);
+
+//             CANSend(&msg);
+
+//             return true;
+//         }
+
+//         // Prevent buffer overflow
+//         if (index < sizeof(buffer) - 1) {
+//             buffer[index++] = c;
+//         }
+//         else {
+//             index = 0;
+//         }
+//     }
+
+//     return false;
+// }
+
+
 bool SLCANReceiveCommand()
 {
     static char buffer[40];
     static uint8_t index = 0;
+    static unsigned long lastCharTime = 0;
 
+    // 1. Read everything available into the buffer
     while (SERIAL.available()) {
-
         char c = SERIAL.read();
+        lastCharTime = millis();
 
-        if (c == '\r') {
-
-            buffer[index] = '\0';
-            index = 0;
-
-            // Need at least:
-            // T + 8 ID chars + DLC
-            if (strlen(buffer) < 10)
-                return false;
-
-            // Extended data frame
-            if (buffer[0] != 'T')
-                return false;
-
-            CAN_msg_t msg;
-
-            msg.format = EXTENDED_FORMAT;
-            msg.type = DATA_FRAME;
-            msg.ch = 0;
-
-            // Parse 29-bit ID
-            char idstr[9];
-            memcpy(idstr, &buffer[1], 8);
-            idstr[8] = '\0';
-
-            msg.id = strtoul(idstr, NULL, 16);
-
-            // DLC
-            msg.len = (uint8_t)(buffer[9] - '0');
-
-            if (msg.len > 8)
-                return false;
-
-            // Parse data
-            for (uint8_t i = 0; i < msg.len; i++) {
-
-                char byteStr[3];
-                byteStr[0] = buffer[10 + i * 2];
-                byteStr[1] = buffer[11 + i * 2];
-                byteStr[2] = '\0';
-
-                msg.data[i] = (uint8_t)strtoul(byteStr, NULL, 16);
+        // Drop garbage bytes to prevent buffer shifting
+        if (index == 0) {
+            if (c != 'T' && c != 'O' && c != 'C' && c != 'S' && c != 's' && c != 'V' && c != '\r' && c != '\n') {
+                continue; 
             }
+        }
 
-            CANSend(&msg);
-
-            return true;
+        // If we actually DO get a \r or \n, force the parse immediately
+        if (c == '\r' || c == '\n') {
+            break; 
         }
 
         // Prevent buffer overflow
         if (index < sizeof(buffer) - 1) {
             buffer[index++] = c;
-        }
-        else {
+        } else {
             index = 0;
         }
+    }
+
+    // 2. Parse if we have data AND the line has been quiet for 5ms (or we manually broke the loop)
+    if (index > 0 && (millis() - lastCharTime > 5)) {
+        
+        buffer[index] = '\0'; // Seal the string
+        
+        // Backup the index so we can reset it, but use the string
+        uint8_t processed_len = index;
+        index = 0; 
+
+        if (buffer[0] == 'O' || buffer[0] == 'C' || buffer[0] == 'S' || buffer[0] == 's' || buffer[0] == 'V') {
+            SERIAL.write('\r');
+            return true;
+        }
+
+        // Need at least: T + 8 ID chars + DLC
+        if (processed_len < 10) return false;
+
+        // Extended data frame
+        if (buffer[0] != 'T') return false;
+
+        // Prevent memory garbage
+        CAN_msg_t msg;
+        memset(&msg, 0, sizeof(CAN_msg_t));
+
+        msg.format = EXTENDED_FORMAT;
+        msg.type = DATA_FRAME;
+        msg.ch = 0;
+
+        // Parse 29-bit ID
+        char idstr[9];
+        memcpy(idstr, &buffer[1], 8);
+        idstr[8] = '\0';
+        msg.id = strtoul(idstr, NULL, 16);
+
+        // DLC
+        msg.len = (uint8_t)(buffer[9] - '0');
+        if (msg.len > 8) return false;
+
+        // Parse data
+        for (uint8_t i = 0; i < msg.len; i++) {
+            char byteStr[3];
+            byteStr[0] = buffer[10 + i * 2];
+            byteStr[1] = buffer[11 + i * 2];
+            byteStr[2] = '\0';
+            msg.data[i] = (uint8_t)strtoul(byteStr, NULL, 16);
+        }
+
+        // --- THE SUCCESS TRAP ---
+        // digitalWrite(LED_BUILTIN, LOW);
+        // delay(1000);
+        // digitalWrite(LED_BUILTIN, HIGH);
+        // delay(200);
+        // ------------------------
+
+        CANSend(&msg);
+        return true;
     }
 
     return false;
@@ -617,12 +742,13 @@ bool SLCANReceiveCommand()
 void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
   
   SERIAL.begin(115200);
 
   delay(1000);
 
-  SERIAL.println("CAN init");
+  // SERIAL.println("CAN init");
  
 //  bool ret = CANInit(CAN_500KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
   bool ret = CANInit(CAN_500KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
@@ -630,7 +756,18 @@ void setup() {
 //  bool ret = CANInit(CAN_1000KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
   //bool ret = CANInit(CAN_1000KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
   //bool ret = CANInit(CAN_1000KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
-  if (!ret) while(true) { SERIAL.println("Failed to initialize CAN"); delay(500);}
+  if (!ret) {
+    while(true) { 
+
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(100);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(100);
+      
+      // SERIAL.println("Failed to initialize CAN"); 
+      // delay(500);
+    }
+  }
 }
 
 void loop() {
@@ -641,7 +778,7 @@ void loop() {
   SLCANReceiveCommand();
 
 
-  digitalWrite(LED_BUILTIN, LOW);
+  // digitalWrite(LED_BUILTIN, LOW);
 
   // CAN_TX_msg.data[0] = 0x00;
   // CAN_TX_msg.data[1] = 0x01;

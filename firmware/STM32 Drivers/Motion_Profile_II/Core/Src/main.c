@@ -58,6 +58,7 @@ uint16_t odom_counter = 0;
 uint16_t idle_counter = 0;
 
 uint8_t led_on = 0;
+uint16_t current_target_speed = 0;
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
@@ -242,7 +243,17 @@ int main(void)
 
                     // Setup the Math Profile
                     motion_profile.STEPS_TO_MOVE = target_steps;
+                    motion_profile.CURRENT_POS = 0;
+                    motion_profile.SET_POINT = target_steps;
                     Motion_Profile_Phases(&motion_profile);
+
+                    // Setting up initial speeds
+
+                    uint16_t starting_speed = (uint16_t)fabsf(motion_profile.V_I);
+                    if (starting_speed < 20) {
+                    	starting_speed = 20;
+                    }
+                    current_target_speed = starting_speed;
 
                     // Setup the Hardware (Using your existing wrapper)
                     if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
@@ -252,6 +263,7 @@ int main(void)
 
                     // Start the clock and enter profiling state
                     profile_start_time = HAL_GetTick();
+
                     rad_state = RAD_STATE_PROFILE_CONTROL;
                     break;
                 }
@@ -365,11 +377,17 @@ int main(void)
                 if (prof_state == MOTION_PROFILE_STATE_BUSY)
                 {
                     uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
-                    
-                    if (target_speed > 0) {
-                        // Dynamically adjust the timer ARR while MoveSteps runs in the background
-                        MOTION_PROFILE_Set_Speed(target_speed);
+
+                    if ((target_speed != current_target_speed) && (target_speed>0)) {
+                    	MOTION_PROFILE_Set_Speed(target_speed);
+                    	current_target_speed = target_speed;
                     }
+                    
+//                    if (target_speed > 0) {
+//                        // Dynamically adjust the timer ARR while MoveSteps runs in the background
+//                        MOTION_PROFILE_Set_Speed(target_speed);
+//                    }
+//                    MOTION_PROFILE_Set_Speed(500);
                 }
                 else if (prof_state == MOTION_PROFILE_STATE_DONE)
                 {
@@ -412,16 +430,16 @@ int main(void)
             // TODO: There may be some issues here with dropping frames if we are putting these too close together
             
             odom_counter++;
-            //MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+//            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
 
-            MX_CAN_Broadcast_Uint8_Data(&rad_can, 1, SEND_VELOCITY);
+//            MX_CAN_Broadcast_Uint8_Data(&rad_can, 1, SEND_VELOCITY);
         }
 
         if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
         {
             rad_status.RAD_STATE = rad_state;
             rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
-            //MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+            MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
         }
 
         rad_can.timer += HAL_GetTick() - prev_ms;
@@ -488,16 +506,37 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 
-    // Guard against divide-by-zero if velocity drops to 0
-    if (velocity == 0) {
+    // Guard against divide-by-zero if velocity drops to 0 and low speeds preventing issues
+    if (velocity < 5) {
         return;
     }
 
 	// Calculate ARR from inputted desired freq
 	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, velocity);
 
+	// limit ARR value to prevent overflow
+
+	if (arr > 65535) {
+		arr = 65535;
+	}
+
+	if (arr < 2) {
+		arr = 2;
+	}
+
 	// Assign ARR to timer hardware
 	TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
+	// Update duty cycle (CCR) us9ing HAL macros to maintain 50%
+//
+	__HAL_TIM_SET_COMPARE(tmc_2590_1.Init.STEP_Tim, tmc_2590_1.Init.STEP_Channel, arr / 2);
+//
+//	// prevent timer lockup if the counter already overshot the new smaller ARR
+//
+//	if (__HAL_TIM_GET_COUNTER(tmc_2590_1.Init.STEP_Tim) > arr) {
+//	        __HAL_TIM_SET_COUNTER(tmc_2590_1.Init.STEP_Tim, 0);
+//	}
+
 
 	// Update local stepper speed reference
 	rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
