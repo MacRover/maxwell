@@ -59,6 +59,7 @@ uint16_t idle_counter = 0;
 
 uint8_t led_on = 0;
 uint16_t current_target_speed = 0;
+uint32_t last_speed_update = 0;
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
@@ -87,7 +88,7 @@ int main(void)
     rad_params.RAD_ID = 0xF0;
     rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
     rad_params.STEPPER_SPEED = 1000;
-    rad_params.ODOM_INTERVAL = 20; // 50hz, or 20ms
+    rad_params.ODOM_INTERVAL = 100; // 50hz, or 20ms
     rad_params.HEALTH_INTERVAL = 1000; // every second
     
     rad_params.CHOPCONF_CHM = 0b0;
@@ -263,6 +264,7 @@ int main(void)
 
                     // Start the clock and enter profiling state
                     profile_start_time = HAL_GetTick();
+                    last_speed_update = profile_start_time;
 
                     rad_state = RAD_STATE_PROFILE_CONTROL;
                     break;
@@ -368,7 +370,7 @@ int main(void)
 
             // REVIEW THIS SOME MORE
             {
-                // Calculate elapsed time in seconds
+                // Calculate elapsed time in seconds TODO
                 motion_profile.TIME_ELAPSED = (float)(HAL_GetTick() - profile_start_time) / 1000.0f;
 
                 // Get target velocity for this exact millisecond
@@ -378,9 +380,15 @@ int main(void)
                 {
                     uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
 
-                    if ((target_speed != current_target_speed) && (target_speed>0)) {
-                    	MOTION_PROFILE_Set_Speed(target_speed);
-                    	current_target_speed = target_speed;
+
+                    if (HAL_GetTick() - last_speed_update >= 1000) {
+
+                    	last_speed_update = HAL_GetTick();
+
+                    	if ((target_speed != current_target_speed) && (target_speed>0)) {
+							MOTION_PROFILE_Set_Speed(target_speed);
+							current_target_speed = target_speed;
+                    	}
                     }
                     
 //                    if (target_speed > 0) {
@@ -391,10 +399,13 @@ int main(void)
                 }
                 else if (prof_state == MOTION_PROFILE_STATE_DONE)
                 {
-                    // Math confirms profile is complete
-                    TMC_2590_Stop(&tmc_2590_1);
-                    MX_PROFILER_RESET();
-                    rad_state = RAD_STATE_IDLE;
+
+                	if (TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY) {
+                		// Math confirms profile is complete
+						TMC_2590_Stop(&tmc_2590_1);
+						MX_PROFILER_RESET();
+						rad_state = RAD_STATE_IDLE;
+                	}
                 }
                 break;
             }
@@ -421,11 +432,11 @@ int main(void)
         		led_on = 0;
         	}
 
-            if (rad_state == RAD_STATE_PROFILE_CONTROL) {
-
-                MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
-
-            }
+//            if (rad_state == RAD_STATE_PROFILE_CONTROL) {
+//
+//                MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
+//
+//            }
 
             // TODO: There may be some issues here with dropping frames if we are putting these too close together
             
@@ -524,6 +535,7 @@ void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 		arr = 2;
 	}
 
+
 	// Assign ARR to timer hardware
 	TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
 
@@ -533,9 +545,9 @@ void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 //
 //	// prevent timer lockup if the counter already overshot the new smaller ARR
 //
-//	if (__HAL_TIM_GET_COUNTER(tmc_2590_1.Init.STEP_Tim) > arr) {
-//	        __HAL_TIM_SET_COUNTER(tmc_2590_1.Init.STEP_Tim, 0);
-//	}
+	// if (__HAL_TIM_GET_COUNTER(tmc_2590_1.Init.STEP_Tim) > arr) {
+	//         __HAL_TIM_SET_COUNTER(tmc_2590_1.Init.STEP_Tim, 0);
+	// }
 
 
 	// Update local stepper speed reference

@@ -20,7 +20,7 @@ typedef enum {DATA_FRAME = 0, REMOTE_FRAME}         CAN_FRAME;
 
 
 typedef struct
-{
+{c
   uint32_t id;        /* 29 bit identifier                               */
   uint8_t  data[8];   /* Data field                                      */
   uint8_t  len;       /* Length of data field in bytes                   */
