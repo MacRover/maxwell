@@ -1,0 +1,6 @@
+#ifndef VIPER_RTOS_TASK_EEPROM_WRITE_H
+#define VIPER_RTOS_TASK_EEPROM_WRITE_H
+
+void TaskEEPROMWrite(void *argument);
+
+#endif /* VIPER_RTOS_TASK_EEPROM_WRITE_H */
