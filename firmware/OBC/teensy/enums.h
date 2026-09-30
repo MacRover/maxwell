@@ -3,36 +3,37 @@
 
 #include <cstdint>
 
+
 enum UROS_states {
   UROS_INIT,
   UROS_FOUND,
   UROS_OK,
   UROS_ERROR 
-} state_UROS;
+};
 
 enum fan_states{
   FANS_INIT,
   FANS_OK,
   FANS_ERROR
-} state_fans;
+};
 
 enum TSB_STATES{
   TSB_INIT,
   TSB_OK,
   TSB_ERROR
-} state_TSB;
+};
 
 enum HYDROGEN_STATES{
   HYDROGEN_INIT,
   HYDROGEN_OK,
   HYDROGEN_ERROR
-} state_hydrogen;
+};
 
 enum OZONE_STATES{
   OZONE_INIT,
   OZONE_OK,
   OZONE_ERROR
-} state_ozone;
+};
 
 enum LORA_STATES {
   LORA_INIT,            
@@ -40,7 +41,14 @@ enum LORA_STATES {
   LORA_FLAG,   
   LORA_FINISH,          
   LORA_DELAY 
-} state_lora;
+};
+
+enum LED_States {
+  LED_STATE_OFF,
+  LED_STATE_AUTO,
+  LED_STATE_TELEOP,
+  LED_STATE_ARRIVED
+};
 
 enum EMC2305_Reg : uint8_t
 {
@@ -65,5 +73,15 @@ enum MIC184_Zone : uint8_t
     MIC184_EXTERNAL = 0x20,
     MIC184_INTERNAL = 0x00
 };
+
+
+
+extern UROS_states state_UROS;
+extern fan_states state_fans;
+extern TSB_STATES state_TSB;
+extern HYDROGEN_STATES state_hydrogen;
+extern OZONE_STATES state_ozone;
+extern LORA_STATES state_lora;
+
 
 #endif
