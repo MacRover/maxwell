@@ -13,8 +13,8 @@ Motion_Profile_HandleTypeDef motion_profile;
 void MX_PROFILER_INIT(void) {
 
     motion_profile.STEPS_TO_MOVE = 90; // Can be arbitrarily changed later
-    motion_profile.V_I = 100.0f;
-    motion_profile.V_MAX = 1000.0f;
+    motion_profile.V_I = 25.0f;
+    motion_profile.V_MAX = 500.0f;
     motion_profile.ACCELERATION = 250.0f;
     motion_profile.DIRECTION = 1;
 

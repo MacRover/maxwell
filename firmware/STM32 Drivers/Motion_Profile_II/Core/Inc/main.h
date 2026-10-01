@@ -95,6 +95,7 @@ typedef struct __attribute__((packed)){
 
 	uint8_t WATCH_DOG_ENABLED;
 	uint8_t SW_STOP_ENABLED;
+	uint8_t MOTION_PROFILE_ENABLED;
 } RAD_PARAMS_TypeDef;
 
 typedef struct

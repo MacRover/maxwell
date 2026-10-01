@@ -15,21 +15,21 @@ def main():
     # Graph setup and initialization
 
     # --- GRAPH SETUP ---
-    plt.ion() # Turn on interactive mode so it doesn't block the CAN loop
-    fig, ax = plt.subplots()
-    line, = ax.plot([], [], lw=2)
-    ax.set_title('Live Motor Velocity Profile')
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Velocity (Hz / Steps per sec)')
-    ax.grid(True)
+    # plt.ion() # Turn on interactive mode so it doesn't block the CAN loop
+    # fig, ax = plt.subplots()
+    # line, = ax.plot([], [], lw=2)
+    # ax.set_title('Live Motor Velocity Profile')
+    # ax.set_xlabel('Time (s)')
+    # ax.set_ylabel('Velocity (Hz / Steps per sec)')
+    # ax.grid(True)
     
     # Store up to 250 data points (5 seconds of data at 50Hz)
-    max_points = 250 
-    times = deque(maxlen=max_points)
-    velocities = deque(maxlen=max_points)
+    # max_points = 250 
+    # times = deque(maxlen=max_points)
+    # velocities = deque(maxlen=max_points)
     
-    start_time = time.time()
-    last_plot_time = 0
+    # start_time = time.time()
+    # last_plot_time = 0
 
     
     # Initialize using the 'slcan' interface instead of 'pcan'
@@ -61,21 +61,21 @@ def main():
 
                         elif cmd_id == 0xFE: # NEW: SEND_VELOCITY Hook
                             velocity = struct.unpack(">f", msg.data)[0]
-                            current_time = time.time() - start_time
+                            # current_time = time.time() - start_time
                             print(msg, round(velocity, 5))
                             
                             # Store the data point
-                            times.append(current_time)
-                            velocities.append(velocity)
+                            # times.append(current_time)
+                            # velocities.append(velocity)
                             
                             # Only redraw the graph at 10Hz (every 0.1s) to prevent CAN lag
-                            if (current_time - last_plot_time) > 0.1:
-                                line.set_data(times, velocities)
-                                ax.relim()
-                                ax.autoscale_view()
-                                fig.canvas.draw()
-                                fig.canvas.flush_events()
-                                last_plot_time = current_time
+                            # if (current_time - last_plot_time) > 0.1:
+                            #     line.set_data(times, velocities)
+                            #     ax.relim()
+                            #     ax.autoscale_view()
+                            #     fig.canvas.draw()
+                            #     fig.canvas.flush_events()
+                            #     last_plot_time = current_time
                         else:
                             float_convert = struct.unpack(">f", msg.data)[0]
                             print(msg, round(float_convert, 5))
@@ -122,6 +122,13 @@ def main():
                 elif(i == "get health" or i == "get odom"):
                     send_uint32_value(bus=bus, can_id=0x10, device_id=rad_id, value = 0)
                     send_uint32_value(bus=bus, can_id=0x14, device_id=rad_id, value = 0)
+                elif(i == "profile toggle"):
+                    # this will break if watchdog of sw stop need to be sent
+                    j = input("1=on, 0=off? ")
+                    if j == "1":
+                        send_uint8_value(bus=bus, can_id=0x61, device_id=rad_id, value = 0b100)
+                    elif j == "0":
+                        send_uint8_value(bus=bus, can_id=0x61, device_id=rad_id, value = 0b0)
                 # elif(i == "eeprom save"):
                 #     send_uint32_value(bus=bus, can_id=0x11, device_id=rad_id, value = 0)
                 # elif(i == "eeprom reload"):

@@ -204,7 +204,7 @@ void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile) {
 		standard_steps = 0;
 		profile->T_LEVEL = 0;
 
-		// Need to recalculate the peak velocity that the profile will go up to
+		// Need to recalculate the peak velocity that the profile will go up to // TODO
 
 		profile->V_PEAK = sqrtf(profile->ACCELERATION * abs_steps + 0.5f * (profile->V_I * profile->V_I));
 

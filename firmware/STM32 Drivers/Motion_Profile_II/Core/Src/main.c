@@ -61,6 +61,8 @@ uint8_t led_on = 0;
 uint16_t current_target_speed = 0;
 uint32_t last_speed_update = 0;
 
+int16_t steps_to_move;
+
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
 /* USER CODE END PV */
@@ -127,6 +129,7 @@ int main(void)
 
     rad_params.SW_STOP_ENABLED = 0;
     rad_params.WATCH_DOG_ENABLED = 0;
+    rad_params.MOTION_PROFILE_ENABLED = 0;
 
   /* USER CODE END 1 */
 
@@ -185,7 +188,8 @@ int main(void)
     {
         RAD_STATE_INIT = 0,
         RAD_STATE_IDLE,
-        RAD_STATE_PROFILE_CONTROL
+        RAD_STATE_PROFILE_CONTROL,
+		RAD_STATE_PULSE_CONTROL
     } rad_state = RAD_STATE_INIT;
 
     while (1)
@@ -234,39 +238,65 @@ int main(void)
 
                     // REVIEW THIS
                     float pulses = decode_float_big_endian(new_message->data);
-                    int32_t target_steps = (int32_t)pulses;
 
-                    // Cap steps using TMC driver limits
-                    if (target_steps > tmc_2590_1.Init.max_steps)
-                        target_steps = tmc_2590_1.Init.max_steps;
-                    else if (target_steps < -1*(tmc_2590_1.Init.max_steps))
-                        target_steps = -1*tmc_2590_1.Init.max_steps;
 
-                    // Setup the Math Profile
-                    motion_profile.STEPS_TO_MOVE = target_steps;
-                    motion_profile.CURRENT_POS = 0;
-                    motion_profile.SET_POINT = target_steps;
-                    Motion_Profile_Phases(&motion_profile);
+                    // Case profile enabled
 
-                    // Setting up initial speeds
+                    if (rad_params.MOTION_PROFILE_ENABLED) {
 
-                    uint16_t starting_speed = (uint16_t)fabsf(motion_profile.V_I);
-                    if (starting_speed < 20) {
-                    	starting_speed = 20;
+						int32_t target_steps = (int32_t)pulses;
+
+						// Cap steps using TMC driver limits
+						if (target_steps > tmc_2590_1.Init.max_steps)
+							target_steps = tmc_2590_1.Init.max_steps;
+						else if (target_steps < -1*(tmc_2590_1.Init.max_steps))
+							target_steps = -1*tmc_2590_1.Init.max_steps;
+
+						// Setup the Math Profile
+						motion_profile.STEPS_TO_MOVE = target_steps;
+						motion_profile.CURRENT_POS = 0;
+						motion_profile.SET_POINT = target_steps;
+						Motion_Profile_Phases(&motion_profile);
+
+						// Setting up initial speeds
+
+						uint16_t starting_speed = (uint16_t)fabsf(motion_profile.V_I);
+						if (starting_speed < 20) {
+							starting_speed = 20;
+						}
+						current_target_speed = starting_speed;
+
+						// Setup the Hardware (Using your existing wrapper)
+						if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+							TMC_2590_Stop(&tmc_2590_1);
+						}
+						rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, target_steps);
+
+						// Start the clock and enter profiling state
+						profile_start_time = HAL_GetTick();
+						last_speed_update = profile_start_time;
+
+						rad_state = RAD_STATE_PROFILE_CONTROL;
+
+					// Case no profile
+                    } else {
+
+                    	steps_to_move = (int16_t)pulses;
+
+
+
+                    	// cap steps
+
+                    	if (steps_to_move > tmc_2590_1.Init.max_steps) {
+                    		steps_to_move = tmc_2590_1.Init.max_steps;
+                    	} else if (steps_to_move <-1*tmc_2590_1.Init.max_steps) {
+                    		steps_to_move = -1*tmc_2590_1.Init.max_steps;
+                    	}
+
+                    	rad_state = RAD_STATE_PULSE_CONTROL;
                     }
-                    current_target_speed = starting_speed;
 
-                    // Setup the Hardware (Using your existing wrapper)
-                    if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
-                        TMC_2590_Stop(&tmc_2590_1);
-                    }
-                    rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, target_steps);
 
-                    // Start the clock and enter profiling state
-                    profile_start_time = HAL_GetTick();
-                    last_speed_update = profile_start_time;
-
-                    rad_state = RAD_STATE_PROFILE_CONTROL;
                     break;
                 }
                 case SET_STEPPER_SPEED:
@@ -285,7 +315,8 @@ int main(void)
                 	uint8_t flags = new_message->data[0];
                 	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
                 	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
-                	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
+                	rad_params.MOTION_PROFILE_ENABLED = flags & (1 << 2);
+                	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED) | (rad_params.MOTION_PROFILE_ENABLED);
                 	break;
                 }
                 case GET_RAD_FLAGS:
@@ -381,7 +412,7 @@ int main(void)
                     uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
 
 
-                    if (HAL_GetTick() - last_speed_update >= 1000) {
+                    if (HAL_GetTick() - last_speed_update >= 50) {
 
                     	last_speed_update = HAL_GetTick();
 
@@ -404,11 +435,23 @@ int main(void)
                 		// Math confirms profile is complete
 						TMC_2590_Stop(&tmc_2590_1);
 						MX_PROFILER_RESET();
+						//MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
 						rad_state = RAD_STATE_IDLE;
+						//last_speed_update = 0;
                 	}
                 }
                 break;
             }
+
+            case RAD_STATE_PULSE_CONTROL:
+
+            	if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+            		TMC_2590_Stop(&tmc_2590_1);
+            	}
+
+            	rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
+
+
             default:
                 rad_state = RAD_STATE_INIT;
                 break;
