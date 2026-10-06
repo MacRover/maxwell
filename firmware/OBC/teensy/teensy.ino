@@ -21,16 +21,27 @@
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
-#define ON_ROVER
+#include "led.h"
+#include "enums.h"
+// #define ON_ROVER
 #define USING_ROS
+#define USING_LED
 #define USING_IMU_ONBOARD
 // #define USING_IMU_OTHER
-#define USING_GPS
+// #define USING_GPS
 //#define USING_TSB
-#define USING_FANS
-#define USING_SERVO
-#define USING_SCIENCE_SENSORS
-#define USING_LORA
+// #define USING_FANS
+// #define USING_SERVO
+// #define USING_SCIENCE_SENSORS
+// #define USING_LORA
+
+// --- STATE VARIABLES ---
+UROS_states state_UROS;
+fan_states state_fans;
+TSB_STATES state_TSB;
+HYDROGEN_STATES state_hydrogen;
+OZONE_STATES state_ozone;
+LORA_STATES state_lora;
 
 
 #define DOMAIN_ID 5
@@ -39,14 +50,13 @@
 #define AD0_VAL 1
 #define IMU_INT1 23
 #define MG_TO_MS2 0.0098066
-#define DEG_TO_RAD 0.01745329
+#define DEG_TO_RAD 0.01745329 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 #define ROS_EXECUTE_INTERVAL(MS, X)  do { \
   static volatile int64_t init = -1; \
   if (init == -1) { init = uxr_millis();} \
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
-
 
 
 rcl_allocator_t allocator;
@@ -203,6 +213,12 @@ void obc_destory_uros_entities()
     rcl_publisher_fini(&health_pub, &teensy_node);
     rcl_subscription_fini(&servo1_sub, &teensy_node);
     rcl_subscription_fini(&servo2_sub, &teensy_node);
+
+    #ifdef USING_LED
+    rcl_subscription_fini(&led_sub, &teensy_node);
+    rclc_executor_fini(&led_executor);
+    #endif
+
     destroy_viper_topics(&teensy_node);
     rcl_node_fini(&teensy_node);
     rclc_support_fini(&support);
@@ -212,20 +228,20 @@ bool obc_setup_uros()
 {
 #ifdef USING_ROS
     if (Ethernet.linkStatus() == LinkOFF) {
-		return false;
-	}
+    return false;
+  }
 
-	locator.address = agent_ip;
-	locator.port = 9999;
+  locator.address = agent_ip;
+  locator.port = 9999;
 
-	RCCHECK(rmw_uros_set_custom_transport(
-		false,
-		(void *) &locator,
-		arduino_native_ethernet_udp_transport_open,
-		arduino_native_ethernet_udp_transport_close,
-		arduino_native_ethernet_udp_transport_write,
-		arduino_native_ethernet_udp_transport_read
-	));
+  RCCHECK(rmw_uros_set_custom_transport(
+    false,
+    (void *) &locator,
+    arduino_native_ethernet_udp_transport_open,
+    arduino_native_ethernet_udp_transport_close,
+    arduino_native_ethernet_udp_transport_write,
+    arduino_native_ethernet_udp_transport_read
+  ));
     allocator = rcl_get_default_allocator();
 
     if (!options_initialized) {
@@ -236,8 +252,14 @@ bool obc_setup_uros()
         options_initialized = true;
     }
 
+    // 1. Core structures must be initialized FIRST
     RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
     RCCHECK(rclc_node_init_default(&teensy_node, "obc_node", "obc", &support));
+
+    #ifdef USING_LED
+    if(!led_setup_subscription(&teensy_node, &support, &allocator)){return false;}
+    #endif
+
     #ifdef USING_SERVO
     if(!servo_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
@@ -245,7 +267,6 @@ bool obc_setup_uros()
      #ifdef USING_LORA
     if(!viper_setup_subscription(&teensy_node, &support, &allocator)){return false;}
     #endif
-
 
      RCCHECK(rclc_publisher_init_default(
         &imu_pub, 
@@ -390,6 +411,10 @@ void setup()
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
 
+    #ifdef USING_LED
+    LED_setup();
+    #endif
+
     pwm.begin();
     pwm.setPWMFreq(50);  
 }
@@ -413,6 +438,7 @@ void Uros_SM(){
       break;
     }
     case UROS_OK:{
+
       ROS_EXECUTE_INTERVAL(200, state_UROS = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? UROS_OK : UROS_ERROR;);
       
       if (state_UROS == UROS_OK) {
@@ -433,6 +459,10 @@ void Uros_SM(){
 
         #ifdef USING_LORA
           rclc_executor_spin_some(&viper_executor, RCL_MS_TO_NS(10));
+        #endif
+
+        #ifdef USING_LED
+        rclc_executor_spin_some(&led_executor, RCL_MS_TO_NS(10));
         #endif
         }
         
@@ -682,6 +712,9 @@ void loop()
 #ifdef USING_SCIENCE_SENSORS
     HYDROGEN_SM();
     OZONE_SM();
+#endif
+#ifdef USING_LED
+  LED_SM();
 #endif
 
 health_msg.data.data[0] = state_UROS;
