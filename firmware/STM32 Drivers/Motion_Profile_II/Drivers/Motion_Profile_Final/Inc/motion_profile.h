@@ -57,6 +57,10 @@ typedef struct {
 	float T_TOTAL;
 
 	int8_t DIRECTION;
+	int32_t ERROR;
+	uint8_t REWIND_CASE;
+	float DELTA_T;
+
 } Motion_Profile_HandleTypeDef;
 
 /**

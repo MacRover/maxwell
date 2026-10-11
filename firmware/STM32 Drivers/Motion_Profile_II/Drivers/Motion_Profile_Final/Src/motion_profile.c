@@ -82,13 +82,162 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef
 
 	return MOTION_PROFILE_STATE_BUSY;
 
+}
+
+Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleTypeDef *profile) {
+
+	float velocity;
+	int32_t stopping_distance;
+
+	// todo may need some kind of a first run flag for a initial velocity kickstart, or can just initialize profile->VELOCITY to whatever Vi is
+
+
+	// todo: it is highly unlikely this will work, will likely need to change this to a range (tuning needed)
+	// bang-bang controller can handle getting us back on track (gd reference)
+
+	if (fabs(profile->ERROR) <= 3.0f) {
+		profile->VELOCITY = 0.0f;
+
+		if (profile->REWIND_CASE == 1) {
+			profile->REWIND_CASE = 0;
+			return MOTION_PROFILE_STATE_BUSY;
+		} else {
+			return MOTION_PROFILE_STATE_DONE;
+		}
+	}
+
+	// Instant deceleration case
+	// Compare our direction to the current velocity to know if we are in the REWIND_CASE
+
+	if ((profile->ERROR < 0 && profile->VELOCITY > 0) || (profile->ERROR > 0 && profile->VELOCITY < 0)) {
+		profile->REWIND_CASE = 1;
+
+		// Calculate next velocity
+		// Slow it down by the delta_T increment
+
+		// If the velocity is positive, aceleration should be negative
+		// If the velocity is negative, acceleration should be positive
+
+		if (profile->VELOCITY > 0) {
+
+			// if velocity is positive, acceleration should be negative
+
+			velocity = (profile->VELOCITY) - fabs(profile->ACCELERATION) * profile->DELTA_T;
+			if (velocity < 0) {
+				velocity = 0;
+			}
+
+		} else {
+
+			// if velocity is negative, acceleration should be positive
+
+			velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+			if (velocity > 0) {
+				velocity = 0;
+			}
+
+		}
 
 
 
+	} else {
+		// Incrementing v
+		profile->REWIND_CASE = 0;
+
+		// There are a couple considerations that are needed here
+		// For one, we need to calculate a breaking distance so we know when to stop
+
+		// Use vf^2 = vi^2 + 2ad
+
+		// We want this to be positive since we just want to purely compare magnitudes for this part
 
 
+		stopping_distance = (int32_t)(profile->VELOCITY * profile->VELOCITY) / (2.0 * fabs(profile->ACCELERATION));
+
+		// Now, check if our error is less than or equal to our stopping distance
+		// This will indicate if we need to be slowing down
+
+
+		// Slowdown Case
+		if (fabs(profile->ERROR) <= stopping_distance) {
+
+			// Now conduct the same math as before
+
+			if (profile->VELOCITY > 0) {
+
+				// Acceleration should be negative to slow it down
+
+				velocity = profile->VELOCITY - fabs(profile->ACCELERATION) * profile->DELTA_T;
+
+			} else {
+
+				// Acceleration should be positive to slow it down (since velocity is negative)
+
+				velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+
+			}
+
+
+		// Cruise - Acceleration Case
+
+		} else {
+
+			// This is very standard motion
+
+			// We will use error to indicate which direction we are going to move in the cruise acceleration case
+			// The reason why is because if we didn't use error, we would have to have another case for 0 of what direction to move
+			// In the cruise case,
+			// If Error > 0, Velocity > 0, acceleration is positive
+			// If Error < 0, Velocity < 0, acceleration is negative
+			// This is the OPPOSITE of the breaking case, since this handles acceleration and cruise
+
+			if (profile->ERROR > 0) {
+
+				velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+
+				// Check for above max velocity
+
+			} else {
+
+				velocity = profile->VELOCITY - fabs(profile->ACCELERATION) * profile->DELTA_T;
+
+			}
+
+		}
+
+	}
+
+	// End of all the fun cases
+	// Now we just run the checks on the velocity so we can "cut off" at cruise
+
+	// Pretty much just velocity checks
+
+	// Same safety check as before
+
+	if (isnan(velocity)) {
+		profile->VELOCITY = 0.0f;
+		return MOTION_PROFILE_STATE_ERROR;
+	}
+
+	// if the absolute value of velocity is greater than max velocity...
+	// If velocity is +ve, set to max velocity
+	// If -ve, set to - max velocity
+
+	if (fabs(velocity) >= profile->V_MAX) {
+		if (velocity >= 0) {
+			velocity = profile->V_MAX;
+		} else {
+			velocity = -profile->V_MAX;
+		}
+	}
+
+	profile->VELOCITY = velocity;
+
+	return MOTION_PROFILE_STATE_BUSY;
 
 }
+
+
 
 // Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile) {
 
