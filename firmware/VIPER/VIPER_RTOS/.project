@@ -29,4 +29,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>Drivers/STM32 Drivers/queue_src</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/STM32%20Drivers/queue/Drivers/queue/Src</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>
