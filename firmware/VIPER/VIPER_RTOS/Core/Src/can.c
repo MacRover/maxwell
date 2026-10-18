@@ -197,17 +197,16 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
 
     /* CAN1 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
     HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
-  /**
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
-
+    // HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
   /* USER CODE END CAN1_MspDeInit 1 */
   }
 }
 
-/* USER CODE BEGIN 1 */
 
+/* USER CODE BEGIN 1 */
+/**
  * @brief  Rx Fifo 0 message pending callback in non blocking mode
  * @param  CanHandle: pointer to a CAN_HandleTypeDef structure that contains
  *         the configuration information for the specified CAN.
