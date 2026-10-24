@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "rtos_objects.h"
+#include "viper_app.h"
 
 /* USER CODE END Includes */
 
@@ -49,9 +50,9 @@
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+osThreadId_t viperSuperLoopHandle;
+const osThreadAttr_t viperSuperLoopTask_attributes = {
+  .name = "viperSuperLoop",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -61,7 +62,7 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void superLoop(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -73,7 +74,9 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
   RTOS_Objects_Init();
-
+  
+  
+  
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -94,7 +97,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  viperSuperLoopHandle = osThreadNew(superLoop, NULL, &viperSuperLoopTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -113,14 +116,13 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+void superLoop(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+  // ESTOP --> DISABLE --> FREEZE -> ACTIVE
+  viper_superLoop();
+  for(;;){}
   /* USER CODE END StartDefaultTask */
 }
 

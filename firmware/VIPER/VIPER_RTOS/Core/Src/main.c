@@ -26,7 +26,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "viper_app.h"
 
+#include "at24c04c.h"
+#include "viper_app.h"
+#include "enc_dec_utils.h"
+#include "ina238.h"
+#include "tca.h"
+#include "tmp.h"
+#include "viper_mcp3221.h"
+#include "can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +56,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+VIPER_STATE_TypeDef viper_state;
+VIPER_PARAMS_TypeDef viper_params;
 
+uint8_t ESTOP = 0;
+uint8_t FREEZE = 0;
+
+uint8_t read_complete = 0;
+uint8_t send_complete = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +86,13 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	// ##############
+	// todo: SET DEFAULT VIPER PARAMS HERE
+	viper_params.VIPER_ID = 0x01;
+	viper_params.HEALTH_INTERVAL = 1000; //every second
+	viper_params.CARD_INTERVAL = 1000; // may need to tune this
 
+	viper_state.STATE = VIPER_STATE_ACTIVE;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,13 +111,27 @@ int main(void)
 
   /* USER CODE END SysInit */
 
+  /* USER CODE BEGIN 2 */
+  // ##############
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
-  /* USER CODE BEGIN 2 */
+
+	// ##############
+	// SET DRIVER INITIALIZATIONS HERE
+  MX_AT24C04C_1_Init();
+	MX_TMP_1075_Init();
+	MX_TMP_100_Init();
+	MX_MCP_3221_Init();
+	MX_INA_238_Init();
+	MX_TCA_Init();
+
+  // ##############
+  // MAIN INIT and BROADCAST HEALTH MESSAGE
+  viper_mainInit();
 
   /* USER CODE END 2 */
 

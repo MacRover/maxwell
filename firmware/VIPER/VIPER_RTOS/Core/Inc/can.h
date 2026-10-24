@@ -27,6 +27,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "viper_app.h"
 
 /* USER CODE BEGIN Includes */
 
