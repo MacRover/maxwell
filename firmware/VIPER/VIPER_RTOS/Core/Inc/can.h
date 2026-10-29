@@ -36,6 +36,17 @@ extern "C" {
 extern CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN Private defines */
+#ifdef VIPER_TEST
+/* Report: [event, card, uint32 result]. Local event = command;
+ * global event = command | 0x80 (global/local command numbers overlap)
+ */
+void VIPER_TestReport(uint8_t event, uint8_t card, uint32_t value);
+void VIPER_TestPoll(void);
+#define VIPER_TEST_REPORT(event, card, value) VIPER_TestReport(event, card, value)
+#else
+#define VIPER_TEST_REPORT(event, card, value) ((void)0)
+#endif
+
 #define CAN_MESSAGE_IDENTIFIER_VIPER 0x05 // To be changed upon VIPER introduction
 #define CAN_MESSAGE_IDENTIFIER_GLOBAL 0x00
 #define CAN_MESSAGE_IDENTIFIER_MASK 0b1111
