@@ -29,6 +29,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
+#define VIPER_PARAMS_EEPROM_PAGE 0
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -57,6 +58,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+
+/* USER CODE BEGIN Private defines */
 #define IN_FAULT_CARD_0_Pin GPIO_PIN_0
 #define IN_FAULT_CARD_0_GPIO_Port GPIOA
 #define IN_FAULT_CARD_1_Pin GPIO_PIN_1
@@ -97,9 +100,6 @@ void Error_Handler(void);
 #define EN_CARD_2_GPIO_Port GPIOB
 #define EN_CARD_3_Pin GPIO_PIN_9
 #define EN_CARD_3_GPIO_Port GPIOB
-
-/* USER CODE BEGIN Private defines */
-
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -53,24 +53,24 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LED_Pin|SM_ALERT_Pin|EN_CARD_0_Pin|EN_CARD_1_Pin
                           |EN_CARD_2_Pin|EN_CARD_3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin PAPin
-                           PAPin PAPin PAPin PAPin */
+  /*Configure GPIO pins : IN_FAULT_CARD_0_Pin IN_FAULT_CARD_1_Pin IN_FAULT_CARD_2_Pin IN_FAULT_CARD_3_Pin
+                           PGOOD_CARD_0_Pin PGOOD_CARD_1_Pin PGOOD_CARD_2_Pin PGOOD_CARD_3_Pin */
   GPIO_InitStruct.Pin = IN_FAULT_CARD_0_Pin|IN_FAULT_CARD_1_Pin|IN_FAULT_CARD_2_Pin|IN_FAULT_CARD_3_Pin
                           |PGOOD_CARD_0_Pin|PGOOD_CARD_1_Pin|PGOOD_CARD_2_Pin|PGOOD_CARD_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin */
+  /*Configure GPIO pins : OUT_FAULT_5_Pin OUT_FAULT_4_Pin OUT_FAULT_3_Pin OUT_FAULT_2_Pin
+                           OUT_FAULT_1_Pin OUT_FAULT_0_Pin */
   GPIO_InitStruct.Pin = OUT_FAULT_5_Pin|OUT_FAULT_4_Pin|OUT_FAULT_3_Pin|OUT_FAULT_2_Pin
                           |OUT_FAULT_1_Pin|OUT_FAULT_0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin */
+  /*Configure GPIO pins : LED_Pin SM_ALERT_Pin EN_CARD_0_Pin EN_CARD_1_Pin
+                           EN_CARD_2_Pin EN_CARD_3_Pin */
   GPIO_InitStruct.Pin = LED_Pin|SM_ALERT_Pin|EN_CARD_0_Pin|EN_CARD_1_Pin
                           |EN_CARD_2_Pin|EN_CARD_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;

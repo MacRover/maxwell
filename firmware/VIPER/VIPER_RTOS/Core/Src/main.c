@@ -26,7 +26,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "viper_app.h"
 
+#include "at24c04c.h"
+#include "viper_app.h"
+#include "enc_dec_utils.h"
+#include "ina238.h"
+#include "tca.h"
+#include "tmp.h"
+#include "viper_mcp3221.h"
+#include "can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +56,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+VIPER_STATE_TypeDef viper_state;
+VIPER_PARAMS_TypeDef viper_params;
 
+uint8_t ESTOP = 0;
+uint8_t FREEZE = 0;
+
+uint8_t read_complete = 0;
+uint8_t send_complete = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +86,13 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	// ##############
+	// todo: SET DEFAULT VIPER PARAMS HERE
+	viper_params.VIPER_ID = 0x01;
+	viper_params.HEALTH_INTERVAL = 1000; //every second
+	viper_params.CARD_INTERVAL = 1000; // may need to tune this
 
+	viper_state.STATE = VIPER_STATE_ACTIVE;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,20 +111,32 @@ int main(void)
 
   /* USER CODE END SysInit */
 
+  /* USER CODE BEGIN 2 */
+  // ##############
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
-  /* USER CODE BEGIN 2 */
+
+	// ##############
+	// SET DRIVER INITIALIZATIONS HERE
+  MX_AT24C04C_1_Init();
+	MX_TMP_1075_Init();
+	MX_TMP_100_Init();
+	MX_MCP_3221_Init();
+	MX_INA_238_Init();
+	MX_TCA_Init();
+
+  // ##############
+  // MAIN INIT and BROADCAST HEALTH MESSAGE
+  viper_mainInit();
 
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
-
-  /* Call init function for freertos objects (in cmsis_os2.c) */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
@@ -165,6 +199,28 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1)
+  {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
+
+/**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
@@ -178,8 +234,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
