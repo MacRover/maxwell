@@ -11,7 +11,8 @@ import sys, termios, tty, os, time
 from .drive_controller import DriveMode
 
 EPSILON = 1e-6
-START_SPEED = 0.03
+DELTA_SPEED = 0.008
+START_SPEED = DELTA_SPEED * 5.0
 
 def getch():  # this function is used to get key input from user in the terminal
     fd = sys.stdin.fileno()
@@ -63,29 +64,29 @@ def main():
         elif char == "w":
             print("Accelerated")
             if abs(vel_msg.linear.x) < EPSILON:
-                vel_msg.linear.x = START_SPEED - 0.008
-            vel_msg.linear.x += 0.008
+                vel_msg.linear.x = START_SPEED - DELTA_SPEED
+            vel_msg.linear.x += DELTA_SPEED
         elif char == "s":
             print("Accelerated the opposite direction")
             if abs(vel_msg.linear.x) < EPSILON:
-                vel_msg.linear.x = -START_SPEED + 0.008
-            vel_msg.linear.x -= 0.008
+                vel_msg.linear.x = -START_SPEED + DELTA_SPEED
+            vel_msg.linear.x -= DELTA_SPEED
         elif char == "d":
             print("Turning right")
             if abs(vel_msg.angular.z) < EPSILON:
-                vel_msg.angular.z = -START_SPEED + 0.008
-            vel_msg.angular.z -= 0.008
+                vel_msg.angular.z = -START_SPEED + DELTA_SPEED
+            vel_msg.angular.z -= DELTA_SPEED
         elif char == "a":
             print("Turning left")
             if abs(vel_msg.angular.z) < EPSILON:
-                vel_msg.angular.z = START_SPEED - 0.008
-            vel_msg.angular.z += 0.008
+                vel_msg.angular.z = START_SPEED - DELTA_SPEED
+            vel_msg.angular.z += DELTA_SPEED
         elif char == "q":
             print("Strafing left")
             if mode == DriveMode.SWERVE_DRIVE:
                 if abs(vel_msg.linear.y) < EPSILON:
-                    vel_msg.linear.y = START_SPEED - 0.008
-                vel_msg.linear.y += 0.008
+                    vel_msg.linear.y = START_SPEED - DELTA_SPEED
+                vel_msg.linear.y += DELTA_SPEED
             elif mode == DriveMode.TANK_STEER_HYBRID:
                 turn_state = (1 if turn_state >= 0 else 0)
                 pulse_msg.front_left_pulse = (-75.0 if turn_state == 1 else 0.0)
@@ -94,8 +95,8 @@ def main():
             print("Strafing right")
             if mode == DriveMode.SWERVE_DRIVE:
                 if abs(vel_msg.linear.y) < EPSILON:
-                    vel_msg.linear.y = -START_SPEED + 0.008
-                vel_msg.linear.y -= 0.008
+                    vel_msg.linear.y = -START_SPEED + DELTA_SPEED
+                vel_msg.linear.y -= DELTA_SPEED
             elif mode == DriveMode.TANK_STEER_HYBRID:
                 turn_state = (-1 if turn_state <= 0 else 0)
                 pulse_msg.front_left_pulse = (75.0 if turn_state == -1 else 0.0)
