@@ -21,17 +21,19 @@
 #include "servo.h"
 #include "science.h"
 #include "viper_topics.h"
-// #define ON_ROVER
-#define USING_ROS
-#define USING_IMU_ONBOARD
-// #define USING_IMU_OTHER
-#define USING_GPS
+//#define ON_ROVER
+//#define USING_ROS
+//#define USING_IMU_ONBOARD
+//#define USING_IMU_OTHER
+//#define USING_GPS
 #define USING_TSB
 #define USING_FANS
-#define USING_SERVO
-#define USING_SCIENCE_SENSORS
-// #define USING_LORA
+//#define USING_SERVO
+//#define USING_SCIENCE_SENSORS
+//#define USING_LORA
 
+//Define Fan_test using PWM
+#define FANTEST 1
 
 #define DOMAIN_ID 5
 
@@ -47,8 +49,7 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
-//Define Fan_test using PWM
-//#define FANTEST 0
+
 
 rcl_allocator_t allocator;
 rclc_support_t support;
@@ -326,10 +327,16 @@ void obc_setup_gps()
 bool obc_setup_tsb() 
 {
 #ifdef USING_TSB
-    if (!MCP.begin(MCP9601_ADDR, &Wire1)) { return false; }
+    setChannel(&tsb1, 0);
+    _tca9544a(tsb1.channel);
+    delay(2);
+    
+    if (!MCP.begin(MCP9601_ADDR, &Wire1)) { 
+      Serial.println("tsb INIT FAILED");
+      return false; 
+    }
     MCP.setADCresolution(MCP9600_ADCRESOLUTION_18);
     MCP.setThermocoupleType(MCP9600_TYPE_K);
-    // setChannel(&tsb1, 0);
     tsb_init();  
 #endif
 return true;
@@ -339,11 +346,11 @@ bool obc_setup_fans()
 {
 #ifdef USING_FANS
     initializeFan(&fan1, 5);
-    initializeFan(&fan2, 6);
+    //initializeFan(&fan2, 6);
     // initializeFan(&fan3, 7);
 
     enableFanControl(&fan1);
-    enableFanControl(&fan2);
+    //enableFanControl(&fan2);
     // enableFanControl(&fan3);
 #endif
 return true;
@@ -371,17 +378,37 @@ bool obc_setup_ozone()
 void setup()
 {
     Wire1.begin();
-    Wire1.setClock(400000);
-    Serial6.begin(38400);
+    Wire1.setClock(100000); // MCP9601 supports 100 kHz
     Serial.begin(115200);
+
+    Serial.println("Wire1 scan:");
+
+    for (uint8_t address = 1; address < 127; address++) {
+        Wire1.beginTransmission(address);
+        uint8_t error = Wire1.endTransmission();
+
+        if (error == 0) {
+            Serial.printf("  Found device at 0x%02X\n", address);
+        }
+    }
+    
+
+    Serial6.begin(38400);
+
+    //while (!Serial && millis() < 3000) {}
+
+
+
+    #ifdef USING_ROS
     Ethernet.begin(arduino_mac, arduino_ip);
+    #endif
     pinMode(LED_PIN, OUTPUT);
     pinMode(IMU_INT1, OUTPUT);
 
-   health_msg_setup(); 
-   obc_setup_imu();
-   obc_setup_gps();
-   obc_setup_tsb();
+    health_msg_setup(); 
+    obc_setup_imu();
+    obc_setup_gps();
+    obc_setup_tsb();
     state_UROS = UROS_FOUND;
     #ifdef USING_LORA
     state_lora = LORA_INIT;
@@ -390,6 +417,7 @@ void setup()
     state_fans = FANS_INIT;
     state_hydrogen = HYDROGEN_INIT;
     state_ozone = OZONE_INIT;
+
 
     pwm.begin();
     pwm.setPWMFreq(50);  
@@ -454,9 +482,13 @@ void Uros_SM(){
 }
 
 void FANS_SM() {
+  constexpr unsigned long FAN_UPDATE_INTERVAL_MS = 50;
+  static unsigned long last_fan_update = 0;
+
   switch (state_fans) {
     case FANS_INIT:
     if (obc_setup_fans()) {
+        last_fan_update = millis() - FAN_UPDATE_INTERVAL_MS;
         state_fans = FANS_OK;
     } 
     else {
@@ -466,16 +498,20 @@ void FANS_SM() {
 
 
     case FANS_OK:
+      if (millis() - last_fan_update < FAN_UPDATE_INTERVAL_MS) {
+        break;
+      }
+      last_fan_update = millis();
       #ifdef FANTEST
         testPWMControl(&fan1);
-        testPWMControl(&fan2);
+        //testPWMControl(&fan2);
       #else 
         TSBControlFAN(&fan1, &tsb1);
-        TSBControlFAN(&fan2, &tsb1);
+        //TSBControlFAN(&fan2, &tsb1);
         //TSBControlFAN(&fan3, &tsb1);
         //setFanRPM(&fan1, MIN_RPM);
         //setFanRPM(&fan2, MIN_RPM);
-        // setFanRPM(&fan3, MIN_RPM);
+        //setFanRPM(&fan3, MIN_RPM);
       #endif
       break;
     case FANS_ERROR:
@@ -484,6 +520,7 @@ void FANS_SM() {
         prev_time_fan = millis();
 
         if (obc_setup_fans()){
+          last_fan_update = millis() - FAN_UPDATE_INTERVAL_MS;
           state_fans = FANS_OK;
         }
         else{

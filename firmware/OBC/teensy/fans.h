@@ -10,10 +10,10 @@
 #define MIN_RPM 1000
 #define MAX_RPM 3800
 
-#define MIN_TEMP 35
-#define MAX_TEMP 65
+#define MIN_TEMP 25
+#define MAX_TEMP 35
 
-int speed_index = 1000;
+double speed_index = 3000;
 
 typedef struct Fan {
     uint8_t id;
@@ -22,6 +22,11 @@ typedef struct Fan {
     uint16_t tach_reading;
     uint16_t tach_target;
 } Fan;
+
+
+
+
+
 
 void initializeFan(Fan* fan, uint8_t id) 
 {
@@ -40,16 +45,19 @@ void setFanRPM(Fan* fan, uint16_t speed)
     fan->tach_target = speed;
     uint8_t high = (tachCount & 0x1FE0) >> 5; 
     uint8_t low = (tachCount & 0x1F) << 3; 
-
-    write_i2c_8bit(
-        fan->address, 
-        FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset), 
-        high);
+    //Serial.print("tachcount: ");
+    //Serial.println(tachCount);
+    //Serial.print("Set RPM: ");
+    //Serial.println(speed);
 
     write_i2c_8bit(
         fan->address, 
         FAN_1_TACH_TARGET_LOW_BYTE + (fan->offset), 
         low);
+    write_i2c_8bit(
+        fan->address, 
+        FAN_1_TACH_TARGET_HIGH_BYTE + (fan->offset), 
+        high);
 }
 
 void getFanRPM(Fan* fan)
@@ -69,8 +77,8 @@ void getFanRPM(Fan* fan)
 
     count = ((uint16_t)hCount << 5) | (lCount >> 3);
     fan->tach_reading = (uint16_t)(7864320 / count);
-    // Serial.print("RPM: ");
-    // Serial.println(fan->tach_reading);
+    //Serial.print("Reading RPM: ");
+    //Serial.println(fan->tach_reading);
 }
 
 void enableFanControl(Fan* fan)
@@ -93,17 +101,33 @@ void testPWMControl(Fan *fan)  {
         speed_index =MIN_RPM;
     }
     setFanRPM(fan, speed_index);
-    //speed_index++;
+    speed_index = speed_index + 0.5;
+    //Serial.print("Speed_index: ");
+    //Serial.println(speed_index);
+    getFanRPM(fan);
 }
 
 void TSBControlFAN(Fan* fan, TSB* tsb) {
-    int16_t temp = tsb->thermocouple_temp;
+    float temp = tsb->ambient_temp;
 
     float fraction = (temp-MIN_TEMP)/(MAX_TEMP-MIN_TEMP);
-    uint16_t rpm = fraction*(MAX_RPM-MIN_RPM) + MIN_RPM;
 
+    float clampedFraction = fraction<0.0f ? 0.0f : fraction;
+    clampedFraction = clampedFraction>1.0f ? 1.0f : clampedFraction;
+
+    uint16_t rpm = clampedFraction*(MAX_RPM-MIN_RPM) + MIN_RPM;
+
+    //getFanRPM(fan);
+    Serial.print("temp: ");
+    Serial.println(temp);
+    Serial.print("Speed: ");
+    Serial.println(rpm);
+    Serial.print("Fraction: ");
+    Serial.println(clampedFraction);
     setFanRPM(fan, rpm) ;
+
 }
+
 
 
 #endif

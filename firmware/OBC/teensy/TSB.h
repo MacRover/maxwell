@@ -79,7 +79,7 @@ void readTemp(TSB* tsb, Adafruit_MCP9601* mcp)
 {
     _tca9544a(tsb->channel);
 
-    tsb->thermocouple_temp = mcp->readThermocouple();
+    tsb->thermocouple_temp = mcp->readThermocouple(); // Not installed on TSB V1.0
 
     tsb->ambient_temp = mcp->readAmbient();
 
