@@ -294,6 +294,7 @@ int main(void)
                     	}
 
                     	rad_state = RAD_STATE_PULSE_CONTROL;
+                    	MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
                     }
 
 
@@ -435,7 +436,7 @@ int main(void)
                 		// Math confirms profile is complete
 						TMC_2590_Stop(&tmc_2590_1);
 						MX_PROFILER_RESET();
-						//MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
+						MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
 						rad_state = RAD_STATE_IDLE;
 						//last_speed_update = 0;
                 	}
@@ -450,6 +451,8 @@ int main(void)
             	}
 
             	rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
+            	rad_state = RAD_STATE_IDLE;
+            	break;
 
 
             default:
@@ -594,7 +597,7 @@ void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
 
 
 	// Update local stepper speed reference
-	rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
+	// rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
 }
 /* USER CODE END 4 */
 
