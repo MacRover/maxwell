@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "rtos_objects.h"
 #include "viper_app.h"
+#include "task_eeprom_write.h"
 
 /* USER CODE END Includes */
 
@@ -47,7 +48,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+BaseType_t xReturned;
+TaskHandle_t  EepromTaskHandle = NULL;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t viperSuperLoopHandle;
@@ -56,6 +58,8 @@ const osThreadAttr_t viperSuperLoopTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+
+
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -99,8 +103,10 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   viperSuperLoopHandle = osThreadNew(superLoop, NULL, &viperSuperLoopTask_attributes);
 
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512, (void*)1, (UBaseType_t)osPriorityNormal, NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

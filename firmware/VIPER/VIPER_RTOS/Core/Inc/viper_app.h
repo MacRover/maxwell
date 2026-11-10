@@ -2,7 +2,7 @@
  * viper_app.h
  *
  *  Created on: Oct 23, 2026
- *      Author: ferrm
+ *      Author: Manil Ferr
  */
 
 #ifndef INC_VIPER_APP_H_

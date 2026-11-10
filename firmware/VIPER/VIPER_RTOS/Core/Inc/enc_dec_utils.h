@@ -2,7 +2,7 @@
  * enc_dec_utils.h
  *
  *  Created on: Oct 14, 2026
- *      Author: Manil Ferr
+ *      Author: Ethan
  */
 
 #ifndef INC_ENC_DEC_UTILS_H_

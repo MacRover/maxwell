@@ -2,7 +2,7 @@
  * viper_mcp3221.h
  *
  *  Created on: Oct 18, 2026
- *      Author: Manil Ferr
+ *      Author: Ali Naqvi
  */
 
  // VIPER specific instantiation

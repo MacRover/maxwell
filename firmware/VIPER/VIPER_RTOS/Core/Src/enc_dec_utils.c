@@ -2,7 +2,7 @@
  * enc_dec_utils.c
  *
  *  Created on: Oct 14, 2026
- *      Author: Manil Ferr
+ *      Author: Ethan
  */
 
 #include "enc_dec_utils.h"

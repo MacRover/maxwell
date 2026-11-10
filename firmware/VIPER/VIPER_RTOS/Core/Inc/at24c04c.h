@@ -2,7 +2,7 @@
  * at24c04c.h
  *
  *  Created on: Oct 18, 2026
- *      Author: Manil Fer
+ *      Author: Ethan
  */
 
 #ifndef INC_AT24C04C_H_

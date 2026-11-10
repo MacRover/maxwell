@@ -2,7 +2,7 @@
  * tmp.h
  *
  *  Created on: Oct 18, 2026
- *      Author: Manil Ferr
+ *      Author: John
  */
 
 #ifndef INC_TMP_H_
