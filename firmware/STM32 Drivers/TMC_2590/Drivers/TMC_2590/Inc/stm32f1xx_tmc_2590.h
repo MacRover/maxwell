@@ -180,7 +180,7 @@ TMC_2590_StatusTypeDef TMC_2590_WriteConfRegisters(
 
 // move X steps
 TMC_2590_StatusTypeDef TMC_2590_MoveSteps(TMC_2590_HandleTypeDef *htmc2590,
-        int16_t steps);
+        int32_t steps);
 
 void TMC_2590_Stop(TMC_2590_HandleTypeDef *htmc2590);
 
