@@ -61,7 +61,7 @@ uint8_t led_on = 0;
 uint16_t current_target_speed = 0;
 uint32_t last_speed_update = 0;
 
-int16_t steps_to_move;
+int32_t steps_to_move;
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
@@ -115,7 +115,7 @@ int main(void)
 
     rad_params.DRVCTRL_DEDGE = 0b0;
     rad_params.DRVCTRL_INTPOL = 0b1;
-    rad_params.DRVCTRL_MRES = 0b1000;
+    rad_params.DRVCTRL_MRES = 0b1000; // 0b1000
 
     rad_params.SGCSCONF_CS = 5;
     rad_params.SGCSCONF_SFILT = 0b0;
@@ -244,7 +244,7 @@ int main(void)
 
                     if (rad_params.MOTION_PROFILE_ENABLED) {
 
-						int32_t target_steps = (int32_t)pulses;
+						int32_t target_steps = (int32_t)(pulses * 4.0f);
 
 						// Cap steps using TMC driver limits
 						if (target_steps > tmc_2590_1.Init.max_steps)
@@ -281,7 +281,7 @@ int main(void)
 					// Case no profile
                     } else {
 
-                    	steps_to_move = (int16_t)pulses;
+                    	steps_to_move = (int32_t)pulses;
 
 
 
@@ -317,6 +317,23 @@ int main(void)
                 	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
                 	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
                 	rad_params.MOTION_PROFILE_ENABLED = flags & (1 << 2);
+
+                	// Change params based on if motion profile is enabled
+
+                	if (rad_params.MOTION_PROFILE_ENABLED) {
+                		 rad_params.STEPPER_SPEED = 4000;  // todo fix hardcode, rn just * 4
+                		 rad_params.DRVCTRL_MRES = 0b0110; // Microstepping
+                		 tmc_2590_1.Init.max_steps = 4000;
+                	} else {
+                		rad_params.STEPPER_SPEED = 1000;
+                		rad_params.DRVCTRL_MRES = 0b1000; // Microstepping
+                		tmc_2590_1.Init.max_steps = 1000;
+                	}
+
+                	// Would happen in both cases
+                	tmc_2590_1.ConfRegisters.DRVCTRL.mres = rad_params.DRVCTRL_MRES;
+                	TMC_2590_WriteConfRegisters(&tmc_2590_1);
+
                 	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED) | (rad_params.MOTION_PROFILE_ENABLED);
                 	break;
                 }
@@ -334,7 +351,7 @@ int main(void)
                     break;
 
                 case SET_VMAX:
-                    motion_profile.V_MAX = decode_float_big_endian(new_message->data);
+                    motion_profile.V_MAX = decode_float_big_endian(new_message->data) * 4.0f;
                     break;
 
                 case GET_VMAX:
@@ -342,7 +359,7 @@ int main(void)
                     break;
 
                 case SET_ACCELERATION:
-                    float new_accel = decode_float_big_endian(new_message->data);
+                    float new_accel = decode_float_big_endian(new_message->data) * 4.0f;
                     if (new_accel > 0.0f) {
                         // Invalid acceleration value, ignore the command
                     	motion_profile.ACCELERATION = new_accel;
@@ -354,7 +371,7 @@ int main(void)
                     break;
                 
                 case SET_STEPS_TO_MOVE:
-                    motion_profile.STEPS_TO_MOVE = decode_int32_big_endian(new_message->data);
+                    motion_profile.STEPS_TO_MOVE = decode_int32_big_endian(new_message->data) * 4;
                     break;
 
                 case GET_STEPS_TO_MOVE:
