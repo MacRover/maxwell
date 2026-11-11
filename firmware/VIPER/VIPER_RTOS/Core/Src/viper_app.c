@@ -8,6 +8,8 @@
 #include <stdlib.h>
 
 #include "viper_queue.h"
+#include "rtos_objects.h"
+#include "task.h"
 #include "at24c04c.h"
 #include "viper_app.h"
 #include "enc_dec_utils.h"
@@ -334,7 +336,11 @@ void viper_superLoop(void){
 
 		if (ESTOP) {
 			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-			break;
+			/* Stay stopped until reset. The watchdog handles ESTOP separately,
+			 * so this intentional stop does not need normal task check-ins. */
+			for (;;) {
+				vTaskDelay(pdMS_TO_TICKS(100));
+			}
 		}
 
 		// MAIN STATE MACHINE START
@@ -407,6 +413,9 @@ void viper_superLoop(void){
 //		 }
 
 		// MAIN STATE MACHINE END
+
+		// Report progress after loop completes.
+		xEventGroupSetBits(xWatchdogEventGroup, WDG_SUPERLOOP);
 
     /* USER CODE END WHILE */
 

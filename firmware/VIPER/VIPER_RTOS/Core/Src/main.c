@@ -21,6 +21,7 @@
 #include "cmsis_os.h"
 #include "can.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -29,13 +30,11 @@
 #include "viper_app.h"
 
 #include "at24c04c.h"
-#include "viper_app.h"
 #include "enc_dec_utils.h"
 #include "ina238.h"
 #include "tca.h"
 #include "tmp.h"
 #include "viper_mcp3221.h"
-#include "can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +58,7 @@
 VIPER_STATE_TypeDef viper_state;
 VIPER_PARAMS_TypeDef viper_params;
 
-uint8_t ESTOP = 0;
+volatile uint8_t ESTOP = 0;
 uint8_t FREEZE = 0;
 
 uint8_t read_complete = 0;
@@ -110,7 +109,7 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-
+  
   /* USER CODE BEGIN 2 */
   // ##############
   /* Initialize all configured peripherals */
@@ -119,6 +118,7 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
 
 	// ##############
 	// SET DRIVER INITIALIZATIONS HERE
@@ -167,10 +167,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;

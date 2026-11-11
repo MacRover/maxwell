@@ -13,6 +13,8 @@ extern QueueHandle_t xCanRxQueue;
 extern SemaphoreHandle_t xI2C2Mutex;
 extern EventGroupHandle_t xWatchdogEventGroup;
 
+#define WDG_SUPERLOOP ((EventBits_t)1U)
+
  typedef struct {
     uint32_t canid;
     bool is_extended;
