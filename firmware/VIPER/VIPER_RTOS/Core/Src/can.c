@@ -28,6 +28,45 @@
 //#include "at24c04c.h"
 
 VIPER_CAN_TypeDef viper_can;
+
+#ifdef VIPER_TEST
+
+static uint8_t test_reports[8][6];
+static uint8_t test_head, test_tail, test_count; // Circular buffer vars
+
+void VIPER_TestReport(uint8_t event, uint8_t card, uint32_t value)
+{
+    if (test_count == 8) return;
+    test_reports[test_tail][0] = event;
+    test_reports[test_tail][1] = card;
+    // Store the result as four big-endian bytes starting at byte 2
+    encode_uint32_big_endian(value, &test_reports[test_tail][2]);
+    // wraparound after slot 7
+    test_tail = (test_tail + 1) % 8;
+    test_count++;
+    VIPER_TestPoll();
+}
+
+void VIPER_TestPoll(void)
+{
+    // Return if the queue is empty or all transmit mailboxes are busy
+    if (test_count == 0 || HAL_CAN_GetTxMailboxesFreeLevel(&hcan) == 0) return;
+    // Build six-byte test response
+    CAN_TxHeaderTypeDef header = {0};
+    uint32_t mailbox;
+    header.IDE = CAN_ID_EXT;
+    header.RTR = CAN_RTR_DATA;
+    header.DLC = 6;
+    header.ExtId = __encode_ext_can_id(viper_can.id, 0x7E, 0);
+    // Submit the oldest report
+    if (HAL_CAN_AddTxMessage(&hcan, &header, test_reports[test_head], &mailbox) == HAL_OK)
+    {
+        // Remove the submitted report
+        test_head = (test_head + 1) % 8;
+        test_count--;
+    }
+}
+#endif
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;

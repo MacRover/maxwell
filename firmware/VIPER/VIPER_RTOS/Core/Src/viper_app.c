@@ -17,6 +17,21 @@
 #include "viper_mcp3221.h"
 #include "can.h"
 
+#ifdef VIPER_TEST
+// Keep reports beside the operations when moving them into RTOS tasks
+#define TEST_OUTPUT(command, card) test_output_command = (command); test_output_card = (card)
+#define TEST_RESULT(call) test_result = (call)
+static uint32_t test_output_mask(void)
+{
+    return HAL_GPIO_ReadPin(EN_CARD_0_GPIO_Port, EN_CARD_0_Pin)
+        | (HAL_GPIO_ReadPin(EN_CARD_1_GPIO_Port, EN_CARD_1_Pin) << 1)
+        | (HAL_GPIO_ReadPin(EN_CARD_2_GPIO_Port, EN_CARD_2_Pin) << 2)
+        | (HAL_GPIO_ReadPin(EN_CARD_3_GPIO_Port, EN_CARD_3_Pin) << 3);
+}
+#else
+#define TEST_OUTPUT(command, card) ((void)0)
+#define TEST_RESULT(call) ((void)(call))
+#endif
 
 void viper_mainInit(void){
 	// ###############
@@ -106,8 +121,12 @@ void viper_mainInit(void){
 
 
 void viper_superLoop(void){
-    
 	while (1) {
+#ifdef VIPER_TEST
+        int test_output_command = -1;
+        uint8_t test_output_card = 0;
+        uint32_t test_result = 0;
+#endif
 
 		VIPER_Card_Check(&viper_state);
 
@@ -123,14 +142,20 @@ void viper_superLoop(void){
 			}
 			case DISABLE_MESSAGE: {
 				viper_state.STATE = VIPER_STATE_INACTIVE;
+				// global disable sets the inactive state
+				VIPER_TEST_REPORT(DISABLE_MESSAGE | 0x80, 0, viper_state.STATE);
 				break;
 			}
 			case ENABLE_MESSAGE: {
 				viper_state.STATE = VIPER_STATE_ACTIVE;
+				// global enable sets the active state
+				VIPER_TEST_REPORT(ENABLE_MESSAGE | 0x80, 0, viper_state.STATE);
 				break;
 			}
 			case HEALTH_STATUS_PING: {
 				MX_CAN_Broadcast_Health_Message(&viper_can, &viper_state);
+				// health ping was handled; report the current state
+				VIPER_TEST_REPORT(HEALTH_STATUS_PING | 0x80, 0, viper_state.STATE);
 				break;
 			}
 			default: {
@@ -150,6 +175,8 @@ void viper_superLoop(void){
 
 			switch ((int) (new_message->command_id)) {
 			case DISABLE_CARD: {
+				// check this card's enable pin after the GPIO update
+				TEST_OUTPUT(DISABLE_CARD, new_message->card_id);
 				switch (new_message->card_id){
 				case VIPER_CARD_0: {
 					viper_state.CARD_0.ENABLE = 0;
@@ -173,6 +200,8 @@ void viper_superLoop(void){
 				break;
 			}
 			case DISABLE_ALL_CARDS: {
+				// check all enable pins are low after the GPIO update
+				TEST_OUTPUT(DISABLE_ALL_CARDS, 0);
 				viper_state.CARD_0.ENABLE = 0;
 				viper_state.CARD_1.ENABLE = 0;
 				viper_state.CARD_2.ENABLE = 0;
@@ -180,6 +209,8 @@ void viper_superLoop(void){
 				break;
 			}
 			case ENABLE_CARD: {
+				// check this card's enable pin after the GPIO update
+				TEST_OUTPUT(ENABLE_CARD, new_message->card_id);
 				switch (new_message->card_id){
 				case VIPER_CARD_0: {
 					viper_state.CARD_0.ENABLE = 1;
@@ -203,6 +234,8 @@ void viper_superLoop(void){
 				break;
 			}
 			case ENABLE_ALL_CARDS: {
+				// check all enable pins are high after the GPIO update
+				TEST_OUTPUT(ENABLE_ALL_CARDS, 0);
 				viper_state.CARD_0.ENABLE = 1;
 				viper_state.CARD_1.ENABLE = 1;
 				viper_state.CARD_2.ENABLE = 1;
@@ -211,6 +244,8 @@ void viper_superLoop(void){
 			}
 			case GET_CARD_DATA: {
 				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, new_message->card_id);
+				// the selected card's data-request handler completed
+				VIPER_TEST_REPORT(GET_CARD_DATA, new_message->card_id, new_message->card_id);
 				break;
 			}
 			case GET_ALL_CARD_DATA: {
@@ -218,42 +253,70 @@ void viper_superLoop(void){
 				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_1);
 				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_2);
 				MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, VIPER_CARD_3);
+				// the handler called broadcasts for all four cards
+				VIPER_TEST_REPORT(GET_ALL_CARD_DATA, 0, 4);
 				break;
 			}
 			case SET_MUX_VALUE: {
-				TCA9544A_SelectChannel(&tca, new_message->card_id);
+				// capture the mux driver's return status
+				TEST_RESULT(TCA9544A_SelectChannel(&tca, new_message->card_id));
 				viper_state.CURRENT_CARD = new_message->card_id;
+				// report mux status and the selected channel
+				VIPER_TEST_REPORT(SET_MUX_VALUE, new_message->card_id,
+                    (test_result << 8) | tca.current_channel);
 				break;
 			}
 			case SAVE_TO_EEPROM: {
-				AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+				// capture the EEPROM write's return status
+				TEST_RESULT(AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE));
+				// EEPROM write returned OK (0), not reboot persistence
+				VIPER_TEST_REPORT(SAVE_TO_EEPROM, 0, test_result);
 				break;
 			}
 			case SET_FREEZE: {
 				FREEZE = 1;
+				// freeze command sets FREEZE to 1
+				VIPER_TEST_REPORT(SET_FREEZE, 0, FREEZE);
 				break;
 			}
 			case STOP_FREEZE: {
 				FREEZE = 0;
+				// unfreeze command clears FREEZE to 0
+				VIPER_TEST_REPORT(STOP_FREEZE, 0, FREEZE);
 				break;
 			}
 			// GETTERS / SETTERS
 			case GET_HEALTH_INTERVAL: {
 				MX_CAN_Broadcast_Uint32_Data(&viper_can, viper_params.HEALTH_INTERVAL, GET_HEALTH_INTERVAL, 0);
+				// report the current health interval
+				VIPER_TEST_REPORT(GET_HEALTH_INTERVAL, 0, viper_params.HEALTH_INTERVAL);
 				break;
 			}
 			case SET_HEALTH_INTERVAL: {
 				viper_params.HEALTH_INTERVAL = decode_uint32_big_endian(new_message->data);
+				// report the health interval stored by this command
+				VIPER_TEST_REPORT(SET_HEALTH_INTERVAL, 0, viper_params.HEALTH_INTERVAL);
 				break;
 			}
 			case GET_CARD_INTERVAL: {
 				MX_CAN_Broadcast_Uint32_Data(&viper_can, viper_params.CARD_INTERVAL, GET_CARD_INTERVAL, 0);
+				// report the current card interval
+				VIPER_TEST_REPORT(GET_CARD_INTERVAL, 0, viper_params.CARD_INTERVAL);
 				break;
 			}
 			case SET_CARD_INTERVAL: {
 				viper_params.CARD_INTERVAL = decode_uint32_big_endian(new_message->data);
+				// report the card interval stored by this command
+				VIPER_TEST_REPORT(SET_CARD_INTERVAL, 0, viper_params.CARD_INTERVAL);
 				break;
 			}
+#ifdef VIPER_TEST
+            case 0x70:
+                // save original settings so Python can restore them
+                VIPER_TEST_REPORT(0x70, 0, test_output_mask()
+                    | (viper_state.STATE << 8) | (FREEZE << 9) | (viper_state.CURRENT_CARD << 10));
+                break;
+#endif
 			default:
 				break;
 			}
@@ -262,6 +325,11 @@ void viper_superLoop(void){
 		}
 
 		 VIPER_Card_Update_State(&viper_state);
+#ifdef VIPER_TEST
+        // return enable-pin levels after applying the command
+        if (test_output_command >= 0)
+            VIPER_TEST_REPORT(test_output_command, test_output_card, test_output_mask());
+#endif
 		// VIPER_Card_Update_Params(&viper_state, &viper_params);
 
 		if (ESTOP) {
@@ -326,6 +394,9 @@ void viper_superLoop(void){
 
 
 
+#ifdef VIPER_TEST
+        VIPER_TestPoll();
+#endif
 		MX_CAN_PollToEmptyQueue();
 
 
