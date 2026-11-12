@@ -2,7 +2,7 @@
  * viper_queue.h
  *
  *  Created on: Oct 14, 2026
- *      Author: Manil Ferr
+ *      Author: Ethan
  */
 
 #ifndef INC_VIPER_QUEUE_H_

@@ -1,10 +1,16 @@
 #include "task_eeprom_write.h"
+#include <stdbool.h>
+#include <string.h>
 
-/*
- * TODO: For now, VIPER_PARAMS_TypeDef carries settings, but it will be changed to a fault/state 
-        logging as described in the flowcharts.
- */
 
+
+
+
+#if EEPROM_TEST
+VIPER_PARAMS_TypeDef eepromReadback;
+volatile AT24C04C_StatusTypeDef eepromReadStatus = AT24C04C_BUSY;
+volatile bool eepromMatches = false;
+#endif
 
 void vEepromWrite(void *pvParameters){
     
@@ -25,12 +31,23 @@ void vEepromWrite(void *pvParameters){
         
         AT24C04C_StatusTypeDef status = AT24C04C_BUSY;
 
-        
-        if( xSemaphoreTake( xI2C1Mutex, pdMS_TO_TICKS(10) ) == pdTRUE )
-        {
-            //Keep exclusive access to I2C1 throughout the write
-            status = AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &receivedParams, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
-            xSemaphoreGive( xI2C1Mutex );
+#if EEPROM_TEST
+            eepromReadStatus = AT24C04C_BUSY;
+            eepromMatches = false;
+#endif
+
+        if (xSemaphoreTake(xI2C1Mutex, pdMS_TO_TICKS(10)) == pdTRUE){
+            status = AT24C04C_WritePages( &at24c04c_1, (uint8_t *)&receivedParams, sizeof(receivedParams), VIPER_PARAMS_EEPROM_PAGE);
+
+#if EEPROM_TEST
+                if (status == AT24C04C_OK){
+                    vTaskDelay(pdMS_TO_TICKS(10));// Allow some time to the last EEPROM page to finish programming.
+                    eepromReadStatus = AT24C04C_ReadPages( &at24c04c_1, (uint8_t *)&eepromReadback, sizeof(eepromReadback), VIPER_PARAMS_EEPROM_PAGE);
+                    eepromMatches = (eepromReadStatus == AT24C04C_OK) && (memcmp(&receivedParams, &eepromReadback, sizeof(receivedParams)) == 0);
+                }
+#endif
+
+            xSemaphoreGive(xI2C1Mutex);
         }
         
         // Pass the write result to the CAN task for transmission

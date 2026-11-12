@@ -16,6 +16,7 @@
 #include "tmp.h"
 #include "viper_mcp3221.h"
 #include "can.h"
+#include "rtos_objects.h"
 
 #ifdef VIPER_TEST
 // Keep reports beside the operations when moving them into RTOS tasks
@@ -127,6 +128,8 @@ void viper_superLoop(void){
         uint8_t test_output_card = 0;
         uint32_t test_result = 0;
 #endif
+
+
 
 		VIPER_Card_Check(&viper_state);
 
@@ -267,10 +270,9 @@ void viper_superLoop(void){
 				break;
 			}
 			case SAVE_TO_EEPROM: {
-				// capture the EEPROM write's return status
-				TEST_RESULT(AT24C04C_WritePages(&at24c04c_1, (uint8_t*) &viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE));
-				// EEPROM write returned OK (0), not reboot persistence
-				VIPER_TEST_REPORT(SAVE_TO_EEPROM, 0, test_result);
+				if (xQueueSend(xEepromWriteQueue, &viper_params, 0) != pdPASS){
+					VIPER_TEST_REPORT(SAVE_TO_EEPROM, 0, AT24C04C_BUSY);
+				}
 				break;
 			}
 			case SET_FREEZE: {
@@ -392,7 +394,11 @@ void viper_superLoop(void){
 
 		//Poll and Publish CAN
 
-
+		CanTxMessage result;
+		if (xQueueReceive(xCanTxQueue, &result, 0) == pdPASS && result.type == CAN_EVENT_EEPROM_STATUS){
+			viper_state.EEPROM_STATUS = result.data.eepromStatus;
+			VIPER_TEST_REPORT(SAVE_TO_EEPROM, 0, result.data.eepromStatus);
+		}
 
 #ifdef VIPER_TEST
         VIPER_TestPoll();
@@ -417,10 +423,10 @@ void viper_superLoop(void){
 
 
 /* USER CODE BEGIN 4 */
-
+volatile AT24C04C_StatusTypeDef eepromBootStatus = AT24C04C_BUSY;
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
 	// Step 1: initialize viper_params (from EEPROM)
-	AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	eepromBootStatus = AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
 
 	// Step 2: set any relevant fields in viper_state from viper_params
 //	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;

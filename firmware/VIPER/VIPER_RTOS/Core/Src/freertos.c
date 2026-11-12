@@ -106,7 +106,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512, (void*)1, (UBaseType_t)osPriorityNormal, NULL);
+  xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512, (void*)1, (UBaseType_t)osPriorityNormal, &EepromTaskHandle);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

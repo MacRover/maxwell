@@ -17,8 +17,12 @@ print_raw = False
 
 def main():
     with can.Bus(interface="pcan", channel="PCAN_USBBUS1", bitrate=500_000) as bus:
-        return run_tests(bus)
+        
+        #return run_tests(bus) // uncomment this for full test. 
 
+        ## EepromTask only test
+        send_uint32_value(bus, can_id=0x07, device_id=viper_id, value=0)
+        time.sleep(0.1)  # Allow transmission before closing the bus.
 
 # Original manual tool, kept here if needed. main() runs the full test sequence
 def manual_commands(bus):

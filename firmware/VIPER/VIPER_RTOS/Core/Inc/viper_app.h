@@ -141,7 +141,8 @@ uint8_t VIPER_Card_Params_Flag(VIPER_STATE_TypeDef* viper_state, VIPER_PARAMS_Ty
 
 
 /* USER CODE BEGIN Private defines */
-
+#define EEPROM_TEST 1
+#define VIPER_TEST 1
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
