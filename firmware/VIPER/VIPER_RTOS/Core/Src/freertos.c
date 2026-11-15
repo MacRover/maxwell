@@ -28,6 +28,7 @@
 #include "rtos_objects.h"
 #include "viper_app.h"
 #include "task_eeprom_write.h"
+#include "task_watchdog.h"
 
 /* USER CODE END Includes */
 
@@ -50,6 +51,18 @@
 /* USER CODE BEGIN Variables */
 BaseType_t xReturned;
 TaskHandle_t  EepromTaskHandle = NULL;
+// reserve RAM for the watchdog task
+static StaticTask_t watchdogTaskBuffer;
+static StackType_t watchdogTaskStack[128]; // 128 entires * 4 bytes
+static const osThreadAttr_t watchdogTask_attributes = {
+  .name = "watchdog",
+  .cb_mem = &watchdogTaskBuffer, // where metadata lives
+  .cb_size = sizeof(watchdogTaskBuffer), // size of metadata
+  .stack_mem = watchdogTaskStack, // where stack lives
+  .stack_size = sizeof(watchdogTaskStack), // size of stack
+  .priority = osPriorityAboveNormal, // priority is level 4
+};
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t viperSuperLoopHandle;
@@ -107,6 +120,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512, (void*)1, (UBaseType_t)osPriorityNormal, &EepromTaskHandle);
+  if (osThreadNew(TaskWatchdog, NULL, &watchdogTask_attributes) == NULL)
+  {
+    Error_Handler();
+  }
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

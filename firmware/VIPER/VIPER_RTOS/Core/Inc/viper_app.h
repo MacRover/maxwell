@@ -106,7 +106,7 @@ typedef struct
 
 extern VIPER_PARAMS_TypeDef viper_params; // static state values
 extern VIPER_STATE_TypeDef viper_state; // dynamic state values
-extern uint8_t ESTOP;
+extern volatile uint8_t ESTOP;
 extern uint8_t FREEZE;
 extern uint8_t read_complete;
 extern uint8_t send_complete;

@@ -37,6 +37,7 @@ typedef struct {
 } CanTxMessage;
 #define CAN_TX_QUEUE_LENGTH 8
 
+#define WDG_SUPERLOOP ((EventBits_t)1U)
 
  typedef struct {
     uint32_t canid;
