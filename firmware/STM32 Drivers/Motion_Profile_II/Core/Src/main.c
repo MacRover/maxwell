@@ -19,6 +19,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tmc_2590.h"
+#include "at24c04c.h"
 #include "queue.h"
 #include "enc_dec_utils.h"
 #include "motion.h"
@@ -165,6 +166,7 @@ int main(void)
     // Initialize only the required drivers for the testbench
     MX_TMC_2590_1_Init();
     MX_PROFILER_INIT();
+    MX_AS5048A_1_Init();
 
     // Default TMC Settings (Kept from your original init)
     tmc_2590_1.Init.inverted = 0;
@@ -233,6 +235,42 @@ int main(void)
 
             switch ((int)(new_message->command_id))
             {
+                case SET_TARGET_ANGLE:
+                {
+                    double new_setpoint = decode_double_big_endian(new_message->data);
+
+                    if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                        rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
+                    {
+                        if (new_setpoint < min_angle)
+                        {
+                            new_setpoint = min_angle;
+                        }
+                        else if (new_setpoint > max_angle)
+                        {
+                            new_setpoint = max_angle;
+                        }
+                        PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+                    }
+                    else
+                    {
+                        // Set raw setpoint for wrist motors
+                        PID_ChangeSetPoint(&pid_1, new_setpoint);
+                    }
+                    
+                    // Enable Watch Dog here
+                    if (rad_params.WATCH_DOG_ENABLED)
+                    {
+                    	rad_can.watchdog_kick = 1;
+                    }
+                    break;
+                }
+                case GET_ENCODER_VALUE:
+                {
+                    rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING); //skip the buffer
+                    MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+                    break;
+                }
                 case PULSE_STEPPER:
                 {
 
@@ -338,45 +376,98 @@ int main(void)
                 	break;
                 }
                 case GET_RAD_FLAGS:
+                {
                 	MX_CAN_Broadcast_Uint8_Data(&rad_can, rad_status.flags, GET_RAD_FLAGS);
                 	break;
-
+                }
                 case REBOOT:
+                {
                 	HAL_NVIC_SystemReset();
                     break;
+                }
                 case ASSIGN_DEVICE_ID:
+                {
                     rad_can.id = new_message->data[0];
                     rad_params.RAD_ID = rad_can.id;
                     MX_CAN_UpdateIdAndFilters(&rad_can);
                     break;
-
+                }
                 case SET_VMAX:
+                {
                     motion_profile.V_MAX = decode_float_big_endian(new_message->data) * 4.0f;
                     break;
-
+                }
                 case GET_VMAX:
+                {
                     MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.V_MAX, GET_VMAX);
                     break;
-
+                }
                 case SET_ACCELERATION:
+                {
                     float new_accel = decode_float_big_endian(new_message->data) * 4.0f;
                     if (new_accel > 0.0f) {
                         // Invalid acceleration value, ignore the command
                     	motion_profile.ACCELERATION = new_accel;
                     }
                     break;
-
+                }
                 case GET_ACCELERATION:
+                {
                     MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.ACCELERATION, GET_ACCELERATION);
                     break;
-                
+                }
                 case SET_STEPS_TO_MOVE:
+                {
                     motion_profile.STEPS_TO_MOVE = decode_int32_big_endian(new_message->data) * 4;
                     break;
-
+                }
                 case GET_STEPS_TO_MOVE:
+                {
                     MX_CAN_Broadcast_Int32_Data(&rad_can, motion_profile.STEPS_TO_MOVE, GET_STEPS_TO_MOVE);
                     break;
+                }
+                case SET_PID_MIN_OUTPUT:
+                {
+                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MIN_OUTPUT = pid_1.Init.min_output_abs;
+
+                    break;
+                }
+                case GET_PID_MIN_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_MIN_OUTPUT);
+                    break;
+                }
+                case SET_PID_MAX_OUTPUT:
+                {
+                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
+
+                    break;
+                }
+                case GET_PID_MAX_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, (uint16_t) pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
+                    break;
+                }
+                case SET_MAX_POINT:
+                {
+                    // For wrist
+                    PID_SetMaxPoint(&pid_1, new_message->data[0]);
+                    PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
+                case SET_ZERO_POINT:
+                {
+                    // For wrist
+                    PID_SetZeroPoint(&pid_1);
+                    PID_ChangeSetPoint(&pid_1, 0.0);
+                    PID_Update_BangBang(&pid_1);
+                    rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
 
                 // (Omitted the extensive TMC SPI tuning cases for brevity, but they can remain here untouched if needed for live testing)
                 default:
@@ -416,6 +507,8 @@ int main(void)
                 break;
 
             case RAD_STATE_PROFILE_CONTROL:
+
+            // NOTE FOR CLOSED LOOP IT'S AT LINE 1239 THAT WE NEED TO PORT OVER.  RAD_STATE_ACTIVE
 
             // REVIEW THIS SOME MORE
             {
