@@ -15,11 +15,12 @@
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
+#include "pid.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tmc_2590.h"
-#include "at24c04c.h"
+#include "as5048a.h"
 #include "queue.h"
 #include "enc_dec_utils.h"
 #include "motion.h"
@@ -36,6 +37,8 @@
 // Kept for CAN and internal driver references
 #define MOTOR_GEARING 1
 #define STEPS_PER_REVOLUTION 200
+#define MAX_ROTATIONS 20 // I am not too sure what this will do
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,6 +66,8 @@ uint16_t current_target_speed = 0;
 uint32_t last_speed_update = 0;
 
 int32_t steps_to_move;
+uint16_t min_angle = 0;
+uint16_t max_angle = 0;
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
@@ -170,6 +175,8 @@ int main(void)
 
     // Default TMC Settings (Kept from your original init)
     tmc_2590_1.Init.inverted = 0;
+    min_angle = 0;
+    max_angle = 360 * MAX_ROTATIONS / MOTOR_GEARING;
 
     MX_CAN_UpdateIdAndFilters(&rad_can);
 
@@ -271,6 +278,12 @@ int main(void)
                     MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
                     break;
                 }
+                case READ_ANGLE:
+                {
+                	AS5048A_ReadAngle(&as5048a_1);
+                	MX_CAN_Broadcast_Double_Data(&rad_can, as5048a_1.Angle_double, READ_ANGLE);
+                	break;
+                }
                 case PULSE_STEPPER:
                 {
 
@@ -308,6 +321,7 @@ int main(void)
 						if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
 							TMC_2590_Stop(&tmc_2590_1);
 						}
+                        MOTION_PROFILE_Set_Speed(starting_speed);
 						rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, target_steps);
 
 						// Start the clock and enter profiling state
@@ -452,11 +466,12 @@ int main(void)
                 }
                 case SET_MAX_POINT:
                 {
+                	// If this is for wrist don't use
                     // For wrist
                     PID_SetMaxPoint(&pid_1, new_message->data[0]);
                     PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
                     PID_Update_BangBang(&pid_1);
-                    rad_state = RAD_STATE_ACTIVE;
+                    //rad_state = RAD_STATE_ACTIVE;
                     break;
                 }
                 case SET_ZERO_POINT:
@@ -465,7 +480,7 @@ int main(void)
                     PID_SetZeroPoint(&pid_1);
                     PID_ChangeSetPoint(&pid_1, 0.0);
                     PID_Update_BangBang(&pid_1);
-                    rad_state = RAD_STATE_ACTIVE;
+                    //rad_state = RAD_STATE_ACTIVE;
                     break;
                 }
 
@@ -597,7 +612,7 @@ int main(void)
             // TODO: There may be some issues here with dropping frames if we are putting these too close together
             
             odom_counter++;
-//            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
 
 //            MX_CAN_Broadcast_Uint8_Data(&rad_can, 1, SEND_VELOCITY);
         }

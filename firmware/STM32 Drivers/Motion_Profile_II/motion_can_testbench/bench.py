@@ -92,24 +92,24 @@ def main():
                 
                 if (i == 'exit'):
                     exit()
-                # elif(i == "set p"):
-                #     j = input("p value? ")
-                #     send_double_value(bus=bus, can_id = 0x05, device_id = rad_id, value=float(j))
-                # elif(i == "get p"):
-                #     send_float_value(bus=bus, can_id = 0x06, device_id = rad_id, value=0)
-                # elif(i == "set i"):
-                #     j = input("i value? ")
-                #     send_double_value(bus=bus, can_id = 0x07, device_id = rad_id, value=float(j))
-                # elif(i == "get i"):
-                #     send_float_value(bus=bus, can_id = 0x08, device_id = rad_id, value=0)
-                # elif(i == "set d"):
-                #     j = input("d value? ")
-                #     send_double_value(bus=bus, can_id = 0x09, device_id = rad_id, value=float(j))
-                # elif(i == "get d"):
-                #     send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
-                # elif (i == "set target"):
-                #     j = input("target? ")
-                #     send_double_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
+                elif(i == "set p"):
+                    j = input("p value? ")
+                    send_double_value(bus=bus, can_id = 0x05, device_id = rad_id, value=float(j))
+                elif(i == "get p"):
+                    send_float_value(bus=bus, can_id = 0x06, device_id = rad_id, value=0)
+                elif(i == "set i"):
+                    j = input("i value? ")
+                    send_double_value(bus=bus, can_id = 0x07, device_id = rad_id, value=float(j))
+                elif(i == "get i"):
+                    send_float_value(bus=bus, can_id = 0x08, device_id = rad_id, value=0)
+                elif(i == "set d"):
+                    j = input("d value? ")
+                    send_double_value(bus=bus, can_id = 0x09, device_id = rad_id, value=float(j))
+                elif(i == "get d"):
+                    send_float_value(bus=bus, can_id = 0x0A, device_id = rad_id, value=0)
+                elif (i == "set target"):
+                    j = input("target? ")
+                    send_double_value(bus=bus, can_id = 0x01, device_id = rad_id, value=float(j))
                 elif(i == "step motor"):
                     j = input("num pulses? ")
                     step_motor(bus=bus, id=rad_id, value=int(j))
@@ -201,6 +201,8 @@ def main():
 
                 elif ( i == "get steps"):
                     send_int32_value(bus=bus, can_id=0x68, device_id=rad_id, value=0)
+                elif (i == "get angle"):
+                    send_double_value(bus=bus, can_id=0x69, device_id=rad_id, value=0)
 
                 # I'm just gonna add the commands at the end here
 

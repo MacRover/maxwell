@@ -189,7 +189,7 @@ typedef enum
     GET_STEPS_TO_MOVE = 0x68,
 
 
-    
+    READ_ANGLE = 0x69,
     SEND_ODOM_ANGLE = 0xFB,
     SEND_HEALTH_STATUS = 0xFC,
     SEND_TEMPERATURE = 0xFD,
