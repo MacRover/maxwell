@@ -450,3 +450,9 @@ www/js/*
 # micro_ros_setup
 uros/
 ros2.repos
+
+
+# CubeIDE workspace and VIPER build outputs
+/firmware/VIPER/.metadata/
+/firmware/VIPER/VIPER_RTOS/Release/
+/firmware/VIPER/release/Release/
