@@ -7,7 +7,7 @@
 #include <rclc/executor.h>
 
 #include <custom_interfaces/msg/viper_card_status.h>
-#include <custom_interfaces/msg/viper_status.h>
+#include <custom_interfaces/msg/viper_status.h> 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 
 
@@ -201,4 +201,3 @@ void destroy_viper_topics(rcl_node_t *node){
 }
 
 #endif 
-
