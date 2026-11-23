@@ -9,7 +9,7 @@
 #include "semphr.h"
 #include "event_groups.h"
 #include "at24c04c.h"
-
+#include "viper_app.h"
 
 extern QueueHandle_t xCanRxQueue;
 extern QueueHandle_t xCanTxQueue;
@@ -21,7 +21,8 @@ extern EventGroupHandle_t xWatchdogEventGroup;
 
 typedef enum {
     CAN_EVENT_EEPROM_STATUS,
-    CAN_EVENT_CARD_FAULT
+    CAN_EVENT_CARD_FAULT,
+    CAN_EVENT_CARD_TELEMETRY
 } CanEventType;
 
 typedef struct {
@@ -29,10 +30,16 @@ typedef struct {
 
     union {
         AT24C04C_StatusTypeDef eepromStatus;
+
         struct {
             uint8_t cardId;
             uint16_t faultCode;
         } cardFault;
+
+        struct {
+            VIPER_CARD_ID_TypeDef cardId;
+            VIPER_CARD_STATE_TypeDef snapshot;
+        } cardTelemetry;
     } data;
 } CanTxMessage;
 #define CAN_TX_QUEUE_LENGTH 8

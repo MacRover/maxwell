@@ -106,7 +106,7 @@ typedef struct
 
 extern VIPER_PARAMS_TypeDef viper_params; // static state values
 extern VIPER_STATE_TypeDef viper_state; // dynamic state values
-extern uint8_t ESTOP;
+extern volatile uint8_t ESTOP;
 extern uint8_t FREEZE;
 extern uint8_t read_complete;
 extern uint8_t send_complete;
@@ -127,6 +127,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void viper_mainInit(void);
+VIPER_CARD_STATE_TypeDef *VIPER_Card_GetState(VIPER_STATE_TypeDef *state, VIPER_CARD_ID_TypeDef card_id);
 void viper_superLoop(void);
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params);
 void VIPER_Card_Check(VIPER_STATE_TypeDef* viper_state);

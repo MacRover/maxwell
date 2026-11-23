@@ -28,7 +28,8 @@
 #include "rtos_objects.h"
 #include "viper_app.h"
 #include "task_eeprom_write.h"
-
+#include "task_can_comms.h"
+#include "task_fault_handler.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +51,13 @@
 /* USER CODE BEGIN Variables */
 BaseType_t xReturned;
 TaskHandle_t  EepromTaskHandle = NULL;
+
+BaseType_t xReturnedCan;
+TaskHandle_t  CanTaskHandle = NULL;
+
+BaseType_t xReturnedFaultHandler;
+TaskHandle_t  FaultHandlerTaskHandle = NULL;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t viperSuperLoopHandle;
@@ -106,7 +114,13 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512, (void*)1, (UBaseType_t)osPriorityNormal, &EepromTaskHandle);
+  xReturned = xTaskCreate(vEepromWrite, "EepromWriteTask", configMINIMAL_STACK_SIZE + 512U, NULL, osPriorityNormal, &EepromTaskHandle);
+  xReturnedCan = xTaskCreate(vCanComms, "CanCommsTask", 256U, NULL, osPriorityNormal, &CanTaskHandle);
+  xReturnedFaultHandler = xTaskCreate(vTaskFaultHandler, "faultHandlerTask", configMINIMAL_STACK_SIZE, NULL, osPriorityAboveNormal, &FaultHandlerTaskHandle);
+  
+  if (viperSuperLoopHandle == NULL || xReturned != pdPASS || xReturnedCan != pdPASS || xReturnedFaultHandler != pdPASS) {
+    Error_Handler();
+  }
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -128,7 +142,7 @@ void superLoop(void *argument)
   /* Infinite loop */
   // ESTOP --> DISABLE --> FREEZE -> ACTIVE
   viper_superLoop();
-  for(;;){}
+  for (;;) { vTaskSuspend(NULL); }
   /* USER CODE END StartDefaultTask */
 }
 

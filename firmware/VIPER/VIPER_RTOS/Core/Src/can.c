@@ -25,13 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "enc_dec_utils.h"
+#include "rtos_objects.h"
+#include "task_fault_handler.h"
 //#include "at24c04c.h"
 
 VIPER_CAN_TypeDef viper_can;
+static volatile uint32_t can_rx_read_errors;
+static volatile uint32_t can_rx_queue_drops;
 
 #ifdef VIPER_TEST
 
-static uint8_t test_reports[8][6];
+static uint8_t test_reports[8][8];
 static uint8_t test_head, test_tail, test_count; // Circular buffer vars
 
 void VIPER_TestReport(uint8_t event, uint8_t card, uint32_t value)
@@ -173,7 +177,7 @@ void MX_CAN_Init(void)
       viper_can.canfilterconfig.SlaveStartFilterBank = 14;
 
       HAL_CAN_ConfigFilter(&(viper_can.hcan), &(viper_can.canfilterconfig));
-      HAL_CAN_ActivateNotification(&(viper_can.hcan), CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
+      //HAL_CAN_ActivateNotification(&(viper_can.hcan), CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts     -[TODO to be cleaned when the vCanComms is check since it enables FIFO RX interrupts there]
 
   /* USER CODE END CAN_Init 2 */
 
@@ -253,11 +257,41 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
  */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
 {
+    CanRxMessage frame = {0};
+    BaseType_t woken = pdFALSE;
     /* Get RX message */
+    if (HAL_CAN_GetRxMessage(canHandle, CAN_RX_FIFO0, &(viper_can.RxHeader),
+            frame.data) != HAL_OK)
+    {
+        /* Reception Error */
+        ++can_rx_read_errors;
+        return;
+        //Error_Handler(); // We will not be using Error_Handler() because it disables interrupts and loops forever. Calling it would hatl the whole firmware.
+    }
+
+    frame.is_extended = viper_can.RxHeader.IDE == CAN_ID_EXT; 
+    frame.is_remote = viper_can.RxHeader.RTR == CAN_RTR_REMOTE;
+    frame.canid = frame.is_extended? viper_can.RxHeader.ExtId : viper_can.RxHeader.StdId;
+    frame.dlc = (uint8_t)viper_can.RxHeader.DLC;
+
+    const uint32_t scope = (frame.canid >> CAN_MESSAGE_IDENTIFIER_OFFSET) & CAN_MESSAGE_IDENTIFIER_MASK;
+    const uint32_t command = (frame.canid >> CAN_MESSAGE_COMMAND_OFFSET) & CAN_MESSAGE_COMMAND_MASK;
+    const bool is_estop = frame.is_extended && !frame.is_remote && scope == CAN_MESSAGE_IDENTIFIER_GLOBAL && command == ESTOP_MESSAGE;
+
+    if (is_estop){
+      xTaskNotifyFromISR(FaultHandlerTaskHandle, FAULT_NOTIFY_ESTOP, eSetBits, &woken);
+    } else if ( xQueueSendFromISR(xCanRxQueue, &frame, &woken) != pdPASS){
+      ++can_rx_queue_drops;
+    }
+    portYIELD_FROM_ISR(woken);
+
+
+    /* Old firmware (to be cleaned when the new is tested)
+      // Get RX message 
     if (HAL_CAN_GetRxMessage(canHandle, CAN_RX_FIFO0, &(viper_can.RxHeader),
             viper_can.RxData) != HAL_OK)
     {
-        /* Reception Error */
+        // Reception Error
         Error_Handler();
     }
 
@@ -269,7 +303,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
         // todo handle error
         return;
     }
-
     new_message->command_id = (viper_can.RxHeader.ExtId >> CAN_MESSAGE_COMMAND_OFFSET) & (CAN_MESSAGE_COMMAND_MASK);
 //    memcpy(new_message->data, viper_can.RxData, 8);
     new_message->dlc = viper_can.RxHeader.DLC;
@@ -296,7 +329,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *canHandle)
     {
         queue_enqueue(&can_message_queue_viper, new_message);
     }
-
+    */
 
 }
 
@@ -408,16 +441,16 @@ void MX_CAN_AddTxMessage(CAN_HandleTypeDef *hcan, CAN_TxHeaderTypeDef *pHeader, 
     tx_message->ext_id = pHeader->ExtId;
     tx_message->dlc = pHeader->DLC;
 
-    uint8_t *data_ptr = malloc(sizeof(uint8_t) * tx_message->dlc);
+    uint8_t *data_ptr = calloc(8, sizeof(*data_ptr));
 
     if (data_ptr == NULL)
     {
-        // todo handle error
+        free(tx_message);
         return;
     }
 
     //CHECK ESTOP OR DISABLE HERE?? WRITE DIRECT TO QUEUE FRONT
-    tx_message->data = memcpy(data_ptr, aData, sizeof(uint8_t) * tx_message->dlc);
+    tx_message->data = memcpy(data_ptr, aData, tx_message->dlc);
 
     queue_enqueue(&can_message_queue_tx, tx_message);
   }

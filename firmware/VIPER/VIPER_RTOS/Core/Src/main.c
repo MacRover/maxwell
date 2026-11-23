@@ -59,7 +59,7 @@
 VIPER_STATE_TypeDef viper_state;
 VIPER_PARAMS_TypeDef viper_params;
 
-uint8_t ESTOP = 0;
+volatile uint8_t ESTOP = 0;
 uint8_t FREEZE = 0;
 
 uint8_t read_complete = 0;

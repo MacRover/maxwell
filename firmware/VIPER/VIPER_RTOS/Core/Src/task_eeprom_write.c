@@ -29,6 +29,7 @@ void vEepromWrite(void *pvParameters){
             receivedParams = viper_params;
         }
         
+        
         AT24C04C_StatusTypeDef status = AT24C04C_BUSY;
 
 #if EEPROM_TEST
@@ -62,6 +63,7 @@ void vEepromWrite(void *pvParameters){
         // Signals that the task has ran. ! Doesn't mean a sucess. this bit merely indicates the task's liveness.
         xEventGroupSetBits(xWatchdogEventGroup, WDG_EEPROM);
     }
+    
 
 }
 

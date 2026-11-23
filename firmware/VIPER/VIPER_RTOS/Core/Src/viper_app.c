@@ -120,8 +120,31 @@ void viper_mainInit(void){
 
 }
 
+VIPER_CARD_STATE_TypeDef *VIPER_Card_GetState(VIPER_STATE_TypeDef *state,
+                                            VIPER_CARD_ID_TypeDef card_id)
+{
+    switch (card_id) {
+    case VIPER_CARD_0:
+        return &state->CARD_0;
+    case VIPER_CARD_1:
+        return &state->CARD_1;
+    case VIPER_CARD_2:
+        return &state->CARD_2;
+    case VIPER_CARD_3:
+        return &state->CARD_3;
+    default:
+        return NULL;
+    }
+}
 
 void viper_superLoop(void){
+
+//#if EEPROM_TEST
+//    if (xQueueSend(xEepromWriteQueue, &viper_params, 0) != pdPASS) {
+//        Error_Handler();
+//    }
+//#endif
+	uint32_t last_card_ms = HAL_GetTick();
 	while (1) {
 #ifdef VIPER_TEST
         int test_output_command = -1;
@@ -348,8 +371,25 @@ void viper_superLoop(void){
 		case VIPER_STATE_ACTIVE: {
 			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
+			const uint32_t now = HAL_GetTick();
+			const uint32_t interval = viper_params.CARD_INTERVAL;
 
+			if (interval != 0U && now - last_card_ms >= interval) {
+			    last_card_ms = now;
 			
+			    if (!FREEZE) {
+			        if (viper_state.CURRENT_CARD == VIPER_CARD_3) {
+			            viper_state.CURRENT_CARD = VIPER_CARD_0;
+			        } else {
+			            viper_state.CURRENT_CARD++;
+			        }
+			    }
+			
+			    read_complete = 0U;
+			    send_complete = 0U;
+			}
+			// To be clearned when the tasks are tested.
+			/*
 			if ((viper_params.CARD_INTERVAL != 0) && (HAL_GetTick() % viper_params.CARD_INTERVAL == 0)) {
 
 				if (!FREEZE) {
@@ -363,6 +403,7 @@ void viper_superLoop(void){
 				read_complete = 0;
 				send_complete = 0;
 			}
+			*/
 		
 			if (!read_complete)
 			{
@@ -386,6 +427,22 @@ void viper_superLoop(void){
 		// 	MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
 		// }
 
+		if (read_complete && !send_complete) {
+    		static CanTxMessage card_event;
+    		const VIPER_CARD_ID_TypeDef card_id = viper_state.CURRENT_CARD;
+    		const VIPER_CARD_STATE_TypeDef *card = VIPER_Card_GetState(&viper_state, card_id);
+
+    		if (card != NULL) {
+    		    card_event.type = CAN_EVENT_CARD_TELEMETRY;
+    		    card_event.data.cardTelemetry.cardId = card_id;
+    		    card_event.data.cardTelemetry.snapshot = *card;
+    		    (void)xQueueSend(xCanTxQueue, &card_event, 0U);
+    		}
+		
+    		send_complete = 1U;
+		}
+
+/* Commented out for RTOS - To be cleaned when the tasks are tested.
 		if (read_complete && !send_complete)
 		{
 			MX_CAN_Broadcast_Card_Data(&viper_can, &viper_state, viper_state.CURRENT_CARD);
@@ -404,7 +461,7 @@ void viper_superLoop(void){
         VIPER_TestPoll();
 #endif
 		MX_CAN_PollToEmptyQueue();
-
+*/
 
 
 //		 if ((viper_params.HEALTH_INTERVAL != 0)
@@ -425,8 +482,17 @@ void viper_superLoop(void){
 /* USER CODE BEGIN 4 */
 volatile AT24C04C_StatusTypeDef eepromBootStatus = AT24C04C_BUSY;
 void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *viper_params) {
+	static VIPER_PARAMS_TypeDef saved_params;
 	// Step 1: initialize viper_params (from EEPROM)
-	eepromBootStatus = AT24C04C_ReadPages(&at24c04c_1, (uint8_t*) viper_params, sizeof(VIPER_PARAMS_TypeDef), VIPER_PARAMS_EEPROM_PAGE);
+	eepromBootStatus = AT24C04C_ReadPages( &at24c04c_1, (uint8_t *)&saved_params, sizeof(saved_params), VIPER_PARAMS_EEPROM_PAGE);
+	if (eepromBootStatus==AT24C04C_OK){
+		*viper_params = saved_params;
+	}else {
+		viper_params->CARD_1.ENABLE = 0U;
+		viper_params->CARD_2.ENABLE = 0U;
+		viper_params->CARD_3.ENABLE = 0U;
+		// [todo : DEFAUOLT SET OF paramaters]
+	}
 
 	// Step 2: set any relevant fields in viper_state from viper_params
 //	viper_state->CARD_0.ENABLE = viper_params->CARD_0.ENABLE;
@@ -435,6 +501,7 @@ void VIPER_Card_Init(VIPER_STATE_TypeDef *viper_state, VIPER_PARAMS_TypeDef *vip
 	viper_state->CARD_1.ENABLE = viper_params->CARD_1.ENABLE;
 	viper_state->CARD_2.ENABLE = viper_params->CARD_2.ENABLE;
 	viper_state->CARD_3.ENABLE = viper_params->CARD_3.ENABLE;
+	viper_state->EEPROM_STATUS = (uint8_t)eepromBootStatus;
 
 	// Step 3: Setup VIPER
 	VIPER_Card_Update_State(viper_state);
