@@ -38,6 +38,8 @@
 #define MOTOR_GEARING 1
 #define STEPS_PER_REVOLUTION 200
 #define MAX_ROTATIONS 20 // I am not too sure what this will do
+#define PROFILE_UPDATE_PERIOD_MS 50
+#define CONTINUOUS_STEP_COUNT 32767 // Max of an int16 (for now)
 
 /* USER CODE END PD */
 
@@ -64,10 +66,13 @@ uint16_t idle_counter = 0;
 uint8_t led_on = 0;
 uint16_t current_target_speed = 0;
 uint32_t last_speed_update = 0;
+int8_t current_direction = 0;
+int8_t target_direction = 0;
 
 int32_t steps_to_move;
 uint16_t min_angle = 0;
 uint16_t max_angle = 0;
+uint32_t last_tick = 0;
 
 void MOTION_PROFILE_Set_Speed(uint16_t velocity);
 
@@ -198,7 +203,8 @@ int main(void)
         RAD_STATE_INIT = 0,
         RAD_STATE_IDLE,
         RAD_STATE_PROFILE_CONTROL,
-		RAD_STATE_PULSE_CONTROL
+		RAD_STATE_PULSE_CONTROL,
+        RAD_STATE_CLOSED_LOOP_CONTROL,
     } rad_state = RAD_STATE_INIT;
 
     while (1)
@@ -570,6 +576,7 @@ int main(void)
             }
 
             case RAD_STATE_PULSE_CONTROL:
+            {
 
             	if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
             		TMC_2590_Stop(&tmc_2590_1);
@@ -578,12 +585,145 @@ int main(void)
             	rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
             	rad_state = RAD_STATE_IDLE;
             	break;
+            }
 
+            case RAD_STATE_CLOSED_LOOP_CONTROL:
+            {
 
+                // PART 1: READ THE ENCODER VALUE
+                // UPDATE THE PID
+                // UPDATE THE MOTION PROFILE ERROR BASED ON THE OUTPUT OF THE PID
+                uint8_t i = 0;
+                static uint8_t consecutive_encoder_failures = 0;
+                while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
+                {
+                    if (i++ > 10)
+                    {
+                        break;
+                    } 
+                }
+
+                if (rad_status.ENCODER_STATUS != AS5048A_OK)
+                {
+                    if (consecutive_encoder_failures++ > 3)
+                    {
+                         //encoder has failed
+                        TMC_2590_Stop(&tmc_2590_1);
+                        MX_PROFILER_RESET();
+                        consecutive_encoder_failures = 0;
+                        rad_state = RAD_STATE_PULSE_CONTROL;
+                    }
+                    break;
+                }   
+                else
+                {
+                    //reset failure counter
+                    consecutive_encoder_failures = 0;
+
+                    //Don't update PID unless we have a new value
+                    PID_Update_BangBang(&pid_1);
+
+                    // We want to do the profile error stuff
+                    // target - actual
+                    // pid BangBang covers this for us
+                    motion_profile.ERROR = pid_1.output;
+                }
+
+                // PART 2: THE ACTUAL PROFILE STUFF NOT JUST ENCODER/PID CONFIG
+
+                // TODO ADAM DONT FORGET TO SET MOTION_PROFILE_SET_SPEED ON STARTUP 😂😂😂
+                // AND PROFILE START TIME!!!
+                // AND LAST SPEED UPDATE
+                uint32_t current_tick = HAL_GetTick();
+                
+                if ((current_tick - last_tick) >= PROFILE_UPDATE_PERIOD_MS) {
+
+                    // delta T update
+
+                    motion_profile.DELTA_T = (float)(current_tick - last_tick) / 1000.0f;
+                    last_tick = current_tick;
+
+                    // Run motion profile velocity function
+
+                    Motion_Profile_StateTypeDef prof_state = Motion_Profile_Velocity_Error(&motion_profile);
+
+                    // Same as other motion profile - exact same logic just with error instead of setpoint
+
+                    if (prof_state == MOTION_PROFILE_STATE_BUSY)
+                    {
+                        uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
+
+                        // Set target direction
+
+                        if (motion_profile.VELOCITY > 0) {
+                            target_direction = 1;
+                        } else {
+                            target_direction = -1;
+                        }
+
+                        // Change speed
+
+                        if (target_speed > 0) {
+                            if (target_speed != current_target_speed) {
+                                MOTION_PROFILE_Set_Speed(target_speed);
+                                current_target_speed = target_speed;
+                            }
+
+                            // Stop motor if current direction is not equal to target direction
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY && (current_direction != target_direction)) {
+                                TMC_2590_Stop(&tmc_2590_1);
+                            }
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY) { // step motor
+                                int16_t signed_steps;
+                                if (target_direction > 0) {
+                                    signed_steps = CONTINUOUS_STEP_COUNT;
+                                } else {
+                                    signed_steps = -CONTINUOUS_STEP_COUNT;
+                                }
+                                rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, signed_steps);
+                                current_direction = target_direction;
+
+                            }  
+                
+                        } else {
+
+                            // If target speed is 0 mid move, it's a rewind case
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+                                TMC_2590_Stop(&tmc_2590_1);
+                            }
+                            current_target_speed = 0;
+                            current_direction = 0;
+                        }
+                        
+                    }
+                    else if (prof_state == MOTION_PROFILE_STATE_DONE)
+                    {
+
+                        // TODO this is VERY interim
+                        // Verify that stopping the motor while its expected to step will not cook it
+
+                        //if (/*TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY*/) {
+                            // Math confirms profile is complete
+                            TMC_2590_Stop(&tmc_2590_1);
+                            MX_PROFILER_RESET();
+                            MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED); // verify if we actually need this
+                            rad_state = RAD_STATE_IDLE;
+                            //last_speed_update = 0;
+                        //}
+                    }
+
+                }
+            break;
+            }
             default:
                 rad_state = RAD_STATE_INIT;
                 break;
         }
+
+
 
         // ------------------------------------------------------
         // 5. TELEMETRY / GRAPHING

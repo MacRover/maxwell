@@ -57,7 +57,7 @@ typedef struct {
 	float T_TOTAL;
 
 	int8_t DIRECTION;
-	int32_t ERROR;
+	volatile double ERROR;
 	uint8_t REWIND_CASE;
 	float DELTA_T;
 
@@ -74,5 +74,6 @@ typedef struct {
 Motion_Profile_StatusTypeDef Motion_Profile_Init(Motion_Profile_HandleTypeDef *profile);
 void Motion_Profile_Phases(Motion_Profile_HandleTypeDef *profile);
 Motion_Profile_StateTypeDef Motion_Profile_Velocity(Motion_Profile_HandleTypeDef *profile);
+Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleTypeDef *profile);
 
 #endif /* MOTION_PROFILE_INC_MOTION_PROFILE_H_ */

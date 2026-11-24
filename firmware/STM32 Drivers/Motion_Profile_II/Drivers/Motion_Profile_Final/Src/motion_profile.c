@@ -95,6 +95,8 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleT
 	// todo: it is highly unlikely this will work, will likely need to change this to a range (tuning needed)
 	// bang-bang controller can handle getting us back on track (gd reference)
 
+	// TODO tune
+
 	if (fabs(profile->ERROR) <= 3.0f) {
 		profile->VELOCITY = 0.0f;
 
@@ -115,7 +117,7 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleT
 		// Calculate next velocity
 		// Slow it down by the delta_T increment
 
-		// If the velocity is positive, aceleration should be negative
+		// If the velocity is positive, acceleration should be negative
 		// If the velocity is negative, acceleration should be positive
 
 		if (profile->VELOCITY > 0) {
@@ -151,14 +153,17 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleT
 
 		// We want this to be positive since we just want to purely compare magnitudes for this part
 
+		// todo debug candidate, make sure profile error less than stop dist
 
-		stopping_distance = (int32_t)(profile->VELOCITY * profile->VELOCITY) / (2.0 * fabs(profile->ACCELERATION));
+
+		stopping_distance = (profile->VELOCITY * profile->VELOCITY) / (2.0 * fabs(profile->ACCELERATION));
 
 		// Now, check if our error is less than or equal to our stopping distance
 		// This will indicate if we need to be slowing down
 
 
 		// Slowdown Case
+		// TODO: if in a case where we are here forever (via breakpoints), get it to 0
 		if (fabs(profile->ERROR) <= stopping_distance) {
 
 			// Now conduct the same math as before
@@ -168,12 +173,20 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleT
 				// Acceleration should be negative to slow it down
 
 				velocity = profile->VELOCITY - fabs(profile->ACCELERATION) * profile->DELTA_T;
+				// catch wrong direction
+				if (velocity < 0.0f) {
+					velocity = 0.0f;
+				}
 
 			} else {
 
 				// Acceleration should be positive to slow it down (since velocity is negative)
 
 				velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+				// catch wrong direction
+				if (velocity > 0.0f) {
+					velocity = 0.0f;
+				}
 
 			}
 
@@ -193,13 +206,29 @@ Motion_Profile_StateTypeDef Motion_Profile_Velocity_Error(Motion_Profile_HandleT
 
 			if (profile->ERROR > 0) {
 
-				velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+				// Kickstart
 
-				// Check for above max velocity
+				if (profile->VELOCITY == 0.0f) {
+					velocity = profile->V_I + fabs(profile->ACCELERATION) * profile->DELTA_T;
 
+				// Standard
+				
+				} else {
+					velocity = profile->VELOCITY + fabs(profile->ACCELERATION) * profile->DELTA_T;
+				}
+				
 			} else {
 
+				// Kickstart
+
+				if (profile->VELOCITY == 0.0f) {
+					velocity = -profile->V_I - fabs(profile->ACCELERATION) * profile->DELTA_T;
+				
+				// Standard
+
+				} else {
 				velocity = profile->VELOCITY - fabs(profile->ACCELERATION) * profile->DELTA_T;
+				}
 
 			}
 
