@@ -215,7 +215,7 @@ int main(void)
 
     }
 
-    rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
+    rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED | rad_params.MOTION_PROFILE_ENABLED);
 
     MX_TMC_2590_1_Init();
     MX_AS5048A_1_Init();

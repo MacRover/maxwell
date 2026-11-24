@@ -1,0 +1,898 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Motion Profile Testbench
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "adc.h"
+#include "can.h"
+#include "dma.h"
+#include "i2c.h"
+#include "spi.h"
+#include "tim.h"
+#include "gpio.h"
+#include "pid.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "tmc_2590.h"
+#include "as5048a.h"
+#include "queue.h"
+#include "enc_dec_utils.h"
+#include "motion.h"
+#include <math.h>
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+// Kept for CAN and internal driver references
+#define MOTOR_GEARING 1
+#define STEPS_PER_REVOLUTION 200
+#define MAX_ROTATIONS 20 // I am not too sure what this will do
+#define PROFILE_UPDATE_PERIOD_MS 50
+#define CONTINUOUS_STEP_COUNT 32767 // Max of an int16 (for now)
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+RAD_STATUS_TypeDef rad_status;
+RAD_PARAMS_TypeDef rad_params;
+
+uint8_t ESTOP = 0;
+uint8_t DISABLED = 0;
+
+uint32_t profile_start_time = 0;
+uint32_t prev_ms = 0;
+
+uint16_t odom_counter = 0;
+uint16_t idle_counter = 0;
+
+uint8_t led_on = 0;
+uint16_t current_target_speed = 0;
+uint32_t last_speed_update = 0;
+int8_t current_direction = 0;
+int8_t target_direction = 0;
+
+int32_t steps_to_move;
+uint16_t min_angle = 0;
+uint16_t max_angle = 0;
+uint32_t last_tick = 0;
+
+void MOTION_PROFILE_Set_Speed(uint16_t velocity);
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+    // SET DEFAULT VALUES (Stripped of PID/EEPROM defaults)
+    rad_params.RAD_ID = 0xF0;
+    rad_params.RAD_TYPE = RAD_TYPE_UNDEFINED;
+    rad_params.STEPPER_SPEED = 1000;
+    rad_params.ODOM_INTERVAL = 100; // 50hz, or 20ms
+    rad_params.HEALTH_INTERVAL = 1000; // every second
+    
+    rad_params.CHOPCONF_CHM = 0b0;
+    rad_params.CHOPCONF_HDEC = 0b00;
+    rad_params.CHOPCONF_HEND = 0b0100;
+    rad_params.CHOPCONF_HSTRT = 0b110;
+    rad_params.CHOPCONF_RNDTF = 0b0;
+    rad_params.CHOPCONF_TBL = 0b10;
+    rad_params.CHOPCONF_TOFF = 0b100;
+
+    rad_params.DRVCONF_DIS_S2G = 0b0;
+    rad_params.DRVCONF_EN_PFD = 0b1;
+    rad_params.DRVCONF_EN_S2VS = 0b1;
+    rad_params.DRVCONF_OTSENS = 0b0;
+    rad_params.DRVCONF_RDSEL = 0b11;
+    rad_params.DRVCONF_SDOFF = 0b0;
+    rad_params.DRVCONF_SHRTSENS = 0b1;
+    rad_params.DRVCONF_SLP = 0b11110;
+    rad_params.DRVCONF_TS2G = 0b00;
+    rad_params.DRVCONF_TST = 0b0;
+    rad_params.DRVCONF_VSENSE = 0b0;
+
+    rad_params.DRVCTRL_DEDGE = 0b0;
+    rad_params.DRVCTRL_INTPOL = 0b1;
+    rad_params.DRVCTRL_MRES = 0b1000; // 0b1000
+
+    rad_params.SGCSCONF_CS = 5;
+    rad_params.SGCSCONF_SFILT = 0b0;
+    rad_params.SGCSCONF_SGT = 0b0000010;
+
+    rad_params.SMARTEN_SEDN = 0b00;
+    rad_params.SMARTEN_SEIMIN = 0b0;
+    rad_params.SMARTEN_SEMAX = 0b0000;
+    rad_params.SMARTEN_SEMIN = 0b0000;
+    rad_params.SMARTEN_SEUP = 0b00;
+
+    rad_params.SW_STOP_ENABLED = 0;
+    rad_params.WATCH_DOG_ENABLED = 0;
+    rad_params.MOTION_PROFILE_ENABLED = 0;
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_CAN_Init();
+  MX_I2C1_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_TIM2_Init();
+  MX_ADC2_Init();
+  /* USER CODE BEGIN 2 */
+
+    rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED);
+
+    // Initialize only the required drivers for the testbench
+    MX_TMC_2590_1_Init();
+    MX_PROFILER_INIT();
+    MX_AS5048A_1_Init();
+
+    // Default TMC Settings (Kept from your original init)
+    tmc_2590_1.Init.inverted = 0;
+    min_angle = 0;
+    max_angle = 360 * MAX_ROTATIONS / MOTOR_GEARING;
+
+    MX_CAN_UpdateIdAndFilters(&rad_can);
+
+    uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, rad_params.STEPPER_SPEED);
+    TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
+    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+
+  // TODO YOUR TRASH THIS IS WRONG - THIS IS SO WRONG WITH RAD STATE
+    // THIS IS ACTUALLY FINE
+
+    static enum 
+    {
+        RAD_STATE_INIT = 0,
+        RAD_STATE_IDLE,
+        RAD_STATE_PROFILE_CONTROL,
+		RAD_STATE_PULSE_CONTROL,
+        RAD_STATE_CLOSED_LOOP_CONTROL,
+    } rad_state = RAD_STATE_INIT;
+
+    while (1)
+    {
+        // ------------------------------------------------------
+        // 1. GLOBAL CAN MESSAGES
+        // ------------------------------------------------------
+        if (!queue_empty(&can_message_queue_global))
+        {
+            RAD_CAN_Message_TypeDef *new_message = (RAD_CAN_Message_TypeDef*) queue_front(&can_message_queue_global);
+
+            switch ((int)(new_message->command_id))
+            {
+                case ESTOP_MESSAGE:
+                    ESTOP = 1;
+                    break;
+                case DISABLE_MESSAGE:
+                    DISABLED = 1;
+                    break;
+                case ENABLE_MESSAGE:
+                    rad_state = RAD_STATE_IDLE;
+                    DISABLED = 0;
+                    ESTOP = 0;
+                    break;
+                case HEALTH_STATUS_PING:
+                    MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+                    break;
+                default:
+                    break;
+            }
+
+            free(new_message->data);
+            queue_dequeue(&can_message_queue_global);
+        }
+        // ------------------------------------------------------
+        // 2. RAD CAN MESSAGES (Stripped of PID/EEPROM)
+        // ------------------------------------------------------
+        else if (!queue_empty(&can_message_queue_rad))
+        {
+            RAD_CAN_Message_TypeDef *new_message = (RAD_CAN_Message_TypeDef*) queue_front(&can_message_queue_rad);
+
+            switch ((int)(new_message->command_id))
+            {
+                case SET_TARGET_ANGLE:
+                {
+                    double new_setpoint = decode_double_big_endian(new_message->data);
+
+                    if (rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_LEFT &&
+                        rad_params.RAD_TYPE != RAD_TYPE_ARM_WRIST_RIGHT)
+                    {
+                        if (new_setpoint < min_angle)
+                        {
+                            new_setpoint = min_angle;
+                        }
+                        else if (new_setpoint > max_angle)
+                        {
+                            new_setpoint = max_angle;
+                        }
+                        PID_ChangeSetPoint(&pid_1, new_setpoint*MOTOR_GEARING);
+                    }
+                    else
+                    {
+                        // Set raw setpoint for wrist motors
+                        PID_ChangeSetPoint(&pid_1, new_setpoint);
+                    }
+                    
+                    // Enable Watch Dog here
+                    if (rad_params.WATCH_DOG_ENABLED)
+                    {
+                    	rad_can.watchdog_kick = 1;
+                    }
+                    break;
+                }
+                case GET_ENCODER_VALUE:
+                {
+                    rad_status.current_angle = (double) (pid_1.feedback_adj / MOTOR_GEARING); //skip the buffer
+                    MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+                    break;
+                }
+                case READ_ANGLE:
+                {
+                	AS5048A_ReadAngle(&as5048a_1);
+                	MX_CAN_Broadcast_Double_Data(&rad_can, as5048a_1.Angle_double, READ_ANGLE);
+                	break;
+                }
+                case PULSE_STEPPER:
+                {
+
+                    // REVIEW THIS
+                    float pulses = decode_float_big_endian(new_message->data);
+
+
+                    // Case profile enabled
+
+                    if (rad_params.MOTION_PROFILE_ENABLED) {
+
+						int32_t target_steps = (int32_t)(pulses * 4.0f);
+
+						// Cap steps using TMC driver limits
+						if (target_steps > tmc_2590_1.Init.max_steps)
+							target_steps = tmc_2590_1.Init.max_steps;
+						else if (target_steps < -1*(tmc_2590_1.Init.max_steps))
+							target_steps = -1*tmc_2590_1.Init.max_steps;
+
+						// Setup the Math Profile
+						motion_profile.STEPS_TO_MOVE = target_steps;
+						motion_profile.CURRENT_POS = 0;
+						motion_profile.SET_POINT = target_steps;
+						Motion_Profile_Phases(&motion_profile);
+
+						// Setting up initial speeds
+
+						uint16_t starting_speed = (uint16_t)fabsf(motion_profile.V_I);
+						if (starting_speed < 20) {
+							starting_speed = 20;
+						}
+						current_target_speed = starting_speed;
+
+						// Setup the Hardware (Using your existing wrapper)
+						if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+							TMC_2590_Stop(&tmc_2590_1);
+						}
+                        MOTION_PROFILE_Set_Speed(starting_speed);
+						rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, target_steps);
+
+						// Start the clock and enter profiling state
+						profile_start_time = HAL_GetTick();
+						last_speed_update = profile_start_time;
+
+						rad_state = RAD_STATE_PROFILE_CONTROL;
+
+					// Case no profile
+                    } else {
+
+                    	steps_to_move = (int32_t)pulses;
+
+
+
+                    	// cap steps
+
+                    	if (steps_to_move > tmc_2590_1.Init.max_steps) {
+                    		steps_to_move = tmc_2590_1.Init.max_steps;
+                    	} else if (steps_to_move <-1*tmc_2590_1.Init.max_steps) {
+                    		steps_to_move = -1*tmc_2590_1.Init.max_steps;
+                    	}
+
+                    	rad_state = RAD_STATE_PULSE_CONTROL;
+                    	MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
+                    }
+
+
+                    break;
+                }
+                case SET_STEPPER_SPEED:
+                {
+                    uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, decode_uint32_big_endian(new_message->data));
+                    TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+                    rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
+                    break;
+                }
+                case GET_STEPPER_SPEED:
+                    MX_CAN_Broadcast_Uint32_Data(&rad_can, rad_params.STEPPER_SPEED, GET_STEPPER_SPEED);
+                    break;
+
+                case SET_RAD_FLAGS:
+                {
+                	uint8_t flags = new_message->data[0];
+                	rad_params.SW_STOP_ENABLED = flags & (1 << 0);
+                	rad_params.WATCH_DOG_ENABLED = flags & (1 << 1);
+                	rad_params.MOTION_PROFILE_ENABLED = flags & (1 << 2);
+
+                	// Change params based on if motion profile is enabled
+
+                	if (rad_params.MOTION_PROFILE_ENABLED) {
+                		 rad_params.STEPPER_SPEED = 4000;  // todo fix hardcode, rn just * 4
+                		 rad_params.DRVCTRL_MRES = 0b0110; // Microstepping
+                		 tmc_2590_1.Init.max_steps = 4000;
+                	} else {
+                		rad_params.STEPPER_SPEED = 1000;
+                		rad_params.DRVCTRL_MRES = 0b1000; // Microstepping
+                		tmc_2590_1.Init.max_steps = 1000;
+                	}
+
+                	// Would happen in both cases
+                	tmc_2590_1.ConfRegisters.DRVCTRL.mres = rad_params.DRVCTRL_MRES;
+                	TMC_2590_WriteConfRegisters(&tmc_2590_1);
+
+                	rad_status.flags = (rad_params.SW_STOP_ENABLED) | (rad_params.WATCH_DOG_ENABLED) | (rad_params.MOTION_PROFILE_ENABLED);
+                	break;
+                }
+                case GET_RAD_FLAGS:
+                {
+                	MX_CAN_Broadcast_Uint8_Data(&rad_can, rad_status.flags, GET_RAD_FLAGS);
+                	break;
+                }
+                case REBOOT:
+                {
+                	HAL_NVIC_SystemReset();
+                    break;
+                }
+                case ASSIGN_DEVICE_ID:
+                {
+                    rad_can.id = new_message->data[0];
+                    rad_params.RAD_ID = rad_can.id;
+                    MX_CAN_UpdateIdAndFilters(&rad_can);
+                    break;
+                }
+                case SET_VMAX:
+                {
+                    motion_profile.V_MAX = decode_float_big_endian(new_message->data) * 4.0f;
+                    break;
+                }
+                case GET_VMAX:
+                {
+                    MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.V_MAX, GET_VMAX);
+                    break;
+                }
+                case SET_ACCELERATION:
+                {
+                    float new_accel = decode_float_big_endian(new_message->data) * 4.0f;
+                    if (new_accel > 0.0f) {
+                        // Invalid acceleration value, ignore the command
+                    	motion_profile.ACCELERATION = new_accel;
+                    }
+                    break;
+                }
+                case GET_ACCELERATION:
+                {
+                    MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.ACCELERATION, GET_ACCELERATION);
+                    break;
+                }
+                case SET_STEPS_TO_MOVE:
+                {
+                    motion_profile.STEPS_TO_MOVE = decode_int32_big_endian(new_message->data) * 4;
+                    break;
+                }
+                case GET_STEPS_TO_MOVE:
+                {
+                    MX_CAN_Broadcast_Int32_Data(&rad_can, motion_profile.STEPS_TO_MOVE, GET_STEPS_TO_MOVE);
+                    break;
+                }
+                case SET_PID_MIN_OUTPUT:
+                {
+                    pid_1.Init.min_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MIN_OUTPUT = pid_1.Init.min_output_abs;
+
+                    break;
+                }
+                case GET_PID_MIN_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, pid_1.Init.min_output_abs, GET_PID_MIN_OUTPUT);
+                    break;
+                }
+                case SET_PID_MAX_OUTPUT:
+                {
+                    pid_1.Init.max_output_abs = (double) decode_uint16_big_endian(new_message->data);
+                    rad_params.PID_MAX_OUTPUT = pid_1.Init.max_output_abs;
+
+                    break;
+                }
+                case GET_PID_MAX_OUTPUT:
+                {
+                    MX_CAN_Broadcast_Uint16_Data(&rad_can, (uint16_t) pid_1.Init.max_output_abs, GET_PID_MAX_OUTPUT);
+                    break;
+                }
+                case SET_MAX_POINT:
+                {
+                	// If this is for wrist don't use
+                    // For wrist
+                    PID_SetMaxPoint(&pid_1, new_message->data[0]);
+                    PID_ChangeSetPoint(&pid_1, (new_message->data[0]) * MAX_ROTATIONS);
+                    PID_Update_BangBang(&pid_1);
+                    //rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
+                case SET_ZERO_POINT:
+                {
+                    // For wrist
+                    PID_SetZeroPoint(&pid_1);
+                    PID_ChangeSetPoint(&pid_1, 0.0);
+                    PID_Update_BangBang(&pid_1);
+                    //rad_state = RAD_STATE_ACTIVE;
+                    break;
+                }
+
+                // (Omitted the extensive TMC SPI tuning cases for brevity, but they can remain here untouched if needed for live testing)
+                default:
+                    break;
+            }
+            free(new_message->data);
+            queue_dequeue(&can_message_queue_rad);
+        }
+
+        // ------------------------------------------------------
+        // 3. SAFETY CHECKS
+        // ------------------------------------------------------
+        if (ESTOP || DISABLED)
+        {
+        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+            TMC_2590_Stop(&tmc_2590_1);
+            if (ESTOP) break;
+            else continue;
+        }
+        else
+        {
+        	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        }
+
+        // ------------------------------------------------------
+        // 4. MAIN STATE MACHINE
+        // ------------------------------------------------------
+        switch (rad_state)
+        {
+            case RAD_STATE_INIT:
+                rad_state = RAD_STATE_IDLE;
+                break;
+
+            case RAD_STATE_IDLE:
+                // Motor is stationary, waiting for PULSE_STEPPER
+            	idle_counter++;
+                break;
+
+            case RAD_STATE_PROFILE_CONTROL:
+
+            // NOTE FOR CLOSED LOOP IT'S AT LINE 1239 THAT WE NEED TO PORT OVER.  RAD_STATE_ACTIVE
+
+            // REVIEW THIS SOME MORE
+            {
+                // Calculate elapsed time in seconds TODO
+                motion_profile.TIME_ELAPSED = (float)(HAL_GetTick() - profile_start_time) / 1000.0f;
+
+                // Get target velocity for this exact millisecond
+                Motion_Profile_StateTypeDef prof_state = Motion_Profile_Velocity(&motion_profile);
+
+                if (prof_state == MOTION_PROFILE_STATE_BUSY)
+                {
+                    uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
+
+
+                    if (HAL_GetTick() - last_speed_update >= 50) {
+
+                    	last_speed_update = HAL_GetTick();
+
+                    	if ((target_speed != current_target_speed) && (target_speed>0)) {
+							MOTION_PROFILE_Set_Speed(target_speed);
+							current_target_speed = target_speed;
+                    	}
+                    }
+                    
+//                    if (target_speed > 0) {
+//                        // Dynamically adjust the timer ARR while MoveSteps runs in the background
+//                        MOTION_PROFILE_Set_Speed(target_speed);
+//                    }
+//                    MOTION_PROFILE_Set_Speed(500);
+                }
+                else if (prof_state == MOTION_PROFILE_STATE_DONE)
+                {
+
+                	if (TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY) {
+                		// Math confirms profile is complete
+						TMC_2590_Stop(&tmc_2590_1);
+						MX_PROFILER_RESET();
+						MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED);
+						rad_state = RAD_STATE_IDLE;
+						//last_speed_update = 0;
+                	}
+                }
+                break;
+            }
+
+            case RAD_STATE_PULSE_CONTROL:
+            {
+
+            	if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+            		TMC_2590_Stop(&tmc_2590_1);
+            	}
+
+            	rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, steps_to_move);
+            	rad_state = RAD_STATE_IDLE;
+            	break;
+            }
+
+            case RAD_STATE_CLOSED_LOOP_CONTROL:
+            {
+
+                // PART 1: READ THE ENCODER VALUE
+                // UPDATE THE PID
+                // UPDATE THE MOTION PROFILE ERROR BASED ON THE OUTPUT OF THE PID
+                uint8_t i = 0;
+                static uint8_t consecutive_encoder_failures = 0;
+                while ((rad_status.ENCODER_STATUS = AS5048A_ReadAngle(&as5048a_1)) != AS5048A_OK)
+                {
+                    if (i++ > 10)
+                    {
+                        break;
+                    } 
+                }
+
+                if (rad_status.ENCODER_STATUS != AS5048A_OK)
+                {
+                    if (consecutive_encoder_failures++ > 3)
+                    {
+                         //encoder has failed
+                        TMC_2590_Stop(&tmc_2590_1);
+                        MX_PROFILER_RESET();
+                        consecutive_encoder_failures = 0;
+                        rad_state = RAD_STATE_PULSE_CONTROL;
+                    }
+                    break;
+                }   
+                else
+                {
+                    //reset failure counter
+                    consecutive_encoder_failures = 0;
+
+                    //Don't update PID unless we have a new value
+                    PID_Update_BangBang(&pid_1);
+
+                    // We want to do the profile error stuff
+                    // target - actual
+                    // pid BangBang covers this for us
+                    motion_profile.ERROR = pid_1.output;
+                }
+
+                // PART 2: THE ACTUAL PROFILE STUFF NOT JUST ENCODER/PID CONFIG
+
+                // TODO ADAM DONT FORGET TO SET MOTION_PROFILE_SET_SPEED ON STARTUP 😂😂😂
+                // AND PROFILE START TIME!!!
+                // AND LAST SPEED UPDATE
+                uint32_t current_tick = HAL_GetTick();
+                
+                if ((current_tick - last_tick) >= PROFILE_UPDATE_PERIOD_MS) {
+
+                    // delta T update
+
+                    motion_profile.DELTA_T = (float)(current_tick - last_tick) / 1000.0f;
+                    last_tick = current_tick;
+
+                    // Run motion profile velocity function
+
+                    Motion_Profile_StateTypeDef prof_state = Motion_Profile_Velocity_Error(&motion_profile);
+
+                    // Same as other motion profile - exact same logic just with error instead of setpoint
+
+                    if (prof_state == MOTION_PROFILE_STATE_BUSY)
+                    {
+                        uint16_t target_speed = (uint16_t)fabsf(motion_profile.VELOCITY);
+
+                        // Set target direction
+
+                        if (motion_profile.VELOCITY > 0) {
+                            target_direction = 1;
+                        } else {
+                            target_direction = -1;
+                        }
+
+                        // Change speed
+
+                        if (target_speed > 0) {
+                            if (target_speed != current_target_speed) {
+                                MOTION_PROFILE_Set_Speed(target_speed);
+                                current_target_speed = target_speed;
+                            }
+
+                            // Stop motor if current direction is not equal to target direction
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY && (current_direction != target_direction)) {
+                                TMC_2590_Stop(&tmc_2590_1);
+                            }
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY) { // step motor
+                                int16_t signed_steps;
+                                if (target_direction > 0) {
+                                    signed_steps = CONTINUOUS_STEP_COUNT;
+                                } else {
+                                    signed_steps = -CONTINUOUS_STEP_COUNT;
+                                }
+                                rad_status.TMC_STATUS = TMC_2590_MoveSteps(&tmc_2590_1, signed_steps);
+                                current_direction = target_direction;
+
+                            }  
+                
+                        } else {
+
+                            // If target speed is 0 mid move, it's a rewind case
+
+                            if (TMC_2590_CheckState(&tmc_2590_1) == TMC_2590_BUSY) {
+                                TMC_2590_Stop(&tmc_2590_1);
+                            }
+                            current_target_speed = 0;
+                            current_direction = 0;
+                        }
+                        
+                    }
+                    else if (prof_state == MOTION_PROFILE_STATE_DONE)
+                    {
+
+                        // TODO this is VERY interim
+                        // Verify that stopping the motor while its expected to step will not cook it
+
+                        //if (/*TMC_2590_CheckState(&tmc_2590_1) != TMC_2590_BUSY*/) {
+                            // Math confirms profile is complete
+                            TMC_2590_Stop(&tmc_2590_1);
+                            MX_PROFILER_RESET();
+                            MOTION_PROFILE_Set_Speed(rad_params.STEPPER_SPEED); // verify if we actually need this
+                            rad_state = RAD_STATE_IDLE;
+                            //last_speed_update = 0;
+                        //}
+                    }
+
+                }
+            break;
+            }
+            default:
+                rad_state = RAD_STATE_INIT;
+                break;
+        }
+
+
+
+        // ------------------------------------------------------
+        // 5. TELEMETRY / GRAPHING
+        // ------------------------------------------------------
+        if ((rad_params.ODOM_INTERVAL != 0) && (HAL_GetTick() % rad_params.ODOM_INTERVAL == 0))
+        {
+            // Transmit the real-time calculated velocity over CAN for your SSH graph.
+            
+            // Send the velocity properly, not the garbage you were doing before
+
+
+        	if (!led_on) {
+        		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+        		led_on = 1;
+        	} else {
+        		HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+        		led_on = 0;
+        	}
+
+//            if (rad_state == RAD_STATE_PROFILE_CONTROL) {
+//
+//                MX_CAN_Broadcast_Float_Data(&rad_can, motion_profile.VELOCITY, SEND_VELOCITY);
+//
+//            }
+
+            // TODO: There may be some issues here with dropping frames if we are putting these too close together
+            
+            odom_counter++;
+            MX_CAN_Broadcast_Odometry_Message(&rad_can, rad_status);
+
+//            MX_CAN_Broadcast_Uint8_Data(&rad_can, 1, SEND_VELOCITY);
+        }
+
+        if ((rad_params.HEALTH_INTERVAL != 0) && (HAL_GetTick() % rad_params.HEALTH_INTERVAL == 0))
+        {
+            rad_status.RAD_STATE = rad_state;
+            rad_status.TMC_STATUS = TMC_2590_CheckState(&tmc_2590_1);
+            MX_CAN_Broadcast_Health_Message(&rad_can, rad_status);
+        }
+
+        rad_can.timer += HAL_GetTick() - prev_ms;
+        prev_ms = HAL_GetTick();
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+    }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/* USER CODE BEGIN 4 */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+    TMC_2590_TIM_PWM_PulseFinishedCallback(&tmc_2590_1, htim);
+}
+
+void MOTION_PROFILE_Set_Speed(uint16_t velocity) {
+
+    // Guard against divide-by-zero if velocity drops to 0 and low speeds preventing issues
+    if (velocity < 5) {
+        return;
+    }
+
+	// Calculate ARR from inputted desired freq
+	uint32_t arr = HAL_TIM_CalculateAutoReload(tmc_2590_1.Init.STEP_Tim, velocity);
+
+	// limit ARR value to prevent overflow
+
+	if (arr > 65535) {
+		arr = 65535;
+	}
+
+	if (arr < 2) {
+		arr = 2;
+	}
+
+
+	// Assign ARR to timer hardware
+	TMC_2590_SetTimAutoReload(&tmc_2590_1, arr);
+
+	// Update duty cycle (CCR) us9ing HAL macros to maintain 50%
+//
+	__HAL_TIM_SET_COMPARE(tmc_2590_1.Init.STEP_Tim, tmc_2590_1.Init.STEP_Channel, arr / 2);
+//
+//	// prevent timer lockup if the counter already overshot the new smaller ARR
+//
+	// if (__HAL_TIM_GET_COUNTER(tmc_2590_1.Init.STEP_Tim) > arr) {
+	//         __HAL_TIM_SET_COUNTER(tmc_2590_1.Init.STEP_Tim, 0);
+	// }
+
+
+	// Update local stepper speed reference
+	// rad_params.STEPPER_SPEED = HAL_TIM_CalculateFrequency(tmc_2590_1.Init.STEP_Tim);
+}
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+    __disable_irq();
+    while (1)
+    {
+    }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
